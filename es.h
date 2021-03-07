@@ -246,8 +246,7 @@ extern void initconv(void);
 extern int print(const char *fmt VARARGS);
 extern int eprint(const char *fmt VARARGS);
 extern int fprint(int fd, const char *fmt VARARGS);
-extern noreturn panic(const char *fmt VARARGS);
-
+extern noreturn panic(const char *fmt VARARGS) __attribute__((noreturn));
 
 /* str.c */
 

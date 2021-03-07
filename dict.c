@@ -111,6 +111,8 @@ static Assoc *get(Dict *dict, const char *name) {
 	return NULL;
 }
 
+static void putwrapper(void*, char*, void*); //shut up clang
+
 static Dict *put(Dict *dict, char *name, void *value) {
 	unsigned long n, mask;
 	Assoc *ap;
@@ -123,7 +125,7 @@ static Dict *put(Dict *dict, char *name, void *value) {
 		Ref(char *, np, name);
 		Ref(void *, vp, value);
 		new = mkdict0(GROW(old->size));
-		dictforall(old, (void (*)(void *, char *, void *)) put, new);
+		dictforall(old, &putwrapper, new);
 		dict = new;
 		name = np;
 		value = vp;
@@ -141,6 +143,11 @@ static Dict *put(Dict *dict, char *name, void *value) {
 	ap->name = name;
 	ap->value = value;
 	return dict;
+}
+
+static void putwrapper(void *a, char *b, void *c)
+{
+	put(a, b, c);
 }
 
 static void rm(Dict *dict, Assoc *ap) {
