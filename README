@@ -1,0 +1,7 @@
+This is my modifications to es to make it easier to live with on unix.
+use configure/make(1) as normal to build and install.
+
+I've tested it on FreeBSD 11.1, OpenBSD 6.3, and Ubuntu 18.04, so it
+should build everywhere sane. I would like testing and reports back
+for solaris/illumos, macOS, Haiku, NetBSD, and anything else you can
+think of.
