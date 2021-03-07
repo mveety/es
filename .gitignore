@@ -22,4 +22,8 @@ config.status
 ltmain.sh
 autom4te.cache
 system.es
+config.guess
+config.sub
+configure
+install-sh
 
