@@ -206,7 +206,7 @@ top:	while ((c = GETC()) == ' ' || c == '\t')
 	switch (c) {
 	case '!':
 		return '!';
-	case '`':
+	case '`': /* NOTE: backquote is here */
 		c = GETC();
 		if (c == '`')
 			return BACKBACK;
@@ -365,6 +365,8 @@ top:	while ((c = GETC()) == ' ' || c == '\t')
 				cmd = "%heredoc";
 		else if (c == '=')
 			return CALL;
+		else if (c == '-') /* stbackquote: <-{ commands } */
+			return STBACK;
 		else
 			cmd = "%open";
 		goto redirection;

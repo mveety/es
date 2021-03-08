@@ -87,6 +87,13 @@ extern Tree *backquote(Tree *ifs, Tree *body) {
 				  treecons(body, NULL))));
 }
 
+/* stbackquote -- a mix of `{} and <={} */
+extern Tree *stbackquote(Tree *ifs, Tree *body){
+	return mk(nCall,
+			prefix("%stbackquote",
+				treecons(flatten(ifs, ""), treecons(body, NULL))));
+}
+
 /* fnassign -- translate a function definition into an assignment */
 extern Tree *fnassign(Tree *name, Tree *defn) {
 	return mk(nAssign, mk(nConcat, mk(nWord, "fn-"), name), defn);

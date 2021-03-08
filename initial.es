@@ -206,9 +206,17 @@ fn-while = $&noreturn @ cond body {
 #	it knows about no arguments meaning ``cd $home'' and has friendlier
 #	error messages than the raw $&cd.  (It also used to search $cdpath,
 #	but that's been moved out of the shell.)
+# mveety addition notes:
+# %cdhook is a function to allow hooking in to directory changes. this
+# is run, if it exists, every time cd is called. This can be used for
+# things like setting your terminal window title automatically or the
+# like.
 
 fn cd dir {
 	if {~ $#dir 1} {
+		if {!~ $#fn-%cdhook 0} {
+			%cdhook $dir
+		}
 		$&cd $dir
 	} {~ $#dir 0} {
 		if {!~ $#home 1} {
@@ -219,6 +227,9 @@ fn cd dir {
 					result 'cd: home directory must be one word'
 				}
 			}
+		}
+		if {!~ $#fn-%cdhook 0} {
+			%cdhook $dir
 		}
 		$&cd $home
 	} {
@@ -332,6 +343,16 @@ fn %backquote {
 	}
 }
 
+# stbackquote returns a list containing the status and the output
+# of the command executed. This will get syntactic sugar once I
+# work out what char it should use.
+
+fn %stbackquote {
+	let ((status output) = <={ $&backquote $* }){
+		result ($status $output)
+	}
+}
+
 #	The following syntax for control flow operations are rewritten
 #	using hook functions:
 #
@@ -392,7 +413,9 @@ fn new-background cmd {
 	let (pid = <={$&background $cmd}) {
 		if {%is-interactive} {
 			cmds = `` (' ' '{' '}') (echo $cmd)
-			echo $cmds(1)^': '^$pid >[1=2]
+			if {! ~ $cmds(1) %*} {
+				echo $cmds(1)^': '^$pid >[1=2]
+			}
 		}
 		apid = pid
 	}
