@@ -6,6 +6,7 @@
 corelib = '/usr/local/share/es/'
 libraries = ()
 enable-import = 'yes'
+import-panic = false
 
 fn import-core-lib lib {
 	dprint 'import-core-lib exec''d'
@@ -44,7 +45,11 @@ fn import lib {
 	if {! import-user-lib $lib} {
 		dprint 'no userlib named '^$lib
 		if {! import-core-lib $lib} {
-			panic 'import' $lib^' not found'
+			if {$import-panic} {
+				panic 'import' $lib^' not found'
+			} {
+				echo 'import: '^$lib^' not found'
+			}
 			return 1
 		}
 	}
