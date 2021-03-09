@@ -1,6 +1,6 @@
 #!/usr/local/bin/es
 
-libs = dirstack.es show.es lc.es
+libs = dirstack.es show.es lc.es history.es
 libdir = $HOME/eslib
 
 let (a = <={access -1 -r $libdir}) {
@@ -10,9 +10,9 @@ let (a = <={access -1 -r $libdir}) {
 	}
 }
 
-for(i = $lib) {
-	let (t = <={access -n $libdir -1 -r $i}) {
-		if {! $#t 0 } {
+for(i = $libs) {
+	let (t = <={access -n $i -1 -r $libdir}) {
+		if {~ $#t 0 } {
 			echo 'installing '^$i^'...'
 			cp $i $libdir
 		}

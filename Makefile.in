@@ -90,6 +90,9 @@ install : es
 	$(MKDIR_P) $(mandir)/man1
 	$(INSTALL) $(srcdir)/doc/es.1 $(mandir)/man1
 
+userlib-install : es
+	./es userlib-install.es
+
 test	: trip
 
 trip	: es $(srcdir)/trip.es

@@ -3,7 +3,7 @@
 
 #include "es.h"
 #include "input.h"
-
+#include <stdio.h> /* needed for dprintf */
 
 /*
  * constants
@@ -84,6 +84,8 @@ static void warn(char *s) {
 /* loghistory -- write the last command out to a file */
 static void loghistory(const char *cmd, size_t len) {
 	const char *s, *end;
+	unsigned long curtime;
+
 	if (history == NULL || disablehistory)
 		return;
 	if (historyfd == -1) {
@@ -103,12 +105,24 @@ static void loghistory(const char *cmd, size_t len) {
 		}
 	writeit:
 		;
+
+	/*
+	 * we're interested in writing out history in the csh format
+	 * for compatibility reasons.
+	 */
+	curtime = time(NULL);
+	dprintf(historyfd, "#+%lu\n", curtime);
 	/*
 	 * Small unix hack: since read() reads only up to a newline
 	 * from a terminal, then presumably this write() will write at
 	 * most only one input line at a time.
 	 */
 	ewrite(historyfd, cmd, len);
+
+	// we close the history file after using it so that other programs
+	// can use it without causing too many problems
+	close(historyfd);
+	historyfd = -1;
 }
 
 /* sethistory -- change the file for the history log */
