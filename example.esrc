@@ -1,0 +1,24 @@
+#!/usr/local/bin/es
+# mveety's ~/.esrc
+# I set most of my environment variables in my .login_conf. I don't know
+# if linux has anything similar, but if it does you should use that
+# instead of your profile or shell dotfiles. It makes life so much easier
+# having everything in one central location instead of being strewn about.
+
+# plugins
+libraries = $home^'/eslib'
+import 'show.es'
+import 'dirstack.es'
+import 'lc.es'
+import 'history.es'
+
+# configure some things
+prompt=('% ' '')
+history = '/home/mveety/.history'
+histmax = 10
+
+# pretty prompt
+fn %prompt {
+	prompt = (`{pwd}^'% ' '')
+}
+
