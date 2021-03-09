@@ -82,6 +82,7 @@ static noreturn usage(void) {
 		"	-v	print input to standard error\n"
 		"	-x	print commands to standard error before executing\n"
 		"	-n	just parse; don't execute\n"
+		"	-N	ignore the .esrc\n"
 		"	-p	don't load functions from the environment\n"
 		"	-o	don't open stdin, stdout, and stderr if they were closed\n"
 		"	-d	don't ignore SIGQUIT or SIGTERM\n"
@@ -104,6 +105,7 @@ int main(int argc, char **argv) {
 	volatile Boolean allowquit = FALSE;	/* -d */
 	volatile Boolean cmd_stdin = FALSE;		/* -s */
 	volatile Boolean loginshell = TRUE;	/* -l or $0[0] == '-' */
+	volatile Boolean readesrc = TRUE;
 	Boolean keepclosed = FALSE;		/* -o */
 	const char *volatile cmd = NULL;	/* -c */
 
@@ -119,12 +121,13 @@ int main(int argc, char **argv) {
 	if (*argv[0] == '-')
 		loginshell = TRUE;
 
-	while ((c = getopt(argc, argv, "eilxvnpodsc:?GIL")) != EOF)
+	while ((c = getopt(argc, argv, "eilxvnpodsc:?GILN")) != EOF)
 		switch (c) {
 		case 'c':	cmd = optarg;			break;
 		case 'e':	runflags |= eval_exitonfalse;	break;
 		case 'i':	runflags |= run_interactive;	break;
 		case 'n':	runflags |= run_noexec;		break;
+		case 'N':	readesrc = FALSE; break;
 		case 'v':	runflags |= run_echoinput;	break;
 		case 'x':	runflags |= run_printcmds;	break;
 #if LISPTREES
@@ -184,7 +187,8 @@ getopt_done:
 		initenv(environ, protected);
 	
 		if (loginshell)
-			runesrc();
+			if(readesrc)
+				runesrc();
 	
 		if (cmd == NULL && !cmd_stdin && optind < ac) {
 			int fd;
