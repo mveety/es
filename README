@@ -1,7 +1,30 @@
 This is my modifications to es to make it easier to live with on unix.
 use configure/make(1) as normal to build and install.
 
-I've tested it on FreeBSD 11.1, OpenBSD 6.3, and Ubuntu 18.04, so it
-should build everywhere sane. I would like testing and reports back
-for solaris/illumos, macOS, Haiku, NetBSD, and anything else you can
-think of.
+I've tested it on FreeBSD, OpenBSD, and Ubuntu, so it should build
+everywhere sane. I would like testing and reports back for solaris/illumos,
+macOS, Haiku, NetBSD, and anything else you can think of.
+
+Some Notes:
+Be sure to install the libraries using 'make userlib-install'. They'll get
+copied to $home/eslib; be sure to add that to your $libraries list. If you
+want to install the libraries for everyone on the system copy them to
+/usr/local/share/es.
+
+dirstack.es:
+dirstack.es adds the commands pushd, popd, and dirs. They work more or less
+as you would expect, though possibly more spartan than you may be used to.
+
+show.es:
+show.es is a little bit of OpenVMS in your shell :) . It can easily
+be extended by defining show-functions. Check out the sources for more
+info.
+
+lc.es:
+lc.es is a clone of Plan 9's lc(1).
+
+history.es:
+history.es is the frontend to the shell's in-built history code. The
+history-file formatting should be mostly equivalent to csh and mostly
+cross-compatible.
+
