@@ -214,10 +214,10 @@ fn-while = $&noreturn @ cond body {
 
 fn cd dir {
 	if {~ $#dir 1} {
-		if {!~ $#fn-%cdhook 0} {
-			%cdhook $dir
-		}
 		$&cd $dir
+		if {!~ $#fn-%cdhook 0} {
+			%cdhook `{pwd}
+		}
 	} {~ $#dir 0} {
 		if {!~ $#home 1} {
 			throw error cd <={
@@ -228,10 +228,10 @@ fn cd dir {
 				}
 			}
 		}
-		if {!~ $#fn-%cdhook 0} {
-			%cdhook $dir
-		}
 		$&cd $home
+		if {!~ $#fn-%cdhook 0} {
+			%cdhook `{pwd}
+		}
 	} {
 		throw error cd 'usage: cd [directory]'
 	}
