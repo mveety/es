@@ -1,5 +1,5 @@
 #!/usr/local/bin/es
-options = $options dirstack
+option dirstack
 
 dirstack = ()
 

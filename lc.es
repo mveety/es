@@ -1,5 +1,5 @@
 #!/usr/local/bin/es
-options = $options lc
+option lc
 
 # lc.es -- convenience for plan 9 users
 

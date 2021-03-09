@@ -1,5 +1,5 @@
 #!/usr/local/bin/es
-options = $options show
+option show
 
 # a little something from OpenVMS:
 # show is an internal that displays various variables and parameters.

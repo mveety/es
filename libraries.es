@@ -1,5 +1,4 @@
 #!/usr/local/bin/es
-options = $options libs
 
 # es library search path support. This will allow users to share
 # libraries globally on a system.
@@ -51,3 +50,19 @@ fn import lib {
 	}
 	return 0
 }
+
+fn checkoption opt {
+	for (i = $options) {
+		if {~ $i $opt } { return 0 }
+	}
+	return 1
+}
+
+fn option opt {
+	if {! checkoption $opt } {
+		options = $options $opt
+	}
+}
+
+option libraries
+

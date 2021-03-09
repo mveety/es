@@ -1,11 +1,12 @@
 #!/usr/local/bin/es
-options = $options history
+option history
 
 histmax = 25
 
-fn history-filter start {
-	awk -v 'n='^$start '
+fn history-filter start usedate {
+	awk -v 'n='^$start -v 'usedate='^$usedate '
 		BEGIN{
+			curtime = ""
 			curdate = ""
 			havedate = 0
 			unixtime = 0
@@ -14,18 +15,29 @@ fn history-filter start {
 		/#\+/{
 			unixtime = substr($1, 2, length($1))
 			cmd = "date -r " unixtime " +%H:%M"
-			cmd | getline result
+			cmd | getline curtime
 			close(cmd)
-			curdate = result
+			if (usedate == 1) {
+				cmd1 = "date -r " unixtime " +%F"
+				cmd1 | getline curdate
+				close(cmd1)
+			}
 			havedate = 1
 		}
 
 		!/#\+/{
 			if($1 != ""){
 				if(havedate == 0){
-					"date +%H:%M" | getline curdate
+					"date +%H:%M" | getline curtime
+					if(usedate == 1){
+						"date +%F" | getline curdate
+					}
 				}
-				printf "%d\t%s  %s\n", n, curdate, $0
+				if(usedate == 1){
+					printf "%d\t%s  %s  %s\n", n, curdate, curtime, $0
+				} else {
+					printf "%d\t%s  %s\n", n, curtime, $0
+				}
 				n++
 			}
 			havedate = 0
@@ -39,6 +51,7 @@ fn history {
 		singleevent = false
 		cleanhistory = false
 		histfile = $history
+		usedate = 0
 	) {
 		while {! ~ $#1 0} {
 			if {~ $1 -n } {
@@ -54,11 +67,13 @@ fn history {
 				singleevent = false
 			} {~ $1 -C } {
 				cleanhistory = true
+			} {~ $1 -d} {
+				usedate = 1
 			} {~ $1 -f } {
 				* = $*(2 ...)
 				histfile = $1
 			} {
-				throw error history 'usage: history [-f histfile] [-C] [-a | -n events | -e event]'
+				throw error history 'usage: history [-f histfile] [-d] [-C] [-a | -n events | -e event]'
 			}
 			* = $*(2 ...)
 		}
@@ -74,14 +89,14 @@ fn history {
 			if {~ $st 'no' } {
 				nstart = `{ awk 'BEGIN{ print (('^$fsize^'/2) - '^$maxents^')+1 }' }
 				nlines = `{ awk 'BEGIN{ print 2*'^$maxents^' }' }
-				tail -n $nlines $histfile | history-filter $nstart
+				tail -n $nlines $histfile | history-filter $nstart $usedate
 			} {
-				history-filter 0 < $histfile
+				history-filter 1 $usedate < $histfile
 			}
 		} {$singleevent} {
-			history-filter 1 < $histfile | awk '($1 == '^$eventn^'){ print $0 ; exit 1 }'
+			history-filter 1 $usedate < $histfile | awk '($1 == '^$eventn^'){ print $0 ; exit 1 }'
 		} {
-			history-filter 1 < $histfile
+			history-filter 1 $usedate < $histfile
 		}
 	}
 }
