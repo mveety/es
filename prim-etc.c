@@ -346,6 +346,8 @@ PRIM(div) {
 		return NULL;
 	a = atoi(getstr(list->term));
 	b = atoi(getstr(list->next->term));
+	if (a == 0)
+		return NULL;
 	res = a / b;
 	print("%d\n", res);
 	return NULL;
@@ -362,6 +364,8 @@ PRIM(mod) {
 		return NULL;
 	a = atoi(getstr(list->term));
 	b = atoi(getstr(list->next->term));
+	if (a == 0)
+		return NULL;
 	res = a % b;
 	print("%d\n", res);
 	return NULL;
