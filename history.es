@@ -58,7 +58,7 @@ fn history-filter start usedate commandonly {
 }
 
 fn history {
-	let(
+	let (
 		maxents = $histmax
 		limitevents = true
 		singleevent = false

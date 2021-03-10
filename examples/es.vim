@@ -13,7 +13,9 @@ syn keyword esCmd eval exec exit false forever
 syn keyword esCmd fork if limit newpgrp result
 syn keyword esCmd return throw time true umask unwind-protect
 syn keyword esCmd var vars wait whats while
-syn keyword esCmd let for fn
+syn keyword esCmd let for fn add sub
+syn keyword esCmd mul div mod lt gt
+syn keyword esCmd eq
 syn match eskeyList /[a-zA-Z0-9]*\s*(/
 syn match esHook /[%][a-zA-Z0-9_]*/
 syn match esComment  /#.*$/
