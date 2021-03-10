@@ -16,8 +16,9 @@
 noexport = $noexport pid signals apid bqstatus fn-%dispatch path home
 noexport = $noexport version mveetyrev options
 noexport = $noexport corelib fn-old-background fn-new-background
-noexport = $noexport panic dprint
-noexport = $noexport enable-import import-core-lib import-user-lib import
+noexport = $noexport fn-panic fn-dprint
+noexport = $noexport fn-enable-import fn-import-core-lib fn-import-user-lib
+noexport = $noexport fn-import
 
 #
 # Title
