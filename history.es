@@ -96,26 +96,24 @@ fn history {
 
 		if {$cleanhistory} {
 			cp $histfile $histfile^'.old'
-			nlines = `{ awk 'BEGIN{ print '^$maxents^'*2 }' }
+			nlines = `{ mul $maxents 2}
 			tail -n $nlines $histfile^'.old' > $histfile
 			return 0 # success?
 		}
 
 		fsize = `{ wc -l $histfile }
-		nents = `{ awk 'BEGIN{ print '^$fsize(1)^'/2 }' }
+		nents = `{ div $fsize(1) 2 }
 		if {$limitevents && ! $singleevent} {
-			st = `{ awk 'BEGIN { n='^$nents^' ; if( n < '^$maxents^') { print "yes\n" } else { print "no" } }' }
-			if {~ $st 'no' } {
-				nstart = `{ awk 'BEGIN{ print (('^$fsize^'/2) - '^$maxents^')+1 }' }
-				nlines = `{ awk 'BEGIN{ print 2*'^$maxents^' }' }
+			if {gt $nents $maxents} {
+				nstart = `{add `{sub `{div $fsize(1) 2} $maxents} 1}
+				nlines = `{mul $maxents 2}
 				tail -n $nlines $histfile | history-filter $nstart $usedate $commandonly
 			} {
 				history-filter 1 $usedate $commandonly < $histfile
 			}
 		} {$singleevent} {
-			headarg = `{ awk 'BEGIN { print ('^$eventn^'*2) }' }
-			st = `{ awk -v 'nents='^$nents -v 'eventn='^$eventn 'BEGIN { if (eventn > nents) { print "error" } else { print "okay" }}'}
-			if {~ $st error} {
+			headarg = `{ mul $eventn 2 }
+			if { gt $eventn $nents } {
 				echo 'history: event too large' >[1=2]
 				return 1
 			}
