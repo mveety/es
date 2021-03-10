@@ -25,3 +25,11 @@ es-mveety changes and additions:
 	* lc.es -- rough and ready copy of plan 9's lc(1)
 	* history.es -- implementation of history(1)
 
+# added some new functions
+	* apply fun list : execute fun on each member of list
+	* map fun list : execute fun on each memory of list. return results
+		in new list
+	* bqmap fun list : same as above but return outputs in a new list
+	* fbqmap fun list : same as bqapply but flatten function output
+		before appending to results list
+
