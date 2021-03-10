@@ -4,6 +4,7 @@
 
 #include "es.h"
 #include "prim.h"
+#include <stdlib.h>
 
 PRIM(result) {
 	return list;
@@ -286,6 +287,130 @@ PRIM(resetterminal) {
 }
 #endif
 
+PRIM(add) {
+	int a = 0;
+	int b = 0;
+	int res = 0;
+
+	if (list == NULL)
+		return NULL;
+	if (list->next == NULL)
+		return NULL;
+	a = atoi(getstr(list->term));
+	b = atoi(getstr(list->next->term));
+	res = a + b;
+	print("%d\n", res);
+	return NULL;
+}
+
+PRIM(sub) {
+	int a = 0;
+	int b = 0;
+	int res = 0;
+
+	if (list == NULL)
+		return NULL;
+	if (list->next == NULL)
+		return NULL;
+	a = atoi(getstr(list->term));
+	b = atoi(getstr(list->next->term));
+	res = a - b;
+	print("%d\n", res);
+	return NULL;
+}
+
+PRIM(mul) {
+	int a = 0;
+	int b = 0;
+	int res = 0;
+
+	if (list == NULL)
+		return NULL;
+	if (list->next == NULL)
+		return NULL;
+	a = atoi(getstr(list->term));
+	b = atoi(getstr(list->next->term));
+	res = a * b;
+	print("%d\n", res);
+	return NULL;
+}
+
+PRIM(div) {
+	int a = 0;
+	int b = 0;
+	int res = 0;
+
+	if (list == NULL)
+		return NULL;
+	if (list->next == NULL)
+		return NULL;
+	a = atoi(getstr(list->term));
+	b = atoi(getstr(list->next->term));
+	res = a / b;
+	print("%d\n", res);
+	return NULL;
+}
+
+PRIM(mod) {
+	int a = 0;
+	int b = 0;
+	int res = 0;
+
+	if (list == NULL)
+		return NULL;
+	if (list->next == NULL)
+		return NULL;
+	a = atoi(getstr(list->term));
+	b = atoi(getstr(list->next->term));
+	res = a % b;
+	print("%d\n", res);
+	return NULL;
+}
+
+PRIM(eq) {
+	int a = 0;
+	int b = 0;
+
+	if (list == NULL)
+		return false;
+	if (list->next == NULL)
+		return false;
+	a = atoi(getstr(list->term));
+	b = atoi(getstr(list->next->term));
+	if (a == b)
+		return true;
+	return false;
+}
+
+PRIM(gt) {
+	int a = 0;
+	int b = 0;
+
+	if (list == NULL)
+		return false;
+	if (list->next == NULL)
+		return false;
+	a = atoi(getstr(list->term));
+	b = atoi(getstr(list->next->term));
+	if (a > b)
+		return true;
+	return false;
+}
+
+PRIM(lt) {
+	int a = 0;
+	int b = 0;
+
+	if (list == NULL)
+		return false;
+	if (list->next == NULL)
+		return false;
+	a = atoi(getstr(list->term));
+	b = atoi(getstr(list->next->term));
+	if (a < b)
+		return true;
+	return false;
+}
 
 /*
  * initialization
@@ -318,5 +443,14 @@ extern Dict *initprims_etc(Dict *primdict) {
 #if READLINE
 	X(resetterminal);
 #endif
+	/* math and numerical functions */
+	X(add);
+	X(sub);
+	X(mul);
+	X(div);
+	X(mod);
+	X(eq);
+	X(gt);
+	X(lt);
 	return primdict;
 }

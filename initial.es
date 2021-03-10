@@ -779,8 +779,11 @@ prompt		= '; ' ''
 max-eval-depth	= 640
 noexport = noexport
 
-# es-mveety extended library
+#
+# es-mveety extentions
+#
 
+# error throwing and debugging prints
 fn panic lib rest {
 	echo $lib^': '^$rest
 	if {! %is-interactive} {
@@ -797,3 +800,14 @@ fn dprint msg {
 		return 0
 	}
 }
+
+# math and numerical functions
+fn-add = $&add
+fn-sub = $&sub
+fn-mul = $&mul
+fn-div = $&div
+fn-mod = $&mod
+fn-eq = $&eq
+fn-lt = $&lt
+fn-gt = $&gt
+
