@@ -1,0 +1,27 @@
+es-mveety changes and additions:
+
+# added <- which works like a mix of <= and `. Returns a list containing
+	the program's status and it's output. $bqstatus still exists for
+	compatibility.
+
+# added support for loading libraries and extensions from a centralized path.
+
+# added $options. $options shows what libraries are currently loaded.
+
+# .esrc loads on all startups unless the -N option is used at start.
+
+# es outputs its history with timestamps in the file pointed at by $history.
+	The timestamps are comments immediately above the corresponding entry
+	similar to how csh formats its history file. The history.es library
+	has functions to help a user manipulate the file.
+
+# added math and numerical comparison primitives add, sub, mul, div, mod,
+	eq, lt, and gt.
+
+# a few libraries are shipped and part of the default installation:
+	* libraries.es -- simple library loading support
+	* show.es -- extensible utility to display es's parameters
+	* dirstack.es -- simple implementation of pushd, popd, and dirs
+	* lc.es -- rough and ready copy of plan 9's lc(1)
+	* history.es -- implementation of history(1)
+

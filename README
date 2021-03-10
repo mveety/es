@@ -28,3 +28,7 @@ history.es is the frontend to the shell's in-built history code. The
 history-file formatting should be mostly equivalent to csh and mostly
 cross-compatible.
 
+Notes:
+# Most/all of the original files shipped with es should still exist.
+# esdump and the files in examples/ are untested and may not work.
+
