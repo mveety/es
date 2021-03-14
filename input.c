@@ -38,6 +38,7 @@ extern void add_history(char *);
 extern void rl_reset_terminal(char *);
 extern char *rl_basic_word_break_characters;
 extern char *rl_completer_quote_characters;
+extern char *rl_readline_name;
 
 #if ABUSED_GETENV
 static char *stdgetenv(const char *);
@@ -602,6 +603,7 @@ extern void initinput(void) {
 #if READLINE
 	rl_meta_chars = 0;
 	rl_basic_word_break_characters=" \t\n\\'`$><=;|&{()}";
-		rl_completer_quote_characters="'";
+	rl_completer_quote_characters="'";
+	rl_readline_name = "es-mveety";
 #endif
 }
