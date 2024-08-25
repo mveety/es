@@ -63,6 +63,7 @@ fn history {
 		limitevents = true
 		singleevent = false
 		cleanhistory = false
+		lastevent = false
 		commandonly = 0
 		histfile = $history
 		usedate = 0
@@ -79,6 +80,8 @@ fn history {
 			} {~ $1 -a } {
 				limitevents = false
 				singleevent = false
+			} {~ $1 -l} {
+				lastevent = true
 			} {~ $1 -C } {
 				cleanhistory = true
 			} {~ $1 -c } {
@@ -89,7 +92,7 @@ fn history {
 				* = $*(2 ...)
 				histfile = $1
 			} {
-				throw error history 'usage: history [-f histfile] [-d] [-c] [-C| -a | -n events | -e event]'
+				throw error history 'usage: history [-f histfile] [-d] [-c] [-C| -l | -a | -n events | -e event]'
 			}
 			* = $*(2 ...)
 		}
@@ -103,7 +106,7 @@ fn history {
 
 		fsize = `{ wc -l $histfile }
 		nents = `{ div $fsize(1) 2 }
-		if {$limitevents && ! $singleevent} {
+		if {$limitevents && ! $singleevent && ! $lastevent} {
 			if {gt $nents $maxents} {
 				nstart = `{add `{sub `{div $fsize(1) 2} $maxents} 1}
 				nlines = `{mul $maxents 2}
@@ -128,10 +131,32 @@ fn history {
 				| history-filter $eventn $usedate 0 \
 				| awk '($1 == '^$eventn^'){ print substr($0, index($0,$3)) ; exit }'
 			}
+		} {$lastevent} {
+			eventn = `{ sub $nents 1 }
+			headarg = `{ mul $eventn 2 }
+			if { gt $eventn $nents } {
+				echo 'history: event too large' >[1=2]
+				return 1
+			}
+			if {~ $commandonly 0} {
+				head -n $headarg $histfile \
+				| tail -n 2 \
+				| history-filter $eventn $usedate 0 \
+				| awk '($1 == '^$eventn^'){ print $0 ; exit }'
+			} {
+				head -n $headarg $histfile \
+				| tail -n 2 \
+				| history-filter $eventn $usedate 0 \
+				| awk '($1 == '^$eventn^'){ print substr($0, index($0,$3)) ; exit }'
+			}
 		} {
 			history-filter 1 $usedate $commandonly < $histfile
 		}
 	}
+}
+
+fn lastcmd {
+	eval `{history -c -l}
 }
 
 noexport = $noexport fn-history-filter fn-history histmax
