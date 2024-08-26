@@ -9,14 +9,11 @@
 
 (defvar es-font-lock-keywords
   '(
-    ("#.*$" . 'font-lock-comment-face)
-    ;; ("\$*" . 'font-lock-variable-face)
     
     ("\\<\\(let\\|if\\|for\\|while\\|fn\\)\\>" . 'font-lock-keyword-face)
     ("\\<\\(access\\|break\\|catch\\|cd\\|echo\\|eval\\|exec\\|exit\\|false\\|forever\\|fork\\|if\\|limit\\|newpgrp\\|result\\|return\\|throw\\|time\\|true\\|umask\\|unwind-protect\\|var\\|vars\\|wait\\|whatis\\|while\\|%read\\|add\\|sub\\|mul\\|div\\|mod\\|lt\\|gt\\|eq\\)\\>" . 'font-lock-builtin-face)
     
     ("'[^']*'" . 'font-lock-string-face)
-    ;; ("\"[^\"]*\"" . 'font-lock-string-face)
     ("`{[^}]*}" . 'font-lock-variable-name-face)
     ("\\<-\\w*\\>" . 'font-lock-reference-face)
     ("\$\\w*" . 'font-lock-reference-face)
@@ -37,6 +34,8 @@
 
 (define-derived-mode es-mode fundamental-mode "es"
   "Major mode for editing Extensible Shell scripts."
+  (setq comment-start "#") 
+  (setq comment-end "")
   (set (make-local-variable 'font-lock-defaults) '(es-font-lock-keywords))
   (set (make-local-variable 'indent-line-function) 'es-indent-line))
 
