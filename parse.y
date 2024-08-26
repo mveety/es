@@ -107,6 +107,7 @@ comword	: param				{ $$ = $1; }
 	| FLAT sword			{ $$ = flatten(mk(nVar, $2), " "); }
 	| PRIM WORD			{ $$ = mk(nPrim, $2); }
 	| TOSTR sword		{ $$ = mk(nCall, prefix("%string", treecons(mk(nVar, $2), NULL))); }
+	| STRLIST sword		{ $$ = mk(nCall, prefix("%strlist", treecons(mk(nVar, $2), NULL))); }
 	| '`' sword			{ $$ = backquote(mk(nVar, mk(nWord, "ifs")), $2); }
 	| BACKBACK word	sword		{ $$ = backquote($2, $3); }
 	| STBACK sword { $$ = stbackquote(mk(nVar, mk(nWord, "ifs")), $2); }

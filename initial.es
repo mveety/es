@@ -327,15 +327,15 @@ fn vars {
 #		$#var                  <={%count $var}
 #		$^var                  <={%flatten ' ' $var}
 #		$"var                  <={%string $var}
+#		$:var                  <={%strlist $var}
 #		`{cmd args}            <={%backquote <={%flatten '' $ifs} {cmd args}}
 #		``ifs {cmd args}       <={%backquote <={%flatten '' ifs} {cmd args}}
 
 fn-%count	= $&count
 fn-%flatten	= $&flatten
 
-fn  %string v {
-	%flatten '' $v
-}
+fn  %string v { %flatten '' $v }
+fn %strlist v { %fsplit '' $v }
 
 #	Note that $&backquote returns the status of the child process
 #	as the first value of its result list.  The default %backquote
