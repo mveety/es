@@ -10,7 +10,7 @@
 %token	WORD QWORD
 %token	LOCAL LET FOR CLOSURE FN
 %token	ANDAND BACKBACK STBACK
-%token	EXTRACT CALL COUNT DUP FLAT OROR PRIM REDIR SUB
+%token	EXTRACT CALL COUNT DUP FLAT OROR TOSTR PRIM REDIR SUB
 %token	NL ENDFILE ERROR
 
 %left	LOCAL LET FOR CLOSURE ')'
@@ -106,6 +106,7 @@ comword	: param				{ $$ = $1; }
 	| COUNT sword			{ $$ = mk(nCall, prefix("%count", treecons(mk(nVar, $2), NULL))); }
 	| FLAT sword			{ $$ = flatten(mk(nVar, $2), " "); }
 	| PRIM WORD			{ $$ = mk(nPrim, $2); }
+	| TOSTR sword		{ $$ = mk(nCall, prefix("%string", treecons(mk(nVar, $2), NULL))); }
 	| '`' sword			{ $$ = backquote(mk(nVar, mk(nWord, "ifs")), $2); }
 	| BACKBACK word	sword		{ $$ = backquote($2, $3); }
 	| STBACK sword { $$ = stbackquote(mk(nVar, mk(nWord, "ifs")), $2); }

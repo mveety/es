@@ -218,6 +218,7 @@ top:	while ((c = GETC()) == ' ' || c == '\t')
 		case '#':	return COUNT;
 		case '^':	return FLAT;
 		case '&':	return PRIM;
+		case '"':	return TOSTR;
 		default:	UNGETC(c); return '$';
 		}
 	case '\'':
