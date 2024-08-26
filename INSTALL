@@ -13,7 +13,7 @@ distribution, it won't have a generated configure file. To generate it,
 you'll need to have autotools, and run:
 
    % aclocal
-   % autoconf
+   % autoconf # known to work with versions 2.69 and earlier
    % libtoolize -qi
 
    Es needs an ANSI compiler (or at least a compiler that respects
