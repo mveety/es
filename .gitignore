@@ -2,6 +2,7 @@
 #*#
 .*#*#
 *.o
+*.old
 es
 esdump
 y.output
@@ -27,5 +28,6 @@ system.es
 config.guess
 config.sub
 configure
+configure_*
 install-sh
 
