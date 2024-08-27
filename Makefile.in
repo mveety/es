@@ -123,6 +123,9 @@ config.h  : config.h.in
 version.c : make_version es.h
 	./make_version > version.c
 
+etags : ${HFILES} ${CFILES} parse.y
+	etags ${HFILES} ${CFILES} parse.y
+
 # for linux use:
 
 # extra file rules
