@@ -63,18 +63,18 @@ OFILES	= access.o closure.o conv.o dict.o eval.o except.o fd.o gc.o glob.o \
 	  tree.o util.o var.o vec.o version.o y.tab.o
 OTHER	= Makefile parse.y mksignal
 SYSLIB = initial.es applymap.es libraries.es suffix.es
-GEN	= esdump y.tab.c y.tab.h y.output token.h sigmsgs.c initial.c system.es
+GEN	= esdump y.tab.c y.tab.h y.output token.h sigmsgs.c system.c system.es
 
 SIGFILES = @SIGFILES@
 
-es	: ${OFILES} initial.o
-	${CC} -o es ${LDFLAGS} ${OFILES} initial.o ${LIBS}
+es	: ${OFILES} system.o
+	${CC} -o es ${LDFLAGS} ${OFILES} system.o ${LIBS}
 
 esdump	: ${OFILES} dump.o
 	${CC} -o esdump ${LDFLAGS} ${OFILES} dump.o ${LIBS}
 
 clean	:
-	rm -f es ${OFILES} ${GEN} dump.o initial.o version.c
+	rm -f es ${OFILES} ${GEN} dump.o system.o version.c
 
 distclean:	clean
 	rm -f config.cache config.log config.h Makefile cscope.out tags TAGS core cs.out config.status ltmain.sh
@@ -111,8 +111,8 @@ token.h : y.tab.h
 system.es : ${SYSLIB}
 	cat ${SYSLIB} >system.es
 
-initial.c : esdump system.es
-	./esdump < $(srcdir)/system.es > initial.c
+system.c : esdump system.es
+	./esdump < $(srcdir)/system.es > system.c
 
 sigmsgs.c : mksignal $(SIGFILES)
 	sh $(srcdir)/mksignal $(SIGFILES) > sigmsgs.c
