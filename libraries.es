@@ -38,7 +38,7 @@ fn import-user-lib lib {
 	}
 }
 
-fn import lib {
+fn import_file lib {
 	if {~ $#enable-import 0} {
 		panic 'import' 'import is not enabled'
 		return 1
@@ -55,6 +55,16 @@ fn import lib {
 		}
 	}
 	return 0
+}
+
+fn import {
+	if {~ $#* 0} {
+		echo 'usage: import [libraries]'
+		return 1
+	}
+	for(i = $*) {
+		import_file $i^'.es'
+	}
 }
 
 fn checkoption opt {
