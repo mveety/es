@@ -7,6 +7,7 @@ corelib = '/usr/local/share/es/'
 libraries = ()
 enable-import = 'yes'
 import-panic = false
+automatic-import = false
 
 fn import-core-lib lib {
 	dprint 'import-core-lib exec''d'
@@ -66,6 +67,31 @@ fn checkoption opt {
 fn option opt {
 	if {! checkoption $opt } {
 		options = $options $opt
+	}
+}
+
+fn check_and_load_options opts {
+	for (i = $opts) {
+		if {! checkoption $i} {
+			if { $automatic-import } {
+				if {! import $i^'.es'} {
+					panic 'library' 'error: library: unable to load '^$i
+					return false
+				}
+			} {
+				panic 'library' 'required library '^$i^' not loaded'
+				return false
+			}
+		}
+	}
+	return true
+}
+
+fn library name requirements {
+	if { <={check_and_load_options $requirements} } {
+		option $name
+	} {
+		panic 'library' 'unable to load library '^$name
 	}
 }
 
