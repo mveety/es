@@ -1,16 +1,14 @@
 #!/usr/local/bin/es
 # mveety's ~/.esrc
-# I set most of my environment variables in my .login_conf. I don't know
+#
+# I set most of my environment vars in my .login_conf. I don't know
 # if linux has anything similar, but if it does you should use that
 # instead of your profile or shell dotfiles. It makes life so much easier
 # having everything in one central location instead of being strewn about.
 
-# plugins
+# libraries
 libraries = $home^'/eslib'
-import 'show.es'
-import 'dirstack.es'
-import 'lc.es'
-import 'history.es'
+import show dirstack lc history string
 
 # configure some things
 prompt=('% ' '')
@@ -21,4 +19,9 @@ histmax = 10
 fn %prompt {
 	prompt = (`{pwd}^'% ' '')
 }
+
+# other pretty prompt
+#fn %prompt {
+#	prompt = (`{hostname}^'% ' '')
+#}
 
