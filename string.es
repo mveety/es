@@ -4,7 +4,7 @@
 # with strings. In addition, it's the first library to use the new
 # library naming convention
 
-option string
+library string (init libraries)
 
 fn string:length str {
 	local (str0 = $:str) {

@@ -1,5 +1,5 @@
 #!/usr/local/bin/es
-option history
+library history (init libraries)
 
 histmax = 25
 

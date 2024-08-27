@@ -1,5 +1,5 @@
 #!/usr/local/bin/es
-option lc
+library lc (init libraries)
 
 # lc.es -- convenience for plan 9 users
 

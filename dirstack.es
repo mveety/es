@@ -1,5 +1,5 @@
 #!/usr/local/bin/es
-option dirstack
+library dirstack (init libraries)
 
 dirstack = ()
 
@@ -33,4 +33,3 @@ fn popd {
 }
 
 noexport = $noexport dirstack fn-dirs fn-pushd fn-popd
-
