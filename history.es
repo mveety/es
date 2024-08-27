@@ -58,6 +58,9 @@ fn history-filter start usedate commandonly {
 }
 
 fn history {
+	if {~ $#history 0 } {
+		throw error history 'history: $history not set'
+	}
 	let (
 		maxents = $histmax
 		limitevents = true
