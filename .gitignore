@@ -12,6 +12,7 @@ y.tab.h
 y.tab.o
 token.h
 initial.c
+system.c
 sigmsgs.c
 version.c
 config.cache
