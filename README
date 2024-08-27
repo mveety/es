@@ -5,6 +5,14 @@ I've tested it on FreeBSD, OpenBSD, and Ubuntu, so it should build
 everywhere sane. I would like testing and reports back for solaris/illumos,
 macOS, Haiku, NetBSD, and anything else you can think of.
 
+Building:
+	% aclocal
+	% autoconf # (seems to need to be version 2.69 or earlier)
+	% libtoolize -qi
+	% ./configure
+	% make
+	% make install
+
 Some Notes:
 Be sure to install the libraries using 'make userlib-install'. They'll get
 copied to $home/eslib; be sure to add that to your $libraries list. If you
@@ -27,6 +35,9 @@ history.es:
 history.es is the frontend to the shell's in-built history code. The
 history-file formatting should be mostly equivalent to csh and mostly
 cross-compatible.
+
+string.es:
+a simple string convenience function library
 
 Notes:
 # Most/all of the original files shipped with es should still exist.
