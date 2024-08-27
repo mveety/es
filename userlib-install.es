@@ -1,6 +1,6 @@
 #!/usr/local/bin/es
 
-libs = dirstack.es show.es lc.es history.es
+libs = dirstack.es show.es lc.es history.es string.es
 libdir = $HOME/eslib
 
 let (a = <={access -1 -r $libdir}) {
