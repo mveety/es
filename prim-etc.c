@@ -346,8 +346,8 @@ PRIM(div) {
 		return NULL;
 	a = atoi(getstr(list->term));
 	b = atoi(getstr(list->next->term));
-	if (a == 0)
-		return NULL;
+	if (b == 0)
+		fail("$&div", "divide by zero");
 	res = a / b;
 	print("%d\n", res);
 	return NULL;
