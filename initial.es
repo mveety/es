@@ -5,8 +5,7 @@ options = 'init'
 # this is the es-mveety version info. the format is
 # $esversion-mveety-$rev
 
-mveetyrev = '2'
-version = '0.9.2-mveety-'^$mveetyrev
+version = <={$&version}
 
 #
 # Introduction

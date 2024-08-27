@@ -74,7 +74,7 @@ esdump	: ${OFILES} dump.o
 	${CC} -o esdump ${LDFLAGS} ${OFILES} dump.o ${LIBS}
 
 clean	:
-	rm -f es ${OFILES} ${GEN} dump.o initial.o
+	rm -f es ${OFILES} ${GEN} dump.o initial.o version.c
 
 distclean:	clean
 	rm -f config.cache config.log config.h Makefile cscope.out tags TAGS core cs.out config.status ltmain.sh
@@ -119,6 +119,10 @@ sigmsgs.c : mksignal $(SIGFILES)
 
 config.h  : config.h.in
 	./configure
+
+version.c : make_version es.h
+	./make_version > version.c
+
 # for linux use:
 
 # extra file rules

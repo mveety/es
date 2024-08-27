@@ -1,0 +1,11 @@
+#!/bin/sh
+
+version="0.9.2"
+patchset="mveety"
+commit=`git log -n1 --format="%h"`
+
+echo "#include \"es.h\""
+echo "// static const char commit[] = \"$commit\";"
+echo "static const char version1[] = \"$version-$patchset-$commit\";"
+echo "const char * const version = version1;"
+echo ""
