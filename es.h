@@ -356,7 +356,7 @@ extern int eopen(char *name, OpenKind k);
 /* version.c */
 
 extern const char * const version;
-
+extern const char * const buildstring;
 
 /* gc.c -- see gc.h for more */
 

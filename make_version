@@ -3,9 +3,19 @@
 version="0.9.2"
 patchset="mveety"
 commit=`git log -n1 --format="%h"`
+versionstring="$version-$patchset-$commit"
+builddate=`date`
+buildhost=`hostname`
+builduser=`whoami`
+buildpath=`pwd`
+buildsys=`uname`
+buildarch=`uname -m`
+buildstring="es $versionstring $builduser@$buildhost:$buildpath $buildsys $buildarch"
 
 echo "#include \"es.h\""
 echo "// static const char commit[] = \"$commit\";"
 echo "static const char version1[] = \"$version-$patchset-$commit\";"
+echo "static const char buildstring1[] = \"$buildstring\";"
 echo "const char * const version = version1;"
+echo "const char * const buildstring = buildstring1;"
 echo ""

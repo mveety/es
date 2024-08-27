@@ -37,6 +37,10 @@ PRIM(version) {
 	return mklist(mkstr((char *) version), NULL);
 }
 
+PRIM(buildstring) {
+	return mklist(mkstr((char *) buildstring), NULL);
+}
+
 PRIM(exec) {
 	return eval(list, NULL, evalflags | eval_inchild);
 }
@@ -424,6 +428,7 @@ extern Dict *initprims_etc(Dict *primdict) {
 	X(echo);
 	X(count);
 	X(version);
+	X(buildstring);
 	X(exec);
 	X(dot);
 	X(flatten);

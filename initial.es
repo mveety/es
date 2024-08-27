@@ -6,6 +6,7 @@ options = 'init'
 # $esversion-mveety-$rev
 
 version = <={$&version}
+buildstring = <={$&buildstring}
 
 #
 # Introduction
