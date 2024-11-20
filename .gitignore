@@ -3,6 +3,7 @@
 .*#*#
 *.o
 *.old
+*~
 es
 esdump
 es.core
