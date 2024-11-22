@@ -55,21 +55,9 @@
 #include <sys/stat.h>
 #endif
 
-#if REQUIRE_DIRENT
-#if HAVE_DIRENT_H
 #include <dirent.h>
 typedef struct dirent Dirent;
-#else
-#include <sys/dir.h>
-typedef struct direct Dirent;
-#endif
-/* prototypes for XXXdir functions. comment out if necessary */
-#if !HPUX
-extern DIR *opendir(const char *);
-extern Dirent *readdir(DIR *);
-/*extern int closedir(DIR *);*/
-#endif
-#endif
+
 
 #if REQUIRE_PWD
 #include <pwd.h>
