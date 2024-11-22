@@ -7,10 +7,20 @@
 #include "syntax.h"
 %}
 
-%token	WORD QWORD
+%union {
+	Tree *tree;
+	char *str;
+	NodeKind kind;
+}
+
+%token <str> WORD
+%token <str> QWORD
+%token <tree> REDIR
+%token <tree> PIPE
+%token <tree> DUP
 %token	LOCAL LET FOR CLOSURE FN
 %token	ANDAND BACKBACK STBACK STRLIST
-%token	EXTRACT CALL COUNT DUP FLAT OROR TOSTR PRIM REDIR SUB
+%token	EXTRACT CALL COUNT FLAT OROR TOSTR PRIM SUB
 %token	NL ENDFILE ERROR
 
 %left	LOCAL LET FOR CLOSURE ')'
@@ -20,16 +30,9 @@
 %right	'$' 
 %left	SUB
 
-%union {
-	Tree *tree;
-	char *str;
-	NodeKind kind;
-}
-
-%type <str>	WORD QWORD keyword
-%type <tree>	REDIR PIPE DUP
-		body cmd cmdsa cmdsan comword first fn line word param assign
-		binding bindings params nlwords words simple redir sword
+%type <str> keyword
+%type <tree> body cmd cmdsa cmdsan comword first fn line word param assign
+			 binding bindings params nlwords words simple redir sword
 %type <kind>	binder
 
 %start es
