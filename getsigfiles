@@ -1,0 +1,4 @@
+#!/bin/sh
+echo "#include <signal.h>" | cpp | grep -E '^#[  ]+1[     ]+' | sed 's/.*"\(.*\)".*/\1/' |sort -u | grep '^/' | tr '\012' ' '
+echo ""
+

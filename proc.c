@@ -74,9 +74,13 @@ static int dowait(int *statusp) {
 
 	if (!setjmp(slowlabel)) {
 		slow = TRUE;
-		n = interrupted ? -2 :
-		waitpid(-1, (void*) statusp, WEXITED|WTRAPPED);
-		getrusage(RUSAGE_CHILDREN, &wait_rusage);
+		if(interrupted)
+			n = -2;
+		else {
+			/* on freebsd this maybe should be WEXITED|WTRAPPED */
+			n = waitpid(-1, (void*) statusp, WEXITED);
+			getrusage(RUSAGE_CHILDREN, &wait_rusage);
+		}
 	} else
 		n = -2;
 	slow = FALSE;

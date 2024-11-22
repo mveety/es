@@ -35,11 +35,7 @@
 #include <memory.h>
 #endif
 
-#if HAVE_STDARG_H
 #include <stdarg.h>
-#else
-#include <varargs.h>
-#endif
 
 #include <errno.h>
 #include <setjmp.h>
@@ -175,6 +171,8 @@ typedef volatile sig_atomic_t Atomic;
 typedef volatile int Atomic;
 #endif
 
+/* assume signals are always void */
+/*
 #if VOID_SIGNALS
 typedef void Sigresult;
 #define	SIGRESULT
@@ -182,6 +180,8 @@ typedef void Sigresult;
 typedef int Sigresult;
 #define	SIGRESULT	0
 #endif
+*/
+typedef void Sigresult;
 
 typedef GETGROUPS_T gidset_t;
 

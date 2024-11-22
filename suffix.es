@@ -20,12 +20,4 @@ noexport = $noexport fn-panic fn-dprint
 noexport = $noexport fn-enable-import fn-import-core-lib fn-import-user-lib
 noexport = $noexport fn-import
 
-#
-# Title
-#
 
-#	This is silly and useless, but whatever value is returned here
-#	is printed in the header comment in initial.c;  nobody really
-#	wants to look at initial.c anyway.
-
-result es initial state built in `/bin/pwd on `/bin/date for $version

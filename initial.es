@@ -83,7 +83,7 @@ fn-newpgrp	= $&newpgrp
 fn-result	= $&result
 fn-throw	= $&throw
 fn-umask	= $&umask
-fn-wait		= $&wait
+#fn-wait		= $&wait
 
 fn-%read	= $&read
 

@@ -43,7 +43,7 @@ extern noreturn throw(List *e) {
 }
 
 /* fail -- pass a user catchable error up the exception chain */
-extern noreturn fail VARARGS2(const char *, from, const char *, fmt) {
+/*extern noreturn fail VARARGS2(const char *, from, const char *, fmt) {
 	char *s;
 	va_list args;
 
@@ -56,6 +56,25 @@ extern noreturn fail VARARGS2(const char *, from, const char *, fmt) {
 			      mklist(mkstr((char *) from),
 				     mklist(mkstr(s), NULL))));
 	while (gcisblocked())
+		gcenable();
+	throw(e);
+	RefEnd(e);
+}*/
+
+extern noreturn fail(const char *from, const char *fmt, ...)
+{
+	char *s;
+	va_list args;
+
+	va_start(args, fmt);
+	s = strv(fmt, args);
+	va_end(args);
+
+	gcdisable();
+	Ref(List *, e, mklist(mkstr("error"),
+				mklist(mkstr((char *) from),
+					mklist(mkstr(s), NULL))));
+	while(gcisblocked())
 		gcenable();
 	throw(e);
 	RefEnd(e);
