@@ -78,7 +78,7 @@ static int dowait(int *statusp) {
 			n = -2;
 		else {
 			/* on freebsd this maybe should be WEXITED|WTRAPPED */
-			n = waitpid(-1, (void*) statusp, WEXITED);
+			n = waitpid(-1, (void*) statusp, 0);
 			getrusage(RUSAGE_CHILDREN, &wait_rusage);
 		}
 	} else
