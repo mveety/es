@@ -6,6 +6,7 @@
 *~
 es
 esdump
+es_static
 es.core
 y.output
 y.tab.c

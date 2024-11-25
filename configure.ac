@@ -21,7 +21,7 @@ use_editline=no
 AC_ARG_WITH(readline,
 --with-readline		Use GNU Readline, use_readline=yes)
 AC_ARG_WITH(editline,
---with-editline		Use the Editline library, use_editline=yes)
+--with-editline		Use libedit, [use_editline=yes; use_readline=no])
 
 AC_CANONICAL_HOST
 
@@ -153,7 +153,7 @@ fi
 
 dnl check for a u_quad_t or something like that
 AC_CACHE_CHECK(for rlimit type ..., es_cv_rlimit_t,
-[es_cv_rlimit_t=$(echo "#include <sys/resource.h>" | cpp | grep rlim_cur | sed -e 's/rlim_cur.*//' -e 's/^ //g' -e 's/^\t//g' -e q)])
+[es_cv_rlimit_t=$(echo "#include <sys/resource.h>" | cpp | grep rlim_cur | sed -e 's/rlim_cur.*//' -e 's/^ //g' -e 's/^\t//g' -e q | tr -d "\r\n\t ")])
 
 AC_DEFINE_UNQUOTED(LIMIT_T, $es_cv_rlimit_t)
 

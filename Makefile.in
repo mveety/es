@@ -73,8 +73,11 @@ es	: ${OFILES} system.o
 esdump	: ${OFILES} dump.o
 	${CC} -o esdump ${LDFLAGS} ${OFILES} dump.o ${LIBS}
 
+es_static : ${OFILES} system.o
+	${CC} -static -o es_static ${LDFLAGS} ${OFILES} system.o ${LIBS}
+
 clean	:
-	rm -f es ${OFILES} ${GEN} dump.o system.o version.c
+	rm -f es es_static ${OFILES} ${GEN} dump.o system.o version.c
 
 distclean:	clean
 	rm -f config.cache config.log config.h Makefile cscope.out tags TAGS core cs.out config.status ltmain.sh
