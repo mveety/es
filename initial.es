@@ -216,7 +216,7 @@ fn cd dir {
 	if {~ $#dir 1} {
 		$&cd $dir
 		if {!~ $#fn-%cdhook 0} {
-			%cdhook `{pwd}
+			%cdhook $dir
 		}
 	} {~ $#dir 0} {
 		if {!~ $#home 1} {
@@ -230,7 +230,7 @@ fn cd dir {
 		}
 		$&cd $home
 		if {!~ $#fn-%cdhook 0} {
-			%cdhook `{pwd}
+			%cdhook $home
 		}
 	} {
 		throw error cd 'usage: cd [directory]'
