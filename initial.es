@@ -771,6 +771,17 @@ if {~ <=$&primitives resetterminal} {
 }
 
 #
+# Getter functions
+#
+# These functions work similarly to settor functions but execute when a
+# variable's contents are retreived. The value of the variable is $1 to
+# the getter function. If the variable is not defined the getter is not
+# called.
+last = ''
+get-last = $&getlast
+
+
+#
 # Variables
 #
 

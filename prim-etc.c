@@ -163,6 +163,12 @@ PRIM(sethistory) {
 	RefReturn(lp);
 }
 
+PRIM(getlast) {
+	if(lastcmd == NULL)
+		return mklist(mkstr((char *) ""), NULL);
+	return mklist(mkstr((char *) lastcmd), NULL);
+}
+
 PRIM(parse) {
 	List *result;
 	Tree *tree;
@@ -434,6 +440,7 @@ extern Dict *initprims_etc(Dict *primdict) {
 	X(flatten);
 	X(whatis);
 	X(sethistory);
+	X(getlast);
 	X(split);
 	X(fsplit);
 	X(var);

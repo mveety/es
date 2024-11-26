@@ -48,6 +48,8 @@ static void pad(Format *format, long len, int c) {
 
 static Boolean sconv(Format *format) {
 	char *s = va_arg(format->args, char *);
+	if(s == NULL)
+		s = "NULL";
 	if ((format->flags & FMT_f1set) == 0)
 		fmtcat(format, s);
 	else {

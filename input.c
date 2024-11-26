@@ -29,6 +29,7 @@ char *prompt, *prompt2;
 Boolean disablehistory = FALSE;
 Boolean resetterminal = FALSE;
 static char *history;
+char *lastcmd, *nextlastcmd;
 static int historyfd = -1;
 
 #if READLINE
@@ -89,6 +90,15 @@ static void loghistory(const char *cmd, size_t len) {
 
 	if (history == NULL || disablehistory)
 		return;
+	if(strnlen(cmd, len) > 1){
+		if (lastcmd != NULL)
+			efree(lastcmd);
+		if (nextlastcmd != NULL)
+			lastcmd = nextlastcmd;
+		nextlastcmd = ealloc(len+2);
+		memcpy(nextlastcmd, cmd, len);
+		nextlastcmd[len-1] = '\0';
+	}
 	if (historyfd == -1) {
 		historyfd = eopen(history, oAppend);
 		if (historyfd == -1) {
