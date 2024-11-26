@@ -6,9 +6,7 @@ everywhere sane. I would like testing and reports back for solaris/illumos,
 macOS, Haiku, NetBSD, and anything else you can think of.
 
 Building:
-	% aclocal
-	% autoconf # (seems to need to be version 2.69 or earlier)
-	% libtoolize -qi
+	% ./setup-autoconf.sh
 	% ./configure
 	% make
 	% make install
