@@ -33,6 +33,16 @@ AC_PROG_INSTALL
 AC_PROG_MKDIR_P
 AC_PROG_YACC
 
+AC_CACHE_CHECK(whether $CC accepts -Wno-clobbered, es_cv_no_clobbered, 
+[
+echo "int main(int argc, char *argv[]) { return 0; }" > conftest.c
+if $CC -Wno-clobbered -Werror conftest.c -o /dev/null >/dev/null 2>&1; then
+	CFLAGS="$CFLAGS -Wno-clobbered"
+	echo -n yes
+else
+	echo -n no
+fi])
+
 dnl CFLAGS="$CFLAGS $saved_CFLAGS"
 
 dnl ----------------------------
