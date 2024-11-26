@@ -403,7 +403,7 @@ extern List *runinput(Input *in, int runflags) {
 	List * volatile result = NULL;
 	List *repl, *dispatch;
 	Push push;
-	const char *dispatcher[] = {
+	char *dispatcher[] = {
 		"fn-%eval-noprint",
 		"fn-%eval-print",
 		"fn-%noeval-noprint",

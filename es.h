@@ -190,7 +190,7 @@ extern void initvars(void);
 extern void initenv(char **envp, Boolean protected);
 extern void hidevariables(void);
 extern void validatevar(const char *var);
-extern List *varlookup(const char *name, Binding *binding);
+extern List *varlookup(char *name, Binding *binding);
 extern List *varlookup2(char *name1, char *name2, Binding *binding);
 extern void vardef(char *, Binding *, List *);
 extern Vector *mkenv(void);

@@ -114,8 +114,11 @@ extern void setnoexport(List *list) {
 }
 
 /* varlookup -- lookup a variable in the current context */
-extern List *varlookup(const char *name, Binding *bp) {
+extern List *varlookup(char *name, Binding *bp) {
 	Var *var;
+	Push p;
+	List *getter;
+	List *defn;
 
 	if (iscounting(name)) {
 		Term *term = nth(varlookup("*", bp), strtol(name, NULL, 10));
@@ -130,9 +133,20 @@ extern List *varlookup(const char *name, Binding *bp) {
 			return bp->defn;
 
 	var = dictget(vars, name);
-	if (var == NULL)
+	if(var == NULL)
 		return NULL;
-	return var->defn;
+	defn = var->defn;
+
+	if(!specialvar(name) && (getter = varlookup2("get-", name, NULL)) != NULL) {
+		Ref(List *, lp, defn);
+		Ref(List *, fn, getter);
+		varpush(&p, "0", mklist(mkstr(name), NULL));
+		lp = listcopy(eval(append(fn, lp), NULL, 0));
+		varpop(&p);
+		RefEnd(fn);
+		RefReturn(lp);
+	}
+	return defn;
 }
 
 extern List *varlookup2(char *name1, char *name2, Binding *bp) {
