@@ -216,6 +216,7 @@ command		description (abbreviations)
 
 break f		set a breakpoint on entry to and exit from function f (b)
 continue	continue execution (c, cont, r, run)
+step		execute next line (s)
 echo expr ...	echo the es expression (print, p)
 quit		exit esdebug (q)
 throw e ...	throw exception e
