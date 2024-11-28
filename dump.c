@@ -91,6 +91,7 @@ static const char *nodename(NodeKind k) {
 	case nFor:	return "For";
 	case nLambda:	return "Lambda";
 	case nLet:	return "Let";
+	case nLets: return "Lets";
 	case nList:	return "List";
 	case nLocal:	return "Local";
 	case nMatch:	return "Match";
@@ -123,7 +124,7 @@ static char *dumptree(Tree *tree) {
 			break;
 		    case nAssign:  case nConcat: case nClosure: case nFor:
 		    case nLambda: case nLet: case nList:  case nLocal:
-		    case nVarsub: case nMatch: case nExtract:
+		    case nVarsub: case nMatch: case nExtract: case nLets:
 			print("static const Tree_pp %s = { n%s, { { (Tree *) %s }, { (Tree *) %s } } };\n",
 			      name + 1, nodename(tree->kind), dumptree(tree->u[0].p), dumptree(tree->u[1].p));
 		}

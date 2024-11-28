@@ -18,12 +18,12 @@
 %token <tree> REDIR
 %token <tree> PIPE
 %token <tree> DUP
-%token	LOCAL LET FOR CLOSURE FN
+%token	LOCAL LET LETS FOR CLOSURE FN
 %token	ANDAND BACKBACK STBACK STRLIST
 %token	EXTRACT CALL COUNT FLAT OROR TOSTR PRIM SUB
 %token	NL ENDFILE ERROR
 
-%left	LOCAL LET FOR CLOSURE ')'
+%left	LOCAL LET LETS FOR CLOSURE ')'
 %left	ANDAND OROR NL
 %left	'!'
 %left	PIPE
@@ -136,14 +136,16 @@ caret 	:
 
 binder	: LOCAL	        { $$ = nLocal; }
 	| LET		{ $$ = nLet; }
+	| LETS		{ $$ = nLets; }
 	| FOR		{ $$ = nFor; }
 	| CLOSURE	{ $$ = nClosure; }
 
 keyword	: '!'		{ $$ = "!"; }
 	| '~'		{ $$ = "~"; }
 	| EXTRACT	{ $$ = "~~"; }
-        | LOCAL 	{ $$ = "local"; }
+	| LOCAL 	{ $$ = "local"; }
 	| LET		{ $$ = "let"; }
+	| LETS		{ $$ = "lets"; }
 	| FOR		{ $$ = "for"; }
 	| FN		{ $$ = "fn"; }
 	| CLOSURE	{ $$ = "%closure"; }

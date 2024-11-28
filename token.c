@@ -189,6 +189,7 @@ top:	while ((c = GETC()) == ' ' || c == '\t')
 			if (streq(buf + 1, "or"))	return FOR;
 		} else if (*buf == 'l') {
 			if (streq(buf + 1, "ocal"))	return LOCAL;
+			if (streq(buf + 1, "ets")) return LETS;
 			if (streq(buf + 1, "et"))	return LET;
 		} else if (streq(buf, "~~"))
 			return EXTRACT;

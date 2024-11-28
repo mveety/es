@@ -80,8 +80,8 @@ static List *assign(Tree *varform, Tree *valueform0, Binding *binding0) {
 }
 
 /* letbindings -- create a new Binding containing let-bound variables */
-static Binding *letbindings(Tree *defn0, Binding *outer0,
-			    Binding *context0, int evalflags) {
+static Binding *letbindings1(Tree *defn0, Binding *outer0,
+			    Binding *context0, int evalflags, int letstar) {
 	Ref(Binding *, binding, outer0);
 	Ref(Binding *, context, context0);
 	Ref(Tree *, defn, defn0);
@@ -112,6 +112,8 @@ static Binding *letbindings(Tree *defn0, Binding *outer0,
 				values = values->next;
 			}
 			binding = mkbinding(name, value, binding);
+			if(letstar)
+				context = mkbinding(name, value, binding);
 			RefEnd(name);
 		}
 
@@ -120,6 +122,16 @@ static Binding *letbindings(Tree *defn0, Binding *outer0,
 
 	RefEnd2(defn, context);
 	RefReturn(binding);
+}
+
+static Binding *letbindings(Tree *defn, Binding *outer, Binding *context, int evalflags)
+{
+	return letbindings1(defn, outer, context, evalflags, 0);
+}
+
+static Binding *letsbindings(Tree *defn, Binding *outer, Binding *context, int evalflags)
+{
+	return letbindings1(defn, outer, context, evalflags, 1);
 }
 
 /* localbind -- recursively convert a Bindings list into dynamic binding */
@@ -289,9 +301,12 @@ top:
 	    case nAssign:
 		return assign(tree->u[0].p, tree->u[1].p, binding);
 
-	    case nLet: case nClosure:
+	    case nLet: case nClosure: case nLets:
 		Ref(Tree *, body, tree->u[1].p);
-		binding = letbindings(tree->u[0].p, binding, binding, flags);
+		if(tree->kind == nLets)
+			binding = letsbindings(tree->u[0].p, binding, binding, flags);
+		else
+			binding = letbindings(tree->u[0].p, binding, binding, flags);
 		tree = body;
 		RefEnd(body);
 		goto top;

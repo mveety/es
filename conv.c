@@ -108,6 +108,10 @@ top:
 		binding(f, "let", n);
 		tailcall(n->u[1].p, FALSE);
 
+	case nLets:
+		binding(f, "lets", n);
+		tailcall(n->u[1].p, FALSE);
+
 	case nFor:
 		binding(f, "for", n);
 		tailcall(n->u[1].p, FALSE);
@@ -429,6 +433,10 @@ static Boolean Bconv(Format *f) {
 
 	case nLet:
 		fmtprint(f, "(let %B %B)", n->u[0].p, n->u[1].p);
+		break;
+
+	case nLets:
+		fmtprint(f, "(lets %B %B)", n->u[0].p, n->u[1].p);
 		break;
 
 	case nLocal:

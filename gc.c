@@ -631,6 +631,7 @@ static char *tree2name(NodeKind k) {
 	case nFor:	return "For";
 	case nLambda:	return "Lambda";
 	case nLet:	return "Let";
+	case nLets: return "Lets";
 	case nList:	return "List";
 	case nLocal:	return "Local";
 	case nMatch:	return "Match";
