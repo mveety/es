@@ -42,12 +42,9 @@ fn macro name argsbody {
 		macresult = '@ { echo -n $*; echo '';'' }'
 		maclet = ''
 		argsvar = ''
-		fnmacname = ''
-		fnevalname = 'fn-'^$name
 		macvarname = 'macro-'^$name
 	) {
-		fnmacname = 'fn-'^$macname
-		$macvarname = $fnevalname $fnmacname $macname
+		$macvarname = 'fn-'^$name 'fn-'^$macname $macname
 		argsvar = <={ if {~ $args ''} {result '$*'} {result '$'^$args} }
 		maclet = 'let(fn-macresult = '$^macresult^' ; args = ('$^args'))'
 		macfn = 'fn-'^$macname^' = @ '^$^args^' { '^$maclet^' '^$^body^' }'
