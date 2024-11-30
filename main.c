@@ -213,7 +213,7 @@ getopt_done:
 		if (termeq(e->term, "exit"))
 			return exitstatus(e->next);
 		else if (termeq(e->term, "error"))
-			eprint("%L\n",
+			eprint("root handler: %L\n",
 			       e->next == NULL ? NULL : e->next->next,
 			       " ");
 		else if (!issilentsignal(e))

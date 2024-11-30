@@ -59,7 +59,7 @@ fn history-filter start usedate commandonly {
 
 fn history {
 	if {~ $#history 0 } {
-		throw error history 'history: $history not set'
+		throw error history '$history not set'
 	}
 	let (
 		maxents = $histmax
@@ -95,7 +95,7 @@ fn history {
 				* = $*(2 ...)
 				histfile = $1
 			} {
-				throw error history 'usage: history [-f histfile] [-d] [-c] [-C| -l | -a | -n events | -e event]'
+				throw usage history 'usage: history [-f histfile] [-d] [-c] [-C| -l | -a | -n events | -e event]'
 			}
 			* = $*(2 ...)
 		}

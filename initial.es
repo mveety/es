@@ -222,9 +222,9 @@ fn cd dir {
 		if {!~ $#home 1} {
 			throw error cd <={
 				if {~ $#home 0} {
-					result 'cd: no home directory'
+					result 'no home directory'
 				} {
-					result 'cd: home directory must be one word'
+					result 'home directory must be one word'
 				}
 			}
 		}
@@ -233,7 +233,7 @@ fn cd dir {
 			%cdhook $home
 		}
 	} {
-		throw error cd 'usage: cd [directory]'
+		throw usage cd 'usage: cd [directory]'
 	}
 }
 
@@ -282,7 +282,7 @@ fn vars {
 			{~ $i -e}	{export	= true}
 			{~ $i -p}	{priv	= true}
 			{~ $i -i}	{intern = true}
-			{throw error vars vars: bad option: $i}
+			{throw error vars bad option: $i}
 		)
 		let (
 			dovar = @ var {
@@ -688,8 +688,14 @@ fn %interactive-loop {
 			} {~ $e exit} {
 				throw $e $type $msg
 			} {~ $e error} {
-				echo >[1=2] $msg
-				$fn-%dispatch false
+				echo >[1=2] 'error: '^$type^': '^$^msg
+				# $fn-%dispatch false
+			} {~ $e usage} {
+				if {~ $#msg 0} {
+					echo >[1=2] $type
+				} {
+					echo >[1=2] $msg
+				}
 			} {~ $e signal} {
 				if {!~ $type sigint sigterm sigquit} {
 					echo >[1=2] caught unexpected signal: $type
@@ -801,11 +807,7 @@ noexport = noexport
 
 # error throwing and debugging prints
 fn panic lib rest {
-	echo $lib^': '^$rest
-	if {! %is-interactive} {
-		exit 1
-	}
-	return 1
+	throw error $lib $rest
 }
 
 fn dprint msg {
