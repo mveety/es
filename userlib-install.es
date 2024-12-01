@@ -1,8 +1,28 @@
-#!/usr/bin/env es
+#!/usr/bin/env -S es -N
 
-libs = dirstack.es show.es lc.es history.es string.es
+libsrc = <={if {~ $#* 1} {
+				let(al=$:1) {
+					if {~ $al($#al) '/'} {
+						al = $al(1 ... `{sub $#al 1})
+						result $"al
+					} {
+						result $1
+					}
+				}
+			} {
+				result `{pwd}^'/libraries'
+			}
+		}
+libs = <={let (r=;dl=;f=) {
+			for(i = $libsrc/*.es){
+				dl = <={%fsplit '/' $i}
+				f = $dl($#dl)
+				r = $r $f
+			}
+			result $r
+		}
+	}
 libdir = $HOME/eslib
-libsrc = 'libraries/'
 
 let (a = <={access -1 -r $libdir}) {
 	if {~ $#a 0} {
@@ -14,7 +34,7 @@ let (a = <={access -1 -r $libdir}) {
 for (i = $libs) {
 	let (
 			t = <={access -n $i -1 -r $libdir}
-			srcfile = $libsrc^$i
+			srcfile = $libsrc/^$i
 		) {
 		if {~ $#t 0 } {
 			echo 'installing '^$i^'...'
@@ -34,3 +54,4 @@ for (i = $libs) {
 	}
 }
 echo 'done.'
+

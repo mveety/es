@@ -37,6 +37,9 @@ cross-compatible.
 string.es:
 a simple string convenience function library
 
+array.es:
+a library that emulates arrays using lists of variables.
+
 Notes:
 # Most/all of the original files shipped with es should still exist.
 # esdump and the files in examples/ are untested and may not work.

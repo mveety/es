@@ -92,7 +92,7 @@ install : es
 	$(INSTALL) $(srcdir)/doc/es.1 $(mandir)/man1
 
 userlib-install : es
-	./es userlib-install.es
+	./es -N userlib-install.es $(srcdir)/libraries
 
 test	: trip
 
