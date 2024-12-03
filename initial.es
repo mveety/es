@@ -829,3 +829,19 @@ fn-eq = $&eq
 fn-lt = $&lt
 fn-gt = $&gt
 
+fn gte a b {
+	if {eq $a $b || gt $a $b} {
+		result 0
+	} {
+		result 1
+	}
+}
+
+fn lte a b {
+	if {eq $a $b || lt $a $b} {
+		result 0
+	} {
+		result 1
+	}
+}
+
