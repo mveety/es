@@ -144,6 +144,18 @@ fn array:new sz {
 	}
 }
 
+fn array:newset elems {
+	let (
+		newarray = <={gensym '__es_array_tmp_'}
+		res=
+	) {
+		$newarray = <={array:new $#elems}
+		array:setall $newarray $elems
+		res = $$newarray
+		$newarray=
+		result $res
+	}
+}
 
 fn array:reallocate name newsz {
 	lets (
