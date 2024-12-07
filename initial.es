@@ -156,6 +156,24 @@ fn-%split       = $&split
 fn-%var		= $&var
 fn-%whatis	= $&whatis
 
+# assert and assert2 are used for debugging and error checking
+
+fn assert body {
+	if {$body} {
+		result 0
+	} {
+		throw error assert $^body
+	}
+}
+
+fn assert2 loc body {
+	if {$body} {
+		result 0
+	} {
+		throw error assert $^loc^': '^$^body
+	}
+}
+
 #	These builtins are only around as a matter of convenience, so
 #	users don't have to type the infamous <= (nee <>) operator.
 #	Whatis also protects the used from exceptions raised by %whatis.
@@ -688,8 +706,12 @@ fn %interactive-loop {
 			} {~ $e exit} {
 				throw $e $type $msg
 			} {~ $e error} {
-				echo >[1=2] 'error: '^$type^': '^$^msg
-				# $fn-%dispatch false
+				if {~ $type assert} {
+					echo >[1=2] 'assert: '^$^msg
+				} {
+					echo >[1=2] 'error: '^$type^': '^$^msg
+					# $fn-%dispatch false
+				}
 			} {~ $e usage} {
 				if {~ $#msg 0} {
 					echo >[1=2] $type
@@ -843,14 +865,6 @@ fn lte a b {
 		result 0
 	} {
 		result 1
-	}
-}
-
-fn assert body {
-	if {$body} {
-		result 0
-	} {
-		throw error assert $^body
 	}
 }
 
