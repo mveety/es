@@ -774,6 +774,7 @@ set-max-eval-depth	= $&setmaxevaldepth
 if {~ <=$&primitives resetterminal} {
 	set-TERM	= @ { $&resetterminal; result $* }
 	set-TERMCAP	= @ { $&resetterminal; result $* }
+	fn-resetterminal = $&resetterminal
 }
 
 #
