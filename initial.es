@@ -846,3 +846,11 @@ fn lte a b {
 	}
 }
 
+fn assert body {
+	if {$body} {
+		result 0
+	} {
+		throw error assert $^body
+	}
+}
+
