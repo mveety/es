@@ -6,9 +6,7 @@
 library array (init macros libraries)
 
 fn _array:range start end {
-	if {gt $start $end && ! eq $start $end} {
-		throw error '_array:range' 'invalid range'
-	}
+	assert2 $0 {lt $start $end || eq $start $end}
 	let(
 		res = ()
 		i = $start
@@ -44,7 +42,7 @@ fn array:setall name val {
 		bounds = $#val
 	) {
 		if {lt $#array $#val} {
-			throw error array:setall 'value larger than array'
+			throw error array 'value larger than array'
 		}
 		while {lt $i `{add $bounds 1}} {
 			n = $array($i)
@@ -65,7 +63,7 @@ fn _array:settor {
 			$getter-name =
 			res = $$name
 			if {lt $#res $#*} {
-				throw error array:settor 'value larger than array'
+				throw error array 'value larger than array'
 			}
 			array:setall $name $*
 			result $res
@@ -185,7 +183,7 @@ fn array:index name elem {
 			}
 			n = `{add $n 1}
 		}
-		throw error array:index 'out of range'
+		throw error array 'out of range'
 	}
 }
 
