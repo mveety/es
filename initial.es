@@ -440,7 +440,7 @@ fn new-background cmd {
 				echo $cmds(1)^': '^$pid >[1=2]
 			}
 		}
-		apid = pid
+		apid = $pid
 	}
 }
 

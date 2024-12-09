@@ -61,7 +61,7 @@ OFILES	= access.o closure.o conv.o dict.o eval.o except.o fd.o gc.o glob.o \
 	  sigmsgs.o signal.o split.o status.o str.o syntax.o term.o token.o \
 	  tree.o util.o var.o vec.o version.o y.tab.o
 OTHER	= Makefile parse.y mksignal getsigfiles
-SYSLIB = initial.es macros.es applymap.es libraries.es suffix.es
+SYSLIB = initial.es macros.es applymap.es libraries.es suffix.es noexport_funs.es
 GEN	= esdump y.tab.c y.tab.h y.output token.h sigmsgs.c system.c
 
 es	: ${OFILES} system.o
@@ -166,4 +166,5 @@ tree.o : tree.c es.h config.h stdenv.h gc.h
 util.o : util.c es.h config.h stdenv.h 
 var.o : var.c es.h config.h stdenv.h gc.h var.h term.h 
 vec.o : vec.c es.h config.h stdenv.h gc.h 
-version.o : version.c es.h config.h stdenv.h 
+version.o : version.c es.h config.h stdenv.h
+

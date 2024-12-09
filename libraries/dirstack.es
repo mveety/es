@@ -32,4 +32,3 @@ fn popd {
 	}
 }
 
-noexport = $noexport dirstack fn-dirs fn-pushd fn-popd

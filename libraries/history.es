@@ -162,5 +162,3 @@ fn lastcmd {
 	eval `{history -c -l}
 }
 
-noexport = $noexport fn-history-filter fn-history histmax
-
