@@ -124,3 +124,5 @@ fn protect_language {
 	noexport = $noexport get-last
 }
 
+noexport = $noexport protect_language
+
