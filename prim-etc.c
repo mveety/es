@@ -302,10 +302,8 @@ PRIM(add) {
 	int b = 0;
 	int res = 0;
 
-	if (list == NULL)
-		return NULL;
-	if (list->next == NULL)
-		return NULL;
+	if (list == NULL || list->next == NULL)
+		fail("$&add", "missing arguments");
 	a = atoi(getstr(list->term));
 	b = atoi(getstr(list->next->term));
 	res = a + b;
@@ -318,10 +316,8 @@ PRIM(sub) {
 	int b = 0;
 	int res = 0;
 
-	if (list == NULL)
-		return NULL;
-	if (list->next == NULL)
-		return NULL;
+	if (list == NULL || list->next == NULL)
+		fail("$&sub", "missing arguments");
 	a = atoi(getstr(list->term));
 	b = atoi(getstr(list->next->term));
 	res = a - b;
@@ -334,10 +330,8 @@ PRIM(mul) {
 	int b = 0;
 	int res = 0;
 
-	if (list == NULL)
-		return NULL;
-	if (list->next == NULL)
-		return NULL;
+	if (list == NULL || list->next == NULL)
+		fail("$&mul", "missing arguments");
 	a = atoi(getstr(list->term));
 	b = atoi(getstr(list->next->term));
 	res = a * b;
@@ -350,10 +344,8 @@ PRIM(div) {
 	int b = 0;
 	int res = 0;
 
-	if (list == NULL)
-		return NULL;
-	if (list->next == NULL)
-		return NULL;
+	if (list == NULL || list->next == NULL)
+		fail("$&div", "missing arguments");
 	a = atoi(getstr(list->term));
 	b = atoi(getstr(list->next->term));
 	if (b == 0)
@@ -368,14 +360,14 @@ PRIM(mod) {
 	int b = 0;
 	int res = 0;
 
-	if (list == NULL)
-		return NULL;
-	if (list->next == NULL)
-		return NULL;
+	if (list == NULL || list->next == NULL)
+		fail("$&mod", "missing arguments");
 	a = atoi(getstr(list->term));
 	b = atoi(getstr(list->next->term));
 	if (a == 0)
 		return NULL;
+	if (b == 0)
+		fail("$&mod", "divide by zero");
 	res = a % b;
 	print("%d\n", res);
 	return NULL;
