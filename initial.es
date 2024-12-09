@@ -843,11 +843,30 @@ fn dprint msg {
 }
 
 # math and numerical functions
-fn-add = $&add
-fn-sub = $&sub
-fn-mul = $&mul
-fn-div = $&div
-fn-mod = $&mod
+fn-tobase = $&tobase
+fn-frombase = $&frombase
+
+fn %mathfun fun a b {
+	let (
+		an = <={if {~ $a 0x*} { result `{frombase 16 $a} }{ result $a }}
+		bn = <={if {~ $b 0x*} { result `{frombase 16 $b} }{ result $b }}
+		res=
+	) {
+		res = `{$fun $an $bn}
+		if {! ~ $a $an || ! ~ $b $bn} {
+			echo '0x'^`{tobase 16 $res}
+		} {
+			echo $res
+		}
+		result 0
+	}
+}
+
+fn-add = @ a b { %mathfun $&add $a $b }
+fn-sub = @ a b { %mathfun $&sub $a $b }
+fn-mul = @ a b { %mathfun $&mul $a $b }
+fn-div = @ a b { %mathfun $&div $a $b }
+fn-mod = @ a b { %mathfun $&mod $a $b }
 fn-eq = $&eq
 fn-lt = $&lt
 fn-gt = $&gt

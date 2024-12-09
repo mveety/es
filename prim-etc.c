@@ -305,7 +305,29 @@ PRIM(add) {
 	if (list == NULL || list->next == NULL)
 		fail("$&add", "missing arguments");
 	a = atoi(getstr(list->term));
+	if(a == 0){
+		switch(errno){
+		case EINVAL:
+			fail("$&add", "invalid input");
+			break;
+		case ERANGE:
+			fail("$&add", "conversion overflow");
+			break;
+		}
+	}
+
 	b = atoi(getstr(list->next->term));
+	if(b == 0){
+		switch(errno){
+		case EINVAL:
+			fail("$&add", "invalid input");
+			break;
+		case ERANGE:
+			fail("$&add", "conversion overflow");
+			break;
+		}
+	}
+
 	res = a + b;
 	print("%d\n", res);
 	return NULL;
@@ -319,7 +341,29 @@ PRIM(sub) {
 	if (list == NULL || list->next == NULL)
 		fail("$&sub", "missing arguments");
 	a = atoi(getstr(list->term));
+	if(a == 0){
+		switch(errno){
+		case EINVAL:
+			fail("$&sub", "invalid input");
+			break;
+		case ERANGE:
+			fail("$&sub", "conversion overflow");
+			break;
+		}
+	}
+
 	b = atoi(getstr(list->next->term));
+	if(b == 0){
+		switch(errno){
+		case EINVAL:
+			fail("$&sub", "invalid input");
+			break;
+		case ERANGE:
+			fail("$&sub", "conversion overflow");
+			break;
+		}
+	}
+
 	res = a - b;
 	print("%d\n", res);
 	return NULL;
@@ -333,7 +377,29 @@ PRIM(mul) {
 	if (list == NULL || list->next == NULL)
 		fail("$&mul", "missing arguments");
 	a = atoi(getstr(list->term));
+	if(a == 0){
+		switch(errno){
+		case EINVAL:
+			fail("$&mul", "invalid input");
+			break;
+		case ERANGE:
+			fail("$&mul", "conversion overflow");
+			break;
+		}
+	}
+
 	b = atoi(getstr(list->next->term));
+	if(b == 0){
+		switch(errno){
+		case EINVAL:
+			fail("$&mul", "invalid input");
+			break;
+		case ERANGE:
+			fail("$&mul", "conversion overflow");
+			break;
+		}
+	}
+
 	res = a * b;
 	print("%d\n", res);
 	return NULL;
@@ -347,7 +413,29 @@ PRIM(div) {
 	if (list == NULL || list->next == NULL)
 		fail("$&div", "missing arguments");
 	a = atoi(getstr(list->term));
+	if(a == 0){
+		switch(errno){
+		case EINVAL:
+			fail("$&div", "invalid input");
+			break;
+		case ERANGE:
+			fail("$&div", "conversion overflow");
+			break;
+		}
+	}
+
 	b = atoi(getstr(list->next->term));
+	if(b == 0){
+		switch(errno){
+		case EINVAL:
+			fail("$&div", "invalid input");
+			break;
+		case ERANGE:
+			fail("$&div", "conversion overflow");
+			break;
+		}
+	}
+
 	if (b == 0)
 		fail("$&div", "divide by zero");
 	res = a / b;
@@ -363,9 +451,29 @@ PRIM(mod) {
 	if (list == NULL || list->next == NULL)
 		fail("$&mod", "missing arguments");
 	a = atoi(getstr(list->term));
+	if(a == 0){
+		switch(errno){
+		case EINVAL:
+			fail("$&mod", "invalid input");
+			break;
+		case ERANGE:
+			fail("$&mod", "conversion overflow");
+			break;
+		}
+	}
+
 	b = atoi(getstr(list->next->term));
-	if (a == 0)
-		return NULL;
+	if(b == 0){
+		switch(errno){
+		case EINVAL:
+			fail("$&mod", "invalid input");
+			break;
+		case ERANGE:
+			fail("$&mod", "conversion overflow");
+			break;
+		}
+	}
+
 	if (b == 0)
 		fail("$&mod", "divide by zero");
 	res = a % b;
@@ -377,7 +485,7 @@ PRIM(eq) {
 	int a = 0;
 	int b = 0;
 
-	if (list == NULL)
+	if(list == NULL)
 		return false;
 	if (list->next == NULL)
 		return false;
@@ -416,6 +524,112 @@ PRIM(lt) {
 	if (a < b)
 		return true;
 	return false;
+}
+
+PRIM(tobase) {
+	int base, num;
+	char *s, *se;
+
+	if(list == NULL || list->next == NULL)
+		fail("$&tobase", "missing arguments");
+
+	base = atoi(getstr(list->term));
+	if(base == 0){
+		switch(errno){
+		case EINVAL:
+			fail("$&tobase", "invalid input");
+			break;
+		case ERANGE:
+			fail("$&tobase", "conversion overflow");
+			break;
+		}
+	}
+
+	num = atoi(getstr(list->next->term));
+	if(num == 0){
+		switch(errno){
+		case EINVAL:
+			fail("$&tobase", "invalid input");
+			break;
+		case ERANGE:
+			fail("$&tobase", "conversion overflow");
+			break;
+		}
+	}
+
+
+	if(base < 2)
+		fail("$&tobase", "base < 2");
+	if(base > 16)
+		fail("$&tobase", "base > 16");
+
+	gcdisable();
+
+	if(num == 0){
+		print("0\n");
+		gcenable();
+		return true;
+	}
+
+	s = ealloc(256);
+	se = &s[254];
+	memset(s, 0, 256);
+
+	while(num) {
+		*--se = "0123456789abcdef"[num%base];
+		num = num/base;
+		if(se == s) {
+			free(s);
+			gcenable();
+			fail("$&tobase", "overflow");
+		}
+	}
+
+	print("%s\n", se);
+	free(s);
+
+	gcenable();
+
+	return true;
+}
+
+PRIM(frombase) {
+	int base, num;
+
+	if(list == NULL || list->next == NULL)
+		fail("$&frombase", "missing arguments");
+
+	base = (int)strtol(getstr(list->term), NULL, 10);
+	if(base == 0){
+		switch(errno){
+		case EINVAL:
+			fail("$&frombase", "invalid input");
+			break;
+		case ERANGE:
+			fail("$&frombase", "conversion overflow");
+			break;
+		}
+	}
+
+	if(base < 2)
+		fail("&frombase", "base < 2");
+	if(base > 16)
+		fail("&frombase", "base > 16");
+
+	num = (int)strtol(getstr(list->next->term), NULL, base);
+	if(num == 0){
+		switch(errno){
+		case EINVAL:
+			fail("$&frombase", "invalid input");
+			break;
+		case ERANGE:
+			fail("$&frombase", "conversion overflow");
+			break;
+		}
+	}
+	print("%d\n", num);
+
+	return true;
 }
 
 /*
@@ -460,5 +674,8 @@ extern Dict *initprims_etc(Dict *primdict) {
 	X(eq);
 	X(gt);
 	X(lt);
+	X(tobase);
+	X(frombase);
 	return primdict;
 }
+
