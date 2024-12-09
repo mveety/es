@@ -14,11 +14,5 @@
 #	interpreter loop.
 
 noexport = $noexport pid signals apid bqstatus fn-%dispatch path home
-noexport = $noexport version mveetyrev options
-noexport = $noexport corelib
-# noexport = $noexport fn-old-background fn-new-background
-# noexport = $noexport fn-panic fn-dprint
-# noexport = $noexport fn-enable-import fn-import-core-lib fn-import-user-lib
-# noexport = $noexport fn-import
-# noexport = $noexport fn-gensym fn-macro fn-macroexpand macro-macroexpand
-
+noexport = $noexport version mveetyrev options buildstring corelib
+noexport = $noexport apids last eval-depth

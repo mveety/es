@@ -810,7 +810,8 @@ last = ''
 get-last = $&getlast
 eval-depth = ''
 get-eval-depth = $&getevaldepth
-
+apids = ''
+get-apids = @ { result <=%apids }
 
 #
 # Variables
