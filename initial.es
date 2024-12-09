@@ -808,6 +808,8 @@ if {~ <=$&primitives resetterminal} {
 # called.
 last = ''
 get-last = $&getlast
+eval-depth = ''
+get-eval-depth = $&getevaldepth
 
 
 #

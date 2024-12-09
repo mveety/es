@@ -290,6 +290,10 @@ PRIM(setmaxevaldepth) {
 	RefReturn(lp);
 }
 
+PRIM(getevaldepth) {
+	return mklist(mkstr(str("%d", evaldepth)), NULL);
+}
+
 #if READLINE
 PRIM(resetterminal) {
 	resetterminal = TRUE;
@@ -662,6 +666,7 @@ extern Dict *initprims_etc(Dict *primdict) {
 	X(exitonfalse);
 	X(noreturn);
 	X(setmaxevaldepth);
+	X(getevaldepth);
 #if READLINE
 	X(resetterminal);
 #endif
