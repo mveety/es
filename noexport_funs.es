@@ -87,10 +87,8 @@ fn protect_language {
 	noexport = $noexport fn-map
 	noexport = $noexport fn-mod
 	noexport = $noexport fn-mul
-	noexport = $noexport fn-new-background
 	noexport = $noexport fn-newpgrp
 	noexport = $noexport fn-nrfn
-	noexport = $noexport fn-old-background
 	noexport = $noexport fn-option
 	noexport = $noexport fn-panic
 	noexport = $noexport fn-resetterminal
@@ -107,6 +105,9 @@ fn protect_language {
 	noexport = $noexport fn-vars
 	noexport = $noexport fn-whatis
 	noexport = $noexport fn-while
+	noexport = $noexport fn-wait
+	noexport = $noexport fn-waitfor
+	noexport = $noexport fn-reverse
 	noexport = $noexport macro-macroexpand
 	noexport = $noexport __es_macro_1
 	noexport = $noexport set-HOME

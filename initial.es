@@ -83,7 +83,7 @@ fn-newpgrp	= $&newpgrp
 fn-result	= $&result
 fn-throw	= $&throw
 fn-umask	= $&umask
-#fn-wait		= $&wait
+fn-wait		= $&wait
 
 fn-%read	= $&read
 
@@ -432,7 +432,9 @@ fn-%or = $&noreturn @ first rest {
 #
 #		cmd &			%background {cmd}
 
-fn new-background cmd {
+usebg = 'new' # for compatibility
+
+fn %background cmd {
 	let (pid = <={$&background $cmd}) {
 		if {%is-interactive} {
 			cmds = `` (' ' '{' '}') (echo $cmd)
@@ -443,22 +445,6 @@ fn new-background cmd {
 		apid = $pid
 	}
 }
-
-# es 0.9.1 and earlier background. this would just print the pid
-# of the background process. most shells will print something in
-# the style of '$argv[0]: $cpid', so es does now too.
-
-fn old-background cmd {
-	let (pid = <={$&background $cmd}) {
-		if {%is-interactive} {
-			echo >[1=2] $pid
-		}
-		apid = $pid
-	}
-}
-
-usebg = 'new'
-fn %background cmd { if {~ $usebg 'new' } { new-background $cmd } { old-background $cmd }}
 
 #	These redirections are rewritten:
 #
@@ -887,6 +873,24 @@ fn lte a b {
 		result 0
 	} {
 		result 1
+	}
+}
+
+fn reverse list {
+	local(res=) {
+		for (i = $list) {
+			res = $i $res
+		}
+		result $res
+	}
+}
+
+fn waitfor pids {
+	local (res =) {
+		for (pid = $pids) {
+			res = <={wait $pid} $res
+		}
+		result <={reverse $res}
 	}
 }
 

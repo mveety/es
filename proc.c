@@ -18,6 +18,7 @@ struct Proc {
 	struct rusage rusage;
 };
 
+
 static Proc *proclist = NULL;
 
 /* mkproc -- create a Proc structure */
@@ -105,8 +106,9 @@ static void reap(int pid, int status) {
 }
 
 /* ewait -- wait for a specific process to die, or any process if pid == 0 */
-extern int ewait(int pid, Boolean interruptible, void *rusage) {
+WaitStatus ewait1(int pid, Boolean interruptible, void *rusage, Boolean print) {
 	Proc *proc;
+	WaitStatus s;
 top:
 	for (proc = proclist; proc != NULL; proc = proc->next)
 		if (proc->pid == pid || (pid == 0 && !proc->alive)) {
@@ -137,12 +139,14 @@ top:
 			else
 				proclist = proc->next;
 			status = proc->status;
-			if (proc->background)
+			if (proc->background && print)
 				printstatus(proc->pid, status);
 			efree(proc);
 			if (rusage != NULL)
 				memcpy(rusage, &proc->rusage, sizeof (struct rusage));
-			return status;
+			s.pid = proc->pid;
+			s.status = status;
+			return s;
 		}
 	if (pid == 0) {
 		int status;
@@ -157,6 +161,21 @@ top:
 	}
 	fail("es:ewait", "wait: %d is not a child of this shell", pid);
 	NOTREACHED;
+}
+
+extern WaitStatus
+ewait(int pid, Boolean interruptable, void *rusage)
+{
+	return ewait1(pid, interruptable, rusage, TRUE);
+}
+
+extern int
+ewaitfor(int pid)
+{
+	WaitStatus s;
+
+	s = ewait1(pid, FALSE, NULL, TRUE);
+	return s.status;
 }
 
 #include "prim.h"
@@ -175,19 +194,28 @@ PRIM(apids) {
 
 PRIM(wait) {
 	int pid;
+	Boolean print = TRUE;
+	Boolean onlystatus = FALSE;
+	WaitStatus s;
 	if (list == NULL)
 		pid = 0;
 	else if (list->next == NULL) {
 		pid = atoi(getstr(list->term));
-		if (pid <= 0) {
+		print = FALSE;
+		if (pid < 0) {
 			fail("$&wait", "wait: %d: bad pid", pid);
 			NOTREACHED;
 		}
+		if (pid != 0)
+			onlystatus = TRUE;
 	} else {
 		fail("$&wait", "usage: wait [pid]");
 		NOTREACHED;
 	}
-	return mklist(mkstr(mkstatus(ewait(pid, TRUE, NULL))), NULL);
+	s = ewait1(pid, TRUE, NULL, print);
+	if(onlystatus)
+		return mklist(mkstr(mkstatus(s.status)), NULL);
+	return mklist(mkstr(str("%d", s.pid)), mklist(mkstr(mkstatus(s.status)), NULL));
 }
 
 extern Dict *initprims_proc(Dict *primdict) {
@@ -195,3 +223,4 @@ extern Dict *initprims_proc(Dict *primdict) {
 	X(wait);
 	return primdict;
 }
+

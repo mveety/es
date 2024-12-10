@@ -73,6 +73,11 @@ typedef struct {
 	char *vector[1];
 } Vector;			/* environment or arguments */
 
+typedef struct WaitStatus WaitStatus;
+struct WaitStatus {
+	int pid;
+	int status;
+};
 
 /*
  * our programming environment
@@ -222,8 +227,9 @@ extern char *checkexecutable(char *file);
 
 extern Boolean hasforked;
 extern int efork(Boolean parent, Boolean background);
-extern int ewait(int pid, Boolean interruptible, void *rusage);
-#define	ewaitfor(pid)	ewait(pid, FALSE, NULL)
+extern WaitStatus ewait(int pid, Boolean interruptible, void *rusage);
+extern int ewaitfor(int pid);
+/* #define	ewaitfor(pid)	ewait(pid, FALSE, NULL) */
 
 
 /* dict.c */
