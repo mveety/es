@@ -298,6 +298,7 @@ PRIM(time) {
 	int pid, status;
 	time_t t0, t1;
 	struct rusage r;
+	WaitStatus s;
 
 	Ref(List *, lp, list);
 
@@ -306,7 +307,8 @@ PRIM(time) {
 	pid = efork(TRUE, FALSE);
 	if (pid == 0)
 		exit(exitstatus(eval(lp, NULL, evalflags | eval_inchild)));
-	status = ewait(pid, FALSE, &r);
+	s = ewait(pid, FALSE, &r);
+	status = s.status;
 	t1 = time(NULL);
 	SIGCHK();
 	printstatus(0, status);
