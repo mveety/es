@@ -141,11 +141,11 @@ top:
 			status = proc->status;
 			if (proc->background && print)
 				printstatus(proc->pid, status);
-			efree(proc);
-			if (rusage != NULL)
-				memcpy(rusage, &proc->rusage, sizeof (struct rusage));
 			s.pid = proc->pid;
 			s.status = status;
+			if (rusage != NULL)
+				memcpy(rusage, &proc->rusage, sizeof (struct rusage));
+			efree(proc);
 			return s;
 		}
 	if (pid == 0) {
