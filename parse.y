@@ -27,7 +27,7 @@
 %left	ANDAND OROR NL
 %left	'!'
 %left	PIPE
-%right	'$' 
+%right	'$' TOSTR
 %left	SUB
 
 %type <str> keyword
@@ -110,6 +110,7 @@ comword	: param				{ $$ = $1; }
 	| FLAT sword			{ $$ = flatten(mk(nVar, $2), " "); }
 	| PRIM WORD			{ $$ = mk(nPrim, $2); }
 	| TOSTR sword		{ $$ = mk(nCall, prefix("%string", treecons(mk(nVar, $2), NULL))); }
+	| TOSTR sword SUB words ')' { $$ = mk(nCall, prefix("%string", treecons(mk(nVarsub, $2, $4), NULL))); }
 	| STRLIST sword		{ $$ = mk(nCall, prefix("%strlist", treecons(mk(nVar, $2), NULL))); }
 	| '`' sword			{ $$ = backquote(mk(nVar, mk(nWord, "ifs")), $2); }
 	| BACKBACK word	sword		{ $$ = backquote($2, $3); }
