@@ -1,5 +1,10 @@
 #!/usr/bin/env -S es -N
 
+if {~ $*(1) -d} {
+	debugging=yes
+	* = $*(2 ...)
+}
+
 assert {gte $#* 1}
 
 libsrc = <={if {~ $#* 1} {
@@ -50,20 +55,26 @@ fn copyfile src dest {
 
 fn makedir {
 	if {~ $#debugging 0} {
-		mkdir $*
+		if{! mkdir $* } {
+			throw error 'libinstall.es' 'mkdir '^$^*^' failed'
+		}
 	}
 }
 
-let (a = <={access -1 -r $libdir}) {
+let (a = <={access -1 -d $libdir}) {
 	if {~ $#a 0} {
 		echo 'making '^$libdir^'...'
 		makedir -p $libdir
 	}
 }
 
+if {! access -w $libdir} {
+	throw error 'libinstall.es' 'unable to write to '^$libdir
+}
+
 for (i = $libs) {
 	let (
-			t = <={access -n $i -1 -r $libdir}
+			t = <={access -n $i -1 -w $libdir}
 			srcfile = $libsrc/^$i
 	) {
 		if {~ $#t 0 } {
