@@ -35,4 +35,5 @@ config.sub
 configure
 configure_*
 install-sh
+config.es
 
