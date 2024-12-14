@@ -681,8 +681,31 @@ if {~ <=$&primitives execfailure} {fn-%exec-failure = $&execfailure}
 #	result gets set to zero when it should not be.
 
 fn-%parse	= $&parse
-fn-%batch-loop	= $&batchloop
 fn-%is-interactive = $&isinteractive
+
+fn %batch-loop {
+	catch @ e type msg {
+		if {~ $e error} {
+			if {~ $type assert} {
+				echo >[1=2] 'assert: '^$^msg
+			} {
+				echo >[1=2] 'error: '^$type^': '^$^msg
+			}
+			throw exit 1 $type $msg
+		} {~ $e usage} {
+			if {~ $#msg 0} {
+				echo >[1=2] $type
+			} {
+				echo >[1=2] $msg
+			}
+			throw exit 1 usage $type
+		} {
+			throw $e $type $msg
+		}
+	} {
+		result <={$&batchloop $*}
+	}
+}
 
 fn %interactive-loop {
 	let (result = <=true) {
