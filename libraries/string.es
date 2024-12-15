@@ -21,14 +21,14 @@ fn string:find needle haystack {
 		ncount = 1
 		hsindex = 1
 	) {
-		while { lt `{sub $hcount 1} $#lhaystack } {
-			if {~ $lhaystack(`{add $hcount `{sub $ncount 1}}) $lneedle($ncount) } {
-				while {lt `{sub $ncount 1} $#lneedle} {
-					hsindex = `{add $hcount `{sub $ncount 1}}
+		while { lt <={sub $hcount 1} $#lhaystack } {
+			if {~ $lhaystack(<={add $hcount <={sub $ncount 1}}) $lneedle($ncount) } {
+				while {lt <={sub $ncount 1} $#lneedle} {
+					hsindex = <={add $hcount <={sub $ncount 1}}
 					if { !~ $lhaystack($hsindex) $lneedle($ncount) } {
 						break
 					} {
-						ncount = `{add $ncount 1}
+						ncount = <={add $ncount 1}
 					}
 					if { ~ $ncount $#lneedle || gt $ncount $#lneedle } {
 						echo $hcount
@@ -37,7 +37,7 @@ fn string:find needle haystack {
 				}
 			}
 			ncount = 1
-			hcount = `{add $hcount 1}
+			hcount = <={add $hcount 1}
 		}
 		echo 0
 		return false
@@ -62,7 +62,7 @@ fn string:slice str start end {
 
 fn string:sub str start len {
 	local (
-		slice_end = `{add $start $len}
+		slice_end = <={add $start $len}
 		rval =
 	) {
 		rval = <-{string:slice $str $start $slice_end}

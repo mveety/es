@@ -7,7 +7,7 @@ if {~ $#__es_symcount 0} {
 fn gensym prefix {
 	prefix = <={if {~ $#prefix 0} { result '__es_sym_' } { result $prefix }}
 	let(symn = $__es_symcount) {
-		__es_symcount = `{add $__es_symcount 1}
+		__es_symcount = <={add $__es_symcount 1}
 		result $prefix^$symn
 	}
 }
@@ -22,7 +22,7 @@ fn nrfn name argsbody {
 		} {~ $#argsbody 1} {
 			eval 'fn-'^$name^' = $&noreturn @ '^$argsbody
 		} {
-			args = $argsbody(1 ... `{sub $#argsbody 1})
+			args = $argsbody(1 ... <={sub $#argsbody 1})
 			body = $argsbody($#argsbody)
 			eval 'fn-'^$name^' = $&noreturn @ '^$^args^' '^$body
 		}
@@ -37,7 +37,7 @@ fn macro name argsbody {
 		macname = <={gensym '__es_macro_'}
 		macfn = ''
 		macevalfn = ''
-		args = <={ if {~ $#argsbody 1} { result ''} { result $argsbody(1 ... `{sub $#argsbody 1}) } }
+		args = <={ if {~ $#argsbody 1} { result ''} { result $argsbody(1 ... <={sub $#argsbody 1}) } }
 		body = <={ if {~ $#argsbody 1} { result $argsbody } { result $argsbody($#argsbody) } }
 		macresult = '@ { echo -n $*; echo '';'' }'
 		maclet = ''

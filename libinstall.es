@@ -10,7 +10,7 @@ assert {gte $#* 1}
 libsrc = <={if {~ $#* 1} {
 				let(al=$:1) {
 					if {~ $al($#al) '/'} {
-						result $"al(1 ... `{sub $#al 1})
+						result $"al(1 ... <={sub $#al 1})
 					} {
 						result $1
 					}
@@ -33,7 +33,7 @@ libs = <={let (r=;dl=;f=) {
 libdir = <={if {! ~ $#2 0} {
 				let(al=$:2) {
 					if {~ $al($#al) '/'} {
-						result $"al(1 ... `{sub $#al 1})
+						result $"al(1 ... <={sub $#al 1})
 					} {
 						result $2
 					}

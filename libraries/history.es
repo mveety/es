@@ -102,23 +102,23 @@ fn history {
 
 		if {$cleanhistory} {
 			cp $histfile $histfile^'.old'
-			nlines = `{ mul $maxents 2}
+			nlines = <={ mul $maxents 2}
 			tail -n $nlines $histfile^'.old' > $histfile
 			return 0 # success?
 		}
 
 		fsize = `{ wc -l $histfile }
-		nents = `{ div $fsize(1) 2 }
+		nents = <={ div $fsize(1) 2 }
 		if {$limitevents && ! $singleevent && ! $lastevent} {
 			if {gt $nents $maxents} {
-				nstart = `{add `{sub `{div $fsize(1) 2} $maxents} 1}
-				nlines = `{mul $maxents 2}
+				nstart = <={add <={sub <={div $fsize(1) 2} $maxents} 1}
+				nlines = <={mul $maxents 2}
 				tail -n $nlines $histfile | history-filter $nstart $usedate $commandonly
 			} {
 				history-filter 1 $usedate $commandonly < $histfile
 			}
 		} {$singleevent} {
-			headarg = `{ mul $eventn 2 }
+			headarg = <={ mul $eventn 2 }
 			if { gt $eventn $nents } {
 				echo 'history: event too large' >[1=2]
 				return 1
@@ -135,8 +135,8 @@ fn history {
 				| awk '($1 == '^$eventn^'){ print substr($0, index($0,$3)) ; exit }'
 			}
 		} {$lastevent} {
-			eventn = `{ sub $nents 1 }
-			headarg = `{ mul $eventn 2 }
+			eventn = <={ sub $nents 1 }
+			headarg = <={ mul $eventn 2 }
 			if { gt $eventn $nents } {
 				echo 'history: event too large' >[1=2]
 				return 1

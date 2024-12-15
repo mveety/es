@@ -855,8 +855,8 @@ fn dprint msg {
 }
 
 # math and numerical functions
-fn-tobase = @ base n { echo <={$&tobase $base $n} }
-fn-frombase = @ base n { echo <={$&frombase $base $n} }
+fn-tobase = @ base n { result <={$&tobase $base $n} }
+fn-frombase = @ base n { result <={$&frombase $base $n} }
 
 fn %mathfun fun a b {
 	let (
@@ -866,11 +866,10 @@ fn %mathfun fun a b {
 	) {
 		res = <={$fun $an $bn}
 		if {! ~ $a $an || ! ~ $b $bn} {
-			echo '0x'^<={$&tobase 16 $res}
+			result '0x'^<={$&tobase 16 $res}
 		} {
-			echo $res
+			result $res
 		}
-		result 0
 	}
 }
 

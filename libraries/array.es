@@ -11,9 +11,9 @@ fn _array:range start end {
 		res = ()
 		i = $start
 	) {
-		while {lt $i `{add $end 1}} {
+		while {lt $i <={add $end 1}} {
 			res = $res $i
-			i = `{add $i 1}
+			i = <={add $i 1}
 		}
 		result $res
 	}
@@ -44,10 +44,10 @@ fn array:setall name val {
 		if {lt $#array $#val} {
 			throw error array 'value larger than array'
 		}
-		while {lt $i `{add $bounds 1}} {
+		while {lt $i <={add $bounds 1}} {
 			n = $array($i)
 			$n = $val($i)
-			i = `{add $i 1}
+			i = <={add $i 1}
 		}
 	}
 }
@@ -181,7 +181,7 @@ fn array:index name elem {
 			if {~ $$i $elem} {
 				return $n
 			}
-			n = `{add $n 1}
+			n = <={add $n 1}
 		}
 		throw error array 'out of range'
 	}
