@@ -275,20 +275,21 @@ fn cd dir {
 fn vars {
 	# choose default options
 	if {~ $* -a} {
-		* = -v -f -s -e -p -i
+		* = -v -f -s -g -e -p -i
 	} {
-		if {!~ $* -[vfs]}	{ * = $* -v }
+		if {!~ $* -[vfsg]}	{ * = $* -v }
 		if {!~ $* -[epi]}	{ * = $* -e }
 	}
 	# check args
 	for (i = $*)
-		if {!~ $i -[vfsepi]} {
-			throw error vars illegal option: $i -- usage: vars '-[vfsepia]'
+		if {!~ $i -[vfsgepi]} {
+			throw error vars illegal option: $i -- usage: vars '-[vfsgepia]'
 		}
 	let (
 		vars	= false
 		fns	= false
 		sets	= false
+		gets	= false
 		export	= false
 		priv	= false
 		intern	= false
@@ -297,6 +298,7 @@ fn vars {
 			{~ $i -v}	{vars	= true}
 			{~ $i -f}	{fns	= true}
 			{~ $i -s}	{sets	= true}
+			{~ $i -g}	{gets	= true}
 			{~ $i -e}	{export	= true}
 			{~ $i -p}	{priv	= true}
 			{~ $i -i}	{intern = true}
@@ -305,7 +307,7 @@ fn vars {
 		let (
 			dovar = @ var {
 				# print functions and/or settor vars
-				if {if {~ $var fn-*} $fns {~ $var set-*} $sets $vars} {
+				if {if {~ $var fn-*} $fns {~ $var set-*} $sets {~ $var get-*} $gets $vars} {
 					echo <={%var $var}
 				}
 			}
@@ -691,14 +693,12 @@ fn %batch-loop {
 			} {
 				echo >[1=2] 'error: '^$type^': '^$^msg
 			}
-			throw exit 1 $type $msg
 		} {~ $e usage} {
 			if {~ $#msg 0} {
 				echo >[1=2] $type
 			} {
 				echo >[1=2] $msg
 			}
-			throw exit 1 usage $type
 		} {
 			throw $e $type $msg
 		}
@@ -855,18 +855,18 @@ fn dprint msg {
 }
 
 # math and numerical functions
-fn-tobase = $&tobase
-fn-frombase = $&frombase
+fn-tobase = @ base n { echo <={$&tobase $base $n} }
+fn-frombase = @ base n { echo <={$&frombase $base $n} }
 
 fn %mathfun fun a b {
 	let (
-		an = <={if {~ $a 0x*} { result `{frombase 16 $a} }{ result $a }}
-		bn = <={if {~ $b 0x*} { result `{frombase 16 $b} }{ result $b }}
+		an = <={if {~ $a 0x*} { result <={$&frombase 16 $a} }{ result $a }}
+		bn = <={if {~ $b 0x*} { result <={$&frombase 16 $b} }{ result $b }}
 		res=
 	) {
-		res = `{$fun $an $bn}
+		res = <={$fun $an $bn}
 		if {! ~ $a $an || ! ~ $b $bn} {
-			echo '0x'^`{tobase 16 $res}
+			echo '0x'^<={$&tobase 16 $res}
 		} {
 			echo $res
 		}

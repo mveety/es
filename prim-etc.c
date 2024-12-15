@@ -333,8 +333,7 @@ PRIM(add) {
 	}
 
 	res = a + b;
-	print("%d\n", res);
-	return NULL;
+	return mklist(mkstr(str("%d", res)), NULL);
 }
 
 PRIM(sub) {
@@ -369,8 +368,7 @@ PRIM(sub) {
 	}
 
 	res = a - b;
-	print("%d\n", res);
-	return NULL;
+	return mklist(mkstr(str("%d", res)), NULL);
 }
 
 PRIM(mul) {
@@ -405,8 +403,7 @@ PRIM(mul) {
 	}
 
 	res = a * b;
-	print("%d\n", res);
-	return NULL;
+	return mklist(mkstr(str("%d", res)), NULL);
 }
 
 PRIM(div) {
@@ -443,8 +440,7 @@ PRIM(div) {
 	if (b == 0)
 		fail("$&div", "divide by zero");
 	res = a / b;
-	print("%d\n", res);
-	return NULL;
+	return mklist(mkstr(str("%d", res)), NULL);
 }
 
 PRIM(mod) {
@@ -481,8 +477,7 @@ PRIM(mod) {
 	if (b == 0)
 		fail("$&mod", "divide by zero");
 	res = a % b;
-	print("%d\n", res);
-	return NULL;
+	return mklist(mkstr(str("%d", res)), NULL);
 }
 
 PRIM(eq) {
@@ -567,12 +562,13 @@ PRIM(tobase) {
 	if(base > 16)
 		fail("$&tobase", "base > 16");
 
+	Ref(List *, res, list);
+
 	gcdisable();
 
 	if(num == 0){
-		print("0\n");
 		gcenable();
-		return true;
+		return mklist(mkstr(str("0")), NULL);
 	}
 
 	s = ealloc(256);
@@ -589,12 +585,12 @@ PRIM(tobase) {
 		}
 	}
 
-	print("%s\n", se);
+	res = mklist(mkstr(str("%s", se)), NULL);
 	free(s);
 
 	gcenable();
 
-	return true;
+	RefReturn(res);
 }
 
 PRIM(frombase) {
@@ -631,9 +627,7 @@ PRIM(frombase) {
 			break;
 		}
 	}
-	print("%d\n", num);
-
-	return true;
+	return mklist(mkstr(str("%d", num)), NULL);
 }
 
 /*
