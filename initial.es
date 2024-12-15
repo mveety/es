@@ -693,12 +693,14 @@ fn %batch-loop {
 			} {
 				echo >[1=2] 'error: '^$type^': '^$^msg
 			}
+			return <=false
 		} {~ $e usage} {
 			if {~ $#msg 0} {
 				echo >[1=2] $type
 			} {
 				echo >[1=2] $msg
 			}
+			return <=false
 		} {
 			throw $e $type $msg
 		}
