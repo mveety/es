@@ -307,6 +307,120 @@ initgetenv(void)
 
 #endif	/* READLINE */
 
+#if READLINE
+int
+is_whitespace(char c){
+	switch(c){
+	case '\n':
+	case '\t':
+	case ' ':
+	case 0:
+		return 1;
+	}
+	return 0;
+}
+
+long
+containsbangbang(char *s, int len)
+{
+	long pos = 0;
+	int state = 0;
+	long i;
+
+	for(i = 0; s[i] != 0 && i < len; i++){
+		switch(state){
+		case 0:
+			if(i == 0 && s[i] == '!')
+				state = 2;
+			else if(s[i] == ' ')
+				state = 1;
+			else if(s[i] == '\'')
+				state = 4;
+			break;
+		case 1:
+			if(s[i] == '!'){
+				state = 2;
+				pos = i;
+			} else if(s[i] == '\'')
+				state = 4;
+			else
+				state = 0;
+			break;
+		case 2:
+			if(s[i] == '!')
+				state = 3;
+			else if(s[i] == '\'')
+				state = 4;
+			else
+				state = 0;
+			break;
+		case 3:
+			if(is_whitespace(s[i]))
+				return pos;
+			else if(s[i] == '\'')
+				state = 4;
+			else
+				state = 0;
+			break;
+		case 4:
+			if(s[i] == '\'')
+				state = 5;
+			break;
+		case 5:
+			if(s[i] == '\'')
+				state = 4;
+			else if(s[i] == ' ')
+				state = 1;
+			else
+				state = 0;
+		}
+	}
+	if(state == 3)
+		return pos;
+	return -1;
+}
+
+long
+copybuffer(Input *in, char *linebuf, long nread)
+{
+	long bbpos = -1;
+	long lastcmdlen;
+	long lbi, lasti, inbufi;
+	long nwrote;
+
+	nwrote = nread;
+	if(nextlastcmd != NULL){
+		if((bbpos = containsbangbang(linebuf, strlen(linebuf))) >= 0)
+			nwrote += (strlen(nextlastcmd) - 2); /* remember we replaced the !! with nextlastcmd */
+	}
+	if (in->buflen < (unsigned int)nwrote+1){
+		while(in->buflen < (unsigned int)nwrote+1)
+			in->buflen *= 2;
+		in->bufbegin = erealloc(in->bufbegin, in->buflen);
+	}
+	if(bbpos < 0){
+		memcpy(in->bufbegin, linebuf, nwrote);
+		return nwrote;
+	}
+	lbi = 0;
+	inbufi = 0;
+	lastcmdlen = strlen(nextlastcmd);
+	while(lbi < nread){
+		if(lbi == bbpos){
+			for(lasti = 0; nextlastcmd[lasti] != 0 && lasti < lastcmdlen; inbufi++, lasti++)
+				in->bufbegin[inbufi] = nextlastcmd[lasti];
+			lbi += 2;
+		} else {
+			in->bufbegin[inbufi] = linebuf[lbi];
+			inbufi++;
+			lbi++;
+		}
+	}
+	return nwrote;
+}
+
+#endif
+
 /* fdfill -- fill input buffer by reading from a file descriptor */
 static int fdfill(Input *in) {
 	long nread;
@@ -317,29 +431,20 @@ static int fdfill(Input *in) {
 	if (in->runflags & run_interactive && in->fd == 0) {
 		char *rlinebuf = callreadline(prompt);
 		if (rlinebuf == NULL)
-
 			nread = 0;
 		else {
 			if (*rlinebuf != '\0')
 				add_history(rlinebuf);
-			nread = strlen(rlinebuf) + 1;
-			if (in->buflen < (unsigned int)nread) {
-				while (in->buflen < (unsigned int)nread)
-					in->buflen *= 2;
-				in->bufbegin = erealloc(in->bufbegin, in->buflen);
-			}
-			memcpy(in->bufbegin, rlinebuf, nread - 1);
-			in->bufbegin[nread - 1] = '\n';
-#if LIBREADLINE
+			nread = copybuffer(in, rlinebuf, strlen(rlinebuf))+1;
+			in->bufbegin[nread-1] = '\n';
 			efree(rlinebuf);
-#endif
 		}
 	} else
 #endif
-	do {
-		nread = eread(in->fd, (char *) in->bufbegin, in->buflen);
-		SIGCHK();
-	} while (nread == -1 && errno == EINTR);
+		do {
+			nread = eread(in->fd, (char *) in->bufbegin, in->buflen);
+			SIGCHK();
+		} while (nread == -1 && errno == EINTR);
 
 	if (nread <= 0) {
 		close(in->fd);
