@@ -5,6 +5,10 @@
 #include "input.h"
 #include <stdio.h> /* needed for dprintf */
 
+#if READLINE
+#include <readline/readline.h>
+#endif
+
 /*
  * constants
  */
@@ -34,12 +38,15 @@ static int historyfd = -1;
 
 #if READLINE
 int rl_meta_chars;	/* for editline; ignored for gnu readline */
-extern char *readline(char *);
 extern void add_history(char *);
+/*
+extern char *readline(char *);
 extern void rl_reset_terminal(char *);
 extern char *rl_basic_word_break_characters;
 extern char *rl_completer_quote_characters;
 extern char *rl_readline_name;
+extern char *rl_line_buf;
+*/
 
 #if ABUSED_GETENV
 static char *stdgetenv(const char *);
@@ -308,6 +315,62 @@ initgetenv(void)
 #endif	/* READLINE */
 
 #if READLINE
+
+volatile int es_rl_start;
+volatile int es_rl_end;
+
+char*
+run_es_completer(const char *text, int state)
+{
+	List *args;
+	List *completer;
+	char *res;
+
+	Ref(List *, result, NULL);
+
+	gcenable();
+	assert(!gcisblocked());
+
+	completer = varlookup("fn-%core_completer", NULL);
+	if(completer == NULL)
+		return strdup(text);
+	args = mklist(mkstr(str("%s", rl_line_buffer)),
+			mklist(mkstr(str("%s", text)),
+				mklist(mkstr(str("%d", es_rl_start)),
+					mklist(mkstr(str("%d", es_rl_end)),
+						mklist(mkstr(str("%d", state)), NULL)))));
+	completer = append(completer, args);
+	result = eval(completer, NULL, 0);
+
+	assert(result != NULL);
+
+	res = strdup(getstr(result->term));
+
+	gcdisable();
+	if(strcmp("%%end_complete", res) == 0){
+		free(res);
+		res = NULL;
+	}
+
+	RefEnd(result);
+
+	return res;
+}
+
+char**
+es_complete_hook(const char *text, int start, int end)
+{
+	List *completer;
+
+	completer = varlookup("fn-%core_completer", NULL);
+	if(completer == NULL)
+		return NULL;
+	rl_attempted_completion_over = 1;
+	es_rl_start = start;
+	es_rl_end = end;
+	return rl_completion_matches(text, run_es_completer);
+}
+
 int
 is_whitespace(char c){
 	switch(c){
@@ -717,8 +780,10 @@ extern void initinput(void) {
 
 #if READLINE
 	rl_meta_chars = 0;
-	rl_basic_word_break_characters=" \t\n\\'`$><=;|&{()}";
-	rl_completer_quote_characters="'";
+	rl_basic_word_break_characters = " \t\n\\'`$><=;|&{()}";
+	rl_special_prefixes = "$";
+	rl_completer_quote_characters = "'";
 	rl_readline_name = "es-mveety";
+	rl_attempted_completion_function = es_complete_hook;
 #endif
 }

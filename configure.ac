@@ -43,6 +43,15 @@ else
 	es_cv_no_clobbered="no"
 fi])
 
+AC_CACHE_CHECK(for extra CFLAGS for $CC on $host_os, es_cv_ccextras,
+			   [
+				case "$host_os" in
+					*)
+						es_cv_ccextras="none needed"
+						;;
+				esac
+				])
+
 AC_CACHE_CHECK(for extra LDFLAGS for $CC on $host_os, es_cv_ldextras,
 			   [
 				case "$host_os" in
@@ -51,6 +60,7 @@ AC_CACHE_CHECK(for extra LDFLAGS for $CC on $host_os, es_cv_ldextras,
 							clang* | cc)
 								es_cv_ldextras="-L/usr/local/lib"
 								LDFLAGS="$LDFLAGS $es_cv_ldextras"
+								CFLAGS="$CFLAGS -I/usr/local/include"
 								;;
 							*)
 								es_cv_ldextras="none needed"
