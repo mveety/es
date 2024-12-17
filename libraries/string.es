@@ -8,8 +8,7 @@ library string (init libraries)
 
 fn string:length str {
 	local (str0 = $:str) {
-		echo $#str0
-		return true
+		return <=true $#str0
 	}
 }
 
@@ -31,16 +30,14 @@ fn string:find needle haystack {
 						ncount = <={add $ncount 1}
 					}
 					if { ~ $ncount $#lneedle || gt $ncount $#lneedle } {
-						echo $hcount
-						return true
+						return <=true $hcount
 					}
 				}
 			}
 			ncount = 1
 			hcount = <={add $hcount 1}
 		}
-		echo 0
-		return false
+		return <=false
 	}
 }
 
@@ -50,23 +47,14 @@ fn string:slice str start end {
 		lslice =
 	) {
 		if { gt $start $#lstr || gt $end $#lstr || gt $start $end } {
-			echo 0
-			return false
+			return <=false 0
 		} {
 			lslice = $lstr($start ... $end)
-			echo $"lslice
-			return true
+			return <=true $"lslice
 		}
 	}
 }
 
 fn string:sub str start len {
-	local (
-		slice_end = <={add $start $len}
-		rval =
-	) {
-		rval = <-{string:slice $str $start $slice_end}
-		echo $rval(2)
-		return $rval(1)
-	}
+	return <={string:slice $str $start <={add $start $len}}
 }
