@@ -1,0 +1,9 @@
+set bell-style none
+
+$if es-mveety
+	set echo-control-characters off
+	TAB: menu-complete
+	"\C-x\t": menu-complete-backward
+	"\C-xc": possible-completions
+$endif
+
