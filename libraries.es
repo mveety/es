@@ -7,7 +7,7 @@
 libraries = ()
 enable-import = 'yes'
 import-panic = false
-automatic-import = false
+automatic-import = true
 
 fn import-core-lib lib {
 	dprint 'import-core-lib exec''d'
@@ -84,7 +84,7 @@ fn check_and_load_options opts {
 	for (i = $opts) {
 		if {! checkoption $i} {
 			if { $automatic-import } {
-				if {! import $i^'.es'} {
+				if {! import $i} {
 					panic 'library' 'error: library: unable to load '^$i
 					return false
 				}
