@@ -1,4 +1,4 @@
-#!/usr/local/bin/es
+#!/usr/bin/env es
 library history (init libraries)
 
 histmax = 25

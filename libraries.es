@@ -1,4 +1,4 @@
-#!/usr/local/bin/es
+#!/usr/bin/env es
 
 # es library search path support. This will allow users to share
 # libraries globally on a system.

@@ -1,4 +1,4 @@
-#!/usr/local/bin/es
+#!/usr/bin/env es
 
 # this is the string library. it contains helper functions for dealing
 # with strings. In addition, it's the first library to use the new

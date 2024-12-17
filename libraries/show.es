@@ -1,4 +1,4 @@
-#!/usr/local/bin/es
+#!/usr/bin/env es
 option show
 
 # a little something from OpenVMS:

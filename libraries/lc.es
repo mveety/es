@@ -1,4 +1,4 @@
-#!/usr/local/bin/es
+#!/usr/bin/env es
 library lc (init libraries)
 
 # lc.es -- convenience for plan 9 users

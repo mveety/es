@@ -1,4 +1,4 @@
-#!/usr/local/bin/es
+#!/usr/bin/env es
 library dirstack (init libraries)
 
 dirstack = ()
