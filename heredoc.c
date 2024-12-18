@@ -14,19 +14,25 @@ struct Here {
 static Here *hereq;
 
 /* getherevar -- read a variable from a here doc */
-extern Tree *getherevar(void) {
-	int c;
+extern Tree
+*getherevar(void) {
+	int c, len;
 	char *s;
 	Buffer *buf = openbuffer(0);
+
 	while (!dnw[c = GETC()])
 		buf = bufputc(buf, c);
+
+	len = buf->len;
 	s = sealcountedbuffer(buf);
-	if (buf->len == 0) {
+
+	if (len == 0) {
 		yyerror("null variable name in here document");
 		return NULL;
 	}
 	if (c != '^')
 		UNGETC(c);
+
 	return flatten(mk(nVar, mk(nWord, s)), " ");
 }
 
