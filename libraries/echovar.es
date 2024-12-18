@@ -2,15 +2,27 @@
 
 library echovar (types format)
 
-fn fmtvar v {
-	result $v^'='^<={format $$v}
+fn fmtvar v d {
+	result $v^'='^<={format $d}
 }
 
 fn echovar v {
 	if {~ $v(1) -n} {
-		echo -n <={fmtvar $v}
+		v = $v(2)
+		echo -n <={fmtvar $v $$v}
 	} {
-		echo <={fmtvar $v}
+		echo <={fmtvar $v $$v}
+	}
+}
+
+fn echovar2 v d {
+	let(echoargs=){
+		if {~ $v -n} {
+			echoargs = '-n'
+			v = $d(1)
+			d = $d(2 ...)
+		}
+		echo $echoargs <={fmtvar $v $d}
 	}
 }
 
