@@ -197,6 +197,10 @@ top:	while ((c = GETC()) == ' ' || c == '\t')
 			return CLOSURE;
 		else if (streq(buf, "match"))
 			return MATCH;
+		else if (streq(buf, "matchall"))
+			return MATCHALL;
+		else if (streq(buf, "process"))
+			return PROCESS;
 		w = RW;
 		y->str = gcdup(buf);
 		return WORD;

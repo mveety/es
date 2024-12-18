@@ -18,7 +18,7 @@ syn keyword esCmd mul div mod lt gt lte gte
 syn keyword esCmd eq lets tobase frombase
 syn keyword esCmd reverse waitfor assert assert2 gensym
 syn keyword esCmd apply bqmap fbqmap map macro import library
-syn keyword esCmd whatis panic option
+syn keyword esCmd whatis panic option match matchall process
 syn match eskeyList /[a-zA-Z0-9]*\s*(/
 syn match esHook /[%][a-zA-Z0-9_]*/
 syn match esComment  /#.*$/

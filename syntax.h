@@ -31,8 +31,11 @@ extern Tree *mkredir(Tree *cmd, Tree *file);
 extern Tree *mkredircmd(char *cmd, int fd);
 extern Tree *redirappend(Tree *t, Tree *r);
 extern Tree *mkmatch(Tree *subj, Tree *cases);
+extern Tree *mkmatchall(Tree *subj, Tree *cases);
+extern Tree *mkprocess(Tree *subj, Tree *cases);
 
 /* heredoc.c */
 
 extern Boolean readheredocs(Boolean endfile);
 extern Boolean queueheredoc(Tree *t);
+

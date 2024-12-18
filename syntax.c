@@ -4,6 +4,7 @@
 #include "input.h"
 #include "syntax.h"
 #include "token.h"
+#include <stdio.h>
 
 Tree errornode;
 Tree *parsetree;
@@ -264,5 +265,110 @@ mkmatch(Tree *subj, Tree *cases)
 	matches = thunkify(prefix("if", matches));
 
 	return mk(nLocal, sass, matches);
+}
+
+int
+is_all_patterns(Tree *pattern)
+{
+	char *str;
+	Tree *p, *e;
+
+	if(pattern == NULL)
+		return 0;
+	if(pattern->kind == nWord){
+		str = pattern->u[0].s;
+		if(str[0] == '*' && str[1] == 0)
+			return 1;
+	}
+	if(pattern->kind == nList) {
+		e = pattern->CAR;
+		p = pattern->CDR;
+		if(is_all_patterns(e))
+			return 1;
+		return is_all_patterns(p);
+	}
+	return 0;
+}
+
+extern Tree*
+mkmatchall(Tree *subj, Tree *cases) {
+	const char *varname = "matchexpr";
+	const char *resname = "resexpr";
+	const char *result = "result";
+	const char *hasmatched = "__es_no_matches";
+	const char *truestr = "true";
+	const char *falsestr = "false";
+	int is_wild = 0, has_wild = 0;
+	Tree *ifs = NULL;
+	Tree *svar, *resvar, *matchvar, *varbinding;
+	Tree *pattlist, *cmd, *match, *ifbody, *wildmatch;
+	Tree *resultnil;
+
+	svar = mk(nVar, mk(nWord, varname));
+	resvar = mk(nVar, mk(nWord, resname));
+	matchvar = mk(nVar, mk(nWord, hasmatched));
+	varbinding = treecons(mk(nAssign, mk(nWord, varname), subj), NULL);
+	varbinding = treeconsend2(varbinding, mk(nAssign, mk(nWord, resname), NULL));
+	varbinding = treeconsend2(varbinding, mk(nAssign, mk(nWord, hasmatched), mk(nWord, truestr)));
+
+	for(; cases != NULL; cases = cases->CDR) {
+		pattlist = cases->CAR->CAR;
+		cmd = cases->CAR->CDR;
+
+		is_wild = is_all_patterns(pattlist);
+		if(pattlist != NULL && pattlist->kind != nList)
+			pattlist = treecons(pattlist, NULL);
+
+		resultnil = treecons(thunkify(treecons(mk(nWord, result), NULL)), NULL);
+		if(!is_wild){
+			ifbody = mkseq("%seq", thunkify(mk(nAssign, mk(nWord, hasmatched),
+												mk(nWord, falsestr))),
+									cmd);
+			ifbody = thunkify(ifbody);
+			match = treecons(mk(nCall, thunkify(prefix("if",
+								treecons(thunkify(mk(nMatch, svar, pattlist)),
+										treecons(ifbody, resultnil))))), NULL);
+			match = mk(nList, resvar, match);
+			match = thunkify(mk(nAssign, mk(nWord, resname), match));
+			ifs = mkseq("%seq", ifs, match);
+		} else if (is_wild && has_wild) {
+			fail("$&parse", "more than no matches case in matchall");
+		} else {
+			wildmatch = treecons(mk(nCall, cmd), NULL);
+			wildmatch = thunkify(mk(nAssign, mk(nWord, resname), wildmatch));
+			wildmatch = prefix("if", treecons(thunkify(matchvar),
+									treecons(wildmatch, NULL)));
+			has_wild = 1;
+		}
+	}
+	if(has_wild)
+		ifs = mkseq("%seq", ifs, wildmatch);
+	ifs = mkseq("%seq", ifs, thunkify(mk(nList, mk(nWord, result), mk(nList, resvar, NULL))));
+	return mk(nLocal, varbinding, thunkify(ifs));
+}
+
+extern Tree*
+mkprocess(Tree *subj, Tree *cases)
+{
+	const char *varstr = "matchelement";
+	const char *resstr = "__es_process_result";
+	const char *resultstr = "result";
+	Tree *forbindings, *mevar;
+	Tree *localbindings, *resvar, *resname;
+	Tree *matchterms, *forterm, *resultterm;
+
+	resname = mk(nWord, resstr);
+	forbindings = treecons(mk(nAssign, mk(nWord, varstr), subj), NULL);
+	localbindings = treecons(mk(nAssign, resname, NULL), NULL);
+	mevar = mk(nVar, mk(nWord, varstr));
+	resvar = mk(nVar, resname);
+
+	matchterms = treecons(mk(nCall, thunkify(mkmatch(treecons(mevar, NULL), cases))), NULL);
+	matchterms = mk(nList, resvar, matchterms);
+	matchterms = thunkify(mk(nAssign, resname, matchterms));
+
+	forterm = mk(nFor, forbindings, matchterms);
+	resultterm = thunkify(mk(nList, mk(nWord, resultstr), mk(nList, resvar, NULL)));
+	return mk(nLocal, localbindings, mkseq("%seq", thunkify(forterm), resultterm));
 }
 

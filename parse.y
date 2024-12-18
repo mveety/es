@@ -21,10 +21,10 @@
 %token	LOCAL LET LETS FOR CLOSURE FN
 %token	ANDAND BACKBACK STBACK STRLIST
 %token	EXTRACT CALL COUNT FLAT OROR TOSTR PRIM SUB
-%token	NL ENDFILE ERROR MATCH
+%token	NL ENDFILE ERROR MATCH MATCHALL PROCESS
 
-%left	MATCH LOCAL LET LETS FOR CLOSURE ')'
-%left	ANDAND OROR NL
+%left	LOCAL LET LETS FOR CLOSURE ')'
+%left	ANDAND OROR NL MATCH MATCHALL PROCESS
 %left	'!'
 %left	PIPE
 %right	'$' TOSTR
@@ -71,6 +71,8 @@ cmd	:		%prec LET		{ $$ = NULL; }
 	| '~' word words			{ $$ = mk(nMatch, $2, $3); }
 	| EXTRACT word words			{ $$ = mk(nExtract, $2, $3); }
 	| MATCH word nl '(' cases ')' {$$ = mkmatch($2, $5); }
+	| MATCHALL word nl '(' cases ')' {$$ = mkmatchall($2, $5); }
+	| PROCESS word nl '(' cases ')' {$$ = mkprocess($2, $5); }
 
 cases : case			{ $$ = treecons2($1, NULL); }
 	  | cases ';' case        { $$ = treeconsend2($1, $3); }
@@ -160,4 +162,6 @@ keyword	: '!'		{ $$ = "!"; }
 	| FN		{ $$ = "fn"; }
 	| CLOSURE	{ $$ = "%closure"; }
 	| MATCH		{ $$ = "match"; }
+	| MATCHALL	{ $$ = "matchall"; }
+	| PROCESS	{ $$ = "process"; }
 
