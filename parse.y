@@ -13,26 +13,27 @@
 	NodeKind kind;
 }
 
-%token <str> WORD
-%token <str> QWORD
-%token <tree> REDIR
-%token <tree> PIPE
-%token <tree> DUP
+%token <str>	WORD
+%token <str>	QWORD
+%token <tree>	REDIR
+%token <tree>	PIPE
+%token <tree> 	DUP
 %token	LOCAL LET LETS FOR CLOSURE FN
 %token	ANDAND BACKBACK STBACK STRLIST
 %token	EXTRACT CALL COUNT FLAT OROR TOSTR PRIM SUB
-%token	NL ENDFILE ERROR
+%token	NL ENDFILE ERROR MATCH
 
-%left	LOCAL LET LETS FOR CLOSURE ')'
+%left	MATCH LOCAL LET LETS FOR CLOSURE ')'
 %left	ANDAND OROR NL
 %left	'!'
 %left	PIPE
 %right	'$' TOSTR
 %left	SUB
 
-%type <str> keyword
-%type <tree> body cmd cmdsa cmdsan comword first fn line word param assign
-			 binding bindings params nlwords words simple redir sword
+%type <str> 	keyword
+%type <tree>	body cmd cmdsa cmdsan comword first fn line word param assign
+				binding bindings params nlwords words simple redir sword
+				cases case
 %type <kind>	binder
 
 %start es
@@ -69,6 +70,14 @@ cmd	:		%prec LET		{ $$ = NULL; }
 	| '!' caret cmd				{ $$ = prefix("%not", mk(nList, thunkify($3), NULL)); }
 	| '~' word words			{ $$ = mk(nMatch, $2, $3); }
 	| EXTRACT word words			{ $$ = mk(nExtract, $2, $3); }
+	| MATCH word nl '(' cases ')' {$$ = mkmatch($2, $5); }
+
+cases : case			{ $$ = treecons2($1, NULL); }
+	  | cases ';' case        { $$ = treeconsend2($1, $3); }
+	  | cases NL case         { $$ = treeconsend2($1, $3); }
+
+case : 					{ $$ = NULL; }
+	 | word first		{ $$ = mk(nList, $1, thunkify($2)); }
 
 simple	: first				{ $$ = treecons2($1, NULL); }
 	| simple word			{ $$ = treeconsend2($1, $2); }
@@ -150,4 +159,5 @@ keyword	: '!'		{ $$ = "!"; }
 	| FOR		{ $$ = "for"; }
 	| FN		{ $$ = "fn"; }
 	| CLOSURE	{ $$ = "%closure"; }
+	| MATCH		{ $$ = "match"; }
 

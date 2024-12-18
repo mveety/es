@@ -238,3 +238,31 @@ extern Tree *redirappend(Tree *tree, Tree *r) {
 	*tp = mk(nRedir, r, t);
 	return tree;
 }
+
+/* mkmatch -- rewrite for match */
+extern Tree*
+mkmatch(Tree *subj, Tree *cases)
+{
+	const char *varname = "matchexpr";
+	Tree *sass, *svar, *matches = NULL;
+	Tree *pattlist, *cmd, *match;
+
+	sass = treecons2(mk(nAssign, mk(nWord, varname), subj), NULL);
+	svar = mk(nVar, mk(nWord, varname));
+
+	for(; cases != NULL; cases = cases->CDR){
+		pattlist = cases->CAR->CAR;
+		cmd = cases->CAR->CDR;
+
+		if(pattlist != NULL && pattlist->kind != nList)
+			pattlist = treecons(pattlist, NULL);
+
+		match = treecons(thunkify(mk(nMatch, svar, pattlist)), treecons(cmd, NULL));
+		matches = treeappend(matches, match);
+	}
+
+	matches = thunkify(prefix("if", matches));
+
+	return mk(nLocal, sass, matches);
+}
+
