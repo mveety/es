@@ -20,8 +20,6 @@ use_editline=no
 
 AC_ARG_WITH(readline,
 --with-readline		Use GNU Readline, use_readline=yes)
-AC_ARG_WITH(editline,
---with-edit		Use libedit, [use_editline=yes; use_readline=no])
 
 AC_CANONICAL_HOST
 

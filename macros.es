@@ -1,15 +1,13 @@
 #!/usr/bin/env es
 
 if {~ $#__es_symcount 0} {
-	__es_symcount=1
+	__es_symcount = 0
 }
 
 fn gensym prefix {
 	prefix = <={if {~ $#prefix 0} { result '__es_sym_' } { result $prefix }}
-	let(symn = $__es_symcount) {
-		__es_symcount = <={add $__es_symcount 1}
-		result $prefix^$symn
-	}
+	__es_symcount = <={add $__es_symcount 1}
+	result $prefix^$__es_symcount
 }
 
 fn nrfn name argsbody {
