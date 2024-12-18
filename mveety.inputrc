@@ -2,6 +2,7 @@ set bell-style none
 
 $if es-mveety
 	set echo-control-characters off
+	set menu-complete-display-prefix on
 	TAB: menu-complete
 	"\C-x\t": menu-complete-backward
 	"\C-xc": possible-completions
