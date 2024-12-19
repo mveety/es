@@ -107,7 +107,9 @@ static Binding *extract(Tree *tree, Binding *bindings) {
 	return bindings;
 }
 
-extern Closure *extractbindings(Tree *tree0) {
+extern Closure*
+extractbindings(Tree *tree0)
+{
 	Chain me;
 	Tree *volatile tree = tree0;
 	Binding *volatile bindings = NULL;
@@ -126,6 +128,10 @@ extern Closure *extractbindings(Tree *tree0) {
 		while (tree->kind == nClosure) {
 			bindings = extract(tree->u[0].p, bindings);
 			tree = tree->u[1].p;
+			
+			if(!tree)
+				fail("$&parse", "%%closure missing body");
+			
 			if (tree->kind == nList && tree->u[1].p == NULL)
 				tree = tree->u[0].p; 
 		}
@@ -140,12 +146,14 @@ extern Closure *extractbindings(Tree *tree0) {
 	chain = chain->next;
 
 	Ref(Closure *, result, me.closure);
+
 	result->tree = tree;
 	result->binding = bindings;
+
 	gcenable();
+
 	RefReturn(result);
 }
-
 
 /*
  * Binding garbage collection support
