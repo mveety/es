@@ -1,4 +1,4 @@
-#!/usr/local/bin/es
+#!/usr/bin/env es
 # mveety's ~/.esrc
 #
 # I set most of my environment vars in my .login_conf. I don't know
@@ -6,22 +6,117 @@
 # instead of your profile or shell dotfiles. It makes life so much easier
 # having everything in one central location instead of being strewn about.
 
-# libraries
+# I added the path for linux
+# path = (/usr/local/sbin /usr/local/bin /usr/bin /usr/lib/jvm/default/bin /usr/bin/site_perl /usr/bin/vendor_perl /usr/bin/core_perl)
+
+# set up libraries support to make sure it works
+corelib = '/usr/local/share/es'
 libraries = $home^'/eslib'
 import show dirstack lc history string
 
-# configure some things
-prompt=('% ' '')
-history = '/home/mveety/.history'
-histmax = 10
-
-# pretty prompt
-fn %prompt {
-	prompt = (`{pwd}^'% ' '')
+# get git branch info
+fn mv-git-branch {
+	local(b=<-{git branch '--show-current' >[2=1]}) {
+		if {~ $b(1) 0} {
+			result ' ('^$b(2)^')'
+		} {
+			result ''
+		}
+	}
 }
 
-# other pretty prompt
-#fn %prompt {
-#	prompt = (`{hostname}^'% ' '')
-#}
+# format path to shorten it (if possible)
+fn mv-pathfmt path {
+	local(homes=(/usr/home /home /export/home)) {
+		if {~ $username 'root' && ~ $path /root /root/*} {
+			return '~'^<={~~ $path /root*}
+		}
+		match $path (
+			($homes/$username) {
+				return '~'
+			}
+			($homes/$username/*) {
+				return '~/'^<={~~ $path $homes/$username/*}
+			}
+			($homes/*) {
+				return '~'^<={~~ $path $homes/*}
+			}
+			(/root) {
+				return '~root'
+			}
+			(/root/*) {
+				return '~root/'^<={~~ $path /root/*}
+			}
+			* {
+				return $path
+			}
+		)
+	}
+}
+
+# replacement for hg incoming/outgoing
+fn egit command branch {
+	branch = <={ if {~ $#branch 0} {
+						result `{git rev-parse --abbrev-ref HEAD}
+					} {
+						result $branch
+					}
+				}
+	if {~ $command 'outgoing'} {
+		git fetch origin
+		git log 'origin/'^$branch^'..'^$branch
+	} {~ $command 'incoming'} {
+		git fetch origin
+		git log $branch^'..origin/'^$branch
+	} {
+		throw usage egit 'usage: egit [outgoing|incoming]'
+	}
+}
+
+# easy switching between prompts
+fn set-prompt pname {
+	if {~ $#pname 0} {
+		throw usage set-prompt $0^' [prompt-name]'
+	}
+	if {~ $#('fn-'^$pname^'-prompt') 0} {
+		throw error set-prompt 'prompt '^$pname^' does not exist'
+	} {
+		fn-%prompt = $('fn-'^$pname^'-prompt')
+		result <=true
+	}
+}
+
+## prompt options
+
+# pretty prompt
+fn mveety-prompt {
+	prompt = ($hostname^':'^<={mv-pathfmt $cwd}^<={mv-git-branch}^' % ' '_% ')
+}
+
+fn path-prompt {
+	prompt = ($cwd^'% ' '_% ')
+}
+
+fn pathfmt-prompt {
+	prompt = (<={mv-pathfmt $cwd}^'% ' '_% ')
+}
+
+fn hostname-prompt {
+	prompt = ($hostname^'% ' '_% ')
+}
+
+## hooks
+
+fn %cdhook {
+	cwd = `{pwd}
+}
+
+## configuration
+
+history = '/home/mveety/.history'
+histmax = 10
+hostname=`{uname -n}
+username=`{whoami}
+cwd=`{pwd}
+set-prompt mveety
 
