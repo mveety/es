@@ -1,8 +1,4 @@
 
-fn glob str {
-	result <={eval 'result '^$^str }
-}
-
 fn es_complete_remove_empty_results files {
 	local(res=){
 		for(i = $files) {
