@@ -29,7 +29,10 @@ dnl Checks for programs.
 AC_PROG_CC
 AC_PROG_INSTALL
 AC_PROG_MKDIR_P
-AC_PROG_YACC
+dnl AC_PROG_YACC
+AC_ARG_VAR([YACC], [hopefully bison])
+AC_CHECK_PROG([YACC], [bison -y], [bison -y], [no])
+AS_IF([test "x$YACC" = "xno"], [AC_MSG_ERROR([bison not found])])
 
 AC_CACHE_CHECK(whether $CC accepts -Wno-clobbered, es_cv_no_clobbered, 
 [
