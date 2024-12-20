@@ -1,6 +1,7 @@
 /* proc.c -- process control system calls ($Revision: 1.2 $) */
 
 #include "es.h"
+#include <stdio.h>
 
 /* TODO: the rusage code for the time builtin really needs to be cleaned up */
 
@@ -105,6 +106,27 @@ static void reap(int pid, int status) {
 		}
 }
 
+/* non-blocking wait. returns 0 if you could wait and not block,
+ * -1 otherwise
+ */
+static int
+nbwaitpid(int pid)
+{
+	int kstat, n, status;
+
+	kstat = kill(pid, 0);
+	if(kstat < 0)
+		return -1;
+
+	n = waitpid(pid, (void*) &status, WNOHANG);
+	if(n == pid){
+		getrusage(RUSAGE_CHILDREN, &wait_rusage);
+		reap(pid, status);
+		return 0;
+	}
+	return -1;
+}
+
 /* ewait -- wait for a specific process to die, or any process if pid == 0 */
 WaitStatus ewait1(int pid, Boolean interruptible, void *rusage, Boolean print) {
 	Proc *proc;
@@ -182,9 +204,25 @@ ewaitfor(int pid)
 
 PRIM(apids) {
 	Proc *p;
+	int alive = 1, dead = 1;
 	Ref(List *, lp, NULL);
+
+	if(list != NULL && termeq(list->term, "-a")) {
+		dead = 0;
+		list = list->next;
+	} else if(list != NULL && termeq(list->term, "-d")) {
+		alive = 0;
+		list = list->next;
+	}
+
 	for (p = proclist; p != NULL; p = p->next)
-		if (p->background && p->alive) {
+		if (p->background) {
+			if(p->alive)
+				nbwaitpid(p->pid);
+			if(p->alive && !alive)
+				continue;
+			if(!p->alive && !dead)
+				continue;
 			Term *t = mkstr(str("%d", p->pid));
 			lp = mklist(t, lp);
 		}
