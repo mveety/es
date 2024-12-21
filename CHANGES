@@ -1,5 +1,7 @@
 es-mveety changes and additions:
 
+# nuked the old versioning and added $version and $buildstring.
+
 # added <- which works like a mix of <= and `. Returns a list containing
 	the program's status and it's output. $bqstatus still exists for
 	compatibility.
@@ -16,7 +18,34 @@ es-mveety changes and additions:
 	has functions to help a user manipulate the file.
 
 # added math and numerical comparison primitives add, sub, mul, div, mod,
-	eq, lt, and gt.
+	eq, lt, lte, gt, and gte.
+
+# added number base converions tobase and frombase
+
+# added getters and $last, $apids, and $eval-depth
+
+# %apids can print all, dead, or alive procs
+
+# wait is more silent if no args are passed and returns the pid and status.
+	wait, if given an argument will wait for that pid.
+# added waitfor. waitfor runs wait on a list of pids and returns their
+	respective statuses.
+
+# added the $: (to char list) and $" (from char list) operators to more
+	easily manipulate strings
+
+# added glob function to more easily deal with constructed or user input
+	globbing patterns, plus it can glob against lists instead of
+	against the filesystem
+
+# added match from mainline es. extened it with matchall and process
+	matchall will execute all bodies that match, and process
+	will iterate over a list matching each element
+
+# added programmable completion and used it to add context sensitive
+	completion.
+
+# added lets which works like common lisp's let*
 
 # a few libraries are shipped and part of the default installation:
 	* libraries.es -- simple library loading support
@@ -24,6 +53,16 @@ es-mveety changes and additions:
 	* dirstack.es -- simple implementation of pushd, popd, and dirs
 	* lc.es -- rough and ready copy of plan 9's lc(1)
 	* history.es -- implementation of history(1)
+	* array.es -- budget arrays
+	* autoinit.es -- loads scripts automatically on start
+	* dict.es -- budget assoc. arrays
+	* echovar.es -- var printing for debugging
+	* format.es -- "type" based formatting
+	* format_*.es -- extensions to format
+	* static_types.es -- runtime type checking
+	* string.es -- a few string utilities
+	* types.es -- low budget "types"
+	* type_*.es -- hooking array and dict into types
 
 # added some new functions
 	* apply fun list : execute fun on each member of list

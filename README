@@ -1,4 +1,4 @@
-This is my modifications to es to make it easier to live with on unix.
+This is my modifications to es to make it easier to live with.
 use configure/make(1) as normal to build and install.
 
 I've tested it on FreeBSD, OpenBSD, and Ubuntu, so it should build
@@ -14,33 +14,9 @@ Building:
 Some Notes:
 Be sure to install the libraries using 'make userlib-install'. They'll get
 copied to $home/eslib; be sure to add that to your $libraries list. If you
-want to install the libraries for everyone on the system copy them to
-/usr/local/share/es.
-
-dirstack.es:
-dirstack.es adds the commands pushd, popd, and dirs. They work more or less
-as you would expect, though possibly more spartan than you may be used to.
-
-show.es:
-show.es is a little bit of OpenVMS in your shell :) . It can easily
-be extended by defining show-functions. Check out the sources for more
-info.
-
-lc.es:
-lc.es is a clone of Plan 9's lc(1).
-
-history.es:
-history.es is the frontend to the shell's in-built history code. The
-history-file formatting should be mostly equivalent to csh and mostly
-cross-compatible.
-
-string.es:
-a simple string convenience function library
-
-array.es:
-a library that emulates arrays using lists of variables.
-
-Notes:
-# Most/all of the original files shipped with es should still exist.
-# esdump and the files in examples/ are untested and may not work.
+want to install the libraries for everyone run make syslib-install.
+Be sure to reference the included *.es files as examples and the CHANGES
+file for more information. the manpage is still functional and broadly
+applicable but reflects es at the time of forking and not it's current
+state.
 
