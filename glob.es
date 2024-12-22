@@ -141,7 +141,7 @@ fn esmglob_partialcompilation xglob {
 							escaped = false
 							tmp = $tmp $matchexpr
 						} {
-							if {~ $#tmp 0} {
+							if {~ $#tmp 0 && ~ $xlglob(<={add $i 1}) '|'} {
 								while {lte $i $xlglobsz} {
 									if {~ $xlglob($i) ')'} {
 										break
@@ -206,6 +206,9 @@ fn esmglob_double_wild_removal xglob {
 				}
 			)
 		}
+		if {~ $state 1} {
+			resl = $resl '*'
+		}
 		result $"resl
 	}
 }
@@ -243,7 +246,7 @@ fn esmglob_add_unique elem list {
 
 fn esmglob_compile0 xglob {
 	if {! isextendedglob $xglob} {
-		return $xglob
+		return <={esmglob_double_wild_removal $xglob}
 	}
 	local (partcomp=;res=();tmp=) {
 		for(i = <={esmglob_partialcompilation <={esmglob_double_wild_removal $xglob}}) {
