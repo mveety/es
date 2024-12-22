@@ -104,6 +104,7 @@ fn fmt-list v {
 	}
 }
 
+install_format 'nil' @ v { result 'nil' }
 install_format 'number' @ v { result <={fmt-number $v} }
 install_format 'string' @ v { result <={fmt-string $v} }
 install_format 'function' @ v { result <={fmt-fun-prim $v} }
