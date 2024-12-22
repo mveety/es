@@ -256,6 +256,9 @@ fn esmglob_partialcompilation xglob {
 		}
 		if {esmglob_alllen1 $mid} {
 			mid = <={%string '[' $mid ']'}
+			if {~ $mid *^'*'^*} {
+				mid = '*'
+			}
 		}
 		result $front^$mid^$back
 	}
