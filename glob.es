@@ -40,6 +40,83 @@ fn isextendedglob glob {
 	result <=false
 }
 
+fn esmglob_expandquestions xglob {
+	local (
+		xlglob = $:xglob
+		state = default # can also be escape and count
+		tmp = ()
+		res = ()
+	){
+		for(i = $:xglob) {
+			match $state (
+				(default) {
+					match $i (
+						('\') {
+							state = escape
+							res = $res '\'
+						}
+						('?') {
+							tmp = ()
+							state = count
+						}
+						* {
+							res = $res $i
+						}
+					)
+				}
+				(escape) {
+					res = $res $i
+					state = default
+				}
+				(count) {
+					if {~ $i [1234567890]} {
+						tmp = $tmp $i
+					} {
+						if {~ $#tmp 0} {
+							res = $res '?'
+						} {
+							tmp = $"tmp
+							while {gt $tmp 0} {
+								res = $res '?'
+								tmp = <={sub $tmp 1}
+							}
+							tmp = ()
+						}
+						state = default
+						res = $res $i
+					}
+				}
+				* {
+					throw error assert $0^': unknown state '^$^state
+				}
+			)
+		}
+		if {~ $state count} {
+			if {~ $#tmp 0} {
+				res = $res '?'
+			} {
+				tmp = $"tmp
+				while {gt $tmp 0} {
+					res = $res '?'
+					tmp = <={sub $tmp 1}
+				}
+				tmp = ()
+			}
+		}
+
+		result $"res
+	}
+}
+
+fn esmglob_alllen1 strs {
+	for(i = $strs) {
+		if {! ~ <={%count $:i} 1} {
+			return <=false
+		}
+	}
+	return <=true
+}
+
 fn esmglob_partialcompilation xglob {
 	local (
 		xlglob = $:xglob
@@ -177,6 +254,9 @@ fn esmglob_partialcompilation xglob {
 		if {lte $i $xlglobsz} {
 			back = <={%string $xlglob($i ...)}
 		}
+		if {esmglob_alllen1 $mid} {
+			mid = <={%string '[' $mid ']'}
+		}
 		result $front^$mid^$back
 	}
 }
@@ -261,7 +341,7 @@ fn esmglob_compile0 xglob {
 
 fn esmglob_compile xglob {
 	local(
-		res = <={esmglob_compile0 $xglob}
+		res = <={esmglob_compile0 <={esmglob_expandquestions $xglob}}
 	) {
 		process $res (
 			* {
@@ -291,7 +371,7 @@ fn esmglob xglob list {
 	local(tmp=;res=){
 		tmp = <={esmglob_do_glob $fn-glob $xglob $list}
 		for(i = $tmp) {
-			if {! ~ $i *^'*'^*} {
+			if {! ~ $i *^'*'^* && ! ~ $i *^'?'^*} {
 				res = $res $i
 			}
 		}
