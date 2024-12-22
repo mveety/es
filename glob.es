@@ -15,66 +15,157 @@ fn glob patternstr list {
 	}
 }
 
-fn glob_extract patternstr elem {
-	if {~ $#elem 0} {
-		throw error $0 'list missing'
-	}
-	result <={eval '~~ '^$elem^' '^$^patternstr}
-}
-
 fn isextendedglob glob {
-	process $:glob (
-		('(') { return <=true }
-	)
+	local(state=0) {
+		process $:glob (
+			('\') {
+				if {~ $state 0} {
+					state = 1
+				} {
+					state = 0
+				}
+			}
+			('(') {
+				if {~ $state 0} {
+					return <=true
+				} {
+					state = 0
+				}
+			}
+			* {
+				state = 0
+			}
+		)
+	}
 	result <=false
 }
 
 fn esmglob_partialcompilation xglob {
 	local (
 		xlglob = $:xglob
-		xlglobsz=
+		xlglobsz=0
 		i = 1
-		j = 1
-		c=
-		tmp=
-		front=''
-		mid=
-		back=''
+		tmp = ()
+		frontl = ()
+		front = ''
+		mid = ()
+		back = ''
+		escaped = false
+		inparens = 0
 	) {
 		xlglobsz = $#xlglob
 		while {lte $i $xlglobsz} {
-			if {~ $xlglob($i) '('} {
-				break
+			if {~ $xlglob($i) '\' && ! $escaped} {
+				escaped = true
+			} {
+				if {~ $xlglob($i) '(' && ! $escaped} {
+					escaped = false
+					break
+				}
+				if {~ $xlglob($i) '(' || ~ $xlglob($i) '\' && $escaped} {
+					frontl = $frontl '\'
+				}
+				frontl = $frontl $xlglob($i)
+				if {$escaped} { escaped = false }
 			}
-			front = $front $xlglob($i)
-			i = <={add $i 1}
+				i = <={add $i 1}
 		}
 		if {! lte $i $xlglobsz} {
-			return $"front
+			return $"frontl
 		}
-		front = $"front
+		front = $"frontl
 		# we're starting on the pattern here
 		if {~ $xlglob($i) '('} {
 			i = <={add $i 1}
 			assert2 $0 {lt $i $xlglobsz}
 			while {lte $i $xlglobsz} {
 				match $xlglob($i) (
-					('|') {
-						mid = $mid $"tmp
-						tmp = ()
+					('\') {
+						if {$escaped} {
+							escaped = false
+							tmp = $tmp '\'
+							tmp = $tmp $matchexpr
+						} {
+							escaped = true
+						}
 					}
-					(')') {
-						if {! ~ $#tmp 0} {
+					('|') {
+						if {$escaped} {
+							escaped = false
+							tmp = $tmp $matchexpr
+						} {
 							mid = $mid $"tmp
 							tmp = ()
 						}
-						i = <={add $i 1}
-						break
+					}
+					(')') {
+						if {$escaped} {
+							escaped = false
+							tmp = $tmp $matchexpr
+						} {
+							if {! ~ $#mid 0} {
+								mid = $mid $"tmp
+								tmp = ()
+							}
+							i = <={add $i 1}
+							break
+						}
 					}
 					('(') {
-						throw error $0 'invalid ( at pos '^$i
+						if {$escaped} {
+							escaped = false
+							tmp = $tmp '\'
+							tmp = $tmp $matchexpr
+						} {
+							i = <={add $i 1}
+							tmp = $tmp '('
+							while {lte $i $xlglobsz} {
+								tmp = $tmp $xlglob($i)
+								if {~ $xlglob($i) '('} {
+									inparens = <={add $inparens 1}
+								}
+								if {~ $xlglob($i) ')'} {
+									if {gt $inparens 0} {
+										inparens = <={sub $inparens 1}
+									} {
+										break
+									}
+								}
+								assert2 $0 {gte $inparens 0}
+								i = <={add $i 1}
+							}
+						}
+					}
+					('*') {
+						if {$escaped} {
+							escaped = false
+							tmp = $tmp $matchexpr
+						} {
+							if {~ $#tmp 0} {
+								while {lte $i $xlglobsz} {
+									if {~ $xlglob($i) ')'} {
+										break
+									}
+									i = <={add $i 1}
+								}
+								i = <={add $i 1}
+								if {~ $#frontl 0} {
+									mid = '*'
+									break
+								}
+								if {~ $frontl($#frontl) '*'} {
+									mid = ''
+									break
+								}
+								mid = '*'
+								break
+							} {
+								tmp = $tmp $matchexpr
+							}
+						}
 					}
 					* {
+						escaped = false
 						tmp = $tmp $matchexpr
 					}
 				)
@@ -90,15 +181,55 @@ fn esmglob_partialcompilation xglob {
 	}
 }
 
-fn esmglob_compile xglob {
-	if {! isextendedglob $xglob} {
-		return $xglob
-	}
-	local (partcomp=;res=()) {
-		for(i = <={esmglob_partialcompilation $xglob}) {
-			res = $res <={esmglob_compile $i}
+fn esmglob_double_wild_removal xglob {
+	local (
+		state = 0
+		resl = ()
+	) {
+		for(i = $:xglob) {
+			match $state (
+				(0) {
+					if {~ $i '*'} {
+						state = 1
+					} {
+						resl = $resl $i
+					}
+				}
+				(1) {
+					if {! ~ $i '*'} {
+						resl = $resl '*' $i
+						state = 0
+					}
+				}
+				* {
+					assert2 $0 {~ $state 0 || ~ $state 1}
+				}
+			)
 		}
-		result $res
+		result $"resl
+	}
+}
+
+fn esmglob_parse_escapes escape_slash xglob {
+	local(res=;state = 0){
+		process $:xglob (
+			('\') {
+				if {~ $state 0} {
+					state = 1
+				} {
+					state = 0
+					if {$escape_slash} {
+						res = $res $matchexpr
+					}
+					res = $res $matchexpr
+				}
+			}
+			* {
+				res = $res $matchexpr
+				state = 0
+			}
+		)
+		result $"res
 	}
 }
 
@@ -107,6 +238,33 @@ fn esmglob_add_unique elem list {
 		result $list
 	} {
 		result $list $elem
+	}
+}
+
+fn esmglob_compile0 xglob {
+	if {! isextendedglob $xglob} {
+		return $xglob
+	}
+	local (partcomp=;res=();tmp=) {
+		for(i = <={esmglob_partialcompilation <={esmglob_double_wild_removal $xglob}}) {
+			tmp = <={esmglob_compile0 $i}
+			for(j = $tmp) {
+				res = <={esmglob_add_unique $j $res}
+			}
+		}
+		result $res
+	}
+}
+
+fn esmglob_compile xglob {
+	local(
+		res = <={esmglob_compile0 $xglob}
+	) {
+		process $res (
+			* {
+				result <={esmglob_parse_escapes true $matchexpr}
+			}
+		)
 	}
 }
 
@@ -138,7 +296,16 @@ fn esmglob xglob list {
 	}
 }
 
-fn esmglob_extract xglob elem {
-	esmglob_do_glob $fn-glob_extract $xglob $elem
+fn esmglob_match elem xglob {
+	local (
+		cglobs = <={esmglob_compile $xglob}
+	) {
+		for(i = $cglobs) {
+			if{eval '{~ '^$elem^' '^$i^'}'} {
+				return <=true
+			}
+		}
+	}
+	result <=false
 }
 
