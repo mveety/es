@@ -141,8 +141,13 @@ fn es_complete_is_command curline {
 	local(curlinel=$:curline;i=){
 		i = $#curlinel
 		while {gt $i 0} {
-			if {~ $curlinel($i) ';' '{'} {
+			if {~ $curlinel($i) ';' '{' '!'} {
 				return <=true
+			}
+			if {~ $curlinel($i) '&' '|'} {
+				if {~ $curlinel(<={sub $i 1}) '&' '|'} {
+					return <=true
+				}
 			}
 			if {~ $curlinel($i) '='} {
 				if {gt $i 1} {
