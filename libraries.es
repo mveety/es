@@ -5,32 +5,31 @@
 
 # corelib = '/usr/local/share/es/'
 libraries = ()
-enable-import = 'yes'
+enable-import = true
 import-panic = false
 automatic-import = true
 
 fn import-core-lib lib {
-	dprint 'import-core-lib exec''d'
-	let(libname = <={access -n $lib -1 -r $corelib}) {
+	let (libname = <={access -n $lib -1 -r $corelib}) {
 		if {! ~ $#libname 0} {
 			dprint 'loading '^$libname
 			. $libname
 			return 0
 		} {
-			return 1
+			throw error $0 $lib^' not found'
 		}
 	}
 }
 
 fn import-user-lib lib {
-	dprint 'import-user-lib-exec''d'
 	if {~ $#libraries 0} {
-		return 1
+		throw error $0 '$libraries not set'
 	} {
 		let (libname = <={access -n $lib -1 -r $libraries}) {
 			if {~ $#libname 0} {
-				return 1
+				throw error $0 $lib^' not found'
 			} {
+				dprint 'loading '^$libname
 				. $libname
 				return 0
 			}
@@ -39,31 +38,33 @@ fn import-user-lib lib {
 }
 
 fn import_file lib {
-	if {~ $#enable-import 0} {
-		panic 'import' 'import is not enabled'
-		return 1
-	}
-	if {! import-user-lib $lib} {
-		dprint 'no userlib named '^$lib
-		if {! import-core-lib $lib} {
-			if {$import-panic} {
-				panic 'import' $lib^' not found'
-			} {
-				echo 'import: '^$lib^' not found'
-			}
-			return 1
+	catch @ e type msg {
+		if {! ~ $e error} {
+			throw $e $type $msg
 		}
+		import-core-lib $lib
+	} {
+		import-user-lib $lib
 	}
-	return 0
+	result 0
 }
 
 fn import {
+	if {! $enable-import} {
+		throw error 'import' 'import is not enabled'
+	}
 	if {~ $#* 0} {
-		echo 'usage: import [libraries]'
-		return 1
+		throw usage import 'usage: import [libraries]'
 	}
 	for(i = $*) {
-		import_file $i^'.es'
+		catch @ e type msg {
+			if {~ $e error && ~ $type import-core-lib} {
+				throw error import 'library '^$i^' not found'
+			}
+			throw $e $type $msg
+		} {
+			import_file $i^'.es'
+		}
 	}
 }
 
@@ -84,13 +85,16 @@ fn check_and_load_options opts {
 	for (i = $opts) {
 		if {! checkoption $i} {
 			if { $automatic-import } {
-				if {! import $i} {
-					panic 'library' 'error: library: unable to load '^$i
-					return false
+				catch @ e type msg {
+					if {~ $type import} {
+						throw error library 'unable to load '^$i
+					}
+					throw $e $type $msg
+				}{
+					import $i
 				}
 			} {
 				panic 'library' 'required library '^$i^' not loaded'
-				return false
 			}
 		}
 	}
@@ -98,10 +102,14 @@ fn check_and_load_options opts {
 }
 
 fn library name requirements {
-	if { <={check_and_load_options $requirements} } {
-		option $name
+	catch @ e type msg {
+		if {~ $type library} {
+			throw error library 'unable to load library '^$name^': '^$msg
+		}
+		throw $e $type $msg
 	} {
-		panic 'library' 'unable to load library '^$name
+		check_and_load_options $requirements
+		option $name
 	}
 }
 
