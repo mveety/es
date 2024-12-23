@@ -382,16 +382,25 @@ fn esmglob xglob list {
 	}
 }
 
-fn esmglob_match elem xglob {
-	local (
-		cglobs = <={esmglob_compile $xglob}
-	) {
-		for(i = $cglobs) {
-			if{eval '{~ '^$elem^' '^$i^'}'} {
-				return <=true
-			}
+fn esmglob_compmatch elem cglobs {
+	for(i = $cglobs) {
+		if{eval '{~ '^$elem^' '^$i^'}'} {
+			return <=true
 		}
 	}
 	result <=false
+}
+
+
+fn esmglob_match elem xglob {
+	result <={esmglob_compmatch $elem <={esmglob_compile $xglob}}
+}
+
+fn esmgm elem xglob_or_cglobs {
+	if {~ $#xglob_or_cglobs 1} {
+		esmglob_match $elem $xglob_or_cglobs
+	} {
+		esmglob_compmatch $elem $xglob_or_cglobs
+	}
 }
 

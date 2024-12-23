@@ -255,10 +255,16 @@ mkmatch(Tree *subj, Tree *cases)
 		pattlist = cases->CAR->CAR;
 		cmd = cases->CAR->CDR;
 
-		if(pattlist != NULL && pattlist->kind != nList)
+		if(pattlist != NULL && pattlist->kind == nLambda){
 			pattlist = treecons(pattlist, NULL);
+			pattlist = treeconsend(pattlist, svar);
+		} else if(pattlist != NULL && pattlist->kind != nList){
+			pattlist = treecons(pattlist, NULL);
+			pattlist = mk(nMatch, svar, pattlist);
+		} else
+			pattlist = mk(nMatch, svar, pattlist);
 
-		match = treecons(thunkify(mk(nMatch, svar, pattlist)), treecons(cmd, NULL));
+		match = treecons(thunkify(pattlist), treecons(cmd, NULL));
 		matches = treeappend(matches, match);
 	}
 
@@ -316,8 +322,16 @@ mkmatchall(Tree *subj, Tree *cases) {
 		cmd = cases->CAR->CDR;
 
 		is_wild = is_all_patterns(pattlist);
-		if(pattlist != NULL && pattlist->kind != nList)
+
+		if(pattlist != NULL && pattlist->kind == nLambda){
 			pattlist = treecons(pattlist, NULL);
+			pattlist = treeconsend(pattlist, svar);
+		} else if(pattlist != NULL && pattlist->kind != nList){
+			pattlist = treecons(pattlist, NULL);
+			pattlist = mk(nMatch, svar, pattlist);
+		} else
+			pattlist = mk(nMatch, svar, pattlist);
+
 
 		resultnil = treecons(thunkify(treecons(mk(nWord, result), NULL)), NULL);
 		if(!is_wild){
@@ -326,13 +340,13 @@ mkmatchall(Tree *subj, Tree *cases) {
 									cmd);
 			ifbody = thunkify(ifbody);
 			match = treecons(mk(nCall, thunkify(prefix("if",
-								treecons(thunkify(mk(nMatch, svar, pattlist)),
+								treecons(thunkify(pattlist),
 										treecons(ifbody, resultnil))))), NULL);
 			match = mk(nList, resvar, match);
 			match = thunkify(mk(nAssign, mk(nWord, resname), match));
 			ifs = mkseq("%seq", ifs, match);
 		} else if (is_wild && has_wild) {
-			fail("$&parse", "more than no matches case in matchall");
+			fail("$&parse", "more than one always match case in matchall");
 		} else {
 			wildmatch = treecons(mk(nCall, cmd), NULL);
 			wildmatch = thunkify(mk(nAssign, mk(nWord, resname), wildmatch));
