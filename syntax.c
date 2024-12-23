@@ -148,6 +148,19 @@ extern Tree *mkpipe(Tree *t1, int outfd, int infd, Tree *t2) {
 	return prefix("%pipe", treecons(t1, tail));
 }
 
+extern Tree*
+mkfunpipe(Tree *t1, Tree *t2)
+{
+	Tree *firstcall, *res;
+
+	if(t1->kind != nList || t2->kind != nList)
+		fail("&parse", "syntax error in function pipe");
+
+	firstcall = mk(nCall, thunkify(t1));
+	res = treeconsend(t2, firstcall);
+
+	return res;
+}
 /*
  * redirections -- these involve queueing up redirection in the prefix of a
  *	tree and then rewriting the tree to include the appropriate commands

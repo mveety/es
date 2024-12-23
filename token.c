@@ -345,6 +345,8 @@ top:	while ((c = GETC()) == ' ' || c == '\t')
 		c = GETC();
 		if (c == '|')
 			return OROR;
+		if (c == '>')
+			return FUNPIPE;
 		if (!getfds(p, c, 1, 0))
 			return ERROR;
 		if (p[1] == CLOSED) {

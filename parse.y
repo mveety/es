@@ -19,14 +19,14 @@
 %token <tree>	PIPE
 %token <tree> 	DUP
 %token	LOCAL LET LETS FOR CLOSURE FN
-%token	ANDAND BACKBACK STBACK STRLIST
+%token	ANDAND BACKBACK STBACK STRLIST FUNPIPE
 %token	EXTRACT CALL COUNT FLAT OROR TOSTR PRIM SUB
 %token	NL ENDFILE ERROR MATCH MATCHALL PROCESS
 
 %left	LOCAL LET LETS FOR CLOSURE ')'
 %left	ANDAND OROR NL MATCH MATCHALL PROCESS
 %left	'!'
-%left	PIPE
+%left	PIPE FUNPIPE
 %right	'$' TOSTR
 %left	SUB
 
@@ -67,6 +67,7 @@ cmd	:		%prec LET		{ $$ = NULL; }
 	| cmd ANDAND nl cmd			{ $$ = mkseq("%and", $1, $4); }
 	| cmd OROR nl cmd			{ $$ = mkseq("%or", $1, $4); }
  	| cmd PIPE nl cmd			{ $$ = mkpipe($1, $2->u[0].i, $2->u[1].i, $4); }
+	| cmd FUNPIPE nl cmd		{ $$ = mkfunpipe($1, $4); }
 	| '!' caret cmd				{ $$ = prefix("%not", mk(nList, thunkify($3), NULL)); }
 	| '~' word words			{ $$ = mk(nMatch, $2, $3); }
 	| EXTRACT word words			{ $$ = mk(nExtract, $2, $3); }
