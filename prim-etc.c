@@ -177,6 +177,11 @@ PRIM(addhistory) {
 	return NULL;
 }
 
+PRIM(clearhistory) {
+	clear_history();
+	return NULL;
+}
+
 #endif
 
 PRIM(getlast) {
@@ -680,6 +685,7 @@ extern Dict *initprims_etc(Dict *primdict) {
 #if READLINE
 	X(resetterminal);
 	X(addhistory);
+	X(clearhistory);
 #endif
 	/* math and numerical functions */
 	X(add);

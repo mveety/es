@@ -919,8 +919,22 @@ fn waitfor pids {
 }
 
 if {~ <=$&primitives addhistory} {
-	fn %add_history {
+	fn %add-history {
 		$&addhistory $1
 	}
+}
+
+if {~ <=$&primitives clearhistory} {
+	fn %clear-history {
+		$&clearhistory
+	}
+}
+
+fn %elem n list {
+	result $list($n)
+}
+
+fn %last list {
+	result $list($#list)
 }
 

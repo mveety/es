@@ -2,6 +2,7 @@
 library history (init libraries)
 
 histmax = 25
+history-reload = 25
 
 fn history-filter start usedate commandonly {
 	awk -v 'n='^$start \
@@ -166,8 +167,36 @@ fn reload-history nelem {
 	if {~ $#nelem 0} {
 		throw usage reload-history 'usage: reload-history [# of commands]'
 	}
-	for (h = ``(\n) {history -c -n 100}) {
-		%add_history $h
+	local(hist = ``(\n) {history -c -n $nelem}) {
+		for (h = $hist) {
+			%add-history $h
+		}
 	}
+}
+
+set-history = @ file {
+	local(basename=<={%last <={%split '/' $file}}) {
+		match $file (
+			(~/*) {file = $home^/^<={~~ $matchexpr ~/*}}
+			(./$basename $basename) { file = `{pwd}^'/'^$basename }
+			(*/$basename) { result 0 }
+		)
+	}
+	if {! access -rwf $file } {
+		touch $file
+	}
+	local(set-history=) {
+		$&sethistory $file
+		history = $file
+		if {! ~ $#history-reload 0} {
+			%clear-history
+			reload-history $history-reload
+		}
+	}
+	result $file
+}
+
+fn change-history file {
+	history = $file
 }
 
