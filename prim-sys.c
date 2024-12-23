@@ -314,10 +314,11 @@ PRIM(time) {
 	printstatus(0, status);
 
 	eprint(
-		"%6ldr %5ld.%ldu %5ld.%lds\t%L\n",
+		"%d: %6ld real %5ld.%ld user %5ld.%ld sys\n  %L\n",
+		pid,
 		t1 - t0,
-		r.ru_utime.tv_sec, (long) (r.ru_utime.tv_usec / 100000),
-		r.ru_stime.tv_sec, (long) (r.ru_stime.tv_usec / 100000),
+		r.ru_utime.tv_sec, (long) (r.ru_utime.tv_usec / 10000),
+		r.ru_stime.tv_sec, (long) (r.ru_stime.tv_usec / 10000),
 		lp, " "
 	);
 
