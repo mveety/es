@@ -218,7 +218,7 @@ fn esmglob_partialcompilation xglob {
 							escaped = false
 							tmp = $tmp $matchexpr
 						} {
-							if {~ $#tmp 0 && ~ $xlglob(<={add $i 1}) '|'} {
+							if {~ $#tmp 0 && ~ $xlglob(<={add $i 1}) '|' ')'} {
 								while {lte $i $xlglobsz} {
 									if {~ $xlglob($i) ')'} {
 										break
