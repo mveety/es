@@ -296,29 +296,32 @@ PRIM(time) {
 /*#if HAVE_WAIT3*/
 
 	int pid, status;
-	time_t t0, t1;
 	struct rusage r;
+	struct timespec before, after;
 	WaitStatus s;
 
 	Ref(List *, lp, list);
 
 	gc();	/* do a garbage collection first to ensure reproducible results */
-	t0 = time(NULL);
+	clock_gettime(CLOCK_MONOTONIC, &before);
 	pid = efork(TRUE, FALSE);
 	if (pid == 0)
 		exit(exitstatus(eval(lp, NULL, evalflags | eval_inchild)));
 	s = ewait(pid, FALSE, &r);
 	status = s.status;
-	t1 = time(NULL);
+	clock_gettime(CLOCK_MONOTONIC, &after);
 	SIGCHK();
 	printstatus(0, status);
+	after.tv_sec -= before.tv_sec;
+	after.tv_nsec -= before.tv_nsec;
+	if(after.tv_nsec < 0)
+		after.tv_nsec--, after.tv_nsec += 1000000000;
 
 	eprint(
-		"%d: %6ld real %5ld.%ld user %5ld.%ld sys\n  %L\n",
-		pid,
-		t1 - t0,
-		r.ru_utime.tv_sec, (long) (r.ru_utime.tv_usec / 10000),
-		r.ru_stime.tv_sec, (long) (r.ru_stime.tv_usec / 10000),
+		"    %6ld.%ld real %5ld.%ld user %5ld.%ld sys\t%L\n",
+		after.tv_sec, after.tv_nsec/10000000,
+		r.ru_utime.tv_sec, (long) (r.ru_utime.tv_usec / 100000),
+		r.ru_stime.tv_sec, (long) (r.ru_stime.tv_usec / 100000),
 		lp, " "
 	);
 

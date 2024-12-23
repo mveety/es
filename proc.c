@@ -69,10 +69,20 @@ extern int efork(Boolean parent, Boolean background) {
 
 static struct rusage wait_rusage;
 
+static void
+timevaldiff(struct timeval *after, struct timeval *before)
+{
+	after->tv_sec -= before->tv_sec;
+	after->tv_usec -= before->tv_usec;
+	if(after->tv_usec < 0)
+		after->tv_sec -= 1, after->tv_usec += 1000000;
+}
+
 /* dowait -- a wait wrapper that interfaces with signals */
 static int dowait(int *statusp) {
 	int n;
 	interrupted = FALSE;
+	struct rusage r_before;
 
 	if (!setjmp(slowlabel)) {
 		slow = TRUE;
@@ -80,8 +90,13 @@ static int dowait(int *statusp) {
 			n = -2;
 		else {
 			/* on freebsd this maybe should be WEXITED|WTRAPPED */
+			/* get the current rusage to help simulate how things would
+ 			 * be if there was only one child */
+			getrusage(RUSAGE_CHILDREN, &r_before);
 			n = waitpid(-1, (void*) statusp, 0);
 			getrusage(RUSAGE_CHILDREN, &wait_rusage);
+			timevaldiff(&wait_rusage.ru_utime, &r_before.ru_utime);
+			timevaldiff(&wait_rusage.ru_stime, &r_before.ru_stime);
 		}
 	} else
 		n = -2;
@@ -94,7 +109,7 @@ static int dowait(int *statusp) {
 }
 
 /* reap -- mark a process as dead and attach its exit status */
-static void reap(int pid, int status) {
+static void reap(int pid, int status, struct rusage r) {
 	Proc *proc;
 	for (proc = proclist; proc != NULL; proc = proc->next)
 		if (proc->pid == pid) {
@@ -113,15 +128,19 @@ static int
 nbwaitpid(int pid)
 {
 	int kstat, n, status;
+	struct rusage r_before;
 
 	kstat = kill(pid, 0);
 	if(kstat < 0)
 		return -1;
 
+	getrusage(RUSAGE_CHILDREN, &r_before);
 	n = waitpid(pid, (void*) &status, WNOHANG);
 	if(n == pid){
 		getrusage(RUSAGE_CHILDREN, &wait_rusage);
-		reap(pid, status);
+		timevaldiff(&wait_rusage.ru_utime, &r_before.ru_utime);
+		timevaldiff(&wait_rusage.ru_stime, &r_before.ru_stime);
+		reap(pid, status, wait_rusage);
 		return 0;
 	}
 	return -1;
@@ -140,7 +159,7 @@ top:
 				int seen_eintr = FALSE;
 				while ((deadpid = dowait(&proc->status)) != pid)
 					if (deadpid != -1)
-						reap(deadpid, proc->status);
+						reap(deadpid, proc->status, wait_rusage);
 					else if (errno == EINTR) {
 						if (interruptible)
 							SIGCHK();
@@ -178,7 +197,7 @@ top:
 			if (interruptible)
 				SIGCHK();
 		}
-		reap(pid, status);
+		reap(pid, status, wait_rusage);
 		goto top;
 	}
 	fail("es:ewait", "wait: %d is not a child of this shell", pid);
