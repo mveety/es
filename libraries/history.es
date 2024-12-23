@@ -162,3 +162,12 @@ fn lastcmd {
 	eval `{history -c -l}
 }
 
+fn reload-history nelem {
+	if {~ $#nelem 0} {
+		throw usage reload-history 'usage: reload-history [# of commands]'
+	}
+	for (h = ``(\n) {history -c -n 100}) {
+		%add_history $h
+	}
+}
+

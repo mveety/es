@@ -918,3 +918,9 @@ fn waitfor pids {
 	}
 }
 
+if {~ <=$&primitives addhistory} {
+	fn %add_history {
+		$&addhistory $1
+	}
+}
+

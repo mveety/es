@@ -6,6 +6,12 @@
 #include "prim.h"
 #include <stdlib.h>
 
+#if READLINE
+#include <stdio.h>
+#include <readline/readline.h>
+#include <readline/history.h>
+#endif
+
 PRIM(result) {
 	return list;
 }
@@ -162,6 +168,16 @@ PRIM(sethistory) {
 	sethistory(getstr(lp->term));
 	RefReturn(lp);
 }
+#if READLINE
+
+PRIM(addhistory) {
+	if (list == NULL)
+		fail("$&addhistory", "usage: $&addhistory [string]");
+	add_history(getstr(list->term));
+	return NULL;
+}
+
+#endif
 
 PRIM(getlast) {
 	if(lastcmd == NULL)
@@ -663,6 +679,7 @@ extern Dict *initprims_etc(Dict *primdict) {
 	X(getevaldepth);
 #if READLINE
 	X(resetterminal);
+	X(addhistory);
 #endif
 	/* math and numerical functions */
 	X(add);

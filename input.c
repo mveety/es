@@ -7,6 +7,7 @@
 
 #if READLINE
 #include <readline/readline.h>
+#include <readline/history.h>
 #endif
 
 /*
@@ -37,8 +38,8 @@ char *lastcmd, *nextlastcmd;
 static int historyfd = -1;
 
 #if READLINE
-int rl_meta_chars;	/* for editline; ignored for gnu readline */
-extern void add_history(char *);
+/* int rl_meta_chars;	* for editline; ignored for gnu readline */
+/*extern void add_history(char *);*/
 /*
 extern char *readline(char *);
 extern void rl_reset_terminal(char *);
@@ -782,7 +783,7 @@ extern void initinput(void) {
 	initparse();
 
 #if READLINE
-	rl_meta_chars = 0;
+	/* rl_meta_chars = 0; */
 	rl_basic_word_break_characters = " \t\n\\'`$><=;|&{()}";
 	rl_special_prefixes = "$";
 	rl_completer_quote_characters = "'";
