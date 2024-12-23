@@ -331,15 +331,18 @@ top:
 }
 
 /* bindargs -- bind an argument list to the parameters of a lambda */
-extern Binding *bindargs(Tree *params, List *args, Binding *binding) {
+extern Binding*
+bindargs(Tree *params, List *args, Binding *binding)
+{
+	Tree *param;
+	List *value;
+
 	if (params == NULL)
 		return mkbinding("*", args, binding);
 
 	gcdisable();
 
 	for (; params != NULL; params = params->u[1].p) {
-		Tree *param;
-		List *value;
 		assert(params->kind == nList);
 		param = params->u[0].p;
 		assert(param->kind == nWord || param->kind == nQword);
@@ -361,19 +364,26 @@ extern Binding *bindargs(Tree *params, List *args, Binding *binding) {
 }
 
 /* pathsearch -- evaluate fn %pathsearch + some argument */
-extern List *pathsearch(Term *term) {
+extern List*
+pathsearch(Term *term)
+{
 	List *search, *list;
+
 	search = varlookup("fn-%pathsearch", NULL);
 	if (search == NULL)
 		fail("es:pathsearch", "%E: fn %%pathsearch undefined", term);
+
 	list = mklist(term, NULL);
 	return eval(append(search, list), NULL, 0);
 }
 
 /* eval -- evaluate a list, producing a list */
-extern List *eval(List *list0, Binding *binding0, int flags) {
+extern List*
+eval(List *list0, Binding *binding0, int flags)
+{
 	Closure *volatile cp;
 	List *fn;
+	char *error, *binname;
 
 	if (++evaldepth >= maxevaldepth)
 		fail("es:eval", "max-eval-depth exceeded");
@@ -388,18 +398,19 @@ restart:
 		--evaldepth;
 		return true;
 	}
+
 	assert(list->term != NULL);
 
 	if ((cp = getclosure(list->term)) != NULL) {
 		switch (cp->tree->kind) {
-		    case nPrim:
+		case nPrim:
 			assert(cp->binding == NULL);
 			list = prim(cp->tree->u[0].s, list->next, binding, flags);
 			break;
-		    case nThunk:
+		case nThunk:
 			list = walk(cp->tree->u[0].p, cp->binding, flags);
 			break;
-		    case nLambda:
+		case nLambda:
 			ExceptionHandler
 
 				Push p;
@@ -428,15 +439,14 @@ restart:
 
 			EndExceptionHandler
 			break;
-		    case nList: {
+		case nList:
 			list = glom(cp->tree, cp->binding, TRUE);
 			list = append(list, list->next);
 			goto restart;
-		    }
-		    default:
+		default:
 			panic("eval: bad closure node kind %d",
 			      cp->tree->kind);
-		    }
+		}
 		goto done;
 	}
 
@@ -451,7 +461,7 @@ restart:
 		goto restart;
 	}
 	if (isabsolute(name)) {
-		char *error = checkexecutable(name);
+		error = checkexecutable(name);
 		if (error != NULL)
 			fail("$&whatis", "%s: %s", name, error);
 		list = forkexec(name, list, flags & eval_inchild);
@@ -463,8 +473,8 @@ restart:
 	fn = pathsearch(list->term);
 	if (fn != NULL && fn->next == NULL
 	    && (cp = getclosure(fn->term)) == NULL) {
-		char *name = getstr(fn->term);
-		list = forkexec(name, list, flags & eval_inchild);
+		binname = getstr(fn->term);
+		list = forkexec(binname, list, flags & eval_inchild);
 		goto done;
 	}
 
@@ -480,6 +490,8 @@ done:
 }
 
 /* eval1 -- evaluate a term, producing a list */
-extern List *eval1(Term *term, int flags) {
+extern List*
+eval1(Term *term, int flags)
+{
 	return eval(mklist(term, NULL), NULL, flags);
 }
