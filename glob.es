@@ -396,7 +396,7 @@ fn esmglob_match elem xglob {
 	result <={esmglob_compmatch $elem <={esmglob_compile $xglob}}
 }
 
-fn esmgm elem xglob_or_cglobs {
+fn esm~ elem xglob_or_cglobs {
 	if {~ $#xglob_or_cglobs 1} {
 		esmglob_match $elem $xglob_or_cglobs
 	} {
