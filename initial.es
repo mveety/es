@@ -938,3 +938,23 @@ fn %last list {
 	result $list($#list)
 }
 
+fn try body {
+	catch @ e type msg {
+		if {~ $e error} {
+			if {~ $type assert} {
+				throw $e $type $msg
+			} {
+				result true $type $msg
+			}
+		} {~ $e usage} {
+			result true usage
+		} {
+			throw $e $type $msg
+		}
+	} {
+		local(res = <={$body}) {
+			result false $res
+		}
+	}
+}
+
