@@ -332,7 +332,7 @@ fn esmglob_compile0 xglob {
 		return <={esmglob_double_wild_removal $xglob}
 	}
 	local (partcomp=;res=();tmp=) {
-		for(i = <={esmglob_partialcompilation <={esmglob_double_wild_removal $xglob}}) {
+		for (i = <={esmglob_double_wild_removal $xglob |> esmglob_partialcompilation}) {
 			tmp = <={esmglob_compile0 $i}
 			for(j = $tmp) {
 				res = <={esmglob_add_unique $j $res}
@@ -344,7 +344,7 @@ fn esmglob_compile0 xglob {
 
 fn esmglob_compile xglob {
 	local(
-		res = <={esmglob_compile0 <={esmglob_expandquestions $xglob}}
+		res = <={esmglob_expandquestions $xglob |> esmglob_compile0}
 	) {
 		process $res (
 			* {
@@ -393,7 +393,7 @@ fn esmglob_compmatch elem cglobs {
 
 
 fn esmglob_match elem xglob {
-	result <={esmglob_compmatch $elem <={esmglob_compile $xglob}}
+	esmglob_compile $xglob |> esmglob_compmatch $elem |> result
 }
 
 fn esm~ elem xglob_or_cglobs {

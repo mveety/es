@@ -99,13 +99,7 @@ fn dict:get keysarray dataarray key {
 			throw $e $type $msg
 		}
 	} {
-		let (
-			index=''
-		) {
-			dict:assert $0 $keysarray $dataarray
-			index = <={array:index $keysarray $key}
-			result <={array:get $dataarray $index}
-		}
+		result <={array:index $keysarray $key |> array:get $dataarray}
 	}
 }
 

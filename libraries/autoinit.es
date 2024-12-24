@@ -44,31 +44,27 @@ fn esrcd_last list {
 }
 
 fn esrcd_extract_name name {
-	result <={~~ <={esrcd_last <={%split '/' $name}} *.es}
+	result <={~~ <={%split '/' $name |> esrcd_last} *.es}
 }
 
 fn esrcd_all_scripts {
 	process <=esrcd_getall (
-		* {
-			result <={esrcd_extract_name $matchexpr}
-		}
+		* { esrcd_extract_name $matchexpr |> result }
 	)
 }
 
 fn esrcd_active_scripts {
 	process <=esrcd_executable_scripts (
-		* {
-			result <={esrcd_extract_name $matchexpr}
-		}
+		* { esrcd_extract_name $matchexpr |> result }
 	)
 }
 
 fn esrcd_enable_script script {
-	chmod +x <={esrcd_find_by_name $script}
+	esrcd_find_by_name $script |> chmod +x
 }
 
 fn esrcd_disable_script script {
-	chmod -x <={esrcd_find_by_name $script}
+	esrcd_find_by_name $script |> chmod -x
 }
 
 fn esrcd_load_script script disabled_error verbose {
@@ -167,14 +163,14 @@ fn autoinit command arg {
 				esrcd_disable_script $arg
 			}
 			(list-all) {
-				esrcd_print <=esrcd_all_scripts
+				esrcd_all_scripts |> esrcd_print
 			}
 			(list-enabled) {
-				esrcd_print <=esrcd_active_scripts
+				esrcd_active_scripts |> esrcd_print
 			}
 			(file) {
 				if {! ~ $#arg 1} { esrcd_usage }
-				esrcd_print <={esrcd_find_by_name $arg}
+				esrcd_find_by_name $arg |> esrcd_print
 			}
 			(help) {
 				esrcd_help

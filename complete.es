@@ -46,10 +46,9 @@ fn es_complete_access perms files {
 }
 
 fn es_complete_only_names files {
-	local(res=;plist=){
+	local(res=){
 		for(i = $files) {
-			plist = <={%split '/' $i}
-			res = $res $plist($#plist)
+			res = $res <={%split '/' $i |> %last}
 		}
 		result $res
 	}
@@ -72,11 +71,9 @@ fn complete_executables partial_name {
 						result <={es_complete_run_glob '$path/'^$partial_name}
 					}
 				}
-		# files = <={es_complete_remove_empty_results $files}
-		# files = <={es_complete_only_executable $files}
 		files = <={es_complete_executable_filter $files}
 		if {$only_name} {
-			result <={es_complete_only_names $files}
+			es_complete_only_names $files |> result
 		} {
 			result $files
 		}
@@ -84,11 +81,9 @@ fn complete_executables partial_name {
 }
 
 fn complete_files partial_name {
-	local(files=){
-		files = <={es_complete_run_glob $partial_name}
-		files = <={es_complete_remove_empty_results $files}
-		result $files
-	}
+	es_complete_run_glob $partial_name |>
+		es_complete_remove_empty_results |>
+		result
 }
 
 fn complete_all_variables prefix partial_name {
@@ -152,6 +147,13 @@ fn es_complete_is_command curline {
 			if {~ $curlinel($i) '='} {
 				if {gt $i 1} {
 					if {~ $curlinel(<={sub $i 1}) '<'} {
+						return <=true
+					}
+				}
+			}
+			if {~ $curlinel($i) '>'} {
+				if {gt $i 1} {
+					if{~ $curlinel(<={sub $i 1}) '|'} {
 						return <=true
 					}
 				}
@@ -227,8 +229,8 @@ fn %core_completer linebuf text start end state {
 					} {
 						tmp = <={es_complete_strip_leading_whitespace $"lbl(1 ... $start)}
 						lbllen = <={%count $lbl(1 ... $start)}
-						nstart = <={add <={sub $start <={sub $lbllen <={%count $:tmp}}} 1}
-						nend = <={add <={sub $end <={sub $lbllen <={%count $:tmp}}} 1}
+						nstart = <={%count $:tmp |> sub $lbllen |> sub $start |> add 1 }
+						nend = <={%count $:tmp |> sub $lbllen |> sub $end |> add 1}
 						assert2 $0 {gt $nstart 0 && gt $nend 0}
 						result $tmp
 					}
