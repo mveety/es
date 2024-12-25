@@ -3,12 +3,6 @@
 
 #include "es.h"
 #include "input.h"
-#include <stdio.h> /* needed for dprintf */
-
-#if READLINE
-#include <readline/readline.h>
-#include <readline/history.h>
-#endif
 
 /*
  * constants

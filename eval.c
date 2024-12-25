@@ -443,6 +443,13 @@ restart:
 			list = glom(cp->tree, cp->binding, TRUE);
 			list = append(list, list->next);
 			goto restart;
+		case nConcat:
+			Ref(Tree *, t, cp->tree);
+			while(t->kind == nConcat)
+				t = t->u[0].p;
+			if(t->kind == nPrim)
+				fail("es:eval", "invalid primitive: %T", cp->tree);
+			RefEnd(t);
 		default:
 			panic("eval: bad closure node kind %d",
 			      cp->tree->kind);

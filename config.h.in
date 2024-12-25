@@ -125,9 +125,6 @@
 /* What type are your limits? */
 #undef LIMIT_T
 
-/* are we solaris? */
-#undef SOLARIS
-
 /* Is getenv called by crt*.o or getopt? */
 #undef ABUSED_GETENV
 

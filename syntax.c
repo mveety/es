@@ -4,7 +4,6 @@
 #include "input.h"
 #include "syntax.h"
 #include "token.h"
-#include <stdio.h>
 
 Tree errornode;
 Tree *parsetree;

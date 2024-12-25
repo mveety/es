@@ -1,12 +1,8 @@
 /* proc.c -- process control system calls ($Revision: 1.2 $) */
 
 #include "es.h"
-#include <stdio.h>
 
 /* TODO: the rusage code for the time builtin really needs to be cleaned up */
-
-#include <sys/time.h>
-#include <sys/resource.h>
 
 Boolean hasforked = FALSE;
 

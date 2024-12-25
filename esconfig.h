@@ -104,10 +104,6 @@
  *		will be checked at run-time.  this is only useful if you're
  *		modifying es source, and makes the binary much larger.
  *
- *	REISER_CPP
- *		true if es is being compiled with a reiser-style preprocessor.
- *		if you have an ansi preprocessor, use it and turn this off.
- *
  *	SHOW_DOT_FILES
  *		if this option is off (the default), wildcard patterns do not
  *		match files that being with a ``.'' character;  this behavior
@@ -209,16 +205,6 @@
 #define	INITIAL_PATH		"/usr/bsd", "/usr/sbin", "/usr/bin", "/bin", ""
 #endif
 #endif	/* sgi */
-
-
-/* SunOS 4.x defaults */
-
-#if sun && !SOLARIS
-#ifndef	INITIAL_PATH
-#define	INITIAL_PATH		"/usr/ucb", "/usr/bin", ""
-#endif
-#endif	/* sun */
-
 
 /* HP/UX 9.0.1 -- from rsalz@osf.org (Rich $alz) and haahr*/
 
@@ -329,10 +315,6 @@
 
 #ifndef	REF_ASSERTIONS
 #define	REF_ASSERTIONS		0
-#endif
-
-#ifndef	REISER_CPP
-#define	REISER_CPP		0
 #endif
 
 #ifndef	SHOW_DOT_FILES

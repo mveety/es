@@ -4,13 +4,6 @@
 
 #include "es.h"
 #include "prim.h"
-#include <stdlib.h>
-
-#if READLINE
-#include <stdio.h>
-#include <readline/readline.h>
-#include <readline/history.h>
-#endif
 
 PRIM(result) {
 	return list;

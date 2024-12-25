@@ -20,6 +20,17 @@
  * protect the rest of es source from the dance of the includes
  */
 
+#include <stdlib.h>
+#include <sys/wait.h>
+#include <time.h>
+#include <stdio.h>
+#include <sys/stat.h>
+
+#if BSD_LIMITS || BUILTIN_TIME
+#include <sys/time.h>
+#include <sys/resource.h>
+#endif
+
 #if HAVE_UNISTD_H
 #include <unistd.h>
 #endif
@@ -51,10 +62,6 @@
 #include <sys/ioctl.h>
 #endif
 
-#if REQUIRE_STAT
-#include <sys/stat.h>
-#endif
-
 #include <dirent.h>
 typedef struct dirent Dirent;
 
@@ -74,20 +81,11 @@ typedef volatile void noreturn;
 typedef void noreturn;
 #endif
 
-#if STDC_HEADERS
-# include <stdlib.h>
-#else
-extern noreturn exit(int);
-extern noreturn abort(void);
-extern long strtol(const char *num, char **end, int base);
-extern void *qsort(
-	void *base, size_t nmemb, size_t size,
-	int (*compar)(const void *, const void *)
-);
-#endif /* !STDC_HEADERS */
 
-#include <sys/wait.h>
-#include <time.h>
+#if READLINE
+#include <readline/readline.h>
+#include <readline/history.h>
+#endif
 
 /*
  * things that should be defined by header files but might not have been
@@ -120,29 +118,16 @@ extern void *qsort(
  * macros
  */
 
+#define STMT(stmt) do { stmt; } while (0)
+#define NOP do {} while (0)
+#define CONCAT(a,b) a ## b
+#define STRING(s) #s
 #define	streq(s, t)		(strcmp(s, t) == 0)
 #define	strneq(s, t, n)		(strncmp(s, t, n) == 0)
 #define	hasprefix(s, p)		strneq(s, p, (sizeof p) - 1)
 #define	arraysize(a)		((int) (sizeof (a) / sizeof (*a)))
 #define	memzero(dest, count)	memset(dest, 0, count)
 #define	atoi(s)			strtol(s, NULL, 0)
-
-#if SOLARIS
-#define	STMT(stmt)		if (1) { stmt; } else
-#define	NOP			if (1) ; else
-#else
-#define	STMT(stmt)		do { stmt; } while (0)
-#define	NOP			do {} while (0)
-#endif
-
-#if REISER_CPP
-#define CONCAT(a,b)	a/**/b
-#define STRING(s)	"s"
-#else
-#define CONCAT(a,b)	a ## b
-#define STRING(s)	#s
-#endif
-
 
 /*
  * types we use throughout es
@@ -159,16 +144,6 @@ typedef volatile sig_atomic_t Atomic;
 typedef volatile int Atomic;
 #endif
 
-/* assume signals are always void */
-/*
-#if VOID_SIGNALS
-typedef void Sigresult;
-#define	SIGRESULT
-#else
-typedef int Sigresult;
-#define	SIGRESULT	0
-#endif
-*/
 typedef void Sigresult;
 
 typedef GETGROUPS_T gidset_t;

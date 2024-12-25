@@ -11,13 +11,6 @@
 # define BSD_LIMITS 0
 #endif
 
-#if BSD_LIMITS || BUILTIN_TIME
-#include <sys/time.h>
-#include <sys/resource.h>
-#endif
-
-#include <sys/stat.h>
-
 PRIM(newpgrp) {
 	int pid;
 	if (list != NULL)
