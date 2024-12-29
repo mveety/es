@@ -561,10 +561,8 @@ extern Tree *parse(char *pr1, char *pr2) {
 		error = NULL;
 		fail("$&parse", "%s", e);
 	}
-#if LISPTREES
 	if (input->runflags & run_lisptrees)
 		eprint("%B\n", parsetree);
-#endif
 	return parsetree;
 }
 

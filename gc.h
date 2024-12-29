@@ -9,26 +9,17 @@
 struct Tag {
 	void *(*copy)(void *);
 	size_t (*scan)(void *);
-#if ASSERTIONS || GCVERBOSE
 	long magic;
 	char *typename;
-#endif
 };
 
 extern Tag StringTag;
 
-#if ASSERTIONS || GCVERBOSE
 enum {TAGMAGIC = 0xDefaced};
 #define	DefineTag(t, storage) \
 	static void *CONCAT(t,Copy)(void *); \
 	static size_t CONCAT(t,Scan)(void *); \
 	storage Tag CONCAT(t,Tag) = { CONCAT(t,Copy), CONCAT(t,Scan), TAGMAGIC, STRING(t) }
-#else
-#define	DefineTag(t, storage) \
-	static void *CONCAT(t,Copy)(void *); \
-	static size_t CONCAT(t,Scan)(void *); \
-	storage Tag CONCAT(t,Tag) = { CONCAT(t,Copy), CONCAT(t,Scan) }
-#endif
 
 /*
  * allocation

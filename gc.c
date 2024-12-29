@@ -51,12 +51,7 @@ static size_t minspace = MIN_minspace;	/* minimum number of bytes in a new space
  * debugging
  */
 
-#if GCVERBOSE
 #define	VERBOSE(p)	STMT(if (gcverbose) eprint p)
-#else
-#define	VERBOSE(p)	NOP
-#endif
-
 
 /*
  * GCPROTECT
@@ -434,12 +429,10 @@ extern void gc(void) {
 		size_t livedata;
 		Space *space;
 
-#if GCINFO
 		size_t olddata = 0;
 		if (gcinfo)
 			for (space = new; space != NULL; space = space->next)
 				olddata += SPACEUSED(space);
-#endif
 
 		assert(gcblocked >= 0);
 		if (gcblocked > 0)
@@ -459,10 +452,10 @@ extern void gc(void) {
 		new = newspace(NULL);
 #endif
 		VERBOSE(("\nGC collection starting\n"));
-#if GCVERBOSE
-		for (space = old; space != NULL; space = space->next)
-			VERBOSE(("GC old space = %ux ... %ux\n", space->bot, space->current));
-#endif
+		if(gcverbose == TRUE){
+			for (space = old; space != NULL; space = space->next)
+				VERBOSE(("GC old space = %ux ... %ux\n", space->bot, space->current));
+		}
 		VERBOSE(("GC new space = %ux ... %ux\n", new->bot, new->top));
 		VERBOSE(("GC scanning root list\n"));
 		scanroots(rootlist);
@@ -480,13 +473,11 @@ extern void gc(void) {
 		for (livedata = 0, space = new; space != NULL; space = space->next)
 			livedata += SPACEUSED(space);
 
-#if GCINFO
 		if (gcinfo)
 			eprint(
 				"[GC: old %8d  live %8d  min %8d  (pid %5d)]\n",
 				olddata, livedata, minspace, getpid()
 			);
-#endif
 
 		if (minspace < livedata * 2)
 			minspace = livedata * 4;
@@ -632,7 +623,6 @@ extern void freebuffer(Buffer *buf) {
 }
 
 
-#if GCVERBOSE
 /*
  * memdump -- print out all of gc space, as best as possible
  */
@@ -776,4 +766,4 @@ extern void memdump(void) {
 		}
 	}
 }
-#endif
+

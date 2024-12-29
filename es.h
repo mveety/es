@@ -86,12 +86,8 @@ struct WaitStatus {
 
 /* main.c */
 
-#if GCVERBOSE
 extern Boolean gcverbose;		/* -G */
-#endif
-#if GCINFO
 extern Boolean gcinfo;			/* -I */
-#endif
 extern Boolean assertions;		/* -A */
 
 /* initial.c (for es) or dump.c (for esdump) */

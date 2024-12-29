@@ -2,12 +2,8 @@
 
 #include "es.h"
 
-#if GCVERBOSE
 Boolean gcverbose	= FALSE;	/* -G */
-#endif
-#if GCINFO
 Boolean gcinfo		= FALSE;	/* -I */
-#endif
 Boolean assertions = FALSE;		/* -A */
 
 /* #if 0 && !HPUX && !defined(linux) && !defined(sgi) */
@@ -75,7 +71,7 @@ static void runesrc(void) {
 static noreturn usage(void) {
 	eprint(
 		"usage: es [-c command] [-silevxnpoIGL] [file [args ...]]\n"
-		"	-c cmd	execute argument\n"
+		"	-c cmd execute argument\n"
 		"	-s	read commands from standard input; stop option parsing\n"
 		"	-i	interactive shell\n"
 		"	-l	login shell\n"
@@ -87,9 +83,9 @@ static noreturn usage(void) {
 		"	-p	don't load functions from the environment\n"
 		"	-o	don't open stdin, stdout, and stderr if they were closed\n"
 		"	-d	don't ignore SIGQUIT or SIGTERM\n"
-		"	-I	print garbage collector information (if enabled)\n"
-		"	-G	print verbose garbage collector information (if enabled)\n"
-		"	-L	print parser results in LISP format (if enabled)\n"
+		"	-I	print garbage collector information\n"
+		"	-G	print verbose garbage collector information\n"
+		"	-L	print parser results in LISP format\n"
 		"	-A	enable assertions\n"
 	);
 	exit(1);
@@ -132,20 +128,14 @@ int main(int argc, char **argv) {
 		case 'N':	readesrc = FALSE; break;
 		case 'v':	runflags |= run_echoinput;	break;
 		case 'x':	runflags |= run_printcmds;	break;
-#if LISPTREES
 		case 'L':	runflags |= run_lisptrees;	break;
-#endif
 		case 'l':	loginshell = TRUE;		break;
 		case 'p':	protected = TRUE;		break;
 		case 'o':	keepclosed = TRUE;		break;
 		case 'd':	allowquit = TRUE;		break;
 		case 's':	cmd_stdin = TRUE;			goto getopt_done;
-#if GCVERBOSE
 		case 'G':	gcverbose = TRUE;		break;
-#endif
-#if GCINFO
 		case 'I':	gcinfo = TRUE;			break;
-#endif
 		case 'A':	assertions = TRUE;		break;
 		default:
 			usage();

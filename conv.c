@@ -378,7 +378,6 @@ static Boolean Wconv(Format *f) {
 }
 
 
-#if LISPTREES
 static Boolean Bconv(Format *f) {
 	Tree *n = va_arg(f->args, Tree *);
 	if (n == NULL) {
@@ -476,7 +475,6 @@ static Boolean Bconv(Format *f) {
 	}
 	return FALSE;
 }
-#endif
 
 /* install the conversion routines */
 void initconv(void) {
@@ -489,7 +487,6 @@ void initconv(void) {
 	fmtinstall('T', Tconv);
 	fmtinstall('W', Wconv);
 	fmtinstall('Z', Zconv);
-#if LISPTREES
 	fmtinstall('B', Bconv);
-#endif
 }
+
