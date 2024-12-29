@@ -291,10 +291,12 @@ extern Boolean isinspace(Space *space, void *p) {
 /* globalroot -- add an external to the list of global roots */
 extern void globalroot(void *addr) {
 	Root *root;
-#if ASSERTIONS
-	for (root = globalrootlist; root != NULL; root = root->next)
-		assert(root->p != addr);
-#endif
+
+	if(assertions == TRUE) {
+		for (root = globalrootlist; root != NULL; root = root->next)
+			assert(root->p != addr);
+	}
+
 	root = ealloc(sizeof (Root));
 	root->p = addr;
 	root->next = globalrootlist;
@@ -306,10 +308,11 @@ exceptionroot(Root *root, List **e)
 {
 	Root *r;
 
-#if ASSERTIONS
-	for(r = exceptionrootlist; r != NULL; r = r->next)
-		assert(r->p != (void**)e);
-#endif
+	if(assertions == TRUE) {
+		for(r = exceptionrootlist; r != NULL; r = r->next)
+			assert(r->p != (void**)e);
+	}
+
 	root->p = (void**)e;
 	root->next = exceptionrootlist;
 	exceptionrootlist = root;

@@ -92,7 +92,7 @@ extern Boolean gcverbose;		/* -G */
 #if GCINFO
 extern Boolean gcinfo;			/* -I */
 #endif
-
+extern Boolean assertions;		/* -A */
 
 /* initial.c (for es) or dump.c (for esdump) */
 
@@ -400,7 +400,7 @@ extern Root *rootlist;
 #endif
 
 #define	Ref(t, v, init) \
-	if (0) ; else { \
+	if(0); else { \
 		t v = init; \
 		Root (CONCAT(v,__root__)); \
 		(CONCAT(v,__root__)).p = (void **) &v; \
@@ -417,6 +417,7 @@ extern Root *rootlist;
 		RefPop(v); \
 		return v; \
 	}
+
 #define	RefAdd(e) \
 	if (0) ; else { \
 		Root __root__; \

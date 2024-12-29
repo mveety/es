@@ -8,6 +8,7 @@ Boolean gcverbose	= FALSE;	/* -G */
 #if GCINFO
 Boolean gcinfo		= FALSE;	/* -I */
 #endif
+Boolean assertions = FALSE;		/* -A */
 
 /* #if 0 && !HPUX && !defined(linux) && !defined(sgi) */
 /* extern int getopt (int argc, char **argv, const char *optstring); */
@@ -89,6 +90,7 @@ static noreturn usage(void) {
 		"	-I	print garbage collector information (if enabled)\n"
 		"	-G	print verbose garbage collector information (if enabled)\n"
 		"	-L	print parser results in LISP format (if enabled)\n"
+		"	-A	enable assertions\n"
 	);
 	exit(1);
 }
@@ -121,7 +123,7 @@ int main(int argc, char **argv) {
 	if (*argv[0] == '-')
 		loginshell = TRUE;
 
-	while ((c = getopt(argc, argv, "eilxvnpodsc:?GILN")) != EOF)
+	while ((c = getopt(argc, argv, "eilxvnpodsAc:?GILN")) != EOF)
 		switch (c) {
 		case 'c':	cmd = optarg;			break;
 		case 'e':	runflags |= eval_exitonfalse;	break;
@@ -144,6 +146,7 @@ int main(int argc, char **argv) {
 #if GCINFO
 		case 'I':	gcinfo = TRUE;			break;
 #endif
+		case 'A':	assertions = TRUE;		break;
 		default:
 			usage();
 		}

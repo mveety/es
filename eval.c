@@ -450,6 +450,7 @@ restart:
 			if(t->kind == nPrim)
 				fail("es:eval", "invalid primitive: %T", cp->tree);
 			RefEnd(t);
+			break;
 		default:
 			panic("eval: bad closure node kind %d",
 			      cp->tree->kind);

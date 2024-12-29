@@ -133,11 +133,12 @@ static int rescount = 0, resmax = 0;
 
 /* registerfd -- reserve a file descriptor for es */
 extern void registerfd(int *fdp, Boolean closeonfork) {
-#if ASSERTIONS
 	int i;
-	for (i = 0; i < rescount; i++)
-		assert(fdp != reserved[i].fdp);
-#endif
+
+	if(assertions == TRUE) {
+		for (i = 0; i < rescount; i++)
+			assert(fdp != reserved[i].fdp);
+	}
 	if (rescount >= resmax) {
 		resmax += 10;
 		reserved = erealloc(reserved, resmax * sizeof (Reserve));

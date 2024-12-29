@@ -34,12 +34,13 @@ extern noreturn throw(List *e) {
 	exceptionunroot();
 	evaldepth = handler->evaldepth;
 
-#if ASSERTIONS
-	for (; rootlist != handler->rootlist; rootlist = rootlist->next)
-		assert(rootlist != NULL);
-#else
-	rootlist = handler->rootlist;
-#endif
+	if(assertions == TRUE){
+		for (; rootlist != handler->rootlist; rootlist = rootlist->next)
+			assert(rootlist != NULL);
+	} else {
+		rootlist = handler->rootlist;
+	}
+
 	exception = e;
 	longjmp(handler->label, 1);
 	NOTREACHED;
