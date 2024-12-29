@@ -67,18 +67,20 @@ fn esrcd_disable_script script {
 	esrcd_find_by_name $script |> chmod -x
 }
 
-fn esrcd_load_script script disabled_error verbose {
+fn esrcd_load_script script disabled_error verbose force {
 	local(name=<={esrcd_extract_name $script}){
-		if {~ $autoloaded $name} {
+		if {~ $autoloaded $name && ! $force} {
 			throw error $0 $name^' is already loaded'
 		}
-		if {! access -xf $script} {
+		if {! access -xf $script && ! $force} {
 			if {$disabled_error} {
 				throw error $0 $name^' is disabled'
 			}
 		}
 		. $script
-		autoloaded = $autoloaded $name
+		if {! ~ $autoloaded $name} {
+			autoloaded = $autoloaded $name
+		}
 		if {$verbose} {
 			echo 'loaded '^$script
 		}
@@ -97,7 +99,7 @@ fn esrcd_load_all_scripts verbose {
 				throw $e $type $msg
 			}
 		} {
-			esrcd_load_script $s false $verbose
+			esrcd_load_script $s false $verbose false
 		}
 	}
 }
@@ -113,14 +115,15 @@ usage: autoinit [-v|-h] command [script]
         -v -- be more verbose
         -h -- print this message
     commands:
-        load-all         -- load all enabled scripts
-        load [script]    -- load any script
-        enable [script]  -- enable a script
-        disable [script] -- disable a script
-        list-all         -- list all available scripts
-        list-enabled     -- list all enabled scripts
-        file [script]    -- print the path to a script
-        help             -- print this message
+        load-all            -- load all enabled scripts
+        load [-f] [script]  -- load any script (-f to force)
+        enable [script]     -- enable a script
+        disable [script]    -- disable a script
+        list-all            -- list all available scripts
+        list-enabled        -- list all enabled scripts
+        list-loaded         -- list all loaded scripts
+        file [script]       -- print the path to a script
+        help                -- print this message
 %%end
 }
 
@@ -144,6 +147,7 @@ fn autoinit command arg {
 					result $autoinit_echo_load
 				}
 			}
+			force_load = false
 	) {
 		if {~ $#command 0} { esrcd_usage }
 		match $command (
@@ -151,8 +155,12 @@ fn autoinit command arg {
 				esrcd_load_all_scripts $be_verbose
 			}
 			(load) {
+				if {~ $arg(1) -f} {
+					force_load = true
+					arg = $arg(2 ...)
+				}
 				if {! ~ $#arg 1} { esrcd_usage }
-				esrcd_load_script <={esrcd_find_by_name $arg} true $be_verbose
+				esrcd_load_script <={esrcd_find_by_name $arg} true $be_verbose $force_load
 			}
 			(enable) {
 				if {! ~ $#arg 1} { esrcd_usage }
@@ -167,6 +175,9 @@ fn autoinit command arg {
 			}
 			(list-enabled) {
 				esrcd_active_scripts |> esrcd_print
+			}
+			(list-loaded) {
+				echo $autoloaded
 			}
 			(file) {
 				if {! ~ $#arg 1} { esrcd_usage }
