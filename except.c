@@ -19,16 +19,19 @@ extern void pophandler(Handler *handler) {
 /* throw -- raise an exception */
 extern noreturn throw(List *e) {
 	Handler *handler = tophandler;
+	Root exceptroot;
 
 	assert(!gcisblocked());
 	assert(e != NULL);
 	assert(handler != NULL);
 	tophandler = handler->up;
-	
+
+	exceptionroot(&exceptroot, &e);
 	while (pushlist != handler->pushlist) {
 		rootlist = &pushlist->defnroot;
 		varpop(pushlist);
 	}
+	exceptionunroot();
 	evaldepth = handler->evaldepth;
 
 #if ASSERTIONS
@@ -42,26 +45,8 @@ extern noreturn throw(List *e) {
 	NOTREACHED;
 }
 
-/* fail -- pass a user catchable error up the exception chain */
-/*extern noreturn fail VARARGS2(const char *, from, const char *, fmt) {
-	char *s;
-	va_list args;
-
-	VA_START(args, fmt);
-	s = strv(fmt, args);
-	va_end(args);
-
-	gcdisable();
-	Ref(List *, e, mklist(mkstr("error"),
-			      mklist(mkstr((char *) from),
-				     mklist(mkstr(s), NULL))));
-	while (gcisblocked())
-		gcenable();
-	throw(e);
-	RefEnd(e);
-}*/
-
-extern noreturn fail(const char *from, const char *fmt, ...)
+extern noreturn
+fail(const char *from, const char *fmt, ...)
 {
 	char *s;
 	va_list args;

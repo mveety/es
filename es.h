@@ -381,7 +381,6 @@ extern void gcenable(void);			/* enable collections */
 extern void gcdisable(void);			/* disable collections */
 extern Boolean gcisblocked();			/* is collection disabled? */
 
-
 /*
  * garbage collector tags
  */
@@ -447,6 +446,8 @@ extern Root *rootlist;
 #define	RefRemove4(v1, v2, v3, v4)	RefRemove(v1); RefRemove3(v2, v3, v4)
 
 extern void globalroot(void *addr);
+extern void exceptionroot(Root*, List**);
+extern void exceptionunroot(void);
 
 /* struct Push -- varpush() placeholder */
 
