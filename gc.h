@@ -5,12 +5,23 @@
 /*
  * tags
  */
-
+/* typedef for Tag is in es.h */
 struct Tag {
 	void *(*copy)(void *);
 	size_t (*scan)(void *);
 	long magic;
 	char *typename;
+};
+
+enum {
+	GcForward = 1<<0,
+};
+
+typedef struct Header Header;
+struct Header {
+/*	unsigned int flags; */
+	Tag *tag;
+	void *forward;
 };
 
 extern Tag StringTag;

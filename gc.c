@@ -320,38 +320,47 @@ exceptionunroot(void)
 	exceptionrootlist = exceptionrootlist->next;
 }
 
-/* not portable to word addressed machines */
-#define	TAG(p)		(((Tag **) p)[-1])
-#define	FORWARDED(tagp)	(((size_t) tagp) & 1)
-#define	FOLLOWTO(p)	((Tag *) (((char *) p) + 1))
-#define	FOLLOW(tagp)	((void *) (((char *) tagp) - 1))
-
 /* forward -- forward an individual pointer from old space */
-extern void *forward(void *p) {
-	Tag *tag;
+Header*
+header(void *p)
+{
+	void *v;
+
+	v = (void*)(((char*)p)-sizeof(Header));
+	return (Header*)v;
+}
+
+extern void*
+forward(void *p)
+{
+	Header *h, *nh;
 	void *np;
 
-	if (!isinspace(old, p)) {
+	if(!isinspace(old, p)){
 		VERBOSE(("GC %8ux : <<not in old space>>\n", p));
 		return p;
 	}
 
-	VERBOSE(("GC %8ux : ", p));
+	h = header(p);
+	assert(h->tag != NULL);
+	assert(h->tag->magic == TAGMAGIC);
 
-	tag = TAG(p);
-	assert(tag != NULL);
-	if (FORWARDED(tag)) {
-		np = FOLLOW(tag);
-		assert(TAG(np)->magic == TAGMAGIC);
-		VERBOSE(("%s	-> %8ux (followed)\n", TAG(np)->typename, np));
+	if(h->forward){
+		np = h->forward;
+		nh = header(np);
+		VERBOSE(("%s	-> %8ux (followed)\n", nh->tag->typename, np));
 	} else {
-		assert(tag->magic == TAGMAGIC);
-		np = (*tag->copy)(p);
-		VERBOSE(("%s	-> %8ux (forwarded)\n", tag->typename, np));
-		TAG(p) = FOLLOWTO(np);
+		np = (h->tag->copy)(p);
+		nh = header(np);
+		h->forward = np;
+		nh->forward = NULL;
+		VERBOSE(("%s	-> %8ux (forwarded)\n", nh->tag->typename, np));
 	}
+
+	assert(nh->tag->magic == TAGMAGIC);
 	return np;
 }
+
 
 /* scanroots -- scan a rootlist */
 static void scanroots(Root *rootlist) {
@@ -363,28 +372,31 @@ static void scanroots(Root *rootlist) {
 }
 
 /* scanspace -- scan new space until it is up to date */
-static void scanspace(void) {
-	Space *sp, *scanned;
-	for (scanned = NULL;;) {
-		Space *front = new;
-		for (sp = new; sp != scanned; sp = sp->next) {
-			char *scan;
-			assert(sp != NULL);
+static void
+scanspace(void)
+{
+	Space *sp, *scanned, *front;
+	char *scan;
+	Header *h;
+
+	scanned = NULL;
+	for(;;){
+		front = new;
+		for(sp = new; sp != scanned; sp = sp->next){
 			scan = sp->bot;
-			while (scan < sp->current) {
-				Tag *tag = *(Tag **) scan;
-				assert(tag->magic == TAGMAGIC);
-				scan += sizeof (Tag *);
-				VERBOSE(("GC %8ux : %s	scan\n", scan, tag->typename));
-				scan += ALIGN((*tag->scan)(scan));
+			while(scan < sp->current){
+				h = (Header*)scan;
+				assert(h->tag->magic == TAGMAGIC);
+				scan += sizeof(Header);
+				VERBOSE(("GC %8ux : %s	scan\n", scan, h->tag->typename));
+				scan += ALIGN((h->tag->scan)(scan));
 			}
 		}
-		if (new == front)
+		if(new == front)
 			break;
 		scanned = front;
 	}
 }
-
 
 /*
  * the garbage collector public interface
@@ -425,15 +437,17 @@ extern Boolean gcisblocked(void) {
 
 /* gc -- actually do a garbage collection */
 extern void gc(void) {
-	do {
 		size_t livedata;
 		Space *space;
+		size_t olddata;
 
-		size_t olddata = 0;
+	do {
+		olddata = 0;
+		
 		if (gcinfo)
 			for (space = new; space != NULL; space = space->next)
 				olddata += SPACEUSED(space);
-
+		
 		assert(gcblocked >= 0);
 		if (gcblocked > 0)
 			return;
@@ -507,29 +521,39 @@ extern void initgc(void) {
  */
 
 /* gcalloc -- allocate an object in new space */
-extern void *gcalloc(size_t nbytes, Tag *tag) {
-	size_t n = ALIGN(nbytes + sizeof (Tag *));
+extern void* /* use the same logic. that's solid */
+gcalloc(size_t nbytes, Tag *tag)
+{
+	Header *hp;
+	char *np;
+	char *p;
+	size_t n;
+
 #if GCALWAYS
 	gc();
 #endif
+
 	assert(tag == NULL || tag->magic == TAGMAGIC);
-	for (;;) {
-		Tag **p = (void *) new->current;
-		char *q = ((char *) p) + n;
-		if (q <= new->top) {
-			new->current = q;
-			*p++ = tag;
-			return p;
+
+	n = ALIGN(nbytes + sizeof(Header));
+	for(;;){
+		hp = (void*)new->current;
+		np = ((char*)hp) + n;
+		if(np <= new->top){
+			new->current = np;
+			p = ((char*)hp)+sizeof(Header);
+			hp->tag = tag;
+			hp->forward = NULL;
+			return (void*)p;
 		}
-		if (minspace < nbytes)
-			minspace = nbytes + sizeof (Tag *);
-		if (gcblocked)
+		if(minspace < n)
+			minspace = n;
+		if(gcblocked)
 			new = newspace(new);
 		else
 			gc();
 	}
 }
-
 
 /*
  * strings
