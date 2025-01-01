@@ -41,7 +41,6 @@ MKDIR_P = @MKDIR_P@
 
 YACC = @YACC@
 
-#CFLAGS	= $(ADDCFLAGS) -I. -I$(srcdir) -W -Wall -Wno-missing-field-initializers -Wno-unused-parameter -Wno-clobbered @CFLAGS@
 CFLAGS	= $(ADDCFLAGS) -I. -I$(srcdir) -W -Wall -Wno-missing-field-initializers -Wno-unused-parameter @CFLAGS@
 LDFLAGS	= $(ADDLDFLAGS) @LDFLAGS@
 LIBS	= $(ADDLIBS) @LIBS@
@@ -62,7 +61,7 @@ OFILES	= access.o closure.o conv.o dict.o eval.o except.o fd.o gc.o glob.o \
 	  tree.o util.o var.o vec.o version.o y.tab.o
 OTHER	= Makefile parse.y mksignal getsigfiles
 SYSLIB = initial.es macros.es applymap.es libraries.es config.es \
-		 glob.es complete.es suffix.es
+		 range.es glob.es complete.es suffix.es
 GEN	= esdump y.tab.c y.tab.h y.output token.h sigmsgs.c system.c config.es
 
 es	: ${OFILES} system.o
