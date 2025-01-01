@@ -385,6 +385,7 @@ typedef struct Root Root;
 struct Root {
 	void **p;
 	Root *next;
+	Root *prev;
 };
 
 extern Root *rootlist;
@@ -400,12 +401,14 @@ extern Root *rootlist;
 		t v = init; \
 		Root (CONCAT(v,__root__)); \
 		(CONCAT(v,__root__)).p = (void **) &v; \
+		if(rootlist) {rootlist->prev = &(CONCAT(v,__root__));} \
 		(CONCAT(v,__root__)).next = rootlist; \
 		rootlist = &(CONCAT(v,__root__))
 #define	RefPop(v) \
 		refassert(rootlist == &(CONCAT(v,__root__))); \
 		refassert(rootlist->p == (void **) &v); \
-		rootlist = rootlist->next;
+		rootlist = rootlist->next; \
+		if(rootlist) {rootlist->prev = NULL;}
 #define RefEnd(v) \
 		RefPop(v); \
 	}
@@ -419,11 +422,13 @@ extern Root *rootlist;
 		Root __root__; \
 		__root__.p = (void **) &e; \
 		__root__.next = rootlist; \
+		if(rootlist){rootlist->prev = &__root__;} \
 		rootlist = &__root__
 #define	RefRemove(e) \
 		refassert(rootlist == &__root__); \
 		refassert(rootlist->p == (void **) &e); \
 		rootlist = rootlist->next; \
+		if(rootlist){rootlist->prev = NULL;} \
 	}
 
 #define	RefEnd2(v1, v2)		RefEnd(v1); RefEnd(v2)

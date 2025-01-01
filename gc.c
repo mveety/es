@@ -294,6 +294,8 @@ extern void globalroot(void *addr) {
 
 	root = ealloc(sizeof (Root));
 	root->p = addr;
+	if(globalrootlist)
+		globalrootlist->prev = root;
 	root->next = globalrootlist;
 	globalrootlist = root;
 }
@@ -309,6 +311,8 @@ exceptionroot(Root *root, List **e)
 	}
 
 	root->p = (void**)e;
+	if(exceptionrootlist)
+		exceptionrootlist->prev = root;
 	root->next = exceptionrootlist;
 	exceptionrootlist = root;
 }
@@ -318,6 +322,8 @@ exceptionunroot(void)
 {
 	assert(exceptionrootlist != NULL);
 	exceptionrootlist = exceptionrootlist->next;
+	if(exceptionrootlist)
+		exceptionrootlist->prev = NULL;
 }
 
 /* forward -- forward an individual pointer from old space */

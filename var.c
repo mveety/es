@@ -217,6 +217,8 @@ extern void varpush(Push *push, char *name, List *defn) {
 	validatevar(name);
 	push->name = name;
 	push->nameroot.next = rootlist;
+	if(rootlist)
+		rootlist->prev = &push->nameroot;
 	push->nameroot.p = (void **) &push->name;
 	rootlist = &push->nameroot;
 
@@ -242,6 +244,7 @@ extern void varpush(Push *push, char *name, List *defn) {
 	pushlist = push;
 
 	push->defnroot.next = rootlist;
+	rootlist->prev = &push->defnroot;
 	push->defnroot.p = (void **) &push->defn;
 	rootlist = &push->defnroot;
 }
