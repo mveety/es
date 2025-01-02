@@ -137,6 +137,32 @@ fn-unwind-protect = $&noreturn @ body cleanup {
 	}
 }
 
+fn-%block = @ rest {
+	local(
+		__es_deferbody=
+		__es_res=
+		fn-defer = @ body {
+		__es_deferbody = {$body} $__es_deferbody
+		__es_exception = __es_none
+		}
+	) {
+		catch @ e {
+			__es_exception = $e
+		} {
+			__es_res = <={$rest}
+		}
+		for(fn = $__es_deferbody) {
+			$fn
+		}
+		if {! ~ $__es_exception __es_none} {
+			throw $__es_exception
+		} {
+			result $__es_res
+		}
+	}
+}
+
+
 #	These builtins are not provided on all systems, so we check
 #	if the accompanying primitives are defined and, if so, define
 #	the builtins.  Otherwise, we'll just not have a limit command
@@ -958,19 +984,4 @@ fn try body {
 	}
 }
 
-fn block rest {
-	local(
-		__es_deferbody=
-		__es_res=
-		fn-defer = @ body {
-			__es_deferbody = $__es_deferbody {$body}
-		}
-	) {
-		__es_res = <={$rest}
-		for(fn = $__es_deferbody) {
-			$fn
-		}
-		result $__es_res
-	}
-}
 
