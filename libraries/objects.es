@@ -60,7 +60,11 @@ fn new class rest {
 			<={method create $$methods} $rest
 		}
 		result @{
+			if {~ $#* 0} {
+				result <={<={method default $$methods}}
+			} {
 				result <={<={method $1 $$methods} $*(2 ...)}
+			}
 		}
 	}
 }
