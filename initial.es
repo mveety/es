@@ -835,7 +835,7 @@ get-apids = @ { result <=%apids }
 home		= /
 ifs		= ' ' \t \n
 prompt		= '; ' ''
-max-eval-depth	= 640
+max-eval-depth	= 2500 # found experimentally. this will work on linux and freebsd
 noexport = noexport
 
 #

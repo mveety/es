@@ -185,14 +185,31 @@ static const Limit limits[] = {
 	{ NULL, 0, NULL }
 };
 
-static void printlimit(const Limit *limit, Boolean hard) {
+struct Limret {
+	Boolean unlimited;
+	size_t size;
+};
+typedef struct Limret Limret;
+
+static Limret printlimit(const Limit *limit, Boolean hard, int retlimit) {
 	struct rlimit rlim;
 	LIMIT_T lim;
+	Limret limret = {FALSE, 0};
+
 	getrlimit(limit->flag, &rlim);
 	if (hard)
 		lim = rlim.rlim_max;
 	else
 		lim = rlim.rlim_cur;
+	if(retlimit){
+		if(lim == (LIMIT_T) RLIM_INFINITY)
+			limret.unlimited = TRUE;
+		else {
+			limret.unlimited = FALSE;
+			limret.size = lim;
+		}
+		return limret;
+	}
 	if (lim == (LIMIT_T) RLIM_INFINITY)
 		print("%-8s\tunlimited\n", limit->name);
 	else {
@@ -205,6 +222,7 @@ static void printlimit(const Limit *limit, Boolean hard) {
 			}
 		print("%-8s\t%d%s\n", limit->name, (int)lim, (suf == NULL || lim == 0) ? "" : suf->name);
 	}
+	return limret;
 }
 
 static long parselimit(const Limit *limit, char *s) {
@@ -243,6 +261,8 @@ static long parselimit(const Limit *limit, char *s) {
 PRIM(limit) {
 	const Limit *lim = limits;
 	Boolean hard = FALSE;
+	Boolean returnlimit = FALSE;
+	Limret limit;
 	Ref(List *, lp, list);
 
 	if (lp != NULL && streq(getstr(lp->term), "-h")) {
@@ -250,11 +270,20 @@ PRIM(limit) {
 		lp = lp->next;
 	}
 
+
 	if (lp == NULL)
 		for (; lim->name != NULL; lim++)
-			printlimit(lim, hard);
+			printlimit(lim, hard, 0);
 	else {
 		char *name = getstr(lp->term);
+		if(streq(name, "-r")){
+			if(lp->next == NULL)
+				fail("$&limit", "missing limit");
+			name = getstr(lp->next->term);
+			returnlimit = TRUE;
+			lp = lp->next;
+		}
+
 		for (;; lim++) {
 			if (lim->name == NULL)
 				fail("$&limit", "%s: no such limit", name);
@@ -263,7 +292,10 @@ PRIM(limit) {
 		}
 		lp = lp->next;
 		if (lp == NULL)
-			printlimit(lim, hard);
+			if(returnlimit)
+				limit = printlimit(lim, hard, 1);
+			else
+				printlimit(lim, hard, 0);
 		else {
 			long n;
 			struct rlimit rlim;
@@ -279,6 +311,12 @@ PRIM(limit) {
 		}
 	}
 	RefEnd(lp);
+	if(returnlimit == TRUE){
+		if(limit.unlimited == TRUE)
+			return mklist(mkstr("unlimited"), NULL);
+		else
+			return mklist(mkstr(str("%uld", limit.size)), NULL);
+	}
 	return true;
 }
 #endif	/* BSD_LIMITS */

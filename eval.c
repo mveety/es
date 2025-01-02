@@ -295,7 +295,7 @@ extractpattern(Tree *subjectform0, Tree *patternform0, Binding *binding)
 }
 
 /* walk -- walk through a tree, evaluating nodes */
-List*
+inline List*
 walk(Tree *tree0, Binding *binding0, int flags)
 {
 	Tree *volatile tree = tree0;
