@@ -51,6 +51,7 @@ fn new class rest {
 		)
 		assert2 $0 {mod <={%count $$methods} 2}
 		catch @ e type msg {
+			$methods=
 			if {! ~ $e error} {
 				throw $e $type $msg
 			} {! ~ $type method} {
@@ -93,6 +94,29 @@ fn add-method object method fun {
 
 fn get-class object {
 	result <={$object __es_get_class}
+}
+
+class_iterator = @{
+	let(v=){
+		result (
+			default @{ local(t=$v(1)){ v = $v(2 ...); result $t }}
+			create @{ v = $* }
+			next @{ local(t=$v(1)){ v = $v(2 ...); result $t }}
+			get @{ result $v }
+			set @{ v = $* }
+		)
+	}
+}
+
+class_container = @{
+	let(d=){
+		result (
+			default @{ result $d }
+			create @{ d = $* }
+			get @{ result $d }
+			set @{ d = $* }
+		)
+	}
 }
 
 #
