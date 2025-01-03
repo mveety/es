@@ -220,7 +220,9 @@ ewaitfor(int pid)
 PRIM(apids) {
 	Proc *p;
 	int alive = 1, dead = 1;
-	Ref(List *, lp, NULL);
+	List *lp = NULL; Root r_lp;
+
+	gcref(&r_lp, (void**)&lp);
 
 	if(list != NULL && termeq(list->term, "-a")) {
 		dead = 0;
@@ -242,7 +244,9 @@ PRIM(apids) {
 			lp = mklist(t, lp);
 		}
 	/* TODO: sort the return value, but by number? */
-	RefReturn(lp);
+
+	gcderef(&r_lp, (void**)&lp);
+	return lp;
 }
 
 PRIM(wait) {

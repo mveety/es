@@ -532,22 +532,18 @@ gcref(Root *r, void **p)
 	r->p = p;
 	rootlist->prev = r;
 	r->next = rootlist;
+	rootlist = r;
 }
 
 void
 gcderef(Root *r, void **p)
 {
-	Root *prev, *next;
-
+	assert(r == rootlist);
 	assert(r->p == p);
 
-	prev = r->prev;
-	next = r->next;
-	if(prev)
-		prev->next = next;
-	next->prev = prev;
-	if(r == rootlist)
-		rootlist = next;
+	rootlist = rootlist->next;
+	if(rootlist)
+		rootlist->prev = NULL;
 }
 
 

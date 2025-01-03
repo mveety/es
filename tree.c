@@ -10,6 +10,7 @@ DefineTag(Tree2, static);
 extern Tree *mk VARARGS1(NodeKind, t) {
 	va_list ap;
 	Tree *n;
+	Tree *tree; Root r_tree;
 
 	gcdisable();
 	VA_START(ap, t);
@@ -45,9 +46,11 @@ extern Tree *mk VARARGS1(NodeKind, t) {
 	n->kind = t;
 	va_end(ap);
 
-	Ref(Tree *, tree, n);
+	tree = n;
+	gcref(&r_tree, (void**)&tree);
 	gcenable();
-	RefReturn(tree);
+	gcderef(&r_tree, (void**)&tree);
+	return tree;
 }
 
 char*
