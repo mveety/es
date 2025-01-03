@@ -101,6 +101,7 @@ PRIM(access) {
 	Boolean first = FALSE, exception = FALSE;
 	char *suffix = NULL;
 	List *lp;
+	List *result; Root r_result;
 	const char * const usage = "access [-n name] [-1e] [-rwx] [-fdcblsp] path ...";
 
 	gcdisable();
@@ -143,13 +144,11 @@ PRIM(access) {
 
 		if (first) {
 			if (error == 0) {
-				Ref(List *, result,
-					mklist(mkstr(suffix == NULL
-							? name
-							: gcdup(name)),
-					       NULL));
+				result = mklist(mkstr(suffix == NULL ? name : gcdup(name)), NULL);
+				gcref(&r_result, (void**)&result);
 				gcenable();
-				RefReturn(result);
+				gcderef(&r_result, (void**)&result);
+				return result;
 			} else if (error != ENOENT)
 				estatus = error;
 		} else
@@ -165,9 +164,11 @@ PRIM(access) {
 			fail("$&access", "%s", esstrerror(estatus));
 	}
 
-	Ref(List *, result, reverse(lp));
+	result = reverse(lp);
+	gcref(&r_result, (void**)&result);
 	gcenable();
-	RefReturn(result);
+	gcderef(&r_result, (void**)&result);
+	return result;
 }
 
 extern Dict *initprims_access(Dict *primdict) {

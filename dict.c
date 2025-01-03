@@ -116,20 +116,31 @@ static void putwrapper(void*, char*, void*); //shut up clang
 static Dict *put(Dict *dict, char *name, void *value) {
 	unsigned long n, mask;
 	Assoc *ap;
+	Dict *old; Root r_old;
+	char *np; Root r_np;
+	void *vp; Root r_vp;
+	Dict *new;
+
 	assert(get(dict, name) == NULL);
 	assert(value != NULL);
 
 	if (dict->remain <= 1) {
-		Dict *new;
-		Ref(Dict *, old, dict);
-		Ref(char *, np, name);
-		Ref(void *, vp, value);
+		old = dict;
+		gcref(&r_old, (void**)&old);
+		np = name;
+		gcref(&r_np, (void**)&np);
+		vp = value;
+		gcref(&r_vp, (void**)&vp);
+
 		new = mkdict0(GROW(old->size));
 		dictforall(old, &putwrapper, new);
 		dict = new;
 		name = np;
 		value = vp;
-		RefEnd3(vp, np, old);
+
+		gcderef(&r_vp, (void**)&vp);
+		gcderef(&r_np, (void**)&np);
+		gcderef(&r_old, (void**)&old);
 	}
 
 	n = strhash(name);
@@ -199,14 +210,20 @@ extern Dict *dictput(Dict *dict, char *name, void *value) {
 
 extern void dictforall(Dict *dp, void (*proc)(void *, char *, void *), void *arg) {
 	int i;
-	Ref(Dict *, dict, dp);
-	Ref(void *, argp, arg);
+	Dict *dict; Root r_dict;
+	void *argp; Root r_argp;
+
+	dict = dp;
+	gcref(&r_dict, (void**)&dict);
+	argp = arg;
+	gcref(&r_argp, (void**)&argp);
 	for (i = 0; i < dict->size; i++) {
 		Assoc *ap = &dict->table[i];
 		if (ap->name != NULL && ap->name != DEAD)
 			(*proc)(argp, ap->name, ap->value);
 	}
-	RefEnd2(argp, dict);
+	gcderef(&r_argp, (void**)&argp);
+	gcderef(&r_dict, (void**)&dict);
 }
 
 /* dictget2 -- look up the catenation of two names (such a hack!) */

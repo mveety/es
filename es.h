@@ -449,6 +449,7 @@ extern Root *rootlist;
 
 extern void gcref(Root*, void**);
 extern void gcderef(Root*, void**);
+extern void gcrderef(Root*);
 /* extern void derefmany(Root*); */
 extern void globalroot(void *addr);
 extern void exceptionroot(Root*, List**);

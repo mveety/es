@@ -530,7 +530,8 @@ void
 gcref(Root *r, void **p)
 {
 	r->p = p;
-	rootlist->prev = r;
+	if(rootlist)
+		rootlist->prev = r;
 	r->next = rootlist;
 	rootlist = r;
 }
@@ -546,7 +547,11 @@ gcderef(Root *r, void **p)
 		rootlist->prev = NULL;
 }
 
-
+void
+gcrderef(Root *r)
+{
+	gcderef(r, r->p);
+}
 
 /* gcalloc -- allocate an object in new space */
 extern void* /* use the same logic. that's solid */

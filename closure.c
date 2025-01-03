@@ -10,12 +10,19 @@
 DefineTag(Closure, static);
 
 extern Closure *mkclosure(Tree *tree, Binding *binding) {
+	Closure *closure; Root r_closure;
+
 	gcdisable();
-	Ref(Closure *, closure, gcnew(Closure));
+
+	closure = gcnew(Closure);
+	gcref(&r_closure, (void**)&closure);
+
 	closure->tree = tree;
 	closure->binding = binding;
 	gcenable();
-	RefReturn(closure);
+
+	gcderef(&r_closure, (void**)&closure);
+	return closure;
 }
 
 static void *ClosureCopy(void *op) {
@@ -113,6 +120,7 @@ extractbindings(Tree *tree0)
 	Chain me;
 	Tree *volatile tree = tree0;
 	Binding *volatile bindings = NULL;
+	Closure *result; Root r_result;
 
 	gcdisable();
 
@@ -145,14 +153,16 @@ extractbindings(Tree *tree0)
 
 	chain = chain->next;
 
-	Ref(Closure *, result, me.closure);
+	result = me.closure;
+	gcref(&r_result, (void**)&result); 
 
 	result->tree = tree;
 	result->binding = bindings;
 
 	gcenable();
 
-	RefReturn(result);
+	gcderef(&r_result, (void**)&result);
+	return result;
 }
 
 /*
@@ -162,15 +172,19 @@ extractbindings(Tree *tree0)
 DefineTag(Binding, static);
 
 extern Binding *mkbinding(char *name, List *defn, Binding *next) {
+	Binding *binding; Root r_binding;
+
 	assert(next == NULL || next->name != NULL);
 	validatevar(name);
 	gcdisable();
-	Ref(Binding *, binding, gcnew(Binding));
+	binding = gcnew(Binding);
+	gcref(&r_binding, (void**)&binding);
 	binding->name = name;
 	binding->defn = defn;
 	binding->next = next;
 	gcenable();
-	RefReturn(binding);
+	gcderef(&r_binding, (void**)&binding);
+	return binding;
 }
 
 extern Binding *reversebindings(Binding *binding) {
