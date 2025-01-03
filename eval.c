@@ -10,17 +10,20 @@ failexec(char *file, List *args)
 {
 	List *fn;
 	int olderror;
+	List *list; Root r_list;
+	Root r_file;
 
 	assert(gcisblocked());
 	fn = varlookup("fn-%exec-failure", NULL);
 	if (fn != NULL) {
 		olderror = errno;
-		Ref(List *, list, append(fn, mklist(mkstr(file), args)));
-		RefAdd(file);
+		list = append(fn, mklist(mkstr(file), args));
+		gcref(&r_list, (void**)&list);
+		gcref(&r_file, (void**)&file);
 		gcenable();
-		RefRemove(file);
+		gcderef(&r_file, (void**)&file);
 		eval(list, NULL, 0);
-		RefEnd(list);
+		gcderef(&r_list, (void**)&list);
 		errno = olderror;
 	}
 	eprint("%s: %s\n", file, esstrerror(errno));
@@ -58,20 +61,35 @@ List*
 assign(Tree *varform, Tree *valueform0, Binding *binding0)
 {
 	List *value;
+	List *result; Root r_result;
+	Tree *valueform; Root r_valueform;
+	Binding *binding; Root r_binding;
+	List *vars; Root r_vars;
+	List *values; Root r_values;
+	char *name; Root r_name;
 
-	Ref(List *, result, NULL);
-	Ref(Tree *, valueform, valueform0);
-	Ref(Binding *, binding, binding0);
-	Ref(List *, vars, glom(varform, binding, FALSE));
+	result = NULL;
+	gcref(&r_result, (void**)&result);
+
+	valueform = valueform0;
+	gcref(&r_valueform, (void**)&valueform);
+
+	binding = binding0;
+	gcref(&r_binding, (void**)&binding);
+
+	vars = glom(varform, binding, FALSE);
+	gcref(&r_vars, (void**)&vars);
 
 	if (vars == NULL)
 		fail("es:assign", "null variable name");
 
-	Ref(List *, values, glom(valueform, binding, TRUE));
+	values = glom(valueform, binding, TRUE);
+	gcref(&r_values, (void**)&values);
 	result = values;
 
 	for (; vars != NULL; vars = vars->next) {
-		Ref(char *, name, getstr(vars->term));
+		name = getstr(vars->term);
+		gcref(&r_name, (void**)&name);
 		if (values == NULL)
 			value = NULL;
 		else if (vars->next == NULL || values->next == NULL) {
@@ -82,11 +100,15 @@ assign(Tree *varform, Tree *valueform0, Binding *binding0)
 			values = values->next;
 		}
 		vardef(name, binding, value);
-		RefEnd(name);
+		gcderef(&r_name, (void**)&name);
 	}
 
-	RefEnd4(values, vars, binding, valueform);
-	RefReturn(result);
+	gcderef(&r_values, (void**)&values);
+	gcderef(&r_vars, (void**)&vars);
+	gcderef(&r_binding, (void**)&binding);
+	gcderef(&r_valueform, (void**)&valueform);
+	gcderef(&r_result, (void**)&result);
+	return result;
 }
 
 /* letbindings -- create a new Binding containing let-bound variables */
@@ -94,26 +116,41 @@ Binding*
 letbindings1(Tree *defn0, Binding *outer0,
 		Binding *context0, int evalflags, int letstar)
 {
-	Ref(Binding *, binding, outer0);
-	Ref(Binding *, context, context0);
-	Ref(Tree *, defn, defn0);
+	Binding *binding; Root r_binding;
+	Binding *context; Root r_context;
+	Tree *defn; Root r_defn;
+	Tree *assign; Root r_assign;
+	List *vars; Root r_vars;
+	List *values; Root r_values;
+	char *name; Root r_name;
+	List *value;
+
+	binding = outer0;
+	gcref(&r_binding, (void**)&binding);
+	context = context0;
+	gcref(&r_context, (void**)&context);
+	defn = defn0;
+	gcref(&r_defn, (void**)&defn);
 
 	for (; defn != NULL; defn = defn->u[1].p) {
 		assert(defn->kind == nList);
 		if (defn->u[0].p == NULL)
 			continue;
 
-		Ref(Tree *, assign, defn->u[0].p);
+		assign = defn->u[0].p;
+		gcref(&r_assign, (void**)&assign);
 		assert(assign->kind == nAssign);
-		Ref(List *, vars, glom(assign->u[0].p, context, FALSE));
-		Ref(List *, values, glom(assign->u[1].p, context, TRUE));
+		vars = glom(assign->u[0].p, context, FALSE);
+		gcref(&r_vars, (void**)&vars);
+		values = glom(assign->u[1].p, context, TRUE);
+		gcref(&r_values, (void**)&values);
 
 		if (vars == NULL)
 			fail("es:let", "null variable name");
 
 		for (; vars != NULL; vars = vars->next) {
-			List *value;
-			Ref(char *, name, getstr(vars->term));
+			name = getstr(vars->term);
+			gcref(&r_name, (void**)&name);
 			if (values == NULL)
 				value = NULL;
 			else if (vars->next == NULL || values->next == NULL) {
@@ -126,14 +163,16 @@ letbindings1(Tree *defn0, Binding *outer0,
 			binding = mkbinding(name, value, binding);
 			if(letstar)
 				context = mkbinding(name, value, binding);
-			RefEnd(name);
+			gcrderef(&r_name);
 		}
-
-		RefEnd3(values, vars, assign);
+		gcrderef(&r_values);
+		gcrderef(&r_vars);
+		gcrderef(&r_assign);
 	}
-
-	RefEnd2(defn, context);
-	RefReturn(binding);
+	gcrderef(&r_defn);
+	gcrderef(&r_context);
+	gcrderef(&r_binding);
+	return binding;
 }
 
 Binding*
