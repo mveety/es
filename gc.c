@@ -18,7 +18,7 @@ struct Space {
 #define	SPACEUSED(sp)	(((sp)->current - (sp)->bot))
 #define	INSPACE(p, sp)	((sp)->bot <= (char *) (p) && (char *) (p) < (sp)->top)
 
-#define	MIN_minspace	10000
+#define	MIN_minspace	1024*1024
 
 #if GCPROTECT
 #define	NSPACES		10
