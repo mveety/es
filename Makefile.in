@@ -48,7 +48,7 @@ LIBS	= $(ADDLIBS) @LIBS@
 VPATH = $(srcdir)
 
 HFILES	= config.h es.h gc.h input.h prim.h print.h sigmsgs.h \
-	  stdenv.h syntax.h term.h var.h esconfig.h
+	  stdenv.h syntax.h term.h var.h esconfig.h eval.h
 CFILES	= access.c closure.c conv.c dict.c eval.c except.c fd.c gc.c glob.c \
 	  glom.c input.c heredoc.c list.c main.c match.c open.c opt.c \
 	  prim-ctl.c prim-etc.c prim-io.c prim-sys.c prim.c print.c proc.c \

@@ -447,6 +447,9 @@ extern Root *rootlist;
 #define	RefRemove3(v1, v2, v3)		RefRemove(v1); RefRemove2(v2, v3)
 #define	RefRemove4(v1, v2, v3, v4)	RefRemove(v1); RefRemove3(v2, v3, v4)
 
+extern void ref(Root*, void**);
+extern void deref(Root*, void**);
+/* extern void derefmany(Root*); */
 extern void globalroot(void *addr);
 extern void exceptionroot(Root*, List**);
 extern void exceptionunroot(void);

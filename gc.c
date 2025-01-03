@@ -526,6 +526,32 @@ extern void initgc(void) {
  * allocation
  */
 
+void
+ref(Root *r, void **p)
+{
+	r->p = p;
+	rootlist->prev = r;
+	r->next = rootlist;
+}
+
+void
+deref(Root *r, void **p)
+{
+	Root *prev, *next;
+
+	assert(r->p == p);
+
+	prev = r->prev;
+	next = r->next;
+	if(prev)
+		prev->next = next;
+	next->prev = prev;
+	if(r == rootlist)
+		rootlist = next;
+}
+
+
+
 /* gcalloc -- allocate an object in new space */
 extern void* /* use the same logic. that's solid */
 gcalloc(size_t nbytes, Tag *tag)
