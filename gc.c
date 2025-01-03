@@ -527,7 +527,7 @@ extern void initgc(void) {
  */
 
 void
-ref(Root *r, void **p)
+gcref(Root *r, void **p)
 {
 	r->p = p;
 	rootlist->prev = r;
@@ -535,7 +535,7 @@ ref(Root *r, void **p)
 }
 
 void
-deref(Root *r, void **p)
+gcderef(Root *r, void **p)
 {
 	Root *prev, *next;
 
