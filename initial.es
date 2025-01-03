@@ -141,10 +141,8 @@ fn-%block = @ rest {
 	local(
 		__es_deferbody=
 		__es_res=
-		fn-defer = @ body {
-		__es_deferbody = {$body} $__es_deferbody
+		fn-defer = @ body { __es_deferbody = {$body} $__es_deferbody }
 		__es_exception =
-		}
 	) {
 		catch @ e {
 			__es_exception = caught $e
