@@ -95,7 +95,14 @@ extern Tree *stbackquote(Tree *ifs, Tree *body){
 }
 
 /* fnassign -- translate a function definition into an assignment */
-extern Tree *fnassign(Tree *name, Tree *defn) {
+extern Tree *fnassign(Tree *name, Tree *params, Tree *body) {
+	Tree *defn;
+
+	if(body == NULL)
+		return mk(nAssign, mk(nConcat, mk(nWord, "fn-"), name), NULL);
+
+/*	defn = mk(nLambda, params, prefix("%block", treecons(thunkify(body), NULL))); */
+	defn = mk(nLambda, params, body);
 	return mk(nAssign, mk(nConcat, mk(nWord, "fn-"), name), defn);
 }
 

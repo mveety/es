@@ -143,19 +143,19 @@ fn-%block = @ rest {
 		__es_res=
 		fn-defer = @ body {
 		__es_deferbody = {$body} $__es_deferbody
-		__es_exception = __es_none
+		__es_exception =
 		}
 	) {
 		catch @ e {
-			__es_exception = $e
+			__es_exception = caught $e
 		} {
 			__es_res = <={$rest}
 		}
 		for(fn = $__es_deferbody) {
 			$fn
 		}
-		if {! ~ $__es_exception __es_none} {
-			throw $__es_exception
+		if {~ $__es_exception(1) caught} {
+			throw $__es_exception(2 ...)
 		} {
 			result $__es_res
 		}
@@ -887,7 +887,7 @@ fn-tobase = @ base n { result <={$&tobase $base $n} }
 fn-frombase = @ base n { result <={$&frombase $base $n} }
 
 fn %mathfun fun a b {
-	let (
+	local (
 		an = <={if {~ $a 0x*} { result <={$&frombase 16 $a} }{ result $a }}
 		bn = <={if {~ $b 0x*} { result <={$&frombase 16 $b} }{ result $b }}
 		res=

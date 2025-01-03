@@ -99,8 +99,8 @@ binding	:				{ $$ = NULL; }
 
 assign	: caret '=' caret words		{ $$ = $4; }
 
-fn	: FN word params '{' body '}'	{ $$ = fnassign($2, mklambda($3, $5)); }
-	| FN word			{ $$ = fnassign($2, NULL); }
+fn	: FN word params '{' body '}'	{ $$ = fnassign($2, $3, $5); }
+	| FN word			{ $$ = fnassign($2, NULL, NULL); }
 
 first	: comword			{ $$ = $1; }
 	| first '^' sword		{ $$ = mk(nConcat, $1, $3); }

@@ -138,7 +138,7 @@ extern List *sortlist(List *list);
 /* tree.c */
 
 extern Tree *mk(NodeKind, ...);
-
+extern char* treekind(Tree*);
 
 /* closure.c */
 

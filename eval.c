@@ -345,7 +345,7 @@ top:
 		return extractpattern(tree->u[0].p, tree->u[1].p, binding);
 
 	    default:
-		panic("walk: bad node kind %d", tree->kind);
+		panic("walk: bad node kind %s", treekind(tree));
 
 	}
 	NOTREACHED;
@@ -473,8 +473,7 @@ restart:
 			RefEnd(t);
 			break;
 		default:
-			panic("eval: bad closure node kind %d",
-			      cp->tree->kind);
+			panic("eval: bad closure node kind %s", treekind(cp->tree));
 		}
 		goto done;
 	}

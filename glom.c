@@ -224,7 +224,7 @@ static List *glom1(Tree *tree, Binding *binding) {
 			RefEnd2(r, l);
 			break;
 		default:
-			fail("es:glom", "glom1: bad node kind %d", tree->kind);
+			fail("es:glom", "glom1: bad node kind %s: %T", treekind(tree), tree);
 		}
 
 		if (list != NULL) {

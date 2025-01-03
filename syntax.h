@@ -19,7 +19,7 @@ extern Tree *prefix(char *s, Tree *t);
 extern Tree *backquote(Tree *ifs, Tree *body);
 extern Tree *stbackquote(Tree *ifs, Tree *body);
 extern Tree *flatten(Tree *t, char *sep);
-extern Tree *fnassign(Tree *name, Tree *defn);
+extern Tree *fnassign(Tree *name, Tree *params, Tree *body);
 extern Tree *mklambda(Tree *params, Tree *body);
 extern Tree *mkseq(char *op, Tree *t1, Tree *t2);
 extern Tree *mkpipe(Tree *t1, int outfd, int infd, Tree *t2);

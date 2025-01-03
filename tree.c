@@ -50,6 +50,55 @@ extern Tree *mk VARARGS1(NodeKind, t) {
 	RefReturn(tree);
 }
 
+char*
+treekind(Tree *t)
+{
+	switch(t->kind){
+	case nAssign:
+		return "nAssign";
+	case nCall:
+		return "nCall";
+	case nClosure:
+		return "nClosure";
+	case nConcat:
+		return "nConcat";
+	case nFor:
+		return "nFor";
+	case nLambda:
+		return "nLambda";
+	case nLet:
+		return "nLet";
+	case nList:
+		return "nList";
+	case nLocal:
+		return "nLocal";
+	case nLets:
+		return "nLets";
+	case nMatch:
+		return "nMatch";
+	case nExtract:
+		return "nExtract";
+	case nPrim:
+		return "nPrim";
+	case nQword:
+		return "nQword";
+	case nThunk:
+		return "nThunk";
+	case nVar:
+		return "nVar";
+	case nVarsub:
+		return "nVarsub";
+	case nWord:
+		return "nWord";
+	case nRedir:
+		return "nRedir";
+	case nPipe:
+		return "nPipe";
+	default:
+		dprintf(2, "error: invalid NodeKind %d\n", t->kind);
+		abort();
+	}
+}
 
 /*
  * garbage collection functions
