@@ -545,6 +545,8 @@ gcderef(Root *r, void **p)
 	rootlist = rootlist->next;
 	if(rootlist)
 		rootlist->prev = NULL;
+	r->next = NULL;
+	r->prev = NULL;
 }
 
 void
