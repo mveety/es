@@ -2,6 +2,12 @@
 
 /* see also es.h for more generally applicable definitions */
 
+#define	ALIGN(n)	(((n) + sizeof (void *) - 1) &~ (sizeof (void *) - 1))
+
+extern Root *globalrootlist;
+extern Root *exceptionrootlist;
+
+
 /*
  * tags
  */
@@ -9,17 +15,19 @@
 struct Tag {
 	void *(*copy)(void *);
 	size_t (*scan)(void *);
+	void (*mark)(void *);
 	long magic;
 	char *typename;
 };
 
 enum {
 	GcForward = 1<<0,
+	GcUsed = 1<<1,
 };
 
 typedef struct Header Header;
 struct Header {
-/*	unsigned int flags; */
+	unsigned int flags;
 	Tag *tag;
 	void *forward;
 };
@@ -30,7 +38,14 @@ enum {TAGMAGIC = 0xDefaced};
 #define	DefineTag(t, storage) \
 	static void *CONCAT(t,Copy)(void *); \
 	static size_t CONCAT(t,Scan)(void *); \
-	storage Tag CONCAT(t,Tag) = { CONCAT(t,Copy), CONCAT(t,Scan), TAGMAGIC, STRING(t) }
+	static void CONCAT(t, Mark)(void *); \
+	storage Tag CONCAT(t,Tag) = { CONCAT(t,Copy), CONCAT(t,Scan), CONCAT(t, Mark), TAGMAGIC, STRING(t) }
+
+extern Header *header(void *p);
+
+/* mark sweep */
+extern void gc_mark(void *p);
+extern void gc_unmark(void *p);
 
 /*
  * allocation
