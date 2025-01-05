@@ -332,20 +332,22 @@ gc_markrootlist(Root *r)
 size_t
 gcsweep(void)
 {
-	Block *l;
+	volatile Block *l, *next;
 	Header *h;
 	size_t frees;
 
-	for(frees = 0, l = usedlist; l != nil; l = l->next){
+	for(frees = 0, l = usedlist; l != nil;){
+		next = l->next;
 		h = (Header*)block_pointer(l);
 		if(h->flags & GcUsed){
 			dprintf(2, ">>> unmarking %p\n", h);
 			gc_unset_mark(h);
-			continue;
+		} else {
+			dprintf(2, ">>> deallocating %p\n", h);
+			deallocate1((void*)h);
+			frees++;
 		}
-		dprintf(2, ">>> deallocating %p\n", h);
-		deallocate1((void*)h);
-		frees++;
+		l = next;
 	}
 	return frees;
 }
