@@ -96,6 +96,17 @@ static size_t TermScan(void *p) {
 	return sizeof (Term);
 }
 
+void
+TermMark(void *p)
+{
+	Term *t;
+
+	t = (Term*)p;
+	gc_set_mark(header(p));
+	gcmark(t->closure);
+	gcmark(t->str);
+}
+
 extern Boolean termeq(Term *term, const char *s) {
 	assert(term != NULL);
 	if (term->str == NULL)

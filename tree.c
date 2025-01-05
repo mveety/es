@@ -136,6 +136,30 @@ static size_t Tree1Scan(void *p) {
 	return offsetof(Tree, u[1]);
 }
 
+void
+Tree1Mark(void *p)
+{
+	Tree *t;
+
+	t = (void*)p;
+	gc_set_mark(header(p));
+	switch(t->kind){
+	default:
+		panic("Tree1Mark: bad node kind: %s\n", treekind(t));
+		break;
+	case nPrim:
+	case nWord:
+	case nQword:
+		gcmark(t->u[0].s);
+		break;
+	case nCall:
+	case nThunk:
+	case nVar:
+		gcmark(t->u[0].p);
+		break;
+	}
+}
+
 static size_t Tree2Scan(void *p) {
 	Tree *n = p;
 	switch (n->kind) {
@@ -150,3 +174,33 @@ static size_t Tree2Scan(void *p) {
 	} 
 	return offsetof(Tree, u[2]);
 }
+
+void
+Tree2Mark(void *p)
+{
+	Tree *t;
+
+	t = (Tree*)p;
+	gc_set_mark(header(p));
+	switch(t->kind){
+	default:
+		panic("Tree2Mark: bad node kind: %s\n", treekind(t));
+		break;
+	case nAssign:
+	case nConcat:
+	case nClosure:
+	case nFor:
+	case nLambda:
+	case nLet:
+	case nList:
+	case nLocal:
+	case nVarsub:
+	case nMatch:
+	case nExtract:
+	case nLets:
+		gcmark(t->u[0].p);
+		gcmark(t->u[1].p);
+		break;
+	}
+}
+

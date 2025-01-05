@@ -44,8 +44,10 @@ enum {TAGMAGIC = 0xDefaced};
 extern Header *header(void *p);
 
 /* mark sweep */
-extern void gc_mark(void *p);
-extern void gc_unmark(void *p);
+extern void gcmark(void *p);
+extern void gc_set_mark(Header *h);
+extern void gc_unset_mark(Header *h);
+extern void gc_markrootlist(Root *r);
 
 /*
  * allocation

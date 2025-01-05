@@ -30,6 +30,17 @@ static size_t VectorScan(void *p) {
 	return offsetof(Vector, vector[v->alloclen + 1]);
 }
 
+void
+VectorMark(void *p)
+{
+	Vector *v;
+	int i;
+
+	v = (Vector*)p;
+	gc_set_mark(header(p));
+	for(i = 0; i <= v->count; i++)
+		gcmark(v->vector[i]);
+}
 
 extern Vector *vectorize(List *list) {
 	int i, n = length(list);

@@ -3,6 +3,8 @@
 #include "es.h"
 #include "gc.h"
 
+Root *globalrootlist;
+Root *exceptionrootlist;
 
 /* globalroot -- add an external to the list of global roots */
 extern void globalroot(void *addr) {
@@ -83,41 +85,6 @@ void
 gcrderef(Root *r)
 {
 	gcderef(r, r->p);
-}
-
-void
-gcmark(void *p)
-{
-	Header *h;
-	Tag *t;
-
-	if(p == NULL)
-		return;
-
-	h = header(p);
-	assert(h->tag != NULL && h->tag->magic == TAGMAGIC);
-	t = h->tag;
-	(t->mark)(p);
-}
-
-void
-gc_set_mark(void *p)
-{
-	Header *h;
-
-	h = header(p);
-	assert(h->tag->magic == TAGMAGIC);
-	h->flags |= GcUsed;
-}
-
-void
-gc_unset_mark(void *p)
-{
-	Header *h;
-
-	h = header(h);
-	assert(h->tag->magic == TAGMAGIC);
-	h->flags &= ~GcUsed;
 }
 
 /*

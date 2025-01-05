@@ -45,8 +45,8 @@ ClosureMark(void *p)
 
 	c = (Closure*)p;
 	gc_set_mark(header(p));
-	gcmark(closure->tree);
-	gcmark(closure->binding);
+	gcmark(c->tree);
+	gcmark(c->binding);
 }
 
 /* revtree -- destructively reverse a list stored in a tree */

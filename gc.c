@@ -42,8 +42,6 @@ static Space *new, *old;
 #if GCPROTECT
 static Space *spaces;
 #endif
-Root *globalrootlist;
-Root *exceptionrootlist;
 static size_t minspace = MIN_minspace;	/* minimum number of bytes in a new space */
 
 
@@ -419,6 +417,7 @@ extern void gc(void) {
 		new = newspace(NULL);
 #endif
 		VERBOSE(("\nGC collection starting\n"));
+		/* gc_markrootlist(rootlist); */
 		if(gcverbose == TRUE){
 			for (space = old; space != NULL; space = space->next)
 				VERBOSE(("GC old space = %ux ... %ux\n", space->bot, space->current));

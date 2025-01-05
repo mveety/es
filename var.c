@@ -62,6 +62,19 @@ static size_t VarScan(void *p) {
 	return sizeof (Var);
 }
 
+void
+VarMark(void *p)
+{
+	Var *v;
+
+	v = (Var*)p;
+	gc_set_mark(header(p));
+	gcmark(v->defn);
+	if(!((v->flags & var_hasbindings) && rebound))
+		gcmark(v->env);
+}
+
+
 /* iscounting -- is it a counter number, i.e., an integer > 0 */
 static Boolean iscounting(const char *name) {
 	int c;

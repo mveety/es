@@ -105,10 +105,10 @@ DictMark(void *p)
 	d = (Dict*)p;
 	gc_set_mark(header(p));
 
-	for(i = 0; i < dict->size; i++){
-		ap = &dict->table[i];
-		gcmark(ap->name);
-		gcmark(ap->value);
+	for(i = 0; i < d->size; i++){
+		a = &d->table[i];
+		gcmark(a->name);
+		gcmark(a->value);
 	}
 }
 

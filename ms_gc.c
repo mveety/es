@@ -76,7 +76,7 @@ coalesce_freelist(void)
 {
 	Block *fl;
 
-	if(!freelist);
+	if(!freelist)
 		return;
 	
 	for(fl = freelist; fl != nil; fl = fl->next)
@@ -221,4 +221,45 @@ nblocks_stats(Block *list)
 
 	return stats;
 }
+
+/* mark sweep garbage collector */
+
+void
+gcmark(void *p)
+{
+	Header *h;
+	Tag *t;
+
+	if(p == NULL)
+		return;
+
+	h = header(p);
+	assert(h->tag != NULL && h->tag->magic == TAGMAGIC);
+	t = h->tag;
+	if(gcverbose)
+		dprintf(2, "gcmark: marking %s %p\n", t->typename, p);
+	(t->mark)(p);
+}
+
+void
+gc_set_mark(Header *h)
+{
+	assert(h->tag->magic == TAGMAGIC);
+	h->flags |= GcUsed;
+}
+
+void
+gc_unset_mark(Header *h)
+{
+	assert(h->tag->magic == TAGMAGIC);
+	h->flags &= ~GcUsed;
+}
+
+void
+gc_markrootlist(Root *r)
+{
+	for(; r != NULL; r = r->next)
+		gcmark(*(r->p));
+}
+
 
