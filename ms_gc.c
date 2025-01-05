@@ -28,6 +28,7 @@ size_t nfrees = 0;
 size_t nallocs = 0;
 size_t bytesfree = 0;
 size_t bytesused = 0;
+size_t allocations = 0;
 
 size_t blocksize = MIN_minspace;
 
@@ -152,6 +153,7 @@ allocate2(size_t sz)
 		cb->next = b->next;
 		cb->prev = b;
 		b->next = cb;
+		b->size = realsize;
 	}
 	ahead = b->next;
 	behind = b->prev;
@@ -189,7 +191,7 @@ allocate1(size_t sz)
 }
 
 void
-deallocate1(void *p, Block **list)
+deallocate1(void *p)
 {
 	Block *b, *prev, *next;
 
@@ -198,10 +200,10 @@ deallocate1(void *p, Block **list)
 	prev = b->prev;
 	bytesused -= b->size;
 
-	if(b == *list){
-		*list = (*list)->next;
-		if(*list)
-			(*list)->prev = nil;
+	if(b == usedlist){
+		usedlist = usedlist->next;
+		if(usedlist)
+			usedlist->prev = nil;
 	} else {
 		if(next)
 			next->prev = prev;
@@ -278,7 +280,7 @@ ismanaged(void *p)
 	Region *r;
 
 	for(r = regions; r != nil; r = r->next)
-		if(r->start >= (size_t)p && (r->start+r->size) < (size_t)p)
+		if(r->start <= (size_t)p && (r->start+r->size) > (size_t)p)
 			return 1;
 	return 0;
 }
@@ -294,13 +296,18 @@ gcmark(void *p)
 	if(p == NULL)
 		return;
 
-	if(!ismanaged(p))
+	if(!ismanaged(p)){
+		if(gcverbose)
+			dprintf(2, ">>> not marking unmanaged ptr %p\n", p);
 		return;
+	}
 
 	h = header(p);
 	assert(h->tag == NULL || h->tag->magic == TAGMAGIC);
 	
 	if(h->tag == NULL){
+		if(gcverbose)
+			dprintf(2, ">>> marking NULL %p\n", p);
 		gc_set_mark(h);
 		return;
 	}
@@ -322,20 +329,25 @@ gc_markrootlist(Root *r)
 	}
 }
 
-void
-gcsweep(Block *list)
+size_t
+gcsweep(void)
 {
 	Block *l;
 	Header *h;
+	size_t frees;
 
-	for(l = list; l != nil; l = l->next){
+	for(frees = 0, l = usedlist; l != nil; l = l->next){
 		h = (Header*)block_pointer(l);
 		if(h->flags & GcUsed){
+			dprintf(2, ">>> unmarking %p\n", h);
 			gc_unset_mark(h);
 			continue;
 		}
-		deallocate1((void*)h, &list);
+		dprintf(2, ">>> deallocating %p\n", h);
+		deallocate1((void*)h);
+		frees++;
 	}
+	return frees;
 }
 
 void
@@ -389,7 +401,8 @@ ms_gc(void)
 
 	if(gcverbose)
 		dprintf(2, ">> Sweeping\n");
-	gcsweep(usedlist);
+	gcsweep();
+	allocations = 0;
 
 	if(gcverbose || gcinfo){
 		gc_getstats(&ending);
@@ -416,10 +429,12 @@ ms_gcallocate(size_t sz, Tag *t)
 	nb = allocate1(realsz);
 	if(nb)
 		goto done;
-	ms_gc();
-	nb = allocate1(realsz);
-	if(nb)
-		goto done;
+	if(allocations > 100){
+		ms_gc();
+		nb = allocate1(realsz);
+		if(nb)
+			goto done;
+	}
 	while(realsz+sizeof(Block) >= blocksize)
 		blocksize *= 2;
 	b = create_block(blocksize);
@@ -427,6 +442,8 @@ ms_gcallocate(size_t sz, Tag *t)
 	nb = allocate1(realsz);
 	assert(nb != nil);
 done:
+	nb->tag = t;
+	allocations++;
 	return (void*)(((char*)nb)+sizeof(Header));
 }
 
