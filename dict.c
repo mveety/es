@@ -95,6 +95,22 @@ static size_t DictScan(void *p) {
 	return offsetof(Dict, table[dict->size]);
 }
 
+void
+DictMark(void *p)
+{
+	Dict *d;
+	Assoc *a;
+	int i;
+
+	d = (Dict*)p;
+	gc_set_mark(header(p));
+
+	for(i = 0; i < dict->size; i++){
+		ap = &dict->table[i];
+		gcmark(ap->name);
+		gcmark(ap->value);
+	}
+}
 
 /*
  * private operations

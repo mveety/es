@@ -32,6 +32,16 @@ static size_t ListScan(void *p) {
 	return sizeof (List);
 }
 
+void
+ListMark(void *p)
+{
+	List *l;
+
+	l = (List*)p;
+	gc_set_mark(header(p));
+	gcmark(l->term);
+	gcmark(l->next);
+}
 
 /*
  * basic list manipulations

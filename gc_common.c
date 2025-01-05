@@ -86,22 +86,37 @@ gcrderef(Root *r)
 }
 
 void
-gc_mark(void *p)
+gcmark(void *p)
+{
+	Header *h;
+	Tag *t;
+
+	if(p == NULL)
+		return;
+
+	h = header(p);
+	assert(h->tag != NULL && h->tag->magic == TAGMAGIC);
+	t = h->tag;
+	(t->mark)(p);
+}
+
+void
+gc_set_mark(void *p)
 {
 	Header *h;
 
 	h = header(p);
-	assert(h->tag->magic = TAGMAGIC);
+	assert(h->tag->magic == TAGMAGIC);
 	h->flags |= GcUsed;
 }
 
 void
-gc_unmark(void *p)
+gc_unset_mark(void *p)
 {
 	Header *h;
 
 	h = header(h);
-	assert(h->tag->magic = TAGMAGIC);
+	assert(h->tag->magic == TAGMAGIC);
 	h->flags &= ~GcUsed;
 }
 

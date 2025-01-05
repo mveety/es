@@ -114,3 +114,14 @@ static size_t StrListScan(void *p) {
 	return sizeof (StrList);
 }
 
+void
+StrListMark(void *p)
+{
+	StrList *l;
+
+	l = (StrList*)p;
+	gc_set_mark(header(p));
+	gcmark(l->str);
+	gcmark(l->next);
+}
+

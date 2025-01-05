@@ -548,7 +548,7 @@ StringMark(void *p) {
 	Header *h;
 
 	h = header(p);
-	gc_mark(h);
+	gc_set_mark(h);
 }
 
 

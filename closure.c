@@ -38,6 +38,17 @@ static size_t ClosureScan(void *p) {
 	return sizeof (Closure);
 }
 
+void
+ClosureMark(void *p)
+{
+	Closure *c;
+
+	c = (Closure*)p;
+	gc_set_mark(header(p));
+	gcmark(closure->tree);
+	gcmark(closure->binding);
+}
+
 /* revtree -- destructively reverse a list stored in a tree */
 static Tree *revtree(Tree *tree) {
 	Tree *prev, *next;
@@ -215,3 +226,16 @@ static size_t BindingScan(void *p) {
 	binding->next = forward(binding->next);
 	return sizeof (Binding);
 }
+
+void
+BindingMark(void *p)
+{
+	Binding *b;
+
+	b = (Binding*)p;
+	gc_set_mark(header(p));
+	gcmark(b->name);
+	gcmark(b->defn);
+	gcmark(b->next);
+}
+
