@@ -3,6 +3,7 @@
 /* see also es.h for more generally applicable definitions */
 
 #define	ALIGN(n)	(((n) + sizeof (void *) - 1) &~ (sizeof (void *) - 1))
+#define	MIN_minspace	1024*1024
 
 extern Root *globalrootlist;
 extern Root *exceptionrootlist;
@@ -32,6 +33,16 @@ struct Header {
 	void *forward;
 };
 
+typedef struct GcStats GcStats;
+struct GcStats {
+	size_t total_free;
+	size_t real_free;
+	size_t total_used;
+	size_t real_used;
+	size_t free_blocks;
+	size_t used_blocks;
+};
+
 extern Tag StringTag;
 
 enum {TAGMAGIC = 0xDefaced};
@@ -43,12 +54,22 @@ enum {TAGMAGIC = 0xDefaced};
 
 extern Header *header(void *p);
 
+/* old collecter */
+extern void old_gcenable(void);
+extern void old_gcdisable(void);
+extern void old_gcreserve(size_t minfree);
+extern Boolean old_gcisblocked(void);
+extern void old_gc(void);
+
 /* mark sweep */
 extern void gcmark(void *p);
 extern void gc_set_mark(Header *h);
 extern void gc_unset_mark(Header *h);
 extern void gc_markrootlist(Root *r);
-
+extern void gc_getstats(GcStats *stats);
+extern void gc_print_stats(GcStats *stats);
+extern void ms_gc(void);
+extern void *gcallocate(size_t sz, Tag *t);
 /*
  * allocation
  */

@@ -18,7 +18,6 @@ struct Space {
 #define	SPACEUSED(sp)	(((sp)->current - (sp)->bot))
 #define	INSPACE(p, sp)	((sp)->bot <= (char *) (p) && (char *) (p) < (sp)->top)
 
-#define	MIN_minspace	1024*1024
 
 #if GCPROTECT
 #define	NSPACES		10
@@ -354,7 +353,7 @@ scanspace(void)
  */
 
 /* gcenable -- enable collections */
-extern void gcenable(void) {
+extern void old_gcenable(void) {
 	assert(gcblocked > 0);
 	--gcblocked;
 	if (!gcblocked && new->next != NULL)
@@ -362,32 +361,32 @@ extern void gcenable(void) {
 }
 
 /* gcdisable -- disable collections */
-extern void gcdisable(void) {
+extern void old_gcdisable(void) {
 	assert(gcblocked >= 0);
 	++gcblocked;
 }
 
 /* gcreserve -- provoke a collection if there's not a certain amount of space around */
-extern void gcreserve(size_t minfree) {
+extern void old_gcreserve(size_t minfree) {
 	if (SPACEFREE(new) < (int)minfree) {
 		if (minspace < minfree)
 			minspace = minfree;
-		gc();
+		old_gc();
 	}
 #if GCALWAYS
 	else
-		gc();
+		old_gc();
 #endif
 }
 
 /* gcisblocked -- is collection disabled? */
-extern Boolean gcisblocked(void) {
+extern Boolean old_gcisblocked(void) {
 	assert(gcblocked >= 0);
 	return gcblocked != 0;
 }
 
 /* gc -- actually do a garbage collection */
-extern void gc(void) {
+extern void old_gc(void) {
 		size_t livedata;
 		Space *space;
 		size_t olddata;

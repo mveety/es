@@ -5,15 +5,27 @@
 
 /* simple allocator */
 
+typedef struct Region Region;
 typedef struct Block Block;
+
+struct Region {
+	size_t start;
+	size_t size;
+	Region *next;
+};
+
 struct Block {
 	Block *prev;
 	Block *next;
 	size_t size; /* includes the size of this header */
 };
 
+Region *regions;
+
 Block *usedlist;
 Block *freelist;
+
+size_t blocksize = MIN_minspace;
 
 /* this is the smallest sensible size of a block (probably) */
 const size_t minsize = sizeof(Block)+sizeof(Header)+sizeof(void*);
@@ -22,8 +34,14 @@ Block*
 create_block(size_t sz)
 {
 	Block *b;
+	Region *r;
 
+	r = ealloc(sizeof(Region));
 	b = ealloc(sz);
+	r->start = (size_t)b;
+	r->size = sz;
+	r->next = regions;
+	regions = r;
 	return b;
 }
 
@@ -222,6 +240,28 @@ nblocks_stats(Block *list)
 	return stats;
 }
 
+void
+gc_getstats(GcStats *stats)
+{
+	stats->total_free = usage_stats(freelist);
+	stats->real_free = real_usage_stats(freelist);
+	stats->total_used = usage_stats(usedlist);
+	stats->real_used = real_usage_stats(usedlist);
+	stats->free_blocks = nblocks_stats(freelist);
+	stats->used_blocks = nblocks_stats(usedlist);
+}
+
+int
+ismanaged(void *p)
+{
+	Region *r;
+
+	for(r = regions; r != nil; r = r->next)
+		if(r->start >= (size_t)p && (r->start+r->size) < (size_t)p)
+			return 1;
+	return 0;
+}
+
 /* mark sweep garbage collector */
 
 void
@@ -237,22 +277,8 @@ gcmark(void *p)
 	assert(h->tag != NULL && h->tag->magic == TAGMAGIC);
 	t = h->tag;
 	if(gcverbose)
-		dprintf(2, "gcmark: marking %s %p\n", t->typename, p);
+		dprintf(2, ">>>> marking %s %p\n", t->typename, p);
 	(t->mark)(p);
-}
-
-void
-gc_set_mark(Header *h)
-{
-	assert(h->tag->magic == TAGMAGIC);
-	h->flags |= GcUsed;
-}
-
-void
-gc_unset_mark(Header *h)
-{
-	assert(h->tag->magic == TAGMAGIC);
-	h->flags &= ~GcUsed;
 }
 
 void
@@ -262,4 +288,112 @@ gc_markrootlist(Root *r)
 		gcmark(*(r->p));
 }
 
+void
+gcsweep(Block *list)
+{
+	Block *l;
+	Header *h;
+
+	for(l = list; l != nil; l = l->next){
+		h = (Header*)block_pointer(l);
+		if(h->flags & GcUsed){
+			gc_unset_mark(h);
+			continue;
+		}
+		deallocate1((void*)h, &list);
+	}
+}
+
+void
+gc_print_stats(GcStats *stats)
+{
+	dprintf(2, "tfree = %lu, rfree = %lu\n", stats->total_free, stats->real_free);
+	dprintf(2, "tused = %lu, rused = %lu\n", stats->total_used, stats->real_used);
+	dprintf(2, "free blocks = %lu, used blocks = %lu\n", stats->free_blocks, stats->used_blocks);
+}
+
+void
+ms_gc(void)
+{
+	GcStats starting, ending;
+
+	if(gcverbose){
+		dprintf(2, "GC starting\n");
+		gc_getstats(&starting);
+	}
+
+	if(gcverbose)
+		dprintf(2, ">> Marking\n");
+	if(gcverbose)
+		dprintf(2, ">>> gc_markrootlist(rootlist)\n");
+	gc_markrootlist(rootlist);
+	if(gcverbose)
+		dprintf(2, ">>> gc_markrootlist(globalrootlist)\n");
+	gc_markrootlist(globalrootlist);
+	if(gcverbose)
+		dprintf(2, ">>> gc_markrootlist(exceptionrootlist)\n");
+	gc_markrootlist(exceptionrootlist);
+
+	if(gcverbose)
+		dprintf(2, ">> Sweeping\n");
+	gcsweep(usedlist);
+
+	if(gcverbose){
+		gc_getstats(&ending);
+		dprintf(2, "Starting stats:\n");
+		gc_print_stats(&starting);
+		dprintf(2, "Ending stats:\n");
+		gc_print_stats(&ending);
+	}
+
+	if(gcverbose)
+		dprintf(2, "GC finished\n");
+}
+
+void*
+gcallocate(size_t sz, Tag *t)
+{
+	Block *b;
+	Header *nb;
+	size_t realsz;
+
+	assert(t == NULL || t->magic == TAGMAGIC);
+
+	realsz = ALIGN(sz + sizeof(Header));
+	nb = allocate1(realsz);
+	if(nb)
+		goto done;
+	ms_gc();
+	nb = allocate1(realsz);
+	if(nb)
+		goto done;
+	while(realsz+sizeof(Block) >= blocksize)
+		blocksize *= 2;
+	b = create_block(blocksize);
+	add_to_freelist(b);
+	nb = allocate1(realsz);
+	assert(nb != nil);
+done:
+	return (void*)(((char*)nb)+sizeof(Header));
+}
+
+void
+gc_set_mark(Header *h)
+{
+	assert(h->tag->magic == TAGMAGIC);
+
+	if(!ismanaged((void*)h))
+		return;
+	h->flags |= GcUsed;
+}
+
+void
+gc_unset_mark(Header *h)
+{
+	assert(h->tag->magic == TAGMAGIC);
+
+	if(!ismanaged((void*)h))
+		return;
+	h->flags &= ~GcUsed;
+}
 

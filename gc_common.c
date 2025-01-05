@@ -87,6 +87,36 @@ gcrderef(Root *r)
 	gcderef(r, r->p);
 }
 
+void
+gc(void)
+{
+	old_gc();
+}
+
+void
+gcenable(void)
+{
+	old_gcenable();
+}
+
+void
+gcdisable(void)
+{
+	old_gcdisable();
+}
+
+void
+gcreserve(size_t sz)
+{
+	old_gcreserve(sz);
+}
+
+Boolean
+gcisblocked(void)
+{
+	return old_gcisblocked();
+}
+
 /*
  * allocation of large, contiguous buffers for large object creation
  *	see the use of this in str().  note that this region may not
