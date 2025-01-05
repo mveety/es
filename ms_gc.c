@@ -317,10 +317,11 @@ ms_gc(void)
 {
 	GcStats starting, ending;
 
-	if(gcverbose){
+	if(gcverbose)
 		dprintf(2, "GC starting\n");
+	
+	if(gcverbose || gcinfo)
 		gc_getstats(&starting);
-	}
 
 	if(gcverbose)
 		dprintf(2, ">> Marking\n");
@@ -338,7 +339,7 @@ ms_gc(void)
 		dprintf(2, ">> Sweeping\n");
 	gcsweep(usedlist);
 
-	if(gcverbose){
+	if(gcverbose || gcinfo){
 		gc_getstats(&ending);
 		dprintf(2, "Starting stats:\n");
 		gc_print_stats(&starting);
