@@ -361,7 +361,7 @@ extern int eopen(char *name, OpenKind k);
 extern const char * const version;
 extern const char * const buildstring;
 
-/* gc.c -- see gc.h for more */
+/* gc.c, ms_gc.c, gc_common.c -- see gc.h for more */
 
 typedef struct Tag Tag;
 #define	gcnew(type)	((type *) gcalloc(sizeof (type), &(CONCAT(type,Tag))))

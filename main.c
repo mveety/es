@@ -1,6 +1,7 @@
 /* main.c -- initialization for es ($Revision: 1.3 $) */
 
 #include "es.h"
+#include "gc.h"
 
 Boolean gcverbose	= FALSE;	/* -G */
 Boolean gcinfo		= FALSE;	/* -I */
@@ -85,6 +86,7 @@ static noreturn usage(void) {
 		"	-d	don't ignore SIGQUIT or SIGTERM\n"
 		"	-I	print garbage collector information\n"
 		"	-G	print verbose garbage collector information\n"
+		"	-X	use experimental gc\n"
 		"	-L	print parser results in LISP format\n"
 		"	-A	enable assertions\n"
 	);
@@ -107,9 +109,6 @@ int main(int argc, char **argv) {
 	Boolean keepclosed = FALSE;		/* -o */
 	const char *volatile cmd = NULL;	/* -c */
 
-	initgc();
-	initconv();
-
 	if (argc == 0) {
 		argc = 1;
 		argv = ealloc(2 * sizeof (char *));
@@ -119,7 +118,7 @@ int main(int argc, char **argv) {
 	if (*argv[0] == '-')
 		loginshell = TRUE;
 
-	while ((c = getopt(argc, argv, "eilxvnpodsAc:?GILN")) != EOF)
+	while ((c = getopt(argc, argv, "eilxXvnpodsAc:?GILN")) != EOF)
 		switch (c) {
 		case 'c':	cmd = optarg;			break;
 		case 'e':	runflags |= eval_exitonfalse;	break;
@@ -136,12 +135,20 @@ int main(int argc, char **argv) {
 		case 's':	cmd_stdin = TRUE;			goto getopt_done;
 		case 'G':	gcverbose = TRUE;		break;
 		case 'I':	gcinfo = TRUE;			break;
+		case 'X':	gctype = NewGc;			break;
 		case 'A':	assertions = TRUE;		break;
 		default:
+			initgc();
+			initconv();
 			usage();
+			break;
 		}
 
+
 getopt_done:
+	initgc();
+	initconv();
+
 	if (cmd_stdin && cmd != NULL) {
 		eprint("es: -s and -c are incompatible\n");
 		exit(1);

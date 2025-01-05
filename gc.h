@@ -4,15 +4,24 @@
 
 #define	ALIGN(n)	(((n) + sizeof (void *) - 1) &~ (sizeof (void *) - 1))
 #define	MIN_minspace	1024*1024
+#define	DefineTag(t, storage) \
+	static void *CONCAT(t,Copy)(void *); \
+	static size_t CONCAT(t,Scan)(void *); \
+	static void CONCAT(t, Mark)(void *); \
+	storage Tag CONCAT(t,Tag) = { CONCAT(t,Copy), CONCAT(t,Scan), CONCAT(t, Mark), TAGMAGIC, STRING(t) }
 
-extern Root *globalrootlist;
-extern Root *exceptionrootlist;
+enum {
+	TAGMAGIC = 0xdefaced,
+	GcForward = 1<<0,
+	GcUsed = 1<<1,
+	NewGc = 101,
+	OldGc = 100,
+};
 
+typedef struct Header Header;
+typedef struct GcStats GcStats;
+typedef struct Buffer Buffer;
 
-/*
- * tags
- */
-/* typedef for Tag is in es.h */
 struct Tag {
 	void *(*copy)(void *);
 	size_t (*scan)(void *);
@@ -21,19 +30,12 @@ struct Tag {
 	char *typename;
 };
 
-enum {
-	GcForward = 1<<0,
-	GcUsed = 1<<1,
-};
-
-typedef struct Header Header;
 struct Header {
 	unsigned int flags;
 	Tag *tag;
 	void *forward;
 };
 
-typedef struct GcStats GcStats;
 struct GcStats {
 	size_t total_free;
 	size_t real_free;
@@ -43,23 +45,31 @@ struct GcStats {
 	size_t used_blocks;
 };
 
-extern Tag StringTag;
+struct Buffer {
+	size_t len;
+	size_t current;
+	char str[1];
+};
 
-enum {TAGMAGIC = 0xDefaced};
-#define	DefineTag(t, storage) \
-	static void *CONCAT(t,Copy)(void *); \
-	static size_t CONCAT(t,Scan)(void *); \
-	static void CONCAT(t, Mark)(void *); \
-	storage Tag CONCAT(t,Tag) = { CONCAT(t,Copy), CONCAT(t,Scan), CONCAT(t, Mark), TAGMAGIC, STRING(t) }
+extern int gctype;
+extern Root *globalrootlist;
+extern Root *exceptionrootlist;
+extern Root *rootlist;
+extern int gcblocked;
+extern Tag StringTag; /* typedef for Tag is in es.h */
 
 extern Header *header(void *p);
+extern size_t dump(Tag *t, void *p);
 
 /* old collecter */
+extern void old_initgc(void);
 extern void old_gcenable(void);
 extern void old_gcdisable(void);
 extern void old_gcreserve(size_t minfree);
 extern Boolean old_gcisblocked(void);
 extern void old_gc(void);
+extern void *old_gcallocate(size_t, Tag*);
+extern void old_memdump(void);
 
 /* mark sweep */
 extern void gcmark(void *p);
@@ -68,20 +78,16 @@ extern void gc_unset_mark(Header *h);
 extern void gc_markrootlist(Root *r);
 extern void gc_getstats(GcStats *stats);
 extern void gc_print_stats(GcStats *stats);
+extern void ms_initgc(void);
 extern void ms_gc(void);
-extern void *gcallocate(size_t sz, Tag *t);
+extern void *ms_gcallocate(size_t sz, Tag *t);
+extern void ms_gcenable(void);
+extern void ms_gcdisable(void);
+extern Boolean ms_gcisblocked(void);
+
 /*
  * allocation
  */
-
-extern void *gcalloc(size_t, Tag *);
-
-typedef struct Buffer Buffer;
-struct Buffer {
-	size_t len;
-	size_t current;
-	char str[1];
-};
 
 extern Buffer *openbuffer(size_t minsize);
 extern Buffer *expandbuffer(Buffer *buf, size_t minsize);
@@ -93,3 +99,4 @@ extern char *sealcountedbuffer(Buffer *buf);
 extern void freebuffer(Buffer *buf);
 
 extern void *forward(void *p);
+

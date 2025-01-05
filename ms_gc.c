@@ -24,6 +24,10 @@ Region *regions;
 
 Block *usedlist;
 Block *freelist;
+size_t nfrees = 0;
+size_t nallocs = 0;
+size_t bytesfree = 0;
+size_t bytesused = 0;
 
 size_t blocksize = MIN_minspace;
 
@@ -38,6 +42,9 @@ create_block(size_t sz)
 
 	r = ealloc(sizeof(Region));
 	b = ealloc(sz);
+	b->size = sz;
+	b->next = nil;
+	b->prev = nil;
 	r->start = (size_t)b;
 	r->size = sz;
 	r->next = regions;
@@ -50,8 +57,15 @@ add_to_freelist(Block *b)
 {
 	Block *fl;
 
-	if(!freelist)
+	nfrees++;
+	bytesfree += b->size;
+
+	if(!freelist){
+		b->next = nil;
+		b->prev = nil;
 		freelist = b;
+		return;
+	}
 
 	for(fl = freelist; fl->next != nil; fl = fl->next){
 		if(fl->next > b)
@@ -67,6 +81,9 @@ add_to_freelist(Block *b)
 int
 coalesce1(Block *a, Block *b)
 {
+	if(b == nil)
+		return 0;
+
 	assert(a->next == b && b->prev == a);
 
 	if(b == nil)
@@ -130,8 +147,8 @@ allocate2(size_t sz)
 
 	b = fl;
 	if(b->size > realsize && b->size-realsize > minsize){
-		cb = b + realsize;
-		cb->size = b->size + realsize;
+		cb = (void*)(((char*)b) + realsize);
+		cb->size = b->size - realsize;
 		cb->next = b->next;
 		cb->prev = b;
 		b->next = cb;
@@ -150,6 +167,9 @@ allocate2(size_t sz)
 
 	b->next = nil;
 	b->prev = nil;
+	nallocs++;
+	bytesfree -= realsize;
+	bytesused += realsize;
 	return b;
 }
 
@@ -176,6 +196,7 @@ deallocate1(void *p, Block **list)
 	b = pointer_block(p);
 	next = b->next;
 	prev = b->prev;
+	bytesused -= b->size;
 
 	if(b == *list){
 		*list = (*list)->next;
@@ -273,8 +294,17 @@ gcmark(void *p)
 	if(p == NULL)
 		return;
 
+	if(!ismanaged(p))
+		return;
+
 	h = header(p);
-	assert(h->tag != NULL && h->tag->magic == TAGMAGIC);
+	assert(h->tag == NULL || h->tag->magic == TAGMAGIC);
+	
+	if(h->tag == NULL){
+		gc_set_mark(h);
+		return;
+	}
+
 	t = h->tag;
 	if(gcverbose)
 		dprintf(2, ">>>> marking %s %p\n", t->typename, p);
@@ -284,8 +314,12 @@ gcmark(void *p)
 void
 gc_markrootlist(Root *r)
 {
-	for(; r != NULL; r = r->next)
-		gcmark(*(r->p));
+	void *p;
+
+	for(; r != NULL; r = r->next){
+		p = *(r->p);
+		gcmark(p);
+	}
 }
 
 void
@@ -310,6 +344,24 @@ gc_print_stats(GcStats *stats)
 	dprintf(2, "tfree = %lu, rfree = %lu\n", stats->total_free, stats->real_free);
 	dprintf(2, "tused = %lu, rused = %lu\n", stats->total_used, stats->real_used);
 	dprintf(2, "free blocks = %lu, used blocks = %lu\n", stats->free_blocks, stats->used_blocks);
+}
+
+void
+ms_initgc(void)
+{
+	GcStats stats;
+	Block *b;
+
+	if(gcverbose || gcinfo)
+		dprintf(2, "Starting mark/sweep GC\n");
+
+	b = create_block(blocksize);
+	add_to_freelist(b);
+
+	if(gcverbose || gcinfo){
+		gc_getstats(&stats);
+		gc_print_stats(&stats);
+	}
 }
 
 void
@@ -352,7 +404,7 @@ ms_gc(void)
 }
 
 void*
-gcallocate(size_t sz, Tag *t)
+ms_gcallocate(size_t sz, Tag *t)
 {
 	Block *b;
 	Header *nb;
@@ -381,8 +433,6 @@ done:
 void
 gc_set_mark(Header *h)
 {
-	assert(h->tag->magic == TAGMAGIC);
-
 	if(!ismanaged((void*)h))
 		return;
 	h->flags |= GcUsed;
@@ -391,10 +441,43 @@ gc_set_mark(Header *h)
 void
 gc_unset_mark(Header *h)
 {
-	assert(h->tag->magic == TAGMAGIC);
-
 	if(!ismanaged((void*)h))
 		return;
 	h->flags &= ~GcUsed;
+}
+
+void
+gc_memdump(void)
+{
+	Block *l;
+	Header *h;
+	void *p;
+
+	for(l = usedlist; l != nil; l = l->next){
+		h = (Header*)block_pointer(l);
+		p = (void*)(((char*)h)+sizeof(Header));
+		dump(h->tag, p);
+	}
+}
+
+void
+ms_gcenable(void)
+{
+	assert(gcblocked > 0);
+	gcblocked--;
+}
+
+void
+ms_gcdisable(void)
+{
+	assert(gcblocked >= 0);
+	gcblocked++;
+}
+
+Boolean
+ms_gcisblocked(void)
+{
+	assert(gcblocked >= 0);
+	return gcblocked != 0;
 }
 

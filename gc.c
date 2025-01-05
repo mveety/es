@@ -30,12 +30,6 @@ struct Space {
 # endif
 #endif
 
-
-/* globals */
-Root *rootlist;
-int gcblocked = 0;
-Tag StringTag;
-
 /* own variables */
 static Space *new, *old;
 #if GCPROTECT
@@ -454,7 +448,7 @@ extern void old_gc(void) {
 }
 
 /* initgc -- initialize the garbage collector */
-extern void initgc(void) {
+extern void old_initgc(void) {
 #if GCPROTECT
 	initmmu();
 	spaces = ealloc(NSPACES * sizeof (Space));
@@ -472,7 +466,7 @@ extern void initgc(void) {
 
 /* gcalloc -- allocate an object in new space */
 extern void* /* use the same logic. that's solid */
-gcalloc(size_t nbytes, Tag *tag)
+old_gcallocate(size_t nbytes, Tag *tag)
 {
 	Header *hp;
 	char *np;
@@ -505,183 +499,7 @@ gcalloc(size_t nbytes, Tag *tag)
 	}
 }
 
-/*
- * strings
- */
-
-#define notstatic
-DefineTag(String, notstatic);
-
-extern char *gcndup(const char *s, size_t n) {
-	char *ns;
-
-	gcdisable();
-	ns = gcalloc((n + 1) * sizeof (char), &StringTag);
-	memcpy(ns, s, n);
-	ns[n] = '\0';
-	assert(strlen(ns) == n);
-
-	Ref(char *, result, ns);
-	gcenable();
-	RefReturn(result);
-}
-
-extern char *gcdup(const char *s) {
-	return gcndup(s, strlen(s));
-}
-
-static void *StringCopy(void *op) {
-	size_t n = strlen(op) + 1;
-	char *np = gcalloc(n, &StringTag);
-	memcpy(np, op, n);
-	return np;
-}
-
-static size_t StringScan(void *p) {
-	return strlen(p) + 1;
-}
-
-static void
-StringMark(void *p) {
-	Header *h;
-
-	h = header(p);
-	gc_set_mark(h);
-}
-
-
-/*
- * memdump -- print out all of gc space, as best as possible
- */
-
-static char *tree1name(NodeKind k) {
-	switch(k) {
-	default:	panic("tree1name: bad node kind %d", k);
-	case nPrim:	return "Prim";
-	case nQword:	return "Qword";
-	case nCall:	return "Call";
-	case nThunk:	return "Thunk";
-	case nVar:	return "Var";
-	case nWord:	return "Word";
-	}
-}
-
-static char *tree2name(NodeKind k) {
-	switch(k) {
-	default:	panic("tree2name: bad node kind %d", k);
-	case nAssign:	return "Assign";
-	case nConcat:	return "Concat";
-	case nClosure:	return "Closure";
-	case nFor:	return "For";
-	case nLambda:	return "Lambda";
-	case nLet:	return "Let";
-	case nLets: return "Lets";
-	case nList:	return "List";
-	case nLocal:	return "Local";
-	case nMatch:	return "Match";
-	case nExtract:	return "Extract";
-	case nVarsub:	return "Varsub";
-	}
-}
-
-/* having these here violates every data hiding rule in the book */
-
-	typedef struct {
-		char *name;
-		void *value;
-	} Assoc;
-	struct Dict {
-		int size, remain;
-		Assoc table[1];		/* variable length */
-	};
-
-#include "var.h"
-#include "term.h"
-
-
-static size_t dump(Tag *t, void *p) {
-	char *s = t->typename;
-	print("%8ux %s\t", p, s);
-
-	if (streq(s, "String")) {
-		print("%s\n", p);
-		return strlen(p) + 1;
-	}
-
-	if (streq(s, "Term")) {
-		Term *t = p;
-		print("str = %ux  closure = %ux\n", t->str, t->closure);
-		return sizeof (Term);
-	}
-
-	if (streq(s, "List")) {
-		List *l = p;
-		print("term = %ux  next = %ux\n", l->term, l->next);
-		return sizeof (List);
-	}
-
-	if (streq(s, "StrList")) {
-		StrList *l = p;
-		print("str = %ux  next = %ux\n", l->str, l->next);
-		return sizeof (StrList);
-	}
-
-	if (streq(s, "Closure")) {
-		Closure *c = p;
-		print("tree = %ux  binding = %ux\n", c->tree, c->binding);
-		return sizeof (Closure);
-	}
-
-	if (streq(s, "Binding")) {
-		Binding *b = p;
-		print("name = %ux  defn = %ux  next = %ux\n", b->name, b->defn, b->next);
-		return sizeof (Binding);
-	}
-
-	if (streq(s, "Var")) {
-		Var *v = p;
-		print("defn = %ux  env = %ux  flags = %d\n",
-		      v->defn, v->env, v->flags);
-		return sizeof (Var);
-	}
-
-	if (streq(s, "Tree1")) {
-		Tree *t = p;
-		print("%s	%ux\n", tree1name(t->kind), t->u[0].p);
-		return offsetof(Tree, u[1]);
-	}
-
-	if (streq(s, "Tree2")) {
-		Tree *t = p;
-		print("%s	%ux  %ux\n", tree2name(t->kind), t->u[0].p, t->u[1].p);
-		return offsetof(Tree, u[2]);
-	}
-
-	if (streq(s, "Vector")) {
-		Vector *v = p;
-		int i;
-		print("alloclen = %d  count = %d [", v->alloclen, v->count);
-		for (i = 0; i <= v->alloclen; i++)
-			print("%s%ux", i == 0 ? "" : " ", v->vector[i]);
-		print("]\n");
-		return offsetof(Vector, vector[v->alloclen + 1]);
-	}
-
-	if (streq(s, "Dict")) {
-		Dict *d = p;
-		int i;
-		print("size = %d  remain = %d\n", d->size, d->remain);
-		for (i = 0; i < d->size; i++)
-			print("\tname = %ux  value = %ux\n",
-			      d->table[i].name, d->table[i].value);
-		return offsetof(Dict, table[d->size]);
-	}
-
-	print("<<unknown>>\n");
-	return 0;
-}
-
-extern void memdump(void) {
+extern void old_memdump(void) {
 	Space *sp;
 	for (sp = new; sp != NULL; sp = sp->next) {
 		char *scan = sp->bot;
