@@ -39,6 +39,7 @@ ListMark(void *p)
 
 	l = (List*)p;
 	gc_set_mark(header(p));
+	assert((void*)l != (void*)l->term && l != l->next);
 	gcmark(l->term);
 	gcmark(l->next);
 }

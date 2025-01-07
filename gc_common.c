@@ -39,7 +39,7 @@ exceptionroot(Root *root, List **e)
 	root->p = (void**)e;
 	if(exceptionrootlist)
 		exceptionrootlist->prev = root;
-root->next = exceptionrootlist;
+	root->next = exceptionrootlist;
 	exceptionrootlist = root;
 }
 

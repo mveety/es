@@ -15,6 +15,8 @@ struct Region {
 };
 
 struct Block {
+	size_t intype;
+	size_t alloc;
 	Block *prev;
 	Block *next;
 	size_t size; /* includes the size of this header */
@@ -29,6 +31,8 @@ size_t nallocs = 0;
 size_t bytesfree = 0;
 size_t bytesused = 0;
 size_t allocations = 0;
+volatile int rangc;
+size_t gen = 0;
 
 size_t blocksize = MIN_minspace;
 
@@ -53,30 +57,156 @@ create_block(size_t sz)
 	return b;
 }
 
+size_t
+checklist2(Block *list, int print, void *b)
+{
+	Block *p;
+	size_t i;
+
+	if(list == nil)
+		return 0;
+	if(list->prev == nil && list->next == nil)
+		return 1;
+
+	print = 0;
+	for(i = 0, p = nil; list != nil; i++, list = list->next){
+		assert(list->intype > 0);
+		assert(p == list->prev);
+		assert(p != list);
+		assert(list->next != list);
+		if(print){
+			if(b){
+				dprintf(2, "%lu: list->prev = %p, list = %p, list->next = %p, p = %p, b = %p\n",
+						i, list->prev, list, list->next, p, b);
+
+			} else {
+				dprintf(2, "%lu: list->prev = %p, list = %p, list->next = %p, p = %p\n",
+						i, list->prev, list, list->next, p);
+			}
+		}
+		p = list;
+	}
+	return i;
+}
+
+size_t
+checklist1(Block *list, int print)
+{
+	return checklist2(list, print, nil);
+}
+
+size_t
+checklist(Block *list)
+{
+	return checklist1(list, 0);
+}
+
 void /* i want to keep the free list ordered for coalescing */
 add_to_freelist(Block *b)
 {
 	Block *fl;
+	Block *prev;
 
 	nfrees++;
 	bytesfree += b->size;
 
+	b->next = nil;
+	b->prev = nil;
 	if(!freelist){
-		b->next = nil;
-		b->prev = nil;
 		freelist = b;
 		return;
 	}
 
-	for(fl = freelist; fl->next != nil; fl = fl->next){
-		if(fl->next > b)
-			break;
+	if(b < freelist){
+		b->next = freelist;
+		freelist->prev = b;
+		freelist = b;
+		return;
 	}
-	b->next = fl->next;
-	if(fl->next != nil)
+
+	fl = usedlist;
+	prev = fl->prev;
+	while(b > fl && fl != nil){
+		prev = fl;
+		fl = fl->next;
+	}
+
+	if(fl == nil){
+		fl = prev;
+		b->prev = prev;
+		b->next = nil;
+		prev->next = b;
+	} else {
+		b->prev = fl;
+		b->next = fl->next;
 		fl->next->prev = b;
-	fl->next = b;
-	b->prev = fl;
+		fl->next = b;
+	}
+
+	assert(b->prev != b && b->next != b);
+}
+
+void /* keeping the used list ordered will help with coalescing on free */
+add_to_usedlist(Block *b)
+{
+	Block *ul, *prev;
+	size_t len, i;
+
+	nallocs++;
+	bytesused += b->size;
+
+	b->prev = nil;
+	b->next = nil;
+	b->intype = 0;
+	b->alloc = gen++;
+
+	len = checklist(usedlist);
+	if(usedlist == nil){
+//		dprintf(2, "initial commit to used list\n");
+		b->intype = 1;
+		usedlist = b;
+		return;
+	}
+
+	if(b < usedlist){
+//		dprintf(2, "head insert: b = %p, usedlist = %p, ul->prev = %p, ul->next = %p\n",
+//					b, usedlist, usedlist->prev, usedlist->next);
+		b->next = usedlist;
+		usedlist->prev = b;
+		usedlist = b;
+		b->intype = 2;
+		assert(len+1 == checklist(usedlist));
+		return;
+	}
+
+	i = 0;
+	ul = usedlist;
+	prev = ul->prev;
+	while(b > ul && ul != nil){
+		prev = ul;
+		ul = ul->next;
+		i++;
+	}
+
+	if(ul == nil){
+//		dprintf(2, "tail insert(%zu): b = %p, ul = %p, ul->prev = %p, ul->next = %p\n",
+//					i, b, prev, prev->prev, prev->next);
+		b->prev = prev;
+		b->next = nil;
+		prev->next = b;
+		b->intype = 3;
+	} else {
+//		dprintf(2, "mid insert(%zu): b = %p, ul = %p, ul->prev = %p, ul->next = %p\n",
+//					i, b, ul, ul->prev, ul->next);
+		b->prev = ul;
+		b->next = ul->next;
+		ul->next->prev = b;
+		ul->next = b;
+		b->intype = 4;
+	}
+
+	assert(len+1 == checklist(usedlist));
+	assert(b->prev != nil);
 }
 
 int
@@ -91,19 +221,24 @@ coalesce1(Block *a, Block *b)
 		return -1;
 	if(a->next == nil || b == nil)
 		return -2;
-	if(a+a->size != b)
+	if(gcverbose)
+		dprintf(2, "coalesce: a = %p, a->size = %lx, a+a->size = %lx, b = %p\n",
+				a, a->size, (size_t)((char*)a)+a->size, b);
+	if(((char*)a)+a->size != (void*)b)
 		return -3;
 
 	a->next = b->next;
 	a->size += b->size;
-	a->next->prev = a;
+	if(a->next)
+		a->next->prev = a;
 	return 0;
 }
 
 void*
 coalesce(Block *a, Block *b)
 {
-	coalesce1(a, b);
+	if(coalesce1(a, b) == 0 && b != nil && gcverbose)
+		dprintf(2, ">>> coalescing blocks %p and %p\n", a, b);
 	return a;
 }
 
@@ -116,7 +251,7 @@ coalesce_freelist(void)
 		return;
 	
 	for(fl = freelist; fl != nil; fl = fl->next)
-		coalesce(fl, fl->next);
+		fl = coalesce(fl, fl->next);
 }
 
 void*
@@ -169,9 +304,7 @@ allocate2(size_t sz)
 
 	b->next = nil;
 	b->prev = nil;
-	nallocs++;
 	bytesfree -= realsize;
-	bytesused += realsize;
 	return b;
 }
 
@@ -182,39 +315,11 @@ allocate1(size_t sz)
 
 	if(!(b = allocate2(sz)))
 		return nil;
-	b->next = usedlist;
-	if(usedlist)
-		usedlist->prev = b;
-	usedlist = b;
+
+	add_to_usedlist(b);
+	checklist(usedlist);
 
 	return block_pointer(b);
-}
-
-void
-deallocate1(void *p)
-{
-	Block *b, *prev, *next;
-
-	b = pointer_block(p);
-	next = b->next;
-	prev = b->prev;
-	bytesused -= b->size;
-
-	if(b == usedlist){
-		usedlist = usedlist->next;
-		if(usedlist)
-			usedlist->prev = nil;
-	} else {
-		if(next)
-			next->prev = prev;
-		if(prev)
-			prev->next = next;
-	}
-
-	add_to_freelist(b);
-	coalesce(b, b->next);
-	if(b->prev)
-		b = coalesce(b->prev, b);
 }
 
 size_t /* includes block headers */
@@ -322,8 +427,13 @@ void
 gc_markrootlist(Root *r)
 {
 	void *p;
+	Header *h;
 
 	for(; r != NULL; r = r->next){
+		if(ismanaged((void*)r)){
+			h = header((void*)r);
+			gc_set_mark(h);
+		}
 		p = *(r->p);
 		gcmark(p);
 	}
@@ -332,23 +442,49 @@ gc_markrootlist(Root *r)
 size_t
 gcsweep(void)
 {
-	volatile Block *l, *next;
+	Block *new_usedlist, *cur, *next;
+	Block *new_usedlist_head;
 	Header *h;
 	size_t frees;
-
-	for(frees = 0, l = usedlist; l != nil;){
-		next = l->next;
-		h = (Header*)block_pointer(l);
+	
+	checklist(usedlist);
+	cur = usedlist;
+	frees = 0;
+	for(;;){
+		if(cur == nil)
+			break;
+		next = cur->next;
+		if(next)
+			next->prev = nil;
+		h = (Header*)block_pointer(cur);
 		if(h->flags & GcUsed){
-			dprintf(2, ">>> unmarking %p\n", h);
+			if(gcverbose)
+				dprintf(2, ">>> unmarking %p\n", h);
 			gc_unset_mark(h);
+			cur->prev = new_usedlist;
+			cur->next = nil;
+			if(!new_usedlist)
+				new_usedlist_head = cur;
+			else
+				new_usedlist->next = cur;
+			new_usedlist = cur;
 		} else {
-			dprintf(2, ">>> deallocating %p\n", h);
-			deallocate1((void*)h);
+			if(gcverbose)
+				dprintf(2, ">>> deallocating %p\n", cur);
+			bytesused -= cur->size;
+			cur->next = nil;
+			cur->prev = nil;
+			add_to_freelist(cur);
+			cur = coalesce(cur, cur->next);
+			if(cur->prev)
+			coalesce(cur->prev, cur);
 			frees++;
+			nallocs--;
 		}
-		l = next;
+		cur = next;
 	}
+	usedlist = new_usedlist_head;
+	checklist(usedlist);
 	return frees;
 }
 
@@ -369,6 +505,7 @@ ms_initgc(void)
 	if(gcverbose || gcinfo)
 		dprintf(2, "Starting mark/sweep GC\n");
 
+	rangc = 0;
 	b = create_block(blocksize);
 	add_to_freelist(b);
 
@@ -412,8 +549,10 @@ ms_gc(void)
 		gc_print_stats(&starting);
 		dprintf(2, "Ending stats:\n");
 		gc_print_stats(&ending);
+		dprintf(2, "nfrees = %lu, nallocs = %lu\n", nfrees, nallocs);
 	}
 
+	rangc = 1;
 	if(gcverbose)
 		dprintf(2, "GC finished\n");
 }
@@ -431,17 +570,18 @@ ms_gcallocate(size_t sz, Tag *t)
 	nb = allocate1(realsz);
 	if(nb)
 		goto done;
-	if(allocations > 100){
-		ms_gc();
-		nb = allocate1(realsz);
-		if(nb)
-			goto done;
-	}
+
+	ms_gc();
+	nb = allocate1(realsz);
+	if(nb)
+		goto done;
+
 	while(realsz+sizeof(Block) >= blocksize)
 		blocksize *= 2;
 	b = create_block(blocksize);
 	add_to_freelist(b);
 	nb = allocate1(realsz);
+
 	assert(nb != nil);
 done:
 	nb->tag = t;
