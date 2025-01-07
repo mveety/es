@@ -136,11 +136,12 @@ add_to_freelist(Block *b)
 		b->prev = prev;
 		b->next = nil;
 		prev->next = b;
-	} else {
-		b->prev = fl;
-		b->next = fl->next;
-		fl->next->prev = b;
-		fl->next = b;
+	} else { /* thanks a mistake from 9fans */
+		b->prev = prev;
+		b->next = prev->next;
+		prev->next = b;
+		if(b->next != nil)
+			b->next->prev = b;
 	}
 
 	assert(b->prev != b && b->next != b);
@@ -188,6 +189,13 @@ add_to_usedlist(Block *b)
 		i++;
 	}
 
+	b->prev = prev;
+	b->next = prev->next;
+	prev->next = b;
+	if(b->next)
+		b->next->prev = b;
+	b->intype = 4;
+	/*
 	if(ul == nil){
 //		dprintf(2, "tail insert(%zu): b = %p, ul = %p, ul->prev = %p, ul->next = %p\n",
 //					i, b, prev, prev->prev, prev->next);
@@ -195,15 +203,16 @@ add_to_usedlist(Block *b)
 		b->next = nil;
 		prev->next = b;
 		b->intype = 3;
-	} else {
+	} else { /* thanks a mistake from 9fans *
 //		dprintf(2, "mid insert(%zu): b = %p, ul = %p, ul->prev = %p, ul->next = %p\n",
 //					i, b, ul, ul->prev, ul->next);
-		b->prev = ul;
-		b->next = ul->next;
-		ul->next->prev = b;
-		ul->next = b;
+		b->prev = prev;
+		b->next = prev->next;
+		prev->next = b;
+		if(b->next != nil)
+			b->next->prev = b;
 		b->intype = 4;
-	}
+	}*/
 
 	assert(len+1 == checklist(usedlist));
 	assert(b->prev != nil);
