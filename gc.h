@@ -30,17 +30,17 @@ struct Tag {
 	char *typename;
 };
 
-/*struct Header {
+struct Header {
 	unsigned short flags;
 	unsigned short tag;
 	void *forward;
-};*/
+};
 
-struct Header {
+/*struct Header {
 	unsigned int flags;
 	Tag *tag;
 	void *forward;
-};
+};*/
 
 struct GcStats {
 	size_t total_free;
@@ -111,6 +111,7 @@ extern void *ms_gcallocate(size_t sz, int tag);
 extern void ms_gcenable(void);
 extern void ms_gcdisable(void);
 extern Boolean ms_gcisblocked(void);
+extern void gc_memdump(void);
 
 /*
  * allocation

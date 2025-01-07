@@ -20,6 +20,7 @@ struct Block {
 	Block *prev;
 	Block *next;
 	size_t size; /* includes the size of this header */
+	Header *h;
 };
 
 Region *regions;
@@ -88,7 +89,7 @@ checklist2(Block *list, int print, void *b)
 		assert(p != list);
 		assert(list->next != list);
 		h = (Header*)block_pointer(list);
-		assert(h->tag == NULL || h->tag->magic == TAGMAGIC);
+		gettag(h->tag);
 		if(print){
 			if(b){
 				dprintf(2, "%lu: list->prev = %p, list = %p, list->next = %p, p = %p, b = %p\n",
@@ -218,7 +219,7 @@ add_to_usedlist(Block *b)
 		b->next = nil;
 		prev->next = b;
 		b->intype = 3;
-	} else { /* thanks a mistake from 9fans *
+	} else { * thanks a mistake from 9fans *
 //		dprintf(2, "mid insert(%zu): b = %p, ul = %p, ul->prev = %p, ul->next = %p\n",
 //					i, b, ul, ul->prev, ul->next);
 		b->prev = prev;
@@ -420,16 +421,15 @@ gcmark(void *p)
 	}
 
 	h = header(p);
-	assert(h->tag == NULL || h->tag->magic == TAGMAGIC);
 	
-	if(h->tag == NULL){
+	if(h->tag == tNil){
 		if(gcverbose)
 			dprintf(2, ">>> marking NULL %p\n", p);
 		gc_set_mark(h);
 		return;
 	}
 
-	t = h->tag;
+	t = gettag(h->tag);
 	if(gcverbose)
 		dprintf(2, ">>>> marking %s %p\n", t->typename, p);
 	(t->mark)(p);
@@ -575,10 +575,8 @@ ms_gcallocate(size_t sz, int tag)
 	Block *b;
 	Header *nb;
 	size_t realsz;
-	Tag *t;
 
-	t = gettag(tag);
-	assert(t == NULL || t->magic == TAGMAGIC);
+	gettag(tag);
 
 	realsz = ALIGN(sz + sizeof(Header));
 	nb = allocate1(realsz);
@@ -598,7 +596,7 @@ ms_gcallocate(size_t sz, int tag)
 
 	assert(nb != nil);
 done:
-	nb->tag = t;
+	nb->tag = tag;
 	allocations++;
 	return (void*)(((char*)nb)+sizeof(Header));
 }
@@ -624,12 +622,14 @@ gc_memdump(void)
 {
 	Block *l;
 	Header *h;
+	Tag *t;
 	void *p;
 
 	for(l = usedlist; l != nil; l = l->next){
 		h = (Header*)block_pointer(l);
 		p = (void*)(((char*)h)+sizeof(Header));
-		dump(h->tag, p);
+		t = gettag(h->tag);
+		dump(t, p);
 	}
 }
 

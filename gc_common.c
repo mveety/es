@@ -419,6 +419,9 @@ size_t dump(Tag *t, void *p) {
 void
 memdump(void)
 {
-	old_memdump();
+	if(gctype == NewGc)
+		gc_memdump();
+	else
+		old_memdump();
 }
 

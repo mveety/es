@@ -278,6 +278,7 @@ extern void*
 forward(void *p)
 {
 	Header *h, *nh;
+	Tag *tag;
 	void *np;
 
 	if(!isinspace(old, p)){
@@ -286,22 +287,23 @@ forward(void *p)
 	}
 
 	h = header(p);
-	assert(h->tag != NULL);
-	assert(h->tag->magic == TAGMAGIC);
+	tag = gettag(h->tag);
+	assert(tag != NULL);
 
 	if(h->forward){
 		np = h->forward;
 		nh = header(np);
-		VERBOSE(("%s	-> %8ux (followed)\n", nh->tag->typename, np));
+		VERBOSE(("%s	-> %8ux (followed)\n", tag->typename, np));
 	} else {
-		np = (h->tag->copy)(p);
+		np = (tag->copy)(p);
 		nh = header(np);
 		h->forward = np;
 		nh->forward = NULL;
-		VERBOSE(("%s	-> %8ux (forwarded)\n", nh->tag->typename, np));
+		VERBOSE(("%s	-> %8ux (forwarded)\n", tag->typename, np));
 	}
 
-	assert(nh->tag->magic == TAGMAGIC);
+	/* this is probably not needed now */
+	assert(tag->magic == TAGMAGIC);
 	return np;
 }
 
@@ -322,6 +324,7 @@ scanspace(void)
 	Space *sp, *scanned, *front;
 	char *scan;
 	Header *h;
+	Tag *t;
 
 	scanned = NULL;
 	for(;;){
@@ -330,10 +333,10 @@ scanspace(void)
 			scan = sp->bot;
 			while(scan < sp->current){
 				h = (Header*)scan;
-				assert(h->tag->magic == TAGMAGIC);
+				t = gettag(h->tag);
 				scan += sizeof(Header);
-				VERBOSE(("GC %8ux : %s	scan\n", scan, h->tag->typename));
-				scan += ALIGN((h->tag->scan)(scan));
+				VERBOSE(("GC %8ux : %s	scan\n", scan, gettag(h->tag)->typename));
+				scan += ALIGN((t->scan)(scan));
 			}
 		}
 		if(new == front)
@@ -472,14 +475,12 @@ old_gcallocate(size_t nbytes, int t)
 	char *np;
 	char *p;
 	size_t n;
-	Tag *tag;
 
 #if GCALWAYS
 	gc();
 #endif
 
-	tag = gettag(t);
-	assert(tag == NULL || tag->magic == TAGMAGIC);
+	gettag(t);
 	n = ALIGN(nbytes + sizeof(Header));
 	for(;;){
 		hp = (void*)new->current;
@@ -487,7 +488,7 @@ old_gcallocate(size_t nbytes, int t)
 		if(np <= new->top){
 			new->current = np;
 			p = ((char*)hp)+sizeof(Header);
-			hp->tag = tag;
+			hp->tag = t;
 			hp->forward = NULL;
 			return (void*)p;
 		}
@@ -501,15 +502,19 @@ old_gcallocate(size_t nbytes, int t)
 }
 
 extern void old_memdump(void) {
-	Space *sp;
+/*	Space *sp;
+	Tag *tag;
+
 	for (sp = new; sp != NULL; sp = sp->next) {
 		char *scan = sp->bot;
 		while (scan < sp->current) {
-			Tag *tag = *(Tag **) scan;
+			tag = gettag(((Header*)scan)->tag);
 			assert(tag->magic == TAGMAGIC);
 			scan += sizeof (Tag *);
 			scan += ALIGN(dump(tag, scan));
 		}
 	}
+*/
+	return; /* stubbed out */
 }
 
