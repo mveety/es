@@ -363,10 +363,25 @@ extern const char * const buildstring;
 
 /* gc.c, ms_gc.c, gc_common.c -- see gc.h for more */
 
-typedef struct Tag Tag;
-#define	gcnew(type)	((type *) gcalloc(sizeof (type), &(CONCAT(type,Tag))))
+enum {
+	tNil,
+	tClosure,
+	tBinding,
+	tDict,
+	tString,
+	tList,
+	tStrList,
+	tTerm,
+	tTree1,
+	tTree2,
+	tVar,
+	tVector,
+};
 
-extern void *gcalloc(size_t n, Tag *t);		/* allocate n with collection tag t */
+typedef struct Tag Tag;
+#define	gcnew(type)	((type *) gcalloc(sizeof (type), (CONCAT(t, type))))
+
+extern void *gcalloc(size_t n, int t);		/* allocate n with collection tag t */
 extern char *gcdup(const char *s);		/* copy a 0-terminated string into gc space */
 extern char *gcndup(const char *s, size_t n);	/* copy a counted string into gc space */
 

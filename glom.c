@@ -36,7 +36,7 @@ static char *qcat(const char *q1, const char *q2, Term *t1, Term *t2) {
 
 	len1 = (q1 == QUOTED || q1 == UNQUOTED) ? strlen(getstr(t1)) : strlen(q1);
 	len2 = (q2 == QUOTED || q2 == UNQUOTED) ? strlen(getstr(t2)) : strlen(q2);
-	result = s = gcalloc(len1 + len2 + 1, &StringTag);
+	result = s = gcalloc(len1 + len2 + 1, tString);
 
 	if (q1 == QUOTED)
 		memset(s, 'q', len1);

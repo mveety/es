@@ -69,7 +69,7 @@ struct Dict {
 
 static Dict *mkdict0(int size) {
 	size_t len = offsetof(Dict, table[size]);
-	Dict *dict = gcalloc(len, &DictTag);
+	Dict *dict = gcalloc(len, tDict);
 	memzero(dict, len);
 	dict->size = size;
 	dict->remain = REMAIN(size);
@@ -79,7 +79,7 @@ static Dict *mkdict0(int size) {
 static void *DictCopy(void *op) {
 	Dict *dict = op;
 	size_t len = offsetof(Dict, table[dict->size]);
-	void *np = gcalloc(len, &DictTag);
+	void *np = gcalloc(len, tDict);
 	memcpy(np, op, len);
 	return np;
 }

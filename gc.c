@@ -466,19 +466,20 @@ extern void old_initgc(void) {
 
 /* gcalloc -- allocate an object in new space */
 extern void* /* use the same logic. that's solid */
-old_gcallocate(size_t nbytes, Tag *tag)
+old_gcallocate(size_t nbytes, int t)
 {
 	Header *hp;
 	char *np;
 	char *p;
 	size_t n;
+	Tag *tag;
 
 #if GCALWAYS
 	gc();
 #endif
 
+	tag = gettag(t);
 	assert(tag == NULL || tag->magic == TAGMAGIC);
-
 	n = ALIGN(nbytes + sizeof(Header));
 	for(;;){
 		hp = (void*)new->current;

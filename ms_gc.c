@@ -57,11 +57,24 @@ create_block(size_t sz)
 	return b;
 }
 
+void*
+block_pointer(Block *b)
+{
+	return (void*)(((char*)b)+sizeof(Block));
+}
+
+Block*
+pointer_block(void *p)
+{
+	return (Block*)(((char*)p)-sizeof(Block));
+}
+
 size_t
 checklist2(Block *list, int print, void *b)
 {
 	Block *p;
 	size_t i;
+	Header *h;
 
 	if(list == nil)
 		return 0;
@@ -74,6 +87,8 @@ checklist2(Block *list, int print, void *b)
 		assert(p == list->prev);
 		assert(p != list);
 		assert(list->next != list);
+		h = (Header*)block_pointer(list);
+		assert(h->tag == NULL || h->tag->magic == TAGMAGIC);
 		if(print){
 			if(b){
 				dprintf(2, "%lu: list->prev = %p, list = %p, list->next = %p, p = %p, b = %p\n",
@@ -261,18 +276,6 @@ coalesce_freelist(void)
 	
 	for(fl = freelist; fl != nil; fl = fl->next)
 		fl = coalesce(fl, fl->next);
-}
-
-void*
-block_pointer(Block *b)
-{
-	return (void*)(((char*)b)+sizeof(Block));
-}
-
-Block*
-pointer_block(void *p)
-{
-	return (Block*)(((char*)p)-sizeof(Block));
 }
 
 Block*
@@ -567,12 +570,14 @@ ms_gc(void)
 }
 
 void*
-ms_gcallocate(size_t sz, Tag *t)
+ms_gcallocate(size_t sz, int tag)
 {
 	Block *b;
 	Header *nb;
 	size_t realsz;
+	Tag *t;
 
+	t = gettag(tag);
 	assert(t == NULL || t->magic == TAGMAGIC);
 
 	realsz = ALIGN(sz + sizeof(Header));

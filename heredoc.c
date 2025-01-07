@@ -134,7 +134,7 @@ extern Boolean queueheredoc(Tree *t) {
 		return FALSE;
 	}
 
-	here = gcalloc(sizeof (Here), NULL);
+	here = gcalloc(sizeof (Here), tNil);
 	here->next = hereq;
 	here->marker = eof;
 	hereq = here;

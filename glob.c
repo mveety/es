@@ -231,21 +231,21 @@ static char *expandhome(char *s, StrList *qp) {
 			size_t pathlen = strlen(string);
 			size_t homelen = strlen(home);
 			size_t len = pathlen - slash + homelen;
-			s = gcalloc(len + 1, &StringTag);
+			s = gcalloc(len + 1, tString);
 			memcpy(s, home, homelen);
 			memcpy(&s[homelen], &string[slash], pathlen - slash);
 			s[len] = '\0';
 			string = s;
 			q = quote->str;
 			if (q == UNQUOTED) {
-				q = gcalloc(len + 1, &StringTag);
+				q = gcalloc(len + 1, tString);
 				memset(q, 'q', homelen);
 				memset(&q[homelen], 'r', pathlen - slash);
 				q[len] = '\0';
 			} else if (strchr(q, 'r') == NULL)
 				q = QUOTED;
 			else {
-				q = gcalloc(len + 1, &StringTag);
+				q = gcalloc(len + 1, tString);
 				memset(q, 'q', homelen);
 				memcpy(&q[homelen], &quote->str[slash], pathlen - slash);
 				q[len] = '\0';

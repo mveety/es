@@ -7,7 +7,7 @@ DefineTag(Vector, static);
 
 extern Vector *mkvector(int n) {
 	int i;
-	Vector *v = gcalloc(offsetof(Vector, vector[n + 1]), &VectorTag);
+	Vector *v = gcalloc(offsetof(Vector, vector[n + 1]), tVector);
 	v->alloclen = n;
 	v->count = 0;
 	for (i = 0; i <= n; i++)
@@ -17,7 +17,7 @@ extern Vector *mkvector(int n) {
 
 static void *VectorCopy(void *ov) {
 	size_t n = offsetof(Vector, vector[((Vector *) ov)->alloclen + 1]);
-	void *nv = gcalloc(n, &VectorTag);
+	void *nv = gcalloc(n, tVector);
 	memcpy(nv, ov, n);
 	return nv;
 }

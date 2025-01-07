@@ -403,10 +403,7 @@ static void importvar(char *name0, char *value) {
 					if (list->next != NULL) {
 						const char *str2
 						  = list->next->term->str;
-						char *str
-						  = gcalloc(offset
-							    + strlen(str2) + 1,
-							    &StringTag);
+						char *str = gcalloc(offset+strlen(str2) + 1, tString);
 						memcpy(str, word, offset - 1);
 						str[offset - 1]
 						  = ENV_SEPARATOR;
@@ -416,8 +413,7 @@ static void importvar(char *name0, char *value) {
 					}
 					break;
 				    case ENV_ESCAPE: {
-					char *str
-					  = gcalloc(strlen(word), &StringTag);
+					char *str = gcalloc(strlen(word), tString);
 					memcpy(str, word, offset);
 					strcpy(str + offset, escape + 2);
 					list->term->str = str;

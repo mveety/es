@@ -8,7 +8,7 @@
 	static void *CONCAT(t,Copy)(void *); \
 	static size_t CONCAT(t,Scan)(void *); \
 	static void CONCAT(t, Mark)(void *); \
-	storage Tag CONCAT(t,Tag) = { CONCAT(t,Copy), CONCAT(t,Scan), CONCAT(t, Mark), TAGMAGIC, STRING(t) }
+	Tag CONCAT(t,Tag) = { CONCAT(t,Copy), CONCAT(t,Scan), CONCAT(t, Mark), TAGMAGIC, STRING(t) }
 
 enum {
 	TAGMAGIC = 0xdefaced,
@@ -29,6 +29,12 @@ struct Tag {
 	long magic;
 	char *typename;
 };
+
+/*struct Header {
+	unsigned short flags;
+	unsigned short tag;
+	void *forward;
+};*/
 
 struct Header {
 	unsigned int flags;
@@ -51,6 +57,26 @@ struct Buffer {
 	char str[1];
 };
 
+/* Tags */
+
+/* defined in es.h
+enum {
+	tNil,
+	tClosure,
+	tBinding,
+	tDict,
+	tString,
+	tList,
+	tStrList,
+	tTerm,
+	tTree1,
+	tTree2,
+	tVar,
+	tVector,
+};
+*/
+
+/* extern Tag *tags[64]; */
 extern int gctype;
 extern Root *globalrootlist;
 extern Root *exceptionrootlist;
@@ -58,6 +84,7 @@ extern Root *rootlist;
 extern int gcblocked;
 extern Tag StringTag; /* typedef for Tag is in es.h */
 
+extern Tag *gettag(int);
 extern Header *header(void *p);
 extern size_t dump(Tag *t, void *p);
 
@@ -68,7 +95,7 @@ extern void old_gcdisable(void);
 extern void old_gcreserve(size_t minfree);
 extern Boolean old_gcisblocked(void);
 extern void old_gc(void);
-extern void *old_gcallocate(size_t, Tag*);
+extern void *old_gcallocate(size_t, int);
 extern void old_memdump(void);
 
 /* mark sweep */
@@ -80,7 +107,7 @@ extern void gc_getstats(GcStats *stats);
 extern void gc_print_stats(GcStats *stats);
 extern void ms_initgc(void);
 extern void ms_gc(void);
-extern void *ms_gcallocate(size_t sz, Tag *t);
+extern void *ms_gcallocate(size_t sz, int tag);
 extern void ms_gcenable(void);
 extern void ms_gcdisable(void);
 extern Boolean ms_gcisblocked(void);

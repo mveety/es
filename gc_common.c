@@ -3,11 +3,26 @@
 #include "es.h"
 #include "gc.h"
 
+#define nil ((void*)0)
+
+extern Tag ClosureTag;
+extern Tag BindingTag;
+extern Tag DictTag;
+extern Tag StringTag;
+extern Tag ListTag;
+extern Tag StrListTag;
+extern Tag TermTag;
+extern Tag Tree1Tag;
+extern Tag Tree2Tag;
+extern Tag VarTag;
+extern Tag VectorTag;
+
 Root *globalrootlist;
 Root *exceptionrootlist;
 Root *rootlist;
 int gcblocked = 0;
 int gctype = OldGc;
+Tag *tags[12];
 
 /* globalroot -- add an external to the list of global roots */
 extern void globalroot(void *addr) {
@@ -52,6 +67,14 @@ exceptionunroot(void)
 		exceptionrootlist->prev = NULL;
 }
 
+Tag*
+gettag(int t)
+{
+	assert(t >= tNil && (size_t)t < sizeof(tags));
+	assert(tags[t] == nil || tags[t]->magic == TAGMAGIC);
+	return tags[t];
+}
+
 Header*
 header(void *p)
 {
@@ -87,6 +110,19 @@ gcderef(Root *r, void **p)
 void
 initgc(void)
 {
+	tags[tNil] = nil;
+	tags[tClosure] = &ClosureTag;
+	tags[tBinding] = &BindingTag;
+	tags[tDict] = &DictTag;
+	tags[tString] = &StringTag;
+	tags[tList] = &ListTag;
+	tags[tStrList] = &StrListTag;
+	tags[tTerm] = &TermTag;
+	tags[tTree1] = &Tree1Tag;
+	tags[tTree2] = &Tree2Tag;
+	tags[tVar] = &VarTag;
+	tags[tVector] = &VectorTag;
+
 	if(gctype == NewGc)
 		ms_initgc();
 	else
@@ -143,7 +179,7 @@ gcisblocked(void)
 }
 
 void*
-gcalloc(size_t sz, Tag *t)
+gcalloc(size_t sz, int t)
 {
 	if(gctype == NewGc)
 		return ms_gcallocate(sz, t);
@@ -215,7 +251,7 @@ extern char *gcndup(const char *s, size_t n) {
 	char *ns;
 
 	gcdisable();
-	ns = gcalloc((n + 1) * sizeof (char), &StringTag);
+	ns = gcalloc((n + 1) * sizeof (char), tString);
 	memcpy(ns, s, n);
 	ns[n] = '\0';
 	assert(strlen(ns) == n);
@@ -231,7 +267,7 @@ extern char *gcdup(const char *s) {
 
 static void *StringCopy(void *op) {
 	size_t n = strlen(op) + 1;
-	char *np = gcalloc(n, &StringTag);
+	char *np = gcalloc(n, tString);
 	memcpy(np, op, n);
 	return np;
 }
