@@ -75,7 +75,6 @@ checklist2(Block *list, int print, void *b)
 {
 	Block *p;
 	size_t i;
-	Header *h;
 
 	if(list == nil)
 		return 0;
@@ -88,8 +87,6 @@ checklist2(Block *list, int print, void *b)
 		assert(p == list->prev);
 		assert(p != list);
 		assert(list->next != list);
-		h = (Header*)block_pointer(list);
-		gettag(h->tag);
 		if(print){
 			if(b){
 				dprintf(2, "%lu: list->prev = %p, list = %p, list->next = %p, p = %p, b = %p\n",
@@ -454,8 +451,8 @@ gc_markrootlist(Root *r)
 size_t
 gcsweep(void)
 {
-	Block *new_usedlist, *cur, *next;
-	Block *new_usedlist_head;
+	Block *new_usedlist = nil, *cur, *next;
+	Block *new_usedlist_head = nil;
 	Header *h;
 	size_t frees;
 	
@@ -475,7 +472,7 @@ gcsweep(void)
 			gc_unset_mark(h);
 			cur->prev = new_usedlist;
 			cur->next = nil;
-			if(!new_usedlist)
+			if(new_usedlist_head == nil)
 				new_usedlist_head = cur;
 			else
 				new_usedlist->next = cur;
@@ -597,6 +594,7 @@ ms_gcallocate(size_t sz, int tag)
 	assert(nb != nil);
 done:
 	nb->tag = tag;
+	pointer_block(nb)->h = nb;
 	allocations++;
 	return (void*)(((char*)nb)+sizeof(Header));
 }
