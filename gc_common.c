@@ -70,7 +70,7 @@ exceptionunroot(void)
 Tag*
 gettag(int t)
 {
-	assert(t >= tNil && (size_t)t < sizeof(tags));
+	assert(t >= tNil && (size_t)t < (sizeof(tags)/sizeof(Tag*)));
 	assert(tags[t] == nil || tags[t]->magic == TAGMAGIC);
 	return tags[t];
 }
