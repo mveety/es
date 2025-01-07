@@ -185,6 +185,7 @@ add_to_usedlist(Block *b)
 	if(b < usedlist){
 //		dprintf(2, "head insert: b = %p, usedlist = %p, ul->prev = %p, ul->next = %p\n",
 //					b, usedlist, usedlist->prev, usedlist->next);
+		assert(usedlist->prev == nil);
 		b->next = usedlist;
 		usedlist->prev = b;
 		usedlist = b;
@@ -203,6 +204,7 @@ add_to_usedlist(Block *b)
 	}
 
 	b->prev = prev;
+	assert(prev != nil);
 	b->next = prev->next;
 	prev->next = b;
 	if(b->next)
@@ -282,6 +284,8 @@ allocate2(size_t sz)
 	Block *b, *cb, *fl;
 	Block *ahead, *behind;
 	size_t realsize;
+	size_t i;
+	char *p;
 	
 	realsize = sizeof(Block) + sz;
 	for(fl = freelist; fl != nil; fl = fl->next)
@@ -315,6 +319,9 @@ allocate2(size_t sz)
 	b->next = nil;
 	b->prev = nil;
 	bytesfree -= realsize;
+	p = (void*)(((char*)b)+sizeof(Block));
+	for(i = 0; i < realsize-sizeof(Block); i++)
+		p[i] = 0;
 	return b;
 }
 
