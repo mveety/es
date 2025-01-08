@@ -34,6 +34,7 @@ size_t bytesused = 0;
 size_t allocations = 0;
 volatile int rangc;
 volatile int ms_gc_blocked;
+volatile size_t ngcs = 0;
 // size_t gen = 0;
 
 size_t blocksize = MIN_minspace;
@@ -165,7 +166,7 @@ void /* keeping the used list ordered will help with coalescing on free */
 add_to_usedlist(Block *b)
 {
 	Block *ul, *prev;
-	size_t len, i;
+	size_t len;
 
 	nallocs++;
 	bytesused += b->size;
@@ -195,13 +196,11 @@ add_to_usedlist(Block *b)
 		return;
 	}
 
-	i = 0;
 	ul = usedlist;
 	prev = ul->prev;
 	while(b > ul && ul != nil){
 		prev = ul;
 		ul = ul->next;
-		i++;
 	}
 
 	if(ul == nil){
@@ -245,6 +244,7 @@ coalesce1(Block *a, Block *b)
 	a->size += b->size;
 	if(a->next)
 		a->next->prev = a;
+	nfrees--;
 	return 0;
 }
 
@@ -290,6 +290,7 @@ krallocate2(size_t sz)
 					new->next->prev = prev;
 				if(fl == freelist)
 					freelist = new->next;
+				nfrees--;
 				break;
 			}
 			fl->size -= realsize;
@@ -598,6 +599,7 @@ ms_gc(void)
 	if(gcverbose)
 		dprintf(2, ">> Sweeping\n");
 	gcsweep();
+	ngcs++;
 
 	if(gcverbose || gcinfo){
 		gc_getstats(&ending);
@@ -607,6 +609,7 @@ ms_gc(void)
 		gc_print_stats(&ending);
 		dprintf(2, "nfrees = %lu, nallocs = %lu\n", nfrees, nallocs);
 		dprintf(2, "allocations since last gc = %lu\n", allocations);
+		dprintf(2, "number of gc = %lu\n", ngcs);
 	}
 
 	allocations = 0;
@@ -685,7 +688,7 @@ ms_gcenable(void)
 {
 	assert(gcblocked > 0);
 	gcblocked--;
-	if(allocations > 500)
+	if(allocations > 5000)
 		ms_gc();
 }
 

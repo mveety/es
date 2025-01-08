@@ -77,7 +77,7 @@ static noreturn usage(void) {
 		"	-i	interactive shell\n"
 		"	-l	login shell\n"
 		"	-e	exit if any command exits with false status\n"
-		"	-v	print input to standard error\n"
+		"	-V	print input to standard error\n"
 		"	-x	print commands to standard error before executing\n"
 		"	-n	just parse; don't execute\n"
 		"	-N	ignore the .esrc\n"
@@ -89,10 +89,17 @@ static noreturn usage(void) {
 		"	-X	use experimental gc\n"
 		"	-L	print parser results in LISP format\n"
 		"	-A	enable assertions (slow)\n"
+		"	-v	print version\n"
 	);
 	exit(1);
 }
 
+void
+print_version(void)
+{
+	eprint("%s\n", buildstring);
+	exit(0);
+}
 
 /* main -- initialize, parse command arguments, and start running */
 int main(int argc, char **argv) {
@@ -118,14 +125,14 @@ int main(int argc, char **argv) {
 	if (*argv[0] == '-')
 		loginshell = TRUE;
 
-	while ((c = getopt(argc, argv, "eilxXvnpodsAc:?GILN")) != EOF)
+	while ((c = getopt(argc, argv, "eilxXvnpodsAVc:?GILN")) != EOF)
 		switch (c) {
 		case 'c':	cmd = optarg;			break;
 		case 'e':	runflags |= eval_exitonfalse;	break;
 		case 'i':	runflags |= run_interactive;	break;
 		case 'n':	runflags |= run_noexec;		break;
 		case 'N':	readesrc = FALSE; break;
-		case 'v':	runflags |= run_echoinput;	break;
+		case 'V':	runflags |= run_echoinput;	break;
 		case 'x':	runflags |= run_printcmds;	break;
 		case 'L':	runflags |= run_lisptrees;	break;
 		case 'l':	loginshell = TRUE;		break;
@@ -137,6 +144,11 @@ int main(int argc, char **argv) {
 		case 'I':	gcinfo = TRUE;			break;
 		case 'X':	gctype = NewGc;			break;
 		case 'A':	assertions = TRUE;		break;
+		case 'v':
+			initgc();
+			initconv();
+			print_version();
+			break;
 		default:
 			initgc();
 			initconv();
