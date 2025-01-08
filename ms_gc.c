@@ -11,6 +11,7 @@ typedef struct Block Block;
 struct Region {
 	size_t start;
 	size_t size;
+	Block *startp;
 	Region *next;
 };
 
@@ -35,6 +36,7 @@ size_t allocations = 0;
 volatile int rangc;
 volatile int ms_gc_blocked;
 volatile size_t ngcs = 0;
+int sort_free_list = 0;
 // size_t gen = 0;
 
 size_t blocksize = MIN_minspace;
@@ -115,8 +117,98 @@ checklist(Block *list)
 	return checklist1(list, 0);
 }
 
+Block* /* cheat a little */
+sort_pivot(Block *list, size_t len)
+{
+	size_t i;
+
+	for(i = 0; i < len/2 && list->next != nil; i++, list = list->next)
+		;
+	return list;
+}
+
+
+Block*
+sort_list(Block *list, size_t len)
+{
+	Block *pivot;
+	Block *p = nil, *n = nil, *l = nil;
+	Block *left = nil, *right = nil;
+	size_t leftlen = 0, rightlen = 0;
+	Block *head;
+
+	if(!list)
+		return nil;
+	if(!list->next)
+		return list;
+
+	pivot = sort_pivot(list, len);
+	if(pivot->prev)
+		pivot->prev->next = pivot->next;
+	if(pivot->next)
+	pivot->next->prev = pivot->prev;
+	p = list;
+	pivot->next = pivot->prev = nil;
+
+	while(p){
+		n = p;
+		p = p->next;
+		n->prev = n->next = nil;
+		if(n < pivot){
+			n->next = left;
+			if(left)
+				left->prev = n;
+			left = n;
+			leftlen++;
+		} else {
+			n->next = right;
+			if(right)
+				right->prev = n;
+			right = n;
+			rightlen++;
+		}
+	}
+
+	left = sort_list(left, leftlen);
+	right = sort_list(right, rightlen);
+
+	head = left;
+	l = left;
+	if(left)
+		for(; l->next != nil; l = l->next)
+			;
+	if(l)
+		l->next = pivot;
+	pivot->prev = l;
+	pivot->next = right;
+	if(right)
+		right->prev = pivot;
+	if(head)
+		return head;
+	else
+		return pivot;
+}
+
+void
+add_to_freelist_nosort(Block *b)
+{
+	size_t len;
+
+	nfrees++;
+	bytesfree += b->size;
+
+	if(assertions)
+		len = checklist(freelist);
+	b->next = freelist;
+	if(freelist)
+		freelist->prev = b;
+	freelist = b;
+	if(assertions)
+		assert(len+1 == checklist(freelist));
+}
+
 void /* i want to keep the free list ordered for coalescing */
-add_to_freelist(Block *b)
+add_to_freelist_sort(Block *b)
 {
 	Block *fl;
 	Block *prev;
@@ -163,6 +255,15 @@ add_to_freelist(Block *b)
 }
 
 void
+add_to_freelist(Block *b)
+{
+	if(sort_free_list)
+		add_to_freelist_sort(b);
+	else
+		add_to_freelist_nosort(b);
+}
+
+void
 add_to_usedlist(Block *b)
 {
 	size_t len;
@@ -184,7 +285,7 @@ void /* keeping the used list ordered will help with coalescing on free */
 add_to_usedlist2(Block *b)
 {
 	Block *ul, *prev;
-	size_t len;
+	size_t len = 0;
 
 	nallocs++;
 	bytesused += b->size;
@@ -274,16 +375,22 @@ coalesce(Block *a, Block *b)
 	return a;
 }
 
-void
-coalesce_freelist(void)
+Block*
+coalesce_list(Block *list)
 {
-	Block *fl;
+	Block *l;
 
-	if(!freelist)
-		return;
-	
-	for(fl = freelist; fl != nil; fl = fl->next)
-		fl = coalesce(fl, fl->next);
+	if(!list)
+		return nil;
+
+	l = list;
+	while(l != nil){
+		l = coalesce(l, l->next);
+		if(l->prev)
+			coalesce(l->prev, l);
+		l = l->next;
+	}
+	return list;
 }
 
 Block*
@@ -548,9 +655,9 @@ gcsweep(void)
 			cur->next = nil;
 			cur->prev = nil;
 			add_to_freelist(cur);
-			cur = coalesce(cur, cur->next);
-			if(cur->prev)
-			coalesce(cur->prev, cur);
+			//cur = coalesce(cur, cur->next);
+			//if(cur->prev)
+			//	coalesce(cur->prev, cur);
 			frees++;
 			nallocs--;
 		}
@@ -617,6 +724,10 @@ ms_gc(void)
 	if(gcverbose)
 		dprintf(2, ">> Sweeping\n");
 	gcsweep();
+	if(!sort_free_list){
+		freelist = sort_list(freelist, nfrees);
+		freelist = coalesce_list(freelist);
+	}
 	ngcs++;
 
 	if(gcverbose || gcinfo){
@@ -706,7 +817,7 @@ ms_gcenable(void)
 {
 	assert(gcblocked > 0);
 	gcblocked--;
-	if(allocations > 1000)
+	if(allocations > 5000)
 		ms_gc();
 }
 

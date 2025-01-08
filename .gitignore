@@ -40,4 +40,5 @@ config.es
 *.new
 tests/*
 estest
+callgrind.*
 
