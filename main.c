@@ -88,7 +88,7 @@ static noreturn usage(void) {
 		"	-G	print verbose garbage collector information\n"
 		"	-X	use experimental gc\n"
 		"	-L	print parser results in LISP format\n"
-		"	-A	enable assertions\n"
+		"	-A	enable assertions (slow)\n"
 	);
 	exit(1);
 }

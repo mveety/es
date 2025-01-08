@@ -15,12 +15,12 @@ struct Region {
 };
 
 struct Block {
-	size_t intype;
-	size_t alloc;
+//	size_t intype;
+//	size_t alloc;
 	Block *prev;
 	Block *next;
 	size_t size; /* includes the size of this header */
-	Header *h;
+//	Header *h;
 };
 
 Region *regions;
@@ -33,7 +33,7 @@ size_t bytesfree = 0;
 size_t bytesused = 0;
 size_t allocations = 0;
 volatile int rangc;
-size_t gen = 0;
+// size_t gen = 0;
 
 size_t blocksize = MIN_minspace;
 
@@ -83,7 +83,6 @@ checklist2(Block *list, int print, void *b)
 
 	print = 0;
 	for(i = 0, p = nil; list != nil; i++, list = list->next){
-		assert(list->intype > 0);
 		assert(p == list->prev);
 		assert(p != list);
 		assert(list->next != list);
@@ -145,18 +144,17 @@ add_to_freelist(Block *b)
 	}
 
 	if(fl == nil){
-		fl = prev;
 		b->prev = prev;
 		b->next = nil;
 		prev->next = b;
-	} else { /* thanks a mistake from 9fans */
+		//b->intype = 3;
+	} else {  /*thanks a mistake from 9fans*/
 		b->prev = prev;
-		if(prev){
-			b->next = prev->next;
-			prev->next = b;
-		}
+		b->next = prev->next;
+		prev->next = b;
 		if(b->next != nil)
 			b->next->prev = b;
+		//b->intype = 4;
 	}
 
 	assert(b->prev != b && b->next != b);
@@ -173,26 +171,26 @@ add_to_usedlist(Block *b)
 
 	b->prev = nil;
 	b->next = nil;
-	b->intype = 0;
-	b->alloc = gen++;
+//	b->intype = 0;
+//	b->alloc = gen++;
 
-	len = checklist(usedlist);
+	if(assertions)
+		len = checklist(usedlist);
+	assert(b != usedlist);
 	if(usedlist == nil){
-//		dprintf(2, "initial commit to used list\n");
-		b->intype = 1;
+		//b->intype = 1;
 		usedlist = b;
 		return;
 	}
 
 	if(b < usedlist){
-//		dprintf(2, "head insert: b = %p, usedlist = %p, ul->prev = %p, ul->next = %p\n",
-//					b, usedlist, usedlist->prev, usedlist->next);
 		assert(usedlist->prev == nil);
 		b->next = usedlist;
 		usedlist->prev = b;
 		usedlist = b;
-		b->intype = 2;
-		assert(len+1 == checklist(usedlist));
+		//b->intype = 2;
+		if(assertions)
+			assert(len+1 == checklist(usedlist));
 		return;
 	}
 
@@ -205,33 +203,22 @@ add_to_usedlist(Block *b)
 		i++;
 	}
 
-	b->prev = prev;
-	assert(prev != nil);
-	b->next = prev->next;
-	prev->next = b;
-	if(b->next)
-		b->next->prev = b;
-	b->intype = 4;
-	/*
 	if(ul == nil){
-//		dprintf(2, "tail insert(%zu): b = %p, ul = %p, ul->prev = %p, ul->next = %p\n",
-//					i, b, prev, prev->prev, prev->next);
 		b->prev = prev;
 		b->next = nil;
 		prev->next = b;
-		b->intype = 3;
-	} else { * thanks a mistake from 9fans *
-//		dprintf(2, "mid insert(%zu): b = %p, ul = %p, ul->prev = %p, ul->next = %p\n",
-//					i, b, ul, ul->prev, ul->next);
+		//b->intype = 3;
+	} else {  /*thanks a mistake from 9fans*/
 		b->prev = prev;
 		b->next = prev->next;
 		prev->next = b;
 		if(b->next != nil)
 			b->next->prev = b;
-		b->intype = 4;
-	}*/
+		//b->intype = 4;
+	}
 
-	assert(len+1 == checklist(usedlist));
+	if(assertions)
+		assert(len+1 == checklist(usedlist));
 	assert(b->prev != nil);
 }
 
@@ -294,11 +281,14 @@ krallocate2(size_t sz)
 	prev = nil;
 	for(fl = freelist; fl != nil; prev = fl, fl = fl->next){
 		if(fl->size >= realsize){
-			if(fl->size == realsize){
+			if(fl->size == realsize || fl->size-realsize < minsize){
 				new = fl;
-				prev->next = new->next;
+				if(prev)
+					prev->next = new->next;
 				if(new->next)
 					new->next->prev = prev;
+				if(fl == freelist)
+					freelist = new->next;
 				break;
 			}
 			fl->size -= realsize;
@@ -309,14 +299,16 @@ krallocate2(size_t sz)
 	}
 
 	if(fl == nil)
-		return fl;
+		return nil;
 
 	new->next = nil;
 	new->prev = nil;
 	bytesfree -= realsize;
 	p = (void*)(((char*)new)+sizeof(Block));
-	for(i = 0; i < realsize-sizeof(Block); i++)
-		p[i] = 0;
+	if(assertions){
+		for(i = 0; i < realsize-sizeof(Block); i++)
+			p[i] = 0;
+	}
 	return new;
 }
 
@@ -377,7 +369,8 @@ allocate1(size_t sz)
 		return nil;
 
 	add_to_usedlist(b);
-	checklist(usedlist);
+	if(assertions)
+		checklist(usedlist);
 
 	return block_pointer(b);
 }
@@ -506,7 +499,8 @@ gcsweep(void)
 	Header *h;
 	size_t frees;
 	
-	checklist(usedlist);
+	if(assertions)
+		checklist(usedlist);
 	cur = usedlist;
 	frees = 0;
 	for(;;){
@@ -543,7 +537,8 @@ gcsweep(void)
 		cur = next;
 	}
 	usedlist = new_usedlist_head;
-	checklist(usedlist);
+	if(assertions)
+		checklist(usedlist);
 	return frees;
 }
 
@@ -600,7 +595,6 @@ ms_gc(void)
 	if(gcverbose)
 		dprintf(2, ">> Sweeping\n");
 	gcsweep();
-	allocations = 0;
 
 	if(gcverbose || gcinfo){
 		gc_getstats(&ending);
@@ -609,8 +603,10 @@ ms_gc(void)
 		dprintf(2, "Ending stats:\n");
 		gc_print_stats(&ending);
 		dprintf(2, "nfrees = %lu, nallocs = %lu\n", nfrees, nallocs);
+		dprintf(2, "allocations since last gc = %lu\n", allocations);
 	}
 
+	allocations = 0;
 	rangc = 1;
 	if(gcverbose)
 		dprintf(2, "GC finished\n");
@@ -644,7 +640,7 @@ ms_gcallocate(size_t sz, int tag)
 	assert(nb != nil);
 done:
 	nb->tag = tag;
-	pointer_block(nb)->h = nb;
+//	pointer_block(nb)->h = nb;
 	allocations++;
 	return (void*)(((char*)nb)+sizeof(Header));
 }
