@@ -137,7 +137,7 @@ add_to_freelist(Block *b)
 		return;
 	}
 
-	fl = usedlist;
+	fl = freelist;
 	prev = fl->prev;
 	while(b > fl && fl != nil){
 		prev = fl;
@@ -151,8 +151,10 @@ add_to_freelist(Block *b)
 		prev->next = b;
 	} else { /* thanks a mistake from 9fans */
 		b->prev = prev;
-		b->next = prev->next;
-		prev->next = b;
+		if(prev){
+			b->next = prev->next;
+			prev->next = b;
+		}
 		if(b->next != nil)
 			b->next->prev = b;
 	}
@@ -279,6 +281,46 @@ coalesce_freelist(void)
 }
 
 Block*
+krallocate2(size_t sz)
+{
+	Block *fl, *prev;
+	size_t realsize;
+	Block *new;
+	char *p;
+	size_t i;
+
+	realsize = sizeof(Block) + sz;
+
+	prev = nil;
+	for(fl = freelist; fl != nil; prev = fl, fl = fl->next){
+		if(fl->size >= realsize){
+			if(fl->size == realsize){
+				new = fl;
+				prev->next = new->next;
+				if(new->next)
+					new->next->prev = prev;
+				break;
+			}
+			fl->size -= realsize;
+			new = (void*)(((char*)fl) + fl->size);
+			new->size = realsize;
+			break;
+		}
+	}
+
+	if(fl == nil)
+		return fl;
+
+	new->next = nil;
+	new->prev = nil;
+	bytesfree -= realsize;
+	p = (void*)(((char*)new)+sizeof(Block));
+	for(i = 0; i < realsize-sizeof(Block); i++)
+		p[i] = 0;
+	return new;
+}
+
+Block*
 allocate2(size_t sz)
 {
 	Block *b, *cb, *fl;
@@ -295,6 +337,7 @@ allocate2(size_t sz)
 	if(fl == nil)
 		return nil;
 
+	/* the problem is from here */
 	b = fl;
 	if(b->size > realsize && b->size-realsize > minsize){
 		cb = (void*)(((char*)b) + realsize);
@@ -315,7 +358,7 @@ allocate2(size_t sz)
 			ahead->prev = behind;
 		behind->next = ahead;
 	}
-
+	/* to here. is there some sort of overlap? */
 	b->next = nil;
 	b->prev = nil;
 	bytesfree -= realsize;
@@ -330,7 +373,7 @@ allocate1(size_t sz)
 {
 	Block *b;
 
-	if(!(b = allocate2(sz)))
+	if(!(b = krallocate2(sz)))
 		return nil;
 
 	add_to_usedlist(b);
