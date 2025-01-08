@@ -162,8 +162,26 @@ add_to_freelist(Block *b)
 	assert(b->prev != b && b->next != b);
 }
 
-void /* keeping the used list ordered will help with coalescing on free */
+void
 add_to_usedlist(Block *b)
+{
+	size_t len;
+
+	nallocs++;
+	bytesused += b->size;
+
+	if(assertions)
+		len = checklist(usedlist);
+	b->next = usedlist;
+	if(usedlist)
+		usedlist->prev = b;
+	usedlist = b;
+	if(assertions)
+		assert(len+1 == checklist(usedlist));
+}
+
+void /* keeping the used list ordered will help with coalescing on free */
+add_to_usedlist2(Block *b)
 {
 	Block *ul, *prev;
 	size_t len;
@@ -688,7 +706,7 @@ ms_gcenable(void)
 {
 	assert(gcblocked > 0);
 	gcblocked--;
-	if(allocations > 5000)
+	if(allocations > 1000)
 		ms_gc();
 }
 
