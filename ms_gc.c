@@ -33,6 +33,7 @@ size_t bytesfree = 0;
 size_t bytesused = 0;
 size_t allocations = 0;
 volatile int rangc;
+volatile int ms_gc_blocked;
 // size_t gen = 0;
 
 size_t blocksize = MIN_minspace;
@@ -574,6 +575,8 @@ ms_gc(void)
 {
 	GcStats starting, ending;
 
+	if(gcblocked > 0)
+		return;
 	if(gcverbose)
 		dprintf(2, "GC starting\n");
 	
@@ -682,6 +685,8 @@ ms_gcenable(void)
 {
 	assert(gcblocked > 0);
 	gcblocked--;
+	if(allocations > 500)
+		ms_gc();
 }
 
 void
