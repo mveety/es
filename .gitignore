@@ -42,4 +42,7 @@ tests/*
 estest
 callgrind.*
 gmon.out
+*.gmon
+*.ps
+*.pdf
 

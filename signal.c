@@ -205,6 +205,7 @@ extern void initsignals(Boolean interactive, Boolean allowdumps) {
 			esignal(SIGTERM, sig_noop);
 		if (interactive || sigeffect[SIGQUIT] == sig_default)
 			esignal(SIGQUIT, sig_noop);
+		esignal(SIGPROF, sig_noop);
 	}
 
 	/* here's the end-run around set-signals */
