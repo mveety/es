@@ -106,7 +106,7 @@ extern void gc_markrootlist(Root *r);
 extern void gc_getstats(GcStats *stats);
 extern void gc_print_stats(GcStats *stats);
 extern void ms_initgc(void);
-extern void ms_gc(void);
+extern void ms_gc(Boolean);
 extern void *ms_gcallocate(size_t sz, int tag);
 extern void ms_gcenable(void);
 extern void ms_gcdisable(void);

@@ -36,7 +36,12 @@ size_t allocations = 0;
 volatile int rangc;
 volatile int ms_gc_blocked;
 volatile size_t ngcs = 0;
-int sort_free_list = 0;
+volatile int nsortgc = 0;
+volatile int ncoalescegc = 0;
+/* tuning */
+int gc_after = 5000;
+int gc_sort_after_n = 100;
+int gc_coalesce_after_n = 100;
 // size_t gen = 0;
 
 size_t blocksize = MIN_minspace;
@@ -190,7 +195,7 @@ sort_list(Block *list, size_t len)
 }
 
 void
-add_to_freelist_nosort(Block *b)
+add_to_freelist(Block *b)
 {
 	size_t len;
 
@@ -205,62 +210,6 @@ add_to_freelist_nosort(Block *b)
 	freelist = b;
 	if(assertions)
 		assert(len+1 == checklist(freelist));
-}
-
-void /* i want to keep the free list ordered for coalescing */
-add_to_freelist_sort(Block *b)
-{
-	Block *fl;
-	Block *prev;
-
-	nfrees++;
-	bytesfree += b->size;
-
-	b->next = nil;
-	b->prev = nil;
-	if(!freelist){
-		freelist = b;
-		return;
-	}
-
-	if(b < freelist){
-		b->next = freelist;
-		freelist->prev = b;
-		freelist = b;
-		return;
-	}
-
-	fl = freelist;
-	prev = fl->prev;
-	while(b > fl && fl != nil){
-		prev = fl;
-		fl = fl->next;
-	}
-
-	if(fl == nil){
-		b->prev = prev;
-		b->next = nil;
-		prev->next = b;
-		//b->intype = 3;
-	} else {  /*thanks a mistake from 9fans*/
-		b->prev = prev;
-		b->next = prev->next;
-		prev->next = b;
-		if(b->next != nil)
-			b->next->prev = b;
-		//b->intype = 4;
-	}
-
-	assert(b->prev != b && b->next != b);
-}
-
-void
-add_to_freelist(Block *b)
-{
-	if(sort_free_list)
-		add_to_freelist_sort(b);
-	else
-		add_to_freelist_nosort(b);
 }
 
 void
@@ -279,66 +228,6 @@ add_to_usedlist(Block *b)
 	usedlist = b;
 	if(assertions)
 		assert(len+1 == checklist(usedlist));
-}
-
-void /* keeping the used list ordered will help with coalescing on free */
-add_to_usedlist2(Block *b)
-{
-	Block *ul, *prev;
-	size_t len = 0;
-
-	nallocs++;
-	bytesused += b->size;
-
-	b->prev = nil;
-	b->next = nil;
-//	b->intype = 0;
-//	b->alloc = gen++;
-
-	if(assertions)
-		len = checklist(usedlist);
-	assert(b != usedlist);
-	if(usedlist == nil){
-		//b->intype = 1;
-		usedlist = b;
-		return;
-	}
-
-	if(b < usedlist){
-		assert(usedlist->prev == nil);
-		b->next = usedlist;
-		usedlist->prev = b;
-		usedlist = b;
-		//b->intype = 2;
-		if(assertions)
-			assert(len+1 == checklist(usedlist));
-		return;
-	}
-
-	ul = usedlist;
-	prev = ul->prev;
-	while(b > ul && ul != nil){
-		prev = ul;
-		ul = ul->next;
-	}
-
-	if(ul == nil){
-		b->prev = prev;
-		b->next = nil;
-		prev->next = b;
-		//b->intype = 3;
-	} else {  /*thanks a mistake from 9fans*/
-		b->prev = prev;
-		b->next = prev->next;
-		prev->next = b;
-		if(b->next != nil)
-			b->next->prev = b;
-		//b->intype = 4;
-	}
-
-	if(assertions)
-		assert(len+1 == checklist(usedlist));
-	assert(b->prev != nil);
 }
 
 int
@@ -697,9 +586,20 @@ ms_initgc(void)
 }
 
 void
-ms_gc(void)
+ms_gc(Boolean full)
 {
 	GcStats starting, ending;
+
+	/* set things to their defaults if it's weird */
+	if(gc_after < 1)
+		gc_after = 5000;
+	if(gc_sort_after_n < 1)
+		gc_sort_after_n = 100;
+	if(gc_coalesce_after_n < 1)
+		gc_coalesce_after_n = 100;
+
+	if(allocations < (size_t)gc_after && !full)
+		return;
 
 	if(gcblocked > 0)
 		return;
@@ -724,11 +624,18 @@ ms_gc(void)
 	if(gcverbose)
 		dprintf(2, ">> Sweeping\n");
 	gcsweep();
-	if(!sort_free_list){
+	if(nsortgc >= gc_sort_after_n || full){
 		freelist = sort_list(freelist, nfrees);
-		freelist = coalesce_list(freelist);
+		nsortgc = 0;
 	}
+	if(ncoalescegc >= gc_coalesce_after_n || full){
+		freelist = coalesce_list(freelist);
+		ncoalescegc = 0;
+	}
+
 	ngcs++;
+	nsortgc++;
+	ncoalescegc++;
 
 	if(gcverbose || gcinfo){
 		gc_getstats(&ending);
@@ -739,6 +646,10 @@ ms_gc(void)
 		dprintf(2, "nfrees = %lu, nallocs = %lu\n", nfrees, nallocs);
 		dprintf(2, "allocations since last gc = %lu\n", allocations);
 		dprintf(2, "number of gc = %lu\n", ngcs);
+		dprintf(2, "gc_sort_after_n = %d, nsortgc = %d\n", gc_sort_after_n, nsortgc);
+		dprintf(2, "gc_coalesce_after_n = %d, ncoalescegc = %d\n",
+				gc_coalesce_after_n, ncoalescegc);
+		dprintf(2, "gc_after = %d\n", gc_after);
 	}
 
 	allocations = 0;
@@ -761,7 +672,7 @@ ms_gcallocate(size_t sz, int tag)
 	if(nb)
 		goto done;
 
-	ms_gc();
+	ms_gc(TRUE);
 	nb = allocate1(realsz);
 	if(nb)
 		goto done;
@@ -817,8 +728,7 @@ ms_gcenable(void)
 {
 	assert(gcblocked > 0);
 	gcblocked--;
-	if(allocations > 5000)
-		ms_gc();
+	ms_gc(FALSE);
 }
 
 void

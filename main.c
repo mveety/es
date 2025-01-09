@@ -90,6 +90,9 @@ static noreturn usage(void) {
 		"	-L	print parser results in LISP format\n"
 		"	-A	enable assertions (slow)\n"
 		"	-v	print version\n"
+		"	-g n	(new gc) collection frequency\n"
+		"	-S n	(new gc) freelist sort frequency\n"
+		"	-C n	(new gc) freelist coalesce frequency\n"
 	);
 	exit(1);
 }
@@ -100,6 +103,10 @@ print_version(void)
 	eprint("%s\n", buildstring);
 	exit(0);
 }
+
+extern int gc_after;
+extern int gc_sort_after_n;
+extern int gc_coalesce_after_n;
 
 /* main -- initialize, parse command arguments, and start running */
 int main(int argc, char **argv) {
@@ -125,7 +132,7 @@ int main(int argc, char **argv) {
 	if (*argv[0] == '-')
 		loginshell = TRUE;
 
-	while ((c = getopt(argc, argv, "eilxXvnpodsAVc:?GILN")) != EOF)
+	while ((c = getopt(argc, argv, "eilxXvnpodsAVc:?GILNg:S:C:")) != EOF)
 		switch (c) {
 		case 'c':	cmd = optarg;			break;
 		case 'e':	runflags |= eval_exitonfalse;	break;
@@ -144,6 +151,15 @@ int main(int argc, char **argv) {
 		case 'I':	gcinfo = TRUE;			break;
 		case 'X':	gctype = NewGc;			break;
 		case 'A':	assertions = TRUE;		break;
+		case 'g':
+			gc_after = atoi(optarg);
+			break;
+		case 'S':
+			gc_sort_after_n = atoi(optarg);
+			break;
+		case 'C':
+			gc_coalesce_after_n = atoi(optarg);
+			break;
 		case 'v':
 			initgc();
 			initconv();

@@ -139,7 +139,7 @@ void
 gc(void)
 {
 	if(gctype == NewGc)
-		ms_gc();
+		ms_gc(FALSE);
 	else
 		old_gc();
 }
