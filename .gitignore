@@ -41,4 +41,5 @@ config.es
 tests/*
 estest
 callgrind.*
+gmon.out
 
