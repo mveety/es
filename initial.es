@@ -87,6 +87,8 @@ fn-wait		= $&wait
 
 fn-%read	= $&read
 
+fn-reverse	= $&reverse
+
 #	eval runs its arguments by turning them into a code fragment
 #	(in string form) and running that fragment.
 
@@ -924,14 +926,7 @@ fn lte a b {
 	}
 }
 
-fn reverse list {
-	local(res=) {
-		for (i = $list) {
-			res = $i $res
-		}
-		result $res
-	}
-}
+
 
 fn waitfor pids {
 	local (res =) {

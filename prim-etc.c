@@ -688,6 +688,22 @@ PRIM(range) {
 	return res;
 }
 
+PRIM(reverse) {
+	List *l = NULL;
+	List *res = NULL; Root r_res;
+
+	if(list == NULL)
+		return NULL;
+
+	gcref(&r_res, (void**)&res);
+
+	for(l = list; l != NULL; l = l->next)
+		res = mklist(l->term, res);
+
+	gcderef(&r_res, (void**)&res);
+	return res;
+}
+
 /*
  * initialization
  */
@@ -736,6 +752,7 @@ extern Dict *initprims_etc(Dict *primdict) {
 	X(tobase);
 	X(frombase);
 	X(range);
+	X(reverse);
 	return primdict;
 }
 
