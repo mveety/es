@@ -49,6 +49,15 @@ struct GcStats {
 	size_t real_used;
 	size_t free_blocks;
 	size_t used_blocks;
+	size_t nfrees;
+	size_t nallocs;
+	size_t allocations;
+	size_t ngcs;
+	int sort_after_n;
+	int nsortgc;
+	int coalesce_after;
+	int ncoalescegc;
+	int gc_after;
 };
 
 struct Buffer {
@@ -84,6 +93,11 @@ extern Root *rootlist;
 extern int gcblocked;
 extern Tag StringTag; /* typedef for Tag is in es.h */
 
+/* tuning for ms gc */
+extern int gc_after;
+extern int gc_sort_after_n;
+extern int gc_coalesce_after_n;
+
 extern Tag *gettag(int);
 extern Header *header(void *p);
 extern size_t dump(Tag *t, void *p);
@@ -97,6 +111,7 @@ extern Boolean old_gcisblocked(void);
 extern void old_gc(void);
 extern void *old_gcallocate(size_t, int);
 extern void old_memdump(void);
+extern void old_getstats(GcStats*);
 
 /* mark sweep */
 extern void gcmark(void *p);
@@ -112,6 +127,7 @@ extern void ms_gcenable(void);
 extern void ms_gcdisable(void);
 extern Boolean ms_gcisblocked(void);
 extern void gc_memdump(void);
+extern void gc_getstats(GcStats*);
 
 /*
  * allocation

@@ -3,6 +3,7 @@
 #define	REQUIRE_IOCTL	1
 
 #include "es.h"
+#include "gc.h"
 #include "prim.h"
 
 #ifdef HAVE_SETRLIMIT
@@ -473,6 +474,44 @@ PRIM(execfailure) {
 }
 #endif /* !KERNEL_POUNDBANG */
 
+PRIM(gcstats) {
+	List *res = NULL; Root r_res;
+	GcStats stats;
+
+	gcref(&r_res, (void**)&res);
+
+	if(gctype == NewGc){
+		gc_getstats(&stats);
+		res = mklist(mkstr(str("%d", stats.gc_after)), res);
+		res = mklist(mkstr(str("%d", stats.ncoalescegc)), res);
+		res = mklist(mkstr(str("%d", stats.coalesce_after)), res);
+		res = mklist(mkstr(str("%d", stats.nsortgc)), res);
+		res = mklist(mkstr(str("%d", stats.sort_after_n)), res);
+		res = mklist(mkstr(str("%lud", stats.ngcs)), res);
+		res = mklist(mkstr(str("%lud", stats.allocations)), res);
+		res = mklist(mkstr(str("%lud", stats.nallocs)), res);
+		res = mklist(mkstr(str("%lud", stats.nfrees)), res);
+		res = mklist(mkstr(str("%lud", stats.used_blocks)), res);
+		res = mklist(mkstr(str("%lud", stats.free_blocks)), res);
+		res = mklist(mkstr(str("%lud", stats.real_used)), res);
+		res = mklist(mkstr(str("%lud", stats.total_used)), res);
+		res = mklist(mkstr(str("%lud", stats.real_free)), res);
+		res = mklist(mkstr(str("%lud", stats.total_free)), res);
+		res = mklist(mkstr(str("new")), res);
+	} else if(gctype == OldGc) {
+		old_getstats(&stats);
+		res = mklist(mkstr(str("%lud", stats.ngcs)), res);
+		res = mklist(mkstr(str("%lud", stats.allocations)), res);
+		res = mklist(mkstr(str("%lud", stats.nallocs)), res);
+		res = mklist(mkstr(str("%lud", stats.total_used)), res);
+		res = mklist(mkstr(str("%lud", stats.total_free)), res);
+		res = mklist(mkstr(str("old")), res);
+	}
+
+	gcderef(&r_res, (void**)&res);
+	return res;
+}
+
 extern Dict *initprims_sys(Dict *primdict) {
 	X(newpgrp);
 	X(background);
@@ -490,5 +529,6 @@ extern Dict *initprims_sys(Dict *primdict) {
 #if !KERNEL_POUNDBANG
 	X(execfailure);
 #endif /* !KERNEL_POUNDBANG */
+	X(gcstats);
 	return primdict;
 }

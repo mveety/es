@@ -398,6 +398,15 @@ gc_getstats(GcStats *stats)
 	stats->real_used = real_usage_stats(usedlist);
 	stats->free_blocks = nblocks_stats(freelist);
 	stats->used_blocks = nblocks_stats(usedlist);
+	stats->nfrees = nfrees;
+	stats->nallocs = nallocs;
+	stats->allocations = allocations;
+	stats->ngcs = ngcs;
+	stats->sort_after_n = gc_sort_after_n;
+	stats->nsortgc = nsortgc;
+	stats->coalesce_after = gc_coalesce_after_n;
+	stats->ncoalescegc = ncoalescegc;
+	stats->gc_after = gc_after;
 }
 
 int
@@ -516,6 +525,14 @@ gc_print_stats(GcStats *stats)
 	dprintf(2, "tfree = %lu, rfree = %lu\n", stats->total_free, stats->real_free);
 	dprintf(2, "tused = %lu, rused = %lu\n", stats->total_used, stats->real_used);
 	dprintf(2, "free blocks = %lu, used blocks = %lu\n", stats->free_blocks, stats->used_blocks);
+	dprintf(2, "nfrees = %lu, nallocs = %lu\n", stats->nfrees, stats->nallocs);
+	dprintf(2, "allocations since last gc = %lu\n", stats->allocations);
+	dprintf(2, "number of gc = %lu\n", stats->ngcs);
+	dprintf(2, "gc_sort_after_n = %d, nsortgc = %d\n", stats->sort_after_n, stats->nsortgc);
+	dprintf(2, "gc_coalesce_after_n = %d, ncoalescegc = %d\n",
+			stats->coalesce_after, stats->ncoalescegc);
+	dprintf(2, "gc_after = %d\n", stats->gc_after);
+
 }
 
 void
@@ -595,13 +612,6 @@ ms_gc(Boolean full)
 		gc_print_stats(&starting);
 		dprintf(2, "Ending stats:\n");
 		gc_print_stats(&ending);
-		dprintf(2, "nfrees = %lu, nallocs = %lu\n", nfrees, nallocs);
-		dprintf(2, "allocations since last gc = %lu\n", allocations);
-		dprintf(2, "number of gc = %lu\n", ngcs);
-		dprintf(2, "gc_sort_after_n = %d, nsortgc = %d\n", gc_sort_after_n, nsortgc);
-		dprintf(2, "gc_coalesce_after_n = %d, ncoalescegc = %d\n",
-				gc_coalesce_after_n, ncoalescegc);
-		dprintf(2, "gc_after = %d\n", gc_after);
 	}
 
 	allocations = 0;

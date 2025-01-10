@@ -644,6 +644,50 @@ PRIM(frombase) {
 	return mklist(mkstr(str("%d", num)), NULL);
 }
 
+PRIM(range) {
+	int start, end;
+	int i;
+	List *res = NULL; Root r_res;
+
+	if(list == NULL || list->next == NULL)
+		fail("$&range", "missing arguments");
+
+	start = (int)strtol(getstr(list->term), NULL, 10);
+	if(start == 0){
+		switch(errno){
+		case EINVAL:
+			fail("$&range", "invalid input");
+			break;
+		case ERANGE:
+			fail("$&range", "conversion overflow");
+			break;
+		}
+	}
+
+	end = (int)strtol(getstr(list->next->term), NULL, 10);
+	if(start == 0){
+		switch(errno){
+		case EINVAL:
+			fail("$&range", "invalid input");
+			break;
+		case ERANGE:
+			fail("$&range", "conversion overflow");
+			break;
+		}
+	}
+
+	if(start > end)
+		fail("$&range", "start > end");
+
+	gcref(&r_res, (void**)&res);
+
+	for(i = end; i >= start; i--)
+		res = mklist(mkstr(str("%d", i)), res);
+
+	gcderef(&r_res, (void**)&res);
+	return res;
+}
+
 /*
  * initialization
  */
@@ -691,6 +735,7 @@ extern Dict *initprims_etc(Dict *primdict) {
 	X(lt);
 	X(tobase);
 	X(frombase);
+	X(range);
 	return primdict;
 }
 

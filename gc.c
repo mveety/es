@@ -37,6 +37,10 @@ static Space *spaces;
 #endif
 static size_t minspace = MIN_minspace;	/* minimum number of bytes in a new space */
 
+/* accounting */
+size_t old_nallocs = 0;
+size_t old_allocations = 0;
+size_t old_ngcs = 0;
 
 /*
  * debugging
@@ -289,6 +293,7 @@ forward(void *p)
 	h = header(p);
 	tag = gettag(h->tag);
 	assert(tag != NULL);
+	old_nallocs++;
 
 	if(h->forward){
 		np = h->forward;
@@ -388,6 +393,7 @@ extern void old_gc(void) {
 		Space *space;
 		size_t olddata;
 
+		old_nallocs = 0;
 	do {
 		olddata = 0;
 		
@@ -448,6 +454,8 @@ extern void old_gc(void) {
 
 		--gcblocked;
 	} while (new->next != NULL);
+	old_allocations = 0;
+	old_ngcs++;
 }
 
 /* initgc -- initialize the garbage collector */
@@ -490,6 +498,8 @@ old_gcallocate(size_t nbytes, int t)
 			p = ((char*)hp)+sizeof(Header);
 			hp->tag = t;
 			hp->forward = NULL;
+			old_nallocs++;
+			old_allocations++;
 			return (void*)p;
 		}
 		if(minspace < n)
@@ -497,8 +507,27 @@ old_gcallocate(size_t nbytes, int t)
 		if(gcblocked)
 			new = newspace(new);
 		else
-			gc();
+			old_gc();
 	}
+}
+
+void
+old_getstats(GcStats *stats)
+{
+	size_t total_used, total_free;
+	char *current, *top, *bottom;
+
+	current = (char*)((void*)new->current);
+	top = (char*)((void*)new->top);
+	bottom = (char*)((void*)new->bot);
+	total_used = current - bottom;
+	total_free = top - current;
+
+	stats->total_free = total_free;
+	stats->total_used = total_used;
+	stats->nallocs = old_nallocs;
+	stats->allocations = old_allocations;
+	stats->ngcs = old_ngcs;
 }
 
 extern void old_memdump(void) {

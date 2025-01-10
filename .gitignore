@@ -45,4 +45,5 @@ gmon.out
 *.gmon
 *.ps
 *.pdf
+other/*
 
