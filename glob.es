@@ -292,6 +292,7 @@ fn esmglob_partialcompilation xglob {
 		back = ''
 		escaped = false
 		inparens = 0
+		starinparens = 0
 	) {
 		xlglobsz = $#xlglob
 		while {lte $i $xlglobsz} {
@@ -383,8 +384,12 @@ fn esmglob_partialcompilation xglob {
 						} {
 							if {~ $#tmp 0 && ~ $xlglob(<={add $i 1}) '|' ')'} {
 								while {lte $i $xlglobsz} {
-									if {~ $xlglob($i) ')'} {
+									if {~ $xlglob($i) '('} {
+										starinparens = <={add $starinparens 1}
+									} {~ $xlglob($i) ')' && eq $starinparens 0} {
 										break
+									} {~ $xlglob($i) ')' && gt $starinparens 0} {
+										starinparens = <={sub $starinparens 1}
 									}
 									i = <={add $i 1}
 								}
