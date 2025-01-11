@@ -108,6 +108,145 @@ fn esmglob_expandquestions xglob {
 	}
 }
 
+fn dirlist2glob args {
+	local(
+		separator = false
+		emptyelem = false
+		first = true
+		arg=;
+		dirs=;
+		res=;
+	) {
+		while {true} {
+			arg = $args(1)
+			if {! ~ $arg -*} {
+				break
+			}
+			arg = $:arg
+			arg = $arg(2 ...)
+			process $arg (
+				s { separator = true }
+				e { emptyelem = true }
+				* { throw error usage $0 '[-es] [dirs...]' }
+			)
+			args = $args(2 ...)
+		}
+		if {$emptyelem} {
+			res = '(|'
+		} {
+			res = '('
+		}
+		for	(i = $args) {
+			if {eq <={%count $:i} 0} {
+				if {! $emptyelem} {
+					if {$first} {
+						res = $res^$i
+						first = false
+					} {
+						res = $res^'|'^$i
+					}
+					emptyelem = true
+				}
+			} {
+				if {$separator} { i = $i^'/' }
+				if {$first} {
+					res = $res^$i
+					first = false
+				} {
+					res = $res^'|'^$i
+				}
+			}
+			dirs = $i $dirs
+		}
+		res = $res^')'
+		if {~ $#dirs 0} {
+			result ''
+		} {~ $#dirs 1} {
+			result $dirs(1)
+		} {
+			result $res
+		}
+	}
+}
+
+fn esmglob_expand_qmacro xglob {
+	local(
+		head=;mid=;tmp=;tail=;start=;end=;
+		state = default
+	) {
+		for(i = $:xglob) {
+			match $state (
+				(default) {
+					match $i (
+						('?') {
+							state = inquestion0
+							mid = $matchexpr
+						}
+						* {
+							head = $head $matchexpr
+						}
+					)
+				}
+				(inquestion0) {
+					match $i (
+						('<') {
+							state = inquestion1
+							mid = $mid $matchexpr
+						}
+						* {
+							state = default
+							head = $head $mid $matchexpr
+							mid=
+						}
+					)
+				}
+				(inquestion1) {
+					match $i (
+						([1234567890]) {
+							mid = $mid $matchexpr
+						}
+						('-') {
+							state = inquestion2
+							mid = $mid $matchexpr
+						}
+						* {
+							state = default
+							head = $head $mid $matchexpr
+							mid=
+						}
+					)
+				}
+				(inquestion2) {
+					match $i (
+						([1234567890]) {
+							mid = $mid $matchexpr
+						}
+						('>') {
+							mid = $mid $matchexpr
+							state = rest
+						}
+						* {
+							state = default
+							head = $head $mid $matchexpr
+							mid=
+						}
+					)
+				}
+				(rest) {
+					tail = $tail $i
+				}
+			)
+		}
+		if {~ $#mid 0} { return $"head }
+		head = $"head
+		mid = $"mid
+		tail = $"tail
+		(start end) = <={~~ $mid '?<'^*^'-'^*^'>'}
+		mid = <={dirlist2glob '?'^<={%range $start $end}}
+		result $head^$mid^$tail
+	}
+}
+
 fn esmglob_alllen1 strs {
 	for(i = $strs) {
 		if {! ~ <={%count $:i} 1} {
@@ -362,7 +501,11 @@ fn esmglob_compile0 xglob {
 
 fn esmglob_compile xglob {
 	local(
-		res = <={esmglob_expandquestions $xglob |> esmglob_compile0}
+		res = <={
+			esmglob_expand_qmacro $xglob |>
+				esmglob_expandquestions |>
+				esmglob_compile0
+		}
 	) {
 		process $res (
 			* {
@@ -422,66 +565,6 @@ fn esm~ elem xglob_or_cglobs {
 	}
 }
 
-fn dirlist2glob args {
-	local(
-		separator = false
-		emptyelem = false
-		first = true
-		arg=;
-		dirs=;
-		res=;
-	) {
-		while {true} {
-			arg = $args(1)
-			if {! ~ $arg -*} {
-				break
-			}
-			arg = $:arg
-			arg = $arg(2 ...)
-			process $arg (
-				s { separator = true }
-				e { emptyelem = true }
-				* { throw error usage $0 '[-es] [dirs...]' }
-			)
-			args = $args(2 ...)
-		}
-		if {$emptyelem} {
-			res = '(|'
-		} {
-			res = '('
-		}
-		for	(i = $args) {
-			if {eq <={%count $:i} 0} {
-				if {! $emptyelem} {
-					if {$first} {
-						res = $res^$i
-						first = false
-					} {
-						res = $res^'|'^$i
-					}
-					emptyelem = true
-				}
-			} {
-				if {$separator} { i = $i^'/' }
-				if {$first} {
-					res = $res^$i
-					first = false
-				} {
-					res = $res^'|'^$i
-				}
-			}
-			dirs = $i $dirs
-		}
-		res = $res^')'
-		if {~ $#dirs 0} {
-			result ''
-		} {~ $#dirs 1} {
-			result $dirs(1)
-		} {
-			result $res
-		}
-	}
-}
 
 fn d2g args {
 	dirlist2glob $args
