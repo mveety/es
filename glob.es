@@ -117,6 +117,30 @@ fn esmglob_alllen1 strs {
 	return <=true
 }
 
+fn esmglob_optimize_mid list {
+	if {~ $#list 0} {
+		return ''
+	}
+	if {~ $#list 1 && ~ <={%count $:list} 0} {
+		return ''
+	}
+	local(single=;multiple=;res=){
+		for(i = $list){
+			if {~ <={%count $:i} 1} {
+				single = $i $single
+			} {
+				multiple = $i $multiple
+			}
+		}
+		if {~ $#single 0} {
+			return $multiple
+		}
+		single = <={%string '[' <={reverse $single} ']'}
+		single = <={if {~ $single *^'*'^*} {result '*'} {result $single}}
+		result $single $multiple
+	}
+}
+
 fn esmglob_partialcompilation xglob {
 	local (
 		xlglob = $:xglob
@@ -254,13 +278,7 @@ fn esmglob_partialcompilation xglob {
 		if {lte $i $xlglobsz} {
 			back = <={%string $xlglob($i ...)}
 		}
-		if {esmglob_alllen1 $mid} {
-			mid = <={%string '[' $mid ']'}
-			if {~ $mid *^'*'^*} {
-				mid = '*'
-			}
-		}
-		result $front^$mid^$back
+		result $front^<={esmglob_optimize_mid $mid}^$back
 	}
 }
 
@@ -402,5 +420,116 @@ fn esm~ elem xglob_or_cglobs {
 	} {
 		esmglob_compmatch $elem $xglob_or_cglobs
 	}
+}
+
+fn dirlist2glob args {
+	local(
+		separator = false
+		emptyelem = false
+		first = true
+		arg=;
+		dirs=;
+		res=;
+	) {
+		while {true} {
+			arg = $args(1)
+			if {! ~ $arg -*} {
+				break
+			}
+			arg = $:arg
+			arg = $arg(2 ...)
+			process $arg (
+				s { separator = true }
+				e { emptyelem = true }
+				* { throw error usage $0 '[-es] [dirs...]' }
+			)
+			args = $args(2 ...)
+		}
+		if {$emptyelem} {
+			res = '(|'
+		} {
+			res = '('
+		}
+		for	(i = $args) {
+			if {eq <={%count $:i} 0} {
+				if {! $emptyelem} {
+					if {$first} {
+						res = $res^$i
+						first = false
+					} {
+						res = $res^'|'^$i
+					}
+					emptyelem = true
+				}
+			} {
+				if {$separator} { i = $i^'/' }
+				if {$first} {
+					res = $res^$i
+					first = false
+				} {
+					res = $res^'|'^$i
+				}
+			}
+			dirs = $i $dirs
+		}
+		res = $res^')'
+		if {~ $#dirs 0} {
+			result ''
+		} {~ $#dirs 1} {
+			result $dirs(1)
+		} {
+			result $res
+		}
+	}
+}
+
+fn d2g args {
+	dirlist2glob $args
+}
+
+fn esm_compile_search xglob dirs {
+	local (
+		pdirs=
+		tmp=
+	) {
+		if {~ $#dirs 0} {
+			esmglob_compile $xglob |> return
+		} {
+			pdirs = <={process $dirs (
+						*/ {
+							tmp = $:matchexpr
+							tmp = $tmp(... <={sub $#tmp 1})
+							result $"tmp
+						}
+						* {
+							result $matchexpr
+						}
+					)}
+		}
+		esmglob_compile <={dirlist2glob -s $pdirs}^$xglob |> result
+	}
+}
+
+fn esm_run_compiled_search globs {
+	local(tmp=;inter=;res=) {
+		for (glob = $globs) {
+			tmp = <={glob $glob}
+			for (i = $tmp) {
+				inter = <={esmglob_add_unique $i $inter}
+			}
+		}
+		for (i = $inter) {
+			if {! ~ $i *^'*'^* && ! ~ *^'?'^*} {
+				res = $i $res
+			}
+		}
+		reverse $res |> result
+	}
+}
+
+fn esm_search xglob dirs {
+	esm_compile_search $xglob $dirs |>
+		esm_run_compiled_search |>
+		result
 }
 
