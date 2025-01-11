@@ -243,7 +243,7 @@ fn esmglob_expand_qmacro xglob {
 		tail = $"tail
 		(start end) = <={~~ $mid '?<'^*^'-'^*^'>'}
 		mid = <={dirlist2glob '?'^<={%range $start $end}}
-		result $head^$mid^$tail
+		result $head^$mid^<={esmglob_expand_qmacro $tail}
 	}
 }
 
