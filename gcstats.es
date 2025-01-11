@@ -2,22 +2,23 @@
 
 fn %gcstats args {
 	local (
-		(type stats) = <={$&gcstats}
 		freemem=; usedmem=; nobjects=;
-		ngcs=;
+		ngcs=; type=;
 	) {
-		match $type (
+		match <={$&gcstats} (
 			(old) {
-				freemem = $stats(1)
-				usedmem = $stats(2)
-				nobjects = $stats(3)
-				ngcs = $stats(5)
+				type = $matchexpr(1)
+				freemem = $matchexpr(2)
+				usedmem = $matchexpr(3)
+				nobjects = $matchexpr(4)
+				ngcs = $matchexpr(6)
 			}
 			(new) {
-				freemem = $stats(1)
-				usedmem = $stats(3)
-				nobjects= $stats(8)
-				ngcs = $stats(10)
+				type = $matchexpr(1)
+				freemem = $matchexpr(2)
+				usedmem = $matchexpr(4)
+				nobjects= $matchexpr(9)
+				ngcs = $matchexpr(11)
 			}
 		)
 		if {~ $args -v} {
