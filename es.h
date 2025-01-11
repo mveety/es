@@ -405,25 +405,12 @@ struct Root {
 
 extern Root *rootlist;
 
-#if REF_ASSERTIONS
-#define	refassert(e)	assert(e)
-#else
-#define	refassert(e)	NOP
-#endif
-
 #define	Ref(t, v, init) \
 	if(0); else { \
 		t v = init; \
 		Root (CONCAT(v,__root__)); \
-		(CONCAT(v,__root__)).p = (void **) &v; \
-		if(rootlist) {rootlist->prev = &(CONCAT(v,__root__));} \
-		(CONCAT(v,__root__)).next = rootlist; \
-		rootlist = &(CONCAT(v,__root__))
-#define	RefPop(v) \
-		refassert(rootlist == &(CONCAT(v,__root__))); \
-		refassert(rootlist->p == (void **) &v); \
-		rootlist = rootlist->next; \
-		if(rootlist) {rootlist->prev = NULL;}
+		gcref(&(CONCAT(v,__root__)), (void**)&v);
+#define	RefPop(v) gcderef(&(CONCAT(v,__root__)), (void**)&v);
 #define RefEnd(v) \
 		RefPop(v); \
 	}
@@ -435,16 +422,9 @@ extern Root *rootlist;
 #define	RefAdd(e) \
 	if (0) ; else { \
 		Root __root__; \
-		__root__.p = (void **) &e; \
-		__root__.next = rootlist; \
-		if(rootlist){rootlist->prev = &__root__;} \
-		rootlist = &__root__
+		gcref(&__root__, (void**)&e);
 #define	RefRemove(e) \
-		refassert(rootlist == &__root__); \
-		refassert(rootlist->p == (void **) &e); \
-		rootlist = rootlist->next; \
-		if(rootlist){rootlist->prev = NULL;} \
-	}
+		gcderef(&__root__, (void**)&e); }
 
 #define	RefEnd2(v1, v2)		RefEnd(v1); RefEnd(v2)
 #define	RefEnd3(v1, v2, v3)	RefEnd(v1); RefEnd2(v2, v3)

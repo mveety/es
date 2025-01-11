@@ -191,21 +191,33 @@ letsbindings(Tree *defn, Binding *outer, Binding *context, int evalflags)
 List*
 localbind(Binding *dynamic0, Binding *lexical0, Tree *body0, int evalflags)
 {
+	Push p;
+	List *result; Root r_result;
+	Tree *body; Root r_body;
+	Binding *dynamic; Root r_dynamic;
+	Binding *lexical; Root r_lexical;
+
 	if (dynamic0 == NULL)
 		return walk(body0, lexical0, evalflags);
 	else {
-		Push p;
-		Ref(List *, result, NULL);
-		Ref(Tree *, body, body0);
-		Ref(Binding *, dynamic, dynamic0);
-		Ref(Binding *, lexical, lexical0);
+		result = NULL;
+		gcref(&r_result, (void**)&result);
+		body = body0;
+		gcref(&r_body, (void**)&body);
+		dynamic = dynamic0;
+		gcref(&r_dynamic, (void**)&dynamic);
+		lexical = lexical0;
+		gcref(&r_lexical, (void**)&lexical);
 
 		varpush(&p, dynamic->name, dynamic->defn);
 		result = localbind(dynamic->next, lexical, body, evalflags);
 		varpop(&p);
 
-		RefEnd3(lexical, dynamic, body);
-		RefReturn(result);
+		gcrderef(&r_lexical);
+		gcrderef(&r_dynamic);
+		gcrderef(&r_body);
+		gcrderef(&r_result);
+		return result;
 	}
 }
 	
