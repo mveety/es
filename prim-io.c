@@ -4,9 +4,7 @@
 #include "gc.h"
 #include "prim.h"
 
-static const char *caller;
-
-static int getnumber(const char *s) {
+static int getnumber(const char *caller, const char *s) {
 	char *end;
 	int result = strtol(s, &end, 0);
 
@@ -15,15 +13,16 @@ static int getnumber(const char *s) {
 	return result;
 }
 
-static List *redir(List *(*rop)(int *fd, List *list), List *list, int evalflags) {
+static List *redir(const char *caller, List *(*rop)(const char *c, int *fd, List *l),
+					List *list, int evalflags) {
 	int destfd, srcfd;
 	volatile int inparent = (evalflags & eval_inchild) == 0;
 	volatile int ticket = UNREGISTERED;
 
 	assert(list != NULL);
 	Ref(List *, lp, list);
-	destfd = getnumber(getstr(lp->term));
-	lp = (*rop)(&srcfd, lp->next);
+	destfd = getnumber(caller, getstr(lp->term));
+	lp = (*rop)(caller, &srcfd, lp->next);
 
 	ticket = (srcfd == -1)
 		   ? defer_close(inparent, destfd)
@@ -39,9 +38,9 @@ static List *redir(List *(*rop)(int *fd, List *list), List *list, int evalflags)
 	RefReturn(lp);
 }
 
-#define	REDIR(name)	static List *CONCAT(redir_,name)(int *srcfdp, List *list)
+#define	REDIR(name)	static List *CONCAT(redir_,name)(const char *caller, int *srcfdp, List *list)
 
-static noreturn argcount(const char *s) {
+static noreturn argcount(const char *caller, const char *s) {
 	fail(caller, "argument count: usage: %s", s);
 }
 
@@ -69,7 +68,7 @@ REDIR(openfile) {
 	lp = lp->next;
 	for (i = 0;; i++) {
 		if (modes[i].name == NULL)
-			fail("$&openfile", "bad %%openfile mode: %s", mode);
+			fail(caller, "bad %%openfile mode: %s", mode);
 		if (streq(mode, modes[i].name)) {
 			kind = modes[i].kind;
 			break;
@@ -80,40 +79,38 @@ REDIR(openfile) {
 	lp = lp->next;
 	fd = eopen(name, kind);
 	if (fd == -1)
-		fail("$&openfile", "%s: %s", name, esstrerror(errno));
+		fail(caller, "%s: %s", name, esstrerror(errno));
 	*srcfdp = fd;
 	RefReturn(lp);
 }
 
 PRIM(openfile) {
 	List *lp;
-	caller = "$&openfile";
 	if (length(list) != 4)
-		argcount("%openfile mode fd file cmd");
+		argcount("$&openfile", "%openfile mode fd file cmd");
 	/* transpose the first two elements */
 	lp = list->next;
 	list->next = lp->next;
 	lp->next = list;
-	return redir(redir_openfile, lp, evalflags);
+	return redir("$&openfile", redir_openfile, lp, evalflags);
 }
 
 REDIR(dup) {
 	int fd;
 	assert(length(list) == 2);
 	Ref(List *, lp, list);
-	fd = dup(fdmap(getnumber(getstr(lp->term))));
+	fd = dup(fdmap(getnumber(caller, getstr(lp->term))));
 	if (fd == -1)
-		fail("$&dup", "dup: %s", esstrerror(errno));
+		fail(caller, "dup: %s", esstrerror(errno));
 	*srcfdp = fd;
 	lp = lp->next;
 	RefReturn(lp);
 }
 
 PRIM(dup) {
-	caller = "$&dup";
 	if (length(list) != 3)
-		argcount("%dup newfd oldfd cmd");
-	return redir(redir_dup, list, evalflags);
+		argcount("$&dup", "%dup newfd oldfd cmd");
+	return redir("$&dup", redir_dup, list, evalflags);
 }
 
 REDIR(close) {
@@ -122,14 +119,13 @@ REDIR(close) {
 }
 
 PRIM(close) {
-	caller = "$&close";
 	if (length(list) != 2)
-		argcount("%close fd cmd");
-	return redir(redir_close, list, evalflags);
+		argcount("$&close", "%close fd cmd");
+	return redir("$&close", redir_close, list, evalflags);
 }
 
 /* pipefork -- create a pipe and fork */
-static int pipefork(int p[2], int *extra) {
+static int pipefork(const char *caller, int p[2], int *extra) {
 	volatile int pid = 0;
 
 	if (pipe(p) == -1)
@@ -167,7 +163,7 @@ REDIR(here) {
 	doc = (list == tail) ? NULL : list;
 	*tailp = NULL;
 
-	if ((pid = pipefork(p, NULL)) == 0) {		/* child that writes to pipe */
+	if ((pid = pipefork(caller, p, NULL)) == 0) {		/* child that writes to pipe */
 		close(p[0]);
 		fprint(p[1], "%L", doc, "");
 		exit(0);
@@ -179,17 +175,15 @@ REDIR(here) {
 }
 
 PRIM(here) {
-	caller = "$&here";
 	if (length(list) < 2)
-		argcount("%here fd [word ...] cmd");
-	return redir(redir_here, list, evalflags);
+		argcount("$&here", "%here fd [word ...] cmd");
+	return redir("$&here", redir_here, list, evalflags);
 }
 
 PRIM(pipe) {
 	int n, infd, inpipe;
 	static int *pids = NULL, pidmax = 0;
 
-	caller = "$&pipe";
 	n = length(list);
 	if ((n % 3) != 1)
 		fail("$&pipe", "usage: pipe cmd [ outfd infd cmd ] ...");
@@ -205,7 +199,7 @@ PRIM(pipe) {
 	for (;; list = list->next) {
 		int p[2], pid;
 		
-		pid = (list->next == NULL) ? efork(TRUE, FALSE) : pipefork(p, &inpipe);
+		pid = (list->next == NULL) ? efork(TRUE, FALSE) : pipefork("$&pipe", p, &inpipe);
 
 		if (pid == 0) {		/* child */
 			if (inpipe != -1) {
@@ -214,7 +208,7 @@ PRIM(pipe) {
 				mvfd(inpipe, infd);
 			}
 			if (list->next != NULL) {
-				int fd = getnumber(getstr(list->next->term));
+				int fd = getnumber("$&pipe", getstr(list->next->term));
 				releasefd(fd);
 				mvfd(p[1], fd);
 				close(p[0]);
@@ -226,7 +220,7 @@ PRIM(pipe) {
 		if (list->next == NULL)
 			break;
 		list = list->next->next;
-		infd = getnumber(getstr(list->term));
+		infd = getnumber("$&pipe", getstr(list->term));
 		inpipe = p[0];
 		close(p[1]);
 	}
@@ -249,9 +243,8 @@ PRIM(readfrom) {
 	int pid, p[2], status;
 	Push push;
 
-	caller = "$&readfrom";
 	if (length(list) != 3)
-		argcount("%readfrom var input cmd");
+		argcount("$&readfrom", "%readfrom var input cmd");
 	Ref(List *, lp, list);
 	Ref(char *, var, getstr(lp->term));
 	lp = lp->next;
@@ -259,7 +252,7 @@ PRIM(readfrom) {
 	lp = lp->next;
 	Ref(Term *, cmd, lp->term);
 
-	if ((pid = pipefork(p, NULL)) == 0) {
+	if ((pid = pipefork("$&readfrom", p, NULL)) == 0) {
 		close(p[0]);
 		mvfd(p[1], 1);
 		exit(exitstatus(eval1(input, evalflags &~ eval_inchild)));
@@ -289,9 +282,8 @@ PRIM(writeto) {
 	int pid, p[2], status;
 	Push push;
 
-	caller = "$&writeto";
 	if (length(list) != 3)
-		argcount("%writeto var output cmd");
+		argcount("$&writeto", "%writeto var output cmd");
 	Ref(List *, lp, list);
 	Ref(char *, var, getstr(lp->term));
 	lp = lp->next;
@@ -299,7 +291,7 @@ PRIM(writeto) {
 	lp = lp->next;
 	Ref(Term *, cmd, lp->term);
 
-	if ((pid = pipefork(p, NULL)) == 0) {
+	if ((pid = pipefork("$&writeto", p, NULL)) == 0) {
 		close(p[1]);
 		mvfd(p[0], 0);
 		exit(exitstatus(eval1(output, evalflags &~ eval_inchild)));
@@ -349,15 +341,14 @@ restart:
 PRIM(backquote) {
 	int pid, p[2], status;
 	
-	caller = "$&backquote";
 	if (list == NULL)
-		fail(caller, "usage: backquote separator command [args ...]");
+		fail("$&backquote", "usage: backquote separator command [args ...]");
 
 	Ref(List *, lp, list);
 	Ref(char *, sep, getstr(lp->term));
 	lp = lp->next;
 
-	if ((pid = pipefork(p, NULL)) == 0) {
+	if ((pid = pipefork("$&backquote", p, NULL)) == 0) {
 		mvfd(p[1], 1);
 		close(p[0]);
 		exit(exitstatus(eval(lp, NULL, evalflags | eval_inchild)));
