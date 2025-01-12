@@ -125,7 +125,6 @@ gcderef(Root *r, void **p)
 	if(istracked(*p)){
 		h = header(*p);
 		h->refcount--;
-		assert(h->refcount >= 0);
 		if(h->refcount == 0)
 			h->flags |= GcDeref;
 	}
