@@ -169,9 +169,39 @@ fn dirlist2glob args {
 	}
 }
 
+fn esmglob_repeat_string e t {
+	local (r='') {
+		while {gt $t 0} {
+			r = $r^$e
+			t = <={sub $t 1}
+		}
+		result $r
+	}
+}
+
+fn matchlist_elem elem times {
+	local (
+		start = true
+		res = '('
+		tmp = ''
+	) {
+		for	(i = $times) {
+			tmp = <={esmglob_repeat_string $elem $i}
+			if {$start} {
+				res = $res^$tmp
+				start = false
+			} {
+				res = $res^'|'^$tmp
+			}
+		}
+		result $res^')'
+	}
+}
+
 fn esmglob_expand_qmacro xglob {
 	local(
-		head=;mid=;tmp=;tail=;start=;end=;
+		head=;mid=;tmp=;tail=;start=;end=
+		elem=;elemhead=;elemtail=
 		state = default
 	) {
 		for(i = $:xglob) {
@@ -182,10 +212,22 @@ fn esmglob_expand_qmacro xglob {
 							state = inquestion0
 							mid = $matchexpr
 						}
+						('%') {
+							state = ingeneral0
+							mid = $matchexpr
+						}
+						('\') {
+							state = startescape
+							head = $head $matchexpr
+						}
 						* {
 							head = $head $matchexpr
 						}
 					)
+				}
+				(startescape) {
+					head = $head $i
+					state = default
 				}
 				(inquestion0) {
 					match $i (
@@ -199,6 +241,25 @@ fn esmglob_expand_qmacro xglob {
 							mid=
 						}
 					)
+				}
+				(ingeneral0) {
+					match $i (
+						('<') {
+							state = inquestion1
+							mid = $mid $matchexpr
+						}
+						('\') {
+							state = ingeneral0_escape
+							mid = $mid $matchexpr
+						}
+						* {
+							mid = $mid $matchexpr
+						}
+					)
+				}
+				(ingeneral0_escape) {
+					mid = $mid $i
+					state = ingeneral0
 				}
 				(inquestion1) {
 					match $i (
@@ -241,8 +302,26 @@ fn esmglob_expand_qmacro xglob {
 		head = $"head
 		mid = $"mid
 		tail = $"tail
-		(start end) = <={~~ $mid '?<'^*^'-'^*^'>'}
-		mid = <={dirlist2glob '?'^<={%range $start $end}}
+		match $mid (
+			('?'^*) {
+				(start end) = <={~~ $matchexpr '?<'^*^'-'^*^'>'}
+				mid = <={dirlist2glob '?'^<={%range $start $end}}
+			}
+			('%\<<'^*) {
+				(start end) = <={~~ $matchexpr '%\<<'^*^'-'^*^'>'}
+				mid = <={matchlist_elem '\<' <={%range $start $end}}
+			}
+			('%'^*^'\<'^*) {
+				(elemhead elemtail) = <={~~ $matchexpr '%'^*^'\<'^*}
+				(elemtail start end) = <={~~ $elemtail *^'<'^*^'-'^*^'>'}
+				elem = $elemhead^'\<'^$elemtail
+				mid = <={matchlist_elem $elem <={%range $start $end}}
+			}
+			('%'^*) {
+				(elem start end) = <={~~ $matchexpr '%'^*^'<'^*^'-'^*^'>'}
+				mid = <={matchlist_elem $elem <={%range $start $end}}
+			}
+		)
 		result $head^$mid^<={esmglob_expand_qmacro $tail}
 	}
 }
