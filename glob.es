@@ -536,6 +536,17 @@ fn esmglob_do_glob globfn xglob list {
 	}
 }
 
+fn esmglob_compmatch elem cglobs {
+	for(i = $cglobs) {
+		if{eval '{~ '^$elem^' '^$i^'}'} {
+			return <=true
+		}
+	}
+	result <=false
+}
+
+## external api
+
 fn esmglob xglob list {
 	local(tmp=;res=){
 		tmp = <={esmglob_do_glob $fn-glob $xglob $list}
@@ -548,16 +559,6 @@ fn esmglob xglob list {
 	}
 }
 
-fn esmglob_compmatch elem cglobs {
-	for(i = $cglobs) {
-		if{eval '{~ '^$elem^' '^$i^'}'} {
-			return <=true
-		}
-	}
-	result <=false
-}
-
-
 fn esmglob_match elem xglob {
 	esmglob_compile $xglob |> esmglob_compmatch $elem |> result
 }
@@ -568,56 +569,5 @@ fn esm~ elem xglob_or_cglobs {
 	} {
 		esmglob_compmatch $elem $xglob_or_cglobs
 	}
-}
-
-
-fn d2g args {
-	dirlist2glob $args
-}
-
-fn esm_compile_search xglob dirs {
-	local (
-		pdirs=
-		tmp=
-	) {
-		if {~ $#dirs 0} {
-			esmglob_compile $xglob |> return
-		} {
-			pdirs = <={process $dirs (
-						*/ {
-							tmp = $:matchexpr
-							tmp = $tmp(... <={sub $#tmp 1})
-							result $"tmp
-						}
-						* {
-							result $matchexpr
-						}
-					)}
-		}
-		esmglob_compile <={dirlist2glob -s $pdirs}^$xglob |> result
-	}
-}
-
-fn esm_run_compiled_search globs {
-	local(tmp=;inter=;res=) {
-		for (glob = $globs) {
-			tmp = <={glob $glob}
-			for (i = $tmp) {
-				inter = <={esmglob_add_unique $i $inter}
-			}
-		}
-		for (i = $inter) {
-			if {! ~ $i *^'*'^* && ! ~ *^'?'^*} {
-				res = $i $res
-			}
-		}
-		reverse $res |> result
-	}
-}
-
-fn esm_search xglob dirs {
-	esm_compile_search $xglob $dirs |>
-		esm_run_compiled_search |>
-		result
 }
 
