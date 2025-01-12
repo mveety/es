@@ -273,6 +273,12 @@ extern Boolean isinspace(Space *space, void *p) {
 	return FALSE;
 }
 
+Boolean
+old_istracked(void *p)
+{
+	return isinspace(new, p);
+}
+
 /*
  * root list building and scanning
  */
@@ -496,8 +502,10 @@ old_gcallocate(size_t nbytes, int t)
 		if(np <= new->top){
 			new->current = np;
 			p = ((char*)hp)+sizeof(Header);
+			hp->flags = 0;
 			hp->tag = t;
 			hp->forward = NULL;
+			hp->refcount = 0;
 			old_nallocs++;
 			old_allocations++;
 			return (void*)p;

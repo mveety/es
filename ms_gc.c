@@ -420,6 +420,14 @@ ismanaged(void *p)
 	return 0;
 }
 
+Boolean
+gc_istracked(void *p)
+{
+	if(ismanaged(p))
+		return TRUE;
+	return FALSE;
+}
+
 /* mark sweep garbage collector */
 
 void
@@ -647,8 +655,10 @@ ms_gcallocate(size_t sz, int tag)
 
 	assert(nb != nil);
 done:
+	nb->flags = 0;
 	nb->tag = tag;
-//	pointer_block(nb)->h = nb;
+	nb->refcount = 0;
+	nb->forward = nil;
 	allocations++;
 	return (void*)(((char*)nb)+sizeof(Header));
 }

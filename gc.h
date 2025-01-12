@@ -14,8 +14,10 @@ enum {
 	TAGMAGIC = 0xdefaced,
 	GcForward = 1<<0,
 	GcUsed = 1<<1,
-	NewGc = 101,
+	GcDeref = 1<<2,
 	OldGc = 100,
+	NewGc = 101,
+	RefCountGc = 102,
 };
 
 typedef struct Header Header;
@@ -33,6 +35,7 @@ struct Tag {
 struct Header {
 	unsigned short flags;
 	unsigned short tag;
+	unsigned int refcount;
 	void *forward;
 };
 
@@ -103,6 +106,7 @@ extern Header *header(void *p);
 extern size_t dump(Tag *t, void *p);
 
 /* old collecter */
+extern Boolean old_istracked(void*);
 extern void old_initgc(void);
 extern void old_gcenable(void);
 extern void old_gcdisable(void);
@@ -114,6 +118,7 @@ extern void old_memdump(void);
 extern void old_getstats(GcStats*);
 
 /* mark sweep */
+extern Boolean gc_istracked(void*);
 extern void gcmark(void *p);
 extern void gc_set_mark(Header *h);
 extern void gc_unset_mark(Header *h);

@@ -84,10 +84,30 @@ header(void *p)
 	return (Header*)v;
 }
 
+Boolean
+istracked(void *p)
+{
+	switch(gctype){
+	case NewGc:
+		return gc_istracked(p);
+	case OldGc:
+		return old_istracked(p);
+	default:
+		abort();
+		break;
+	}
+}
+
 void
 gcref(Root *r, void **p)
 {
+	Header *h;
+
 	r->p = p;
+	if(istracked(*p)){
+		h = header(*p);
+		h->refcount++;
+	}
 	if(rootlist)
 		rootlist->prev = r;
 	r->next = rootlist;
@@ -97,9 +117,18 @@ gcref(Root *r, void **p)
 void
 gcderef(Root *r, void **p)
 {
+	Header *h;
+
 	assert(r == rootlist);
 	assert(r->p == p);
 
+	if(istracked(*p)){
+		h = header(*p);
+		h->refcount--;
+		assert(h->refcount >= 0);
+		if(h->refcount == 0)
+			h->flags |= GcDeref;
+	}
 	rootlist = rootlist->next;
 	if(rootlist)
 		rootlist->prev = NULL;
