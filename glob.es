@@ -626,7 +626,7 @@ fn esmglob_compmatch elem cglobs {
 
 ## external api
 
-fn esmglob xglob list {
+fn %esmglob xglob list {
 	local(tmp=;res=){
 		tmp = <={esmglob_do_glob $fn-glob $xglob $list}
 		for(i = $tmp) {
@@ -638,11 +638,11 @@ fn esmglob xglob list {
 	}
 }
 
-fn esmglob_match elem xglob {
+fn %esmglob_match elem xglob {
 	esmglob_compile $xglob |> esmglob_compmatch $elem |> result
 }
 
-fn esm~ elem xglob_or_cglobs {
+fn %esm~ elem xglob_or_cglobs {
 	if {~ $#xglob_or_cglobs 1} {
 		esmglob_match $elem $xglob_or_cglobs
 	} {
