@@ -977,4 +977,20 @@ fn try body {
 	}
 }
 
+fn __es_getargs argsbody {
+	if {~ $#argsbody 1 } {
+		result ()
+	} {
+		result $argsbody(1 ... <={sub $#argsbody 1})
+	}
+}
+
+fn __es_getbody argsbody {
+	if {~ $#argsbody 1 } {
+		result $argsbody
+	} {
+		result <={%last $argsbody}
+	}
+}
+
 
