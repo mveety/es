@@ -320,15 +320,15 @@ fn vars {
 		priv	= false
 		intern	= false
 	) {
-		for (i = $*) if (
-			{~ $i -v}	{vars	= true}
-			{~ $i -f}	{fns	= true}
-			{~ $i -s}	{sets	= true}
-			{~ $i -g}	{gets	= true}
-			{~ $i -e}	{export	= true}
-			{~ $i -p}	{priv	= true}
-			{~ $i -i}	{intern = true}
-			{throw error vars bad option: $i}
+		process $* (
+			(-v) {vars = true}
+			(-f) {fns = true}
+			(-s) {sets = true}
+			(-g) {gets = true}
+			(-e) {export = true}
+			(-p) {priv = true}
+			(-i) {intern = true}
+			* {throw error vars bad option: $i}
 		)
 		let (
 			dovar = @ var {
