@@ -32,3 +32,7 @@ fn %gcstats args {
 	}
 }
 
+fn %gc {
+	assert {~ gc <=$&primitives}
+	$&gc
+}

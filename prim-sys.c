@@ -512,6 +512,11 @@ PRIM(gcstats) {
 	return res;
 }
 
+PRIM(gc) {
+	gc();
+	return NULL;
+}
+
 extern Dict *initprims_sys(Dict *primdict) {
 	X(newpgrp);
 	X(background);
@@ -530,5 +535,6 @@ extern Dict *initprims_sys(Dict *primdict) {
 	X(execfailure);
 #endif /* !KERNEL_POUNDBANG */
 	X(gcstats);
+	X(gc);
 	return primdict;
 }
