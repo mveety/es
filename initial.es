@@ -957,6 +957,10 @@ fn %last list {
 	result $list($#list)
 }
 
+fn %first list {
+	return $list(1)
+}
+
 fn try body {
 	catch @ e type msg {
 		if {~ $e error} {
