@@ -256,6 +256,10 @@ static const Limit limits[] = {
 	{ "posixlocks", RLIMIT_POSIXLOCKS, NULL },
 #endif
 
+#ifdef RLIMIT_NTHR
+	{ "nthr", RLIMIT_NTHR, NULL },
+#endif
+
 	{ NULL, 0, NULL }
 };
 
