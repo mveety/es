@@ -269,7 +269,8 @@ struct Limret {
 };
 typedef struct Limret Limret;
 
-static Limret printlimit(const Limit *limit, Boolean hard, int retlimit) {
+static Limret
+printlimit(const Limit *limit, Boolean hard, int retlimit) {
 	struct rlimit rlim;
 	LIMIT_T lim;
 	Limret limret = {FALSE, 0};
@@ -303,14 +304,17 @@ static Limret printlimit(const Limit *limit, Boolean hard, int retlimit) {
 	return limret;
 }
 
-static long parselimit(const Limit *limit, char *s) {
+static long
+parselimit(const Limit *limit, char *s) {
 	long lim;
 	char *t;
 	const Suffix *suf = limit->suffix;
 	if (streq(s, "unlimited"))
 		return RLIM_INFINITY;
+
 	if (!isdigit(*s))
 		fail("$&limit", "%s: bad limit value", s);
+
 	if (suf == timesuf && (t = strchr(s, ':')) != NULL) {
 		char *u;
 		lim = strtol(s, &u, 0) * 60;
@@ -347,7 +351,6 @@ PRIM(limit) {
 		hard = TRUE;
 		lp = lp->next;
 	}
-
 
 	if (lp == NULL)
 		for (; lim->name != NULL; lim++)
@@ -401,9 +404,6 @@ PRIM(limit) {
 
 #if BUILTIN_TIME
 PRIM(time) {
-
-/*#if HAVE_WAIT3*/
-
 	int pid, status;
 	struct rusage r;
 	struct timespec before, after;
@@ -436,54 +436,6 @@ PRIM(time) {
 
 	RefEnd(lp);
 	return mklist(mkstr(mkstatus(status)), NULL);
-
-/*
-#else	* !HAVE_WAIT3 *
-
-	int pid, status;
-	Ref(List *, lp, list);
-
-	gc();	* do a garbage collection first to ensure reproducible results *
-	pid = efork(TRUE, FALSE);
-	if (pid == 0) {
-		clock_t t0, t1;
-		struct tms tms;
-		static clock_t ticks = 0;
-
-		if (ticks == 0)
-			ticks = sysconf(_SC_CLK_TCK);
-
-		t0 = times(&tms);
-		pid = efork(TRUE, FALSE);
-		if (pid == 0)
-			exit(exitstatus(eval(lp, NULL, evalflags | eval_inchild)));
-
-		status = ewaitfor(pid);
-		t1 = times(&tms);
-		SIGCHK();
-		printstatus(0, status);
-
-		tms.tms_cutime += ticks / 20;
-		tms.tms_cstime += ticks / 20;
-
-		eprint(
-			"%6ldr %5ld.%ldu %5ld.%lds\t%L\n",
-			(t1 - t0 + ticks / 2) / ticks,
-			tms.tms_cutime / ticks, ((tms.tms_cutime * 10) / ticks) % 10,
-			tms.tms_cstime / ticks, ((tms.tms_cstime * 10) / ticks) % 10,
-			lp, " "
-		);
-		exit(status);
-	}
-	status = ewaitfor(pid);
-	SIGCHK();
-	printstatus(0, status);
-
-	RefEnd(lp);
-	return mklist(mkstr(mkstatus(status)), NULL);
-
-#endif	* !HAVE_WAIT3 *
-*/
 }
 #endif	/* BUILTIN_TIME */
 
