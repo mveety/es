@@ -158,54 +158,54 @@ typedef struct {
 static const Limit limits[] = {
 
 #ifdef RLIMIT_AS
-	{"address", RLIMIT_AS, NULL},
+	{"addrspace", RLIMIT_AS, NULL },
 #endif
 
 #ifdef RLIMIT_CPU
-	{ "cputime",		RLIMIT_CPU,	timesuf },
+	{ "cputime", RLIMIT_CPU, timesuf },
 #endif
 
 #ifdef RLIMIT_FSIZE
-	{ "filesize",		RLIMIT_FSIZE,	sizesuf },
+	{ "filesize", RLIMIT_FSIZE, sizesuf },
 #endif
 
 #ifdef RLIMIT_DATA
-	{ "datasize",		RLIMIT_DATA,	sizesuf },
+	{ "datasize", RLIMIT_DATA, sizesuf },
 #endif
 
 #ifdef RLIMIT_STACK
-	{ "stacksize",		RLIMIT_STACK,	sizesuf },
+	{ "stacksize", RLIMIT_STACK, sizesuf },
 #endif
 
 #ifdef RLIMIT_CORE
-	{ "coredumpsize",	RLIMIT_CORE,	sizesuf },
+	{ "coredumpsize", RLIMIT_CORE, sizesuf },
 #endif
 
 #ifdef RLIMIT_RSS	/* SysVr4 does not have this */
-	{ "memoryuse",		RLIMIT_RSS,	sizesuf },
+	{ "memoryuse", RLIMIT_RSS, sizesuf },
 #endif
 #ifdef RLIMIT_VMEM	/* instead, they have this! */
-	{ "memorysize",		RLIMIT_VMEM,	sizesuf },
+	{ "memorysize", RLIMIT_VMEM, sizesuf },
 #endif
 
 #ifdef RLIMIT_MEMLOCK	/* 4.4bsd adds an unimplemented limit on non-pageable memory */
-	{ "lockedmemory",	RLIMIT_CORE,	sizesuf },
+	{ "lockedmemory", RLIMIT_CORE, sizesuf },
 #endif
 
 #ifdef RLIMIT_NOFILE	/* SunOS 4.1 adds a limit on file descriptors */
-	{ "descriptors",	RLIMIT_NOFILE,	NULL },
+	{ "descriptors", RLIMIT_NOFILE, NULL },
 #endif
 
 #ifdef RLIMIT_NPROC	/* 4.4bsd adds a limit on child processes */
-	{ "processes",		RLIMIT_NPROC,	NULL },
+	{ "processes", RLIMIT_NPROC, NULL },
 #endif
 
 #ifdef RLIMIT_KQUEUES
-	{ "kqueues", RLIMIT_KQUEUES, NULL},
+	{ "kqueues", RLIMIT_KQUEUES, NULL },
 #endif
 
 #ifdef RLIMIT_NPTS
-	{ "npts", RLIMIT_NPTS, NULL},
+	{ "npts", RLIMIT_NPTS, NULL },
 #endif
 
 #ifdef RLIMIT_PIPEBUF
@@ -221,11 +221,35 @@ static const Limit limits[] = {
 #endif
 
 #ifdef RLIMIT_UMTXP
-	{ "umtxp", RLIMIT_UMTXP, NULL},
+	{ "umtxp", RLIMIT_UMTXP, NULL },
 #endif
 
 #ifdef RLIMIT_VMEM
-	{ "vmem", RLIMIT_VMEM, NULL},
+	{ "vmem", RLIMIT_VMEM, NULL },
+#endif
+
+#ifdef RLIMIT_LOCKS
+	{ "locks", RLIMIT_LOCKS, NULL },
+#endif
+
+#ifdef RLIMIT_MSGQUEUE
+	{ "msgqueue", RLIMIT_MSGQUEUE, sizesuf },
+#endif
+
+#ifdef RLIMIT_NICE
+	{ "nice", RLIMIT_NICE, NULL },
+#endif
+
+#ifdef RLIMIT_RTPRIO
+	{ "rtprio", RLIMIT_RTPRIO, NULL },
+#endif
+
+#ifdef RLIMT_RTTIME
+	{ "rttime", RLIMIT_RTTIME, NULL },
+#endif
+
+#ifdef RLIMIT_SIGPENDING
+	{ "sigpending", RLIMIT_SIGPENDING, NULL },
 #endif
 
 	{ NULL, 0, NULL }
