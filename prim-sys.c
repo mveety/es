@@ -1,5 +1,6 @@
 /* prim-sys.c -- system call primitives ($Revision: 1.2 $) */
 
+#include <sys/resource.h>
 #define	REQUIRE_IOCTL	1
 
 #include "es.h"
@@ -156,11 +157,29 @@ typedef struct {
 
 static const Limit limits[] = {
 
+#ifdef RLIMIT_AS
+	{"address", RLIMIT_AS, NULL},
+#endif
+
+#ifdef RLIMIT_CPU
 	{ "cputime",		RLIMIT_CPU,	timesuf },
+#endif
+
+#ifdef RLIMIT_FSIZE
 	{ "filesize",		RLIMIT_FSIZE,	sizesuf },
+#endif
+
+#ifdef RLIMIT_DATA
 	{ "datasize",		RLIMIT_DATA,	sizesuf },
+#endif
+
+#ifdef RLIMIT_STACK
 	{ "stacksize",		RLIMIT_STACK,	sizesuf },
+#endif
+
+#ifdef RLIMIT_CORE
 	{ "coredumpsize",	RLIMIT_CORE,	sizesuf },
+#endif
 
 #ifdef RLIMIT_RSS	/* SysVr4 does not have this */
 	{ "memoryuse",		RLIMIT_RSS,	sizesuf },
@@ -175,12 +194,38 @@ static const Limit limits[] = {
 
 #ifdef RLIMIT_NOFILE	/* SunOS 4.1 adds a limit on file descriptors */
 	{ "descriptors",	RLIMIT_NOFILE,	NULL },
-#elif defined(RLIMIT_OFILE) /* but 4.4bsd uses this name for it */
-	{ "descriptors",	RLIMIT_OFILE,	NULL },
 #endif
 
 #ifdef RLIMIT_NPROC	/* 4.4bsd adds a limit on child processes */
 	{ "processes",		RLIMIT_NPROC,	NULL },
+#endif
+
+#ifdef RLIMIT_KQUEUES
+	{ "kqueues", RLIMIT_KQUEUES, NULL},
+#endif
+
+#ifdef RLIMIT_NPTS
+	{ "npts", RLIMIT_NPTS, NULL},
+#endif
+
+#ifdef RLIMIT_PIPEBUF
+	{ "pipebuf", RLIMIT_PIPEBUF, sizesuf },
+#endif
+
+#ifdef RLIMIT_SBSIZE
+	{ "sbsize", RLIMIT_SBSIZE, sizesuf },
+#endif
+
+#ifdef RLIMIT_SWAP
+	{ "swap", RLIMIT_SWAP, sizesuf },
+#endif
+
+#ifdef RLIMIT_UMTXP
+	{ "umtxp", RLIMIT_UMTXP, NULL},
+#endif
+
+#ifdef RLIMIT_VMEM
+	{ "vmem", RLIMIT_VMEM, NULL},
 #endif
 
 	{ NULL, 0, NULL }
