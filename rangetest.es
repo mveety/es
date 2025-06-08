@@ -53,3 +53,4 @@ fn rangetest {
 
 }
 
+rangetest
