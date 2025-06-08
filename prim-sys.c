@@ -252,6 +252,10 @@ static const Limit limits[] = {
 	{ "sigpending", RLIMIT_SIGPENDING, NULL },
 #endif
 
+#ifdef RLIMIT_POSIXLOCKS
+	{ "posixlocks", RLIMIT_POSIXLOCKS, NULL },
+#endif
+
 	{ NULL, 0, NULL }
 };
 
