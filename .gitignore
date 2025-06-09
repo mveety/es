@@ -38,8 +38,6 @@ configure_*
 install-sh
 config.es
 *.new
-tests/*
-estest
 callgrind.*
 gmon.out
 *.gmon

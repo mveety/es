@@ -1,0 +1,133 @@
+#!/usr/bin/env es
+
+fn info {
+	echo '>>> info:' $*
+}
+
+fn lastelem elems {
+	result $elems($#elems)
+}
+
+esbin = <={
+	if {access -xf ./es} {
+		result ./es
+	} {
+		result <={access -1n es -xf $path}
+	}
+}
+
+testpath = <={
+	if {~ $#* 0} {
+		result 'tests'
+	} {
+		if {~ $*(1) */} {
+			result <={~~ $*(1) */}
+		} {
+			result $*(1)
+		}
+		* = $*(2 ...)
+	}
+}
+
+info 'build: '^$buildstring
+info 'running tests in '^$testpath^'/'
+
+testfiles = <={
+	process $testpath/*.es (
+		(*/test_*) {
+			if {access -xf $matchexpr} {
+				result $matchexpr
+			} {
+				result
+			}
+		}
+		(*/util_*) {
+			if {access -xf $matchexpr} {
+				echo >[2=1] 'loading '^$matchexpr
+				. $matchexpr
+			}
+			result
+		}
+		* { result }
+	)
+}
+
+match $#testfiles (
+	0 { info 'found no tests' }
+	1 { info 'found 1 test' }
+	* { info 'found '^$matchexpr^' tests' }
+)
+
+if {~ $#print_failure_output 0} {
+	print_failure_output = true
+}
+if {~ $#print_failure_stderr 0} {
+	print_failure_stderr = true
+}
+
+fn output {
+	if {$print_failute_stderr} {
+		echo >[2=1] $*
+	} {
+		echo $*
+	}
+}
+
+fn run_test_file file {
+	assert2 $0 {eq $#file 1}
+	lets (
+		testname = <={~~ <={lastelem <={%split '/' $file}} test_*.es}
+		passed = false
+		test_exception=
+		test_log='/tmp/es_'^$pid^'_test_'^$testname^'.log'
+		tfp = 'test_'^$testname^'_fail_pass'
+	) {
+		. $file
+		if {~ <={%count $$tfp} 0} {
+			$tfp = false
+		}
+		catch @ e {
+			test_exception = $e
+			if {$$tfp} {
+				passed = true
+			} {
+				passed = false
+			}
+		} {
+			run_test_$testname > $test_log
+			if {$$tfp} {
+				passed = false
+			} {
+				passed = true
+			}
+		}
+ 		echo -n 'test '^$testname^': '
+		if {$passed} {
+			echo 'passed!'
+		} {
+			echo 'failed!'
+			echo '>>> exception: '^$^test_exception
+			if {$print_failure_output} {
+				output '>>> '^$testname^' output:'
+				for(outline = ``(\n) {cat $test_log}) {
+					output '>>>>>> '^$^outline
+				}
+			}
+		}
+	rm $test_log
+	result $passed
+	}
+}
+
+fn run_all_tests {
+	for(i = $testfiles) {
+		run_test_file $i
+	}
+}
+
+echo -n 'run all tests [yes]? '
+r = <=%read
+if {~ $r '' || ~ $r [yY]*} {
+	run_all_tests
+}
+
