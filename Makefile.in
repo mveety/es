@@ -126,7 +126,7 @@ config.h  : config.h.in
 	./configure
 
 version.c : make_version es.h
-	./make_version > version.c
+	./make_version $(CC) > version.c
 
 etags : ${HFILES} ${CFILES} parse.y
 	etags ${HFILES} ${CFILES} parse.y
