@@ -644,9 +644,9 @@ fn %esmglob_match elem xglob {
 
 fn %esm~ elem xglob_or_cglobs {
 	if {~ $#xglob_or_cglobs 1} {
-		esmglob_match $elem $xglob_or_cglobs
+		%esmglob_match $elem $xglob_or_cglobs
 	} {
-		esmglob_compmatch $elem $xglob_or_cglobs
+		%esmglob_compmatch $elem $xglob_or_cglobs
 	}
 }
 
