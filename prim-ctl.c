@@ -4,7 +4,7 @@
 #include "prim.h"
 
 PRIM(seq) {
-	Ref(List *, result, true);
+	Ref(List *, result, list_true);
 	Ref(List *, lp, list);
 	for (; lp != NULL; lp = lp->next)
 		result = eval1(lp->term, evalflags &~ (lp->next == NULL ? 0 : eval_inchild));
@@ -28,7 +28,7 @@ PRIM(if) {
 		}
 	}
 	RefEnd(lp);
-	return true;
+	return list_true;
 }
 
 PRIM(forever) {

@@ -19,7 +19,7 @@ PRIM(echo) {
 			list = list->next;
 	}
 	print("%L%s", list, " ", eol);
-	return true;
+	return list_true;
 }
 
 PRIM(count) {
@@ -209,7 +209,7 @@ PRIM(exitonfalse) {
 }
 
 PRIM(batchloop) {
-	Ref(List *, result, true);
+	Ref(List *, result, list_true);
 	Ref(List *, dispatch, NULL);
 
 	SIGCHK();
@@ -237,8 +237,8 @@ PRIM(batchloop) {
 		if (!termeq(e->term, "eof"))
 			throw(e);
 		RefEnd(dispatch);
-		if (result == true)
-			result = true;
+		if (result == list_true)
+			result = list_true;
 		RefReturn(result);
 
 	EndExceptionHandler
@@ -246,7 +246,7 @@ PRIM(batchloop) {
 
 PRIM(collect) {
 	gc();
-	return true;
+	return list_true;
 }
 
 PRIM(home) {
@@ -268,7 +268,7 @@ PRIM(internals) {
 }
 
 PRIM(isinteractive) {
-	return isinteractive() ? true : false;
+	return isinteractive() ? list_true : list_false;
 }
 
 PRIM(noreturn) {
@@ -311,7 +311,7 @@ PRIM(getevaldepth) {
 #if READLINE
 PRIM(resetterminal) {
 	resetterminal = TRUE;
-	return true;
+	return list_true;
 }
 #endif
 
@@ -499,14 +499,14 @@ PRIM(eq) {
 	int b = 0;
 
 	if(list == NULL)
-		return false;
+		return list_false;
 	if (list->next == NULL)
-		return false;
+		return list_false;
 	a = atoi(getstr(list->term));
 	b = atoi(getstr(list->next->term));
 	if (a == b)
-		return true;
-	return false;
+		return list_true;
+	return list_false;
 }
 
 PRIM(gt) {
@@ -514,14 +514,14 @@ PRIM(gt) {
 	int b = 0;
 
 	if (list == NULL)
-		return false;
+		return list_false;
 	if (list->next == NULL)
-		return false;
+		return list_false;
 	a = atoi(getstr(list->term));
 	b = atoi(getstr(list->next->term));
 	if (a > b)
-		return true;
-	return false;
+		return list_true;
+	return list_false;
 }
 
 PRIM(lt) {
@@ -529,14 +529,14 @@ PRIM(lt) {
 	int b = 0;
 
 	if (list == NULL)
-		return false;
+		return list_false;
 	if (list->next == NULL)
-		return false;
+		return list_false;
 	a = atoi(getstr(list->term));
 	b = atoi(getstr(list->next->term));
 	if (a < b)
-		return true;
-	return false;
+		return list_true;
+	return list_false;
 }
 
 PRIM(tobase) {
