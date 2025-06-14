@@ -542,6 +542,7 @@ PRIM(lt) {
 PRIM(tobase) {
 	int base, num;
 	char *s, *se;
+	List *res; Root r_res;
 
 	if(list == NULL || list->next == NULL)
 		fail("$&tobase", "missing arguments");
@@ -576,12 +577,14 @@ PRIM(tobase) {
 	if(base > 16)
 		fail("$&tobase", "base > 16");
 
-	Ref(List *, res, list);
+	res = list;
+	gcref(&r_res, (void**)&res);
 
 	gcdisable();
 
 	if(num == 0){
 		gcenable();
+		gcrderef(&r_res);
 		return mklist(mkstr(str("0")), NULL);
 	}
 
@@ -603,8 +606,8 @@ PRIM(tobase) {
 	free(s);
 
 	gcenable();
-
-	RefReturn(res);
+	gcrderef(&r_res);
+	return res;
 }
 
 PRIM(frombase) {
