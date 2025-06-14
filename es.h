@@ -376,6 +376,7 @@ enum {
 	tTree2,
 	tVar,
 	tVector,
+	tAnonymous,
 };
 
 typedef struct Tag Tag;

@@ -1,5 +1,8 @@
 /* stdenv.h -- set up an environment we can use ($Revision: 1.3 $) */
 
+#ifndef __es_stdenv
+#define __es_stdenv
+
 #include "esconfig.h"
 #ifdef HAVE_SYS_CDEFS_H
 # include <sys/cdefs.h>
@@ -269,4 +272,5 @@ extern int getgroups(int, int *);
 #define	SIFEXITED(status)	(!SIFSIGNALED(status))
 #define	SEXITSTATUS(status)	(((status) >> 8) & 0xff)
 
+#endif
 

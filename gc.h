@@ -1,5 +1,8 @@
 /* gc.h -- garbage collector interface for es ($Revision: 1.1.1.1 $) */
 
+#include <stddef.h>
+#include "stdenv.h"
+
 /* see also es.h for more generally applicable definitions */
 
 #define	ALIGN(n)	(((n) + sizeof (void *) - 1) &~ (sizeof (void *) - 1))
@@ -15,6 +18,7 @@ enum {
 	GcForward = 1<<0,
 	GcUsed = 1<<1,
 	GcDeref = 1<<2,
+	GcFixed = 1<<3,
 	OldGc = 100,
 	NewGc = 101,
 	RefCountGc = 102,
@@ -23,6 +27,7 @@ enum {
 typedef struct Header Header;
 typedef struct GcStats GcStats;
 typedef struct Buffer Buffer;
+typedef struct AnonSpace AnonSpace;
 
 struct Tag {
 	void *(*copy)(void *);
@@ -36,6 +41,7 @@ struct Header {
 	unsigned short flags;
 	unsigned short tag;
 	unsigned int refcount;
+	size_t size;
 	void *forward;
 };
 

@@ -1,3 +1,4 @@
+#include <stddef.h>
 #define	GARBAGE_COLLECTOR	1	/* for es.h */
 
 #include "es.h"
@@ -16,13 +17,14 @@ extern Tag Tree1Tag;
 extern Tag Tree2Tag;
 extern Tag VarTag;
 extern Tag VectorTag;
+extern Tag AnonymousTag;
 
 Root *globalrootlist;
 Root *exceptionrootlist;
 Root *rootlist;
 int gcblocked = 0;
 int gctype = OldGc;
-Tag *tags[12];
+Tag *tags[13];
 
 /* globalroot -- add an external to the list of global roots */
 extern void globalroot(void *addr) {
@@ -151,6 +153,7 @@ initgc(void)
 	tags[tTree2] = &Tree2Tag;
 	tags[tVar] = &VarTag;
 	tags[tVector] = &VectorTag;
+	tags[tAnonymous] = &AnonymousTag;
 
 	if(gctype == NewGc)
 		ms_initgc();
@@ -295,14 +298,20 @@ extern char *gcdup(const char *s) {
 }
 
 static void *StringCopy(void *op) {
-	size_t n = strlen(op) + 1;
+	Header *oh;
+
+	oh = header(op);
+	size_t n = oh->size;
 	char *np = gcalloc(n, tString);
 	memcpy(np, op, n);
 	return np;
 }
 
 static size_t StringScan(void *p) {
-	return strlen(p) + 1;
+	Header *h;
+
+	h = header(p);
+	return h->size;
 }
 
 static void
@@ -313,6 +322,52 @@ StringMark(void *p) {
 	gc_set_mark(h);
 }
 
+/*
+ * Anonymous space
+ */
+
+DefineTag(Anonymous, notstatic);
+
+void*
+gcmalloc(size_t sz)
+{
+	void *p;
+
+	gcdisable();
+	p = gcalloc(sz, tAnonymous);
+	gcenable();
+	return p;
+}
+
+static void*
+AnonymousCopy(void *p)
+{
+	Header *h1;
+	void *np;
+
+	h1 = header(p);
+	np = gcalloc(h1->size, tAnonymous);
+	memcpy(np, p, h1->size);
+	return np;
+}
+
+static size_t
+AnonymousScan(void *p)
+{
+	Header *h;
+
+	h = header(p);
+	return h->size;
+}
+
+static void
+AnonymousMark(void *p)
+{
+	Header *h;
+
+	h = header(p);
+	gc_set_mark(h);
+}
 
 /*
  * memdump -- print out all of gc space, as best as possible
