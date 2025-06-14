@@ -50,7 +50,6 @@ static char *(*realgetenv)(const char *) = stdgetenv;
 #endif
 #endif
 
-
 /*
  * errors and warnings
  */
@@ -323,15 +322,19 @@ run_es_completer(const char *text, int state)
 	List *args;
 	List *completer;
 	char *res;
+	List *result; Root r_result;
 
-	Ref(List *, result, NULL);
+	result = NULL;
+	gcref(&r_result, (void**)&result);
 
 	gcenable();
 	assert(!gcisblocked());
 
 	completer = varlookup("fn-%core_completer", NULL);
-	if(completer == NULL)
+	if(completer == NULL){
+		gcrderef(&r_result);
 		return strdup(text);
+	}
 	args = mklist(mkstr(str("%s", rl_line_buffer)),
 			mklist(mkstr(str("%s", text)),
 				mklist(mkstr(str("%d", es_rl_start)),
@@ -350,7 +353,7 @@ run_es_completer(const char *text, int state)
 		res = NULL;
 	}
 
-	RefEnd(result);
+	gcrderef(&r_result);
 
 	return res;
 }

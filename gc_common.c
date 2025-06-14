@@ -103,6 +103,7 @@ gcref(Root *r, void **p)
 {
 	Header *h;
 
+	assert(p);
 	r->p = p;
 	if(istracked(*p)){
 		h = header(*p);
