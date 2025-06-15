@@ -2,6 +2,7 @@
 /* stdgetenv is based on the FreeBSD getenv */
 
 #include "es.h"
+#include <string.h>
 #include "input.h"
 
 /*
@@ -488,6 +489,13 @@ copybuffer(Input *in, char *linebuf, long nread)
 /* fdfill -- fill input buffer by reading from a file descriptor */
 static int fdfill(Input *in) {
 	long nread;
+	char *line_in;
+	List *history_hook;
+	List *args;
+	List *result; Root r_result;
+	char *res;
+	size_t i;
+
 	assert(in->buf == in->bufend);
 	assert(in->fd >= 0);
 
@@ -520,9 +528,34 @@ static int fdfill(Input *in) {
 		return EOF;
 	}
 
-	if (in->runflags & run_interactive)
-		loghistory((char *) in->bufbegin, nread);
+	if (in->runflags & run_interactive){
+		history_hook = varlookup("fn-%history", NULL);
+		if(history_hook == NULL){
+			loghistory((char *) in->bufbegin, nread);
+		} else {
+			gcenable();
+			gcref(&r_result, (void**)&result);
+			line_in = strndup((char*) in->bufbegin, nread);
+			for(i = 0; line_in[i] != 0; i++)
+				if(line_in[i] == '\n'){
+					line_in[i] = 0;
+					break;
+				}
+			args = mklist(mkstr(str("%s", line_in)), NULL);
+			history_hook = append(history_hook, args);
+			result = eval(history_hook, NULL, 0);
 
+			assert(result != NULL);
+
+			res = strdup(getstr(result->term));
+			if(strcmp("0", res) == 0)
+				loghistory((char*) in->bufbegin, nread);
+			free(res);
+			free(line_in);
+			gcrderef(&r_result);
+			gcdisable();
+		}
+	}
 	in->buf = in->bufbegin;
 	in->bufend = &in->buf[nread];
 	return *in->buf++;

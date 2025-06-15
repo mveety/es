@@ -707,6 +707,13 @@ PRIM(reverse) {
 	return res;
 }
 
+PRIM(unixtime) {
+	unsigned long curtime;
+
+	curtime = time(NULL);
+	return mklist(mkstr(str("%lud", curtime)), NULL);
+}
+
 /*
  * initialization
  */
@@ -754,8 +761,10 @@ extern Dict *initprims_etc(Dict *primdict) {
 	X(lt);
 	X(tobase);
 	X(frombase);
+
 	X(range);
 	X(reverse);
+	X(unixtime);
 	return primdict;
 }
 
