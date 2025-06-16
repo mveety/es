@@ -84,9 +84,14 @@ es-mveety changes and additions:
 
 # added support for bash-like !! substitutions.
 
-# added %first, %last, %nelem, and %range
+# added %first, %last, %elem, and %range
 
 # added support for getter functions
 	getter functions execute when a variable is read and the result of
 	the function becomes the result of the variable.
+
+# added |> operator.
+	the |> operator takes the result of the left side function and appends
+	it to the aruments list of the right side.
+	broadly: a |> b |> c is the same as c <={b <={a}}
 
