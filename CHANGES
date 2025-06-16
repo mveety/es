@@ -12,11 +12,6 @@ es-mveety changes and additions:
 
 # .esrc loads on all startups unless the -N option is used at start.
 
-# es outputs its history with timestamps in the file pointed at by $history.
-	The timestamps are comments immediately above the corresponding entry
-	similar to how csh formats its history file. The history.es library
-	has functions to help a user manipulate the file.
-
 # added math and numerical comparison primitives add, sub, mul, div, mod,
 	eq, lt, lte, gt, and gte.
 
@@ -71,4 +66,27 @@ es-mveety changes and additions:
 	* bqmap fun list : same as above but return outputs in a new list
 	* fbqmap fun list : same as bqapply but flatten function output
 		before appending to results list
+
+# es outputs its history with timestamps in the file pointed at by $history.
+	The timestamps are comments immediately above the corresponding entry
+	similar to how csh formats its history file. The history.es library
+	has functions to help a user manipulate the file.
+
+# added %history hook (plus %add-history and %clear-history)
+	%add-history adds a line to the readline history.
+	%clear-history clears the readline history.
+	%history is normally undefined but if defined will execute after
+		a line is entered with the command line as its argument. if it
+		returns <=true then the normal history machinery will run after
+		%history returns.
+
+# added $unixtime
+
+# added support for bash-like !! substitutions.
+
+# added %first, %last, %nelem, and %range
+
+# added support for getter functions
+	getter functions execute when a variable is read and the result of
+	the function becomes the result of the variable.
 
