@@ -493,7 +493,6 @@ static int fdfill(Input *in) {
 	List *history_hook;
 	List *args;
 	List *result; Root r_result;
-	char *res;
 	size_t i;
 
 	assert(in->buf == in->bufend);
@@ -551,15 +550,13 @@ static int fdfill(Input *in) {
 
 			assert(result != NULL);
 
-			res = strdup(getstr(result->term));
-			if(strcmp("0", res) == 0){
+			if(strcmp("0", getstr(result->term)) == 0){
 #if READLINE
 				if(*line_in != '\0')
 					add_history(line_in);
 #endif
 				loghistory((char*) in->bufbegin, nread);
 			}
-			free(res);
 			gcrderef(&r_result);
 			gcdisable();
 		}
