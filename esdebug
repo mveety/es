@@ -1,4 +1,4 @@
-#! /usr/local/bin/es -p
+#!/usr/bin/env -S es -Np
 # esdebug: a debugger for es scripts ($Revision: 1.1.1.1 $)
 
 # TODO
