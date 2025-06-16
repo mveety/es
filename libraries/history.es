@@ -17,7 +17,7 @@ fn history-filter start usedate commandonly {
 			unixtime = 0
 		}
 
-		/#\+/{
+		/^#\+[0-9]+$/{
 			unixtime = substr($1, 2, length($1))
 			if (platform == "Linux") {
 				cmd = "date -d @" unixtime " +%H:%M"
@@ -35,7 +35,7 @@ fn history-filter start usedate commandonly {
 			havedate = 1
 		}
 
-		!/#\+/{
+		!/^#\+[0-9]+$/{
 			if($1 != ""){
 				if(havedate == 0){
 					"date +%H:%M" | getline curtime
