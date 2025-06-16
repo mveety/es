@@ -845,10 +845,15 @@ if {~ <=$&primitives resetterminal} {
 # called.
 last = ''
 get-last = $&getlast
+
 eval-depth = ''
 get-eval-depth = $&getevaldepth
+
 apids = ''
 get-apids = @ { result <=%apids }
+
+unixtime = ''
+get-unixtime = @ { result <=$&unixtime }
 
 #
 # Variables
