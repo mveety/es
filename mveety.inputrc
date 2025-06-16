@@ -1,10 +1,19 @@
 set bell-style none
 
 $if es-mveety
+	set blink-matching-paren on
+	set completion-query-items 0
 	set echo-control-characters off
 	set menu-complete-display-prefix on
+	set show-all-if-ambiguous off
 	TAB: menu-complete
-	"\C-x\t": menu-complete-backward
+	"\e[Z": menu-complete-backward
+	"\e[1;5C": menu-complete
+	"\e[1;5D": menu-complete-backward
 	"\C-xc": possible-completions
+	"\e[A": previous-history
+	"\e[B": next-history
+	"\e[1;5A": history-search-backward
+	"\e[1;5B": history-search-forward
 $endif
 
