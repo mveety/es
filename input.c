@@ -505,8 +505,8 @@ static int fdfill(Input *in) {
 		if (rlinebuf == NULL)
 			nread = 0;
 		else {
-			if (*rlinebuf != '\0')
-				add_history(rlinebuf);
+//			if (*rlinebuf != '\0')
+//				add_history(rlinebuf);
 			nread = copybuffer(in, rlinebuf, strlen(rlinebuf))+1;
 			in->bufbegin[nread-1] = '\n';
 			efree(rlinebuf);
@@ -529,18 +529,22 @@ static int fdfill(Input *in) {
 	}
 
 	if (in->runflags & run_interactive){
+		line_in = strndup((char*) in->bufbegin, nread);
+		for(i = 0; line_in[i] != 0; i++)
+			if(line_in[i] == '\n'){
+				line_in[i] = 0;
+				break;
+			}
 		history_hook = varlookup("fn-%history", NULL);
 		if(history_hook == NULL){
+#if READLINE
+			if(*line_in != '\0')
+				add_history(line_in);
+#endif
 			loghistory((char *) in->bufbegin, nread);
 		} else {
 			gcenable();
 			gcref(&r_result, (void**)&result);
-			line_in = strndup((char*) in->bufbegin, nread);
-			for(i = 0; line_in[i] != 0; i++)
-				if(line_in[i] == '\n'){
-					line_in[i] = 0;
-					break;
-				}
 			args = mklist(mkstr(str("%s", line_in)), NULL);
 			history_hook = append(history_hook, args);
 			result = eval(history_hook, NULL, 0);
@@ -548,13 +552,18 @@ static int fdfill(Input *in) {
 			assert(result != NULL);
 
 			res = strdup(getstr(result->term));
-			if(strcmp("0", res) == 0)
+			if(strcmp("0", res) == 0){
+#if READLINE
+				if(*line_in != '\0')
+					add_history(line_in);
+#endif
 				loghistory((char*) in->bufbegin, nread);
+			}
 			free(res);
-			free(line_in);
 			gcrderef(&r_result);
 			gcdisable();
 		}
+		free(line_in);
 	}
 	in->buf = in->bufbegin;
 	in->bufend = &in->buf[nread];
