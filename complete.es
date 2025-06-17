@@ -132,10 +132,29 @@ fn es_complete_strip_leading_whitespace str {
 	}
 }
 
+fn es_complete_is_sub_command cmdname curline {
+	local (
+		curlastcmd = <={
+			%fsplit ' ' $curline |>
+				@{process ($*) (
+					'' { result }
+					* { result $matchexpr }
+				)} |> %last
+		}
+	) {
+		if {~ $curlastcmd $cmdname} {
+			result <=true
+		} {
+			result <=false
+		}
+	}
+}
+
 fn es_complete_is_command curline {
 	local(curlinel=$:curline;i=){
 		i = $#curlinel
 		while {gt $i 0} {
+
 			if {~ $curlinel($i) ';' '{' '!'} {
 				return <=true
 			}
@@ -157,6 +176,10 @@ fn es_complete_is_command curline {
 						return <=true
 					}
 				}
+			}
+			if {es_complete_is_sub_command 'sudo' $curline ||
+				es_complete_is_sub_command 'doas' $curline} {
+				return <=true
 			}
 			if {! ~ $curlinel($i) (' ' \t \n \r)} {
 				return <=false
