@@ -164,6 +164,11 @@ fn es_complete_trim string {
 	}
 }
 
+fn es_complete_right_trim string {
+	reverse $:string |> %string |> es_complete_trim |>
+	%strlist |> reverse |> %string |> result
+}
+
 fn es_complete_get_last_cmdline cmdline {
 	lets (
 		cmdlinel = $:cmdline
