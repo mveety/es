@@ -150,6 +150,46 @@ fn es_complete_is_sub_command cmdname curline {
 	}
 }
 
+fn es_complete_trim string {
+	let(do_trim = true) {
+		{process $:string (
+			(' ' \t \n \r) {
+				if {$do_trim} { result } { result $matchexpr }
+			}
+			* {
+				if {$do_trim} { do_trim = false }
+				result $matchexpr
+			}
+		)} |> %string |> result
+	}
+}
+
+fn es_complete_get_last_cmdline cmdline {
+	lets (
+		cmdlinel = $:cmdline
+		i = $#cmdlinel
+	) {
+		while {gt $i 0} {
+			match $cmdlinel($i) (
+				(';' '{' '!' '&' '|') {
+					if {~ $cmdlinel(<={add $i 1}) '>'} {
+						i = <={add $i 1}
+					}
+					result $cmdlinel(<={add $i 1} ... $#cmdlinel) |>
+						%string |> es_complete_trim |> return
+				}
+			)
+			i = <={sub $i 1}
+		}
+		result $cmdline
+	}
+}
+
+fn es_complete_get_last_command cmdline {
+	es_complete_get_last_cmdline $cmdline |> %fsplit ' ' |>
+		%elem 1 |> result
+}
+
 fn es_complete_is_command curline {
 	local(curlinel=$:curline;i=){
 		i = $#curlinel
@@ -190,6 +230,31 @@ fn es_complete_is_command curline {
 	}
 }
 
+es_complete_hooked_commands = ()
+es_complete_command_hooks = ()
+es_complete_default_to_files = true
+
+fn es_complete_run_command_hook curline partial {
+	assert2 $0 {~ $#es_complete_command_hooks <={div $#es_complete_command_hooks 2 |> mul 2}}
+	let (pcmd = <={es_complete_get_last_command $curline}) {
+		for ((cmdname function) = $es_complete_command_hooks) {
+			if {~ $pcmd $cmdname} {
+				return <={$function $curline $partial}
+			}
+		}
+	}
+	if {$es_complete_default_to_files} {
+		result <={complete_files $partial}
+	} {
+		result ()
+	}
+}
+
+fn %complete_cmd_hook cmdname completefn {
+	es_complete_hooked_commands = $es_complete_hooked_commands $cmdname
+	es_complete_command_hooks = $es_complete_command_hooks $cmdname $completefn
+}
+
 # set this to true if you want to list executables before functions
 es_completion_executables_first = true
 
@@ -210,7 +275,11 @@ fn %complete curline partial start end {
 			result <={complete_functions $partial} <={complete_executables $partial}
 		}
 	} {
-		result <={complete_files $partial}
+		if {~ <={es_complete_get_last_command $curline} $es_complete_hooked_commands} {
+			result <={es_complete_run_command_hook $curline $partial}
+		} {
+			result <={complete_files $partial}
+		}
 	}
 }
 
