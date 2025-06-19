@@ -1,4 +1,4 @@
-library complete_import (init)
+library complete_import (init completion)
 
 fn complete_import_remove_ext ext files {
 	result <={ process $files (

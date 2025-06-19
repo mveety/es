@@ -1,3 +1,4 @@
+library completion (init)
 
 fn es_complete_remove_empty_results files {
 	local(res=){
