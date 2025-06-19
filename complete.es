@@ -165,7 +165,7 @@ fn es_complete_left_trim string {
 }
 
 fn es_complete_right_trim string {
-	reverse $:string |> %string |> es_complete_trim |>
+	reverse $:string |> %string |> es_complete_left_trim |>
 	%strlist |> reverse |> %string |> result
 }
 
