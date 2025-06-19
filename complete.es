@@ -150,7 +150,7 @@ fn es_complete_is_sub_command cmdname curline {
 	}
 }
 
-fn es_complete_trim string {
+fn es_complete_left_trim string {
 	let(do_trim = true) {
 		{process $:string (
 			(' ' \t \n \r) {
@@ -169,6 +169,10 @@ fn es_complete_right_trim string {
 	%strlist |> reverse |> %string |> result
 }
 
+fn es_complete_trim string {
+	es_complete_left_trim $string |> es_complete_right_trim |> result
+}
+
 fn es_complete_get_last_cmdline cmdline {
 	lets (
 		cmdlinel = $:cmdline
@@ -181,7 +185,7 @@ fn es_complete_get_last_cmdline cmdline {
 						i = <={add $i 1}
 					}
 					result $cmdlinel(<={add $i 1} ... $#cmdlinel) |>
-						%string |> es_complete_trim |> return
+						%string |> es_complete_left_trim |> return
 				}
 			)
 			i = <={sub $i 1}
