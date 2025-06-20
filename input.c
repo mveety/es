@@ -601,7 +601,7 @@ extern Tree *parse(char *pr1, char *pr2) {
 		assert(error != NULL);
 		e = error;
 		error = NULL;
-		fail("$&parse", "%s", e);
+		fail("$&parse", "yyparse: %s", e);
 	}
 	if (input->runflags & run_lisptrees)
 		eprint("%B\n", parsetree);
