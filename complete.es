@@ -277,7 +277,11 @@ es_completion_executables_first = true
 # indexed starting at 1 for cultural compatibility with es.
 fn %complete curline partial start end {
 	if {~ $partial '$'^*} {
-		result <={complete_variables '$' $partial}
+		if {~ <={%elem 2 $:partial} '#' '^' '"' ':'} {
+			result <={complete_variables '$'^<={%elem 2 $:partial} $partial}
+		} {
+			result <={complete_variables '$' $partial}
+		}
 	} {~ $start 1 || es_complete_is_command $curline} {
 		if {$es_completion_executables_first} {
 			result <={complete_executables $partial} <={complete_functions $partial}
