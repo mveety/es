@@ -37,7 +37,7 @@ fn complete_git_hook curline partial {
 }
 
 %complete_cmd_hook git @ curline partial {
-	echo 'complete_git: curline = '^<={format $curline}^', partial = '^<={format $partial}
+	# echo 'complete_git: curline = '^<={format $curline}^', partial = '^<={format $partial}
 	result <={complete_git_hook $curline $partial}
 }
 
