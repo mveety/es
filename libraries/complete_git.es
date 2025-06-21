@@ -26,9 +26,9 @@ fn complete_git_filter_list str {
 fn complete_git_hook curline partial {
 	let (prevtok = <={
 		es_complete_get_last_cmdline $curline |> es_complete_trim |>
-			%fsplit ' ' |> %last
+			%fsplit ' ' |> %last |> es_complete_trim
 	}) {
-		if {~ <={es_complete_trim $prevtok} 'git'} {
+		if {~ $prevtok 'git'} {
 			result <={complete_git_filter_list $partial}
 		} {
 			result <={complete_files $partial}
@@ -37,6 +37,7 @@ fn complete_git_hook curline partial {
 }
 
 %complete_cmd_hook git @ curline partial {
+	echo 'complete_git: curline = '^<={format $curline}^', partial = '^<={format $partial}
 	result <={complete_git_hook $curline $partial}
 }
 
