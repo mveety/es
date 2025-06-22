@@ -13,7 +13,6 @@ Boolean assertions = FALSE;		/* -A */
 
 extern int optind;
 extern char *optarg;
-extern int yydebug;
 
 /* extern int isatty(int fd); */
 extern char **environ;
@@ -91,7 +90,6 @@ static noreturn usage(void) {
 		"	-L	print parser results in LISP format\n"
 		"	-A	enable assertions (slow)\n"
 		"	-v	print version\n"
-		"	-P	set yydebug = 1\n"
 		"	-g n	(new gc) collection frequency\n"
 		"	-S n	(new gc) freelist sort frequency\n"
 		"	-C n	(new gc) freelist coalesce frequency\n"
@@ -153,7 +151,6 @@ int main(int argc, char **argv) {
 		case 'I':	gcinfo = TRUE;			break;
 		case 'X':	gctype = NewGc;			break;
 		case 'A':	assertions = TRUE;		break;
-		case 'P':	yydebug = 1; break;
 		case 'g':
 			gc_after = atoi(optarg);
 			break;
