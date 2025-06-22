@@ -240,9 +240,15 @@ fn es_complete_is_command curline {
 	}
 }
 
-es_complete_hooked_commands = ()
-es_complete_command_hooks = ()
-es_complete_default_to_files = true
+if {~ $#es_complete_hooked_commands 0} {
+	es_complete_hooked_commands = ()
+}
+if {~ $#es_complete_command_hooks 0} {
+	es_complete_command_hooks = ()
+}
+if {~ $#es_complete_default_to_files 0} {
+	es_complete_default_to_files = true
+}
 
 fn es_complete_run_command_hook curline partial {
 	assert2 $0 {~ $#es_complete_command_hooks <={div $#es_complete_command_hooks 2 |> mul 2}}
@@ -260,7 +266,33 @@ fn es_complete_run_command_hook curline partial {
 	}
 }
 
+fn es_complete_remove elem list {
+	let(res=) {
+		for (i = $list) {
+			if {! ~ $i $elem} {
+				res = $res $i
+			}
+		}
+		result $res
+	}
+}
+
+fn es_complete_remove2 elem list {
+	let(res=){
+		for ((cmd fn) = $list) {
+			if {! ~ $cmd $elem} {
+				res = $res $cmd $fn
+			}
+		}
+		result $res
+	}
+}
+
 fn %complete_cmd_hook cmdname completefn {
+	if {~ $cmdname $es_complete_hooked_commands} {
+		es_complete_hooked_commands = <={es_complete_remove $cmdname $es_complete_hooked_commands}
+		es_complete_command_hooks = <={es_complete_remove2 $cmdname $es_complete_command_hooks}
+	}
 	es_complete_hooked_commands = $es_complete_hooked_commands $cmdname
 	es_complete_command_hooks = $es_complete_command_hooks $cmdname $completefn
 }
