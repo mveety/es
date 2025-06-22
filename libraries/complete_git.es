@@ -17,10 +17,14 @@ complete_git_commands = $complete_git_commands symbolic-ref update-index update-
 complete_git_commands = $complete_git_commands verify-pack write-tree
 
 fn complete_git_filter_list str {
-	process $complete_git_commands (
-		($str^*) { result $matchexpr }
-		* { result }
-	)
+	let(res=) {
+		for(i = $complete_git_commands) {
+			if {~ $i $str^*} {
+				res = $res $i
+			}
+		}
+		result $res
+	}
 }
 
 fn complete_git_hook curline partial {
@@ -29,7 +33,7 @@ fn complete_git_hook curline partial {
 			%fsplit ' ' |> %last |> es_complete_trim
 	}) {
 		if {~ $prevtok 'git'} {
-			result <={complete_git_filter_list $partial}
+			result <={complete_git_filter_list $partial |> es_complete_remove_empty_results}
 		} {
 			result <={complete_files $partial}
 		}

@@ -298,7 +298,9 @@ fn %complete_cmd_hook cmdname completefn {
 }
 
 # set this to true if you want to list executables before functions
-es_completion_executables_first = true
+if {~ $#es_completion_executables_first 0} {
+	es_completion_executables_first = true
+}
 
 # %complete returns a list of possible completions based on the context
 # at this time it's pretty simple, completing executables if start is 1
