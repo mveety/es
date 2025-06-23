@@ -7,6 +7,8 @@ if {~ $*(1) -d} {
 
 assert {gte $#* 1}
 
+ignore = ( 'complete_git.es' )
+
 libsrc = <={if {~ $#* 1} {
 				let(al=$:1) {
 					if {~ $al($#al) '/'} {
@@ -24,7 +26,7 @@ libs = <={let (r=;dl=;f=) {
 			for(i = $libsrc/*.es){
 				dl = <={%fsplit '/' $i}
 				f = $dl($#dl)
-				r = $r $f
+				if {! ~ $f $ignore} { r = $r $f }
 			}
 			result $r
 		}

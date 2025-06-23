@@ -152,7 +152,7 @@ glom.o : glom.c es.h config.h stdenv.h gc.h esconfig.h
 input.o : input.c es.h config.h stdenv.h input.h esconfig.h
 heredoc.o : heredoc.c es.h config.h stdenv.h gc.h input.h syntax.h esconfig.h
 list.o : list.c es.h config.h stdenv.h gc.h esconfig.h
-main.o : main.c es.h config.h stdenv.h esconfig.h
+main.o : main.c es.h config.h stdenv.h esconfig.h token.h
 match.o : match.c es.h config.h stdenv.h esconfig.h
 open.o : open.c es.h config.h stdenv.h esconfig.h
 opt.o : opt.c es.h config.h stdenv.h esconfig.h

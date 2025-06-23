@@ -2,6 +2,7 @@
 
 #include "es.h"
 #include "gc.h"
+#include "token.h"
 
 Boolean gcverbose	= FALSE;	/* -G */
 Boolean gcinfo		= FALSE;	/* -I */
@@ -13,10 +14,10 @@ Boolean assertions = FALSE;		/* -A */
 
 extern int optind;
 extern char *optarg;
+extern int yydebug;
 
 /* extern int isatty(int fd); */
 extern char **environ;
-
 
 /* checkfd -- open /dev/null on an fd if it is closed */
 static void checkfd(int fd, OpenKind r) {
@@ -131,6 +132,8 @@ int main(int argc, char **argv) {
 	}
 	if (*argv[0] == '-')
 		loginshell = TRUE;
+
+	/* yydebug = 1; */
 
 	while ((c = getopt(argc, argv, "eilxXvnpPodsAVc:?GILNg:S:C:")) != EOF)
 		switch (c) {
