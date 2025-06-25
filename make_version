@@ -6,7 +6,7 @@ tag=`git describe --tags --abbrev=0`
 branch=`git rev-parse --abbrev-ref HEAD`
 patchset="mveety"
 commit=`git log -n1 --format="%h"`
-versionstring="$branch-$patchset-$commit"
+versionstring="$patchset-$branch-$commit"
 builddate=`date`
 buildhost=`uname -n`
 builduser=`whoami`
