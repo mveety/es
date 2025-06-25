@@ -79,7 +79,7 @@ fn complete_git_setup {
 					# echo 'making ' $comppath/complete_git/$i
 					touch $comppath/complete_git/$i
 				}
-				complete_git_use_list = true
+				complete_git_use_list = false
 				return <=true
 			}
 		}
