@@ -7,7 +7,8 @@ if {~ $*(1) -d} {
 
 assert {gte $#* 1}
 
-ignore = ( 'complete_git.es' )
+#ignore = ( 'complete_git.es' )
+ignore = ()
 
 libsrc = <={if {~ $#* 1} {
 				let(al=$:1) {
