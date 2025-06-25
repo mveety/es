@@ -3,7 +3,7 @@ library complete_git (init completion)
 if {~ $#complete_git_use_list 0} {
 	if {~ <={access -r -1 -d $libraries/complete_git |> %count} 0} {
 		echo 'warning: list completer is non-functional. run complete_git_setup for'
-		echo 'warning: a supported configuration.'
+		echo '         a supported configuration.'
 		complete_git_use_list = true
 	} {
 		complete_git_use_list = false
