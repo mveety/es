@@ -44,4 +44,5 @@ gmon.out
 *.ps
 *.pdf
 other/*
+libraries/complete_git/*
 

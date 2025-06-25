@@ -2,6 +2,7 @@
 /* stdgetenv is based on the FreeBSD getenv */
 
 #include "es.h"
+#include "readline/readline.h"
 #include <string.h>
 #include "input.h"
 
@@ -368,6 +369,9 @@ es_complete_hook(const char *text, int start, int end)
 	if(completer == NULL)
 		return NULL;
 	rl_attempted_completion_over = 1;
+	rl_sort_completion_matches = 0;
+	rl_ignore_completion_duplicates = 1;
+	rl_filename_completion_desired = 1;
 	es_rl_start = start;
 	es_rl_end = end;
 	return rl_completion_matches(text, run_es_completer);
@@ -822,6 +826,7 @@ extern void initinput(void) {
 	rl_special_prefixes = "$";
 	rl_completer_quote_characters = "'";
 	rl_readline_name = "es-mveety";
+
 	rl_attempted_completion_function = es_complete_hook;
 #endif
 }
