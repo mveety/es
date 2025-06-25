@@ -2,10 +2,16 @@
 
 library autoinit (init libraries)
 
-assert2 autoinit {gt $#libraries 0}
+if {~ $#libraries 0 } {
+	throw error autoinit '$libraries must be set appropriately'
+}
 
 if {~ $#autoinit_echo_load 0} {
 	autoinit_echo_load = false
+}
+
+if {~ $#esrcd_debugging 0} {
+	esrcd_debugging = false
 }
 
 if {~ $#autoloaded 0} {
@@ -18,6 +24,10 @@ if {~ $#autoinit_start_automatically 0} {
 
 fn esrcd_getall {
 	result $libraries/esrc.d/*.es
+}
+
+fn esrcd_get_dir {
+	access -r -1 -d $libraries/esrc.d
 }
 
 fn esrcd_executable_scripts {
@@ -37,6 +47,13 @@ fn esrcd_find_by_name name {
 		(*/$name.es) { return $matchexpr }
 	)
 	throw error $0 $name^' not found'
+}
+
+fn esrcd_delete be_verbose file {
+	if {! access -f $file } { throw error $0 $file^' not found' }
+	if {! access -wf $file } { throw error $0 $file^' is read-only' }
+	if {$be_verbose || $esrcd_debugging } { echo 'rm '^$file }
+	if {! $esrcd_debugging } { rm $file }
 }
 
 fn esrcd_last list {
@@ -115,15 +132,18 @@ usage: autoinit [-v|-h] command [script]
         -v -- be more verbose
         -h -- print this message
     commands:
-        load-all            -- load all enabled scripts
-        load [-f] [script]  -- load any script (-f to force)
-        enable [script]     -- enable a script
-        disable [script]    -- disable a script
-        list-all            -- list all available scripts
-        list-enabled        -- list all enabled scripts
-        list-loaded         -- list all loaded scripts
-        file [script]       -- print the path to a script
-        help                -- print this message
+        load-all             -- load all enabled scripts
+        load [-f] [script]   -- load any script (-f to force)
+        enable [script]      -- enable a script
+        disable [script]     -- disable a script
+        list-all             -- list all available scripts
+        list-enabled         -- list all enabled scripts
+        list-loaded          -- list all loaded scripts
+        file [script]        -- print the path to a script
+        new [script]         -- print the path to a new script
+        delete [-y] [script] -- delete a script
+        dir                  -- list esrc.d directories
+        help                 -- print this message
 %%end
 }
 
@@ -133,10 +153,24 @@ fn esrcd_print args {
 }
 
 fn autoinit command arg {
-	if {~ $command -h} {
-		esrcd_help
-		return <=true
-	}
+	match $command (
+		(-h) {
+			esrcd_help
+			return <=true
+		}
+		([+-]d) {
+			match $matchexpr (
+				(-*) { esrcd_debugging = false }
+				(+*) { esrcd_debugging = true }
+			)
+			command = $arg(1)
+			arg = $arg(2 ...)
+		}
+
+	)
+
+	if {$esrcd_debugging} { echo 'autoinit: debugging enabled' >[1=2] }
+
 	local (
 			be_verbose = <={
 				if {~ $command -v} {
@@ -148,6 +182,7 @@ fn autoinit command arg {
 				}
 			}
 			force_load = false
+			yes = false
 	) {
 		if {~ $#command 0} { esrcd_usage }
 		match $command (
@@ -182,6 +217,48 @@ fn autoinit command arg {
 			(file) {
 				if {! ~ $#arg 1} { esrcd_usage }
 				esrcd_find_by_name $arg |> esrcd_print
+			}
+			(new) {
+				if {! ~ $#arg 1} { esrcd_usage }
+				catch @ e type msg {
+					if {! ~ $e error} { throw $e $type $msg }
+					if {! ~ $type esrcd_find_by_name} { throw $e $type $msg }
+					if {! ~ $msg $arg^' not found'} { throw $e $type $msg }
+					esrcd_print <={esrcd_get_dir}^'/'^$arg^'.es'
+				} {
+					esrcd_find_by_name $arg
+					throw error $0 $arg^' already exists'
+				}
+			}
+			(delete) {
+				if {! gte $#arg 1} { esrcd_usage }
+				if {~ $arg(1) -y} {
+					yes = true
+					arg = $arg(2 ...)
+				}
+				if {! ~ $#arg 1} { esrcd_usage }
+				catch @ e type msg {
+					if {! ~ $e error} { throw $e $type $msg }
+					match $type (
+						(esrcd_find_by_name) { throw $e $0 $msg }
+						(esrcd_delete) { throw $e $0 'unable to delete '^$arg }
+						* { throw $e $type $msg }
+					)
+				} {
+					local (file = <={esrcd_find_by_name $arg}; r = 'n') {
+						if {! $yes} {
+							echo -n 'delete '^$arg^'?[no] '
+							r = <=%read
+							if {~ $r [yY]*} { yes = true }
+						}
+						esrcd_delete $be_verbose $file
+					}
+				}
+			}
+			(dir*) {
+				for (i = $libraries/esrc.d) {
+					if {access -r -d $i} { esrcd_print $i }
+				}
 			}
 			(help) {
 				esrcd_help
