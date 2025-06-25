@@ -27,7 +27,10 @@ fn esrcd_getall {
 }
 
 fn esrcd_get_dir {
-	access -r -1 -d $libraries/esrc.d
+	for (i = $libraries/esrc.d) {
+		if {access -w -d $i } { return $i }
+	}
+	throw error $0 'no writable esrc.d'
 }
 
 fn esrcd_executable_scripts {
@@ -224,7 +227,14 @@ fn autoinit command arg {
 					if {! ~ $e error} { throw $e $type $msg }
 					if {! ~ $type esrcd_find_by_name} { throw $e $type $msg }
 					if {! ~ $msg $arg^' not found'} { throw $e $type $msg }
-					esrcd_print <={esrcd_get_dir}^'/'^$arg^'.es'
+					catch @ e type msg {
+						if {~ $e error && ~ $type esrcd_get_dir} {
+							throw error $0 $msg
+						}
+						throw $e $type $msg
+					} {
+						esrcd_print <={esrcd_get_dir}^'/'^$arg^'.es'
+					}
 				} {
 					esrcd_find_by_name $arg
 					throw error $0 $arg^' already exists'
