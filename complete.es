@@ -121,6 +121,20 @@ fn complete_variables prefix partial_name {
 	result $prefix^<={complete_all_variables '' <={~~ $partial_name $prefix^*}}
 }
 
+fn complete_primitives prefix partial {
+	local (
+		allprims = <={if {$prefix} { result '$&'^<=$&primitives } { $&primitives }}
+		res=
+	) {
+		for (i = $allprims) {
+			if {~ $i $partial^*} {
+				res = $res $i
+			}
+		}
+		result $res
+	}
+}
+
 fn es_complete_strip_leading_whitespace str {
 	local(strl=$:str;i=1){
 		for(c = $strl){
@@ -311,11 +325,19 @@ if {~ $#es_completion_executables_first 0} {
 # indexed starting at 1 for cultural compatibility with es.
 fn %complete curline partial start end {
 	if {~ $partial '$'^*} {
-		if {~ <={%elem 2 $:partial} '#' '^' '"' ':'} {
-			result <={complete_variables '$'^<={%elem 2 $:partial} $partial}
-		} {
-			result <={complete_variables '$' $partial}
-		}
+		match <={%elem 2 $:partial} (
+			('#' '^' '"' ':') {
+				result <={complete_variables '$'^<={%elem 2 $:partial} $partial}
+			}
+			('&') {
+				result <={complete_primitives true $partial}
+			}
+			* {
+				result <={complete_variables '$' $partial}
+			}
+		)
+	} {~ $curline *^'$&'} {
+		result <={complete_primitives false $partial}
 	} {~ $start 1 || es_complete_is_command $curline} {
 		if {$es_completion_executables_first} {
 			result <={complete_executables $partial} <={complete_functions $partial}
@@ -348,6 +370,23 @@ fn es_complete_cc_checkstate linebuf text start end {
 	} {
 		result <=false
 	}
+}
+
+fn es_complete_format_list list {
+	local(res=){
+		for (i = $list) {
+			res = $res ''''^$i^''''
+		}
+		result '('^$^res^')'
+	}
+}
+
+fn es_complete_dump_state {
+	echo 'es_complete_current_curline = '''^$es_complete_current_curline^''''
+	echo 'es_complete_current_partial = '''^$es_complete_current_partial^''''
+	echo 'es_complete_current_start = '^$es_complete_current_start
+	echo 'es_complete_current_end = '^$es_complete_current_end
+	echo 'es_complete_current_completion = '^<={es_complete_format_list $es_complete_current_completion}
 }
 
 # %core_completer is the hook es uses to call into the completion machinery.
