@@ -9,11 +9,6 @@ fn lastelem elems {
 	result $elems($#elems)
 }
 
-fn estest_usage prgm {
-	echo 'usage: '^$prgm^' [-xdv] [-p path]'
-	exit 1
-}
-
 esbin = <={
 	if {access -xf ./es} {
 		result ./es
@@ -44,7 +39,10 @@ parseargs @ arg {
 		}
 		* { usage }
 	)
-} @{$fn-estest_usage $dollar0} $*
+} @{
+	echo 'usage: '^$dollar0^' [-xdv] [-p path]'
+	exit 1
+} $*
 
 fn output {
 	if {$print_failute_stderr} {
