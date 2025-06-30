@@ -9,6 +9,11 @@ fn lastelem elems {
 	result $elems($#elems)
 }
 
+fn estest_usage prgm {
+	echo 'usage: '^$prgm^' [-x] [-d] [-v] [-p path]'
+	exit 1
+}
+
 esbin = <={
 	if {access -xf ./es} {
 		result ./es
@@ -17,53 +22,38 @@ esbin = <={
 	}
 }
 
-testpath = <={
-	if {~ $#* 0} {
-		result 'tests'
-	} {
-		if {~ $*(1) */} {
-			result <={~~ $*(1) */}
-		} {
-			result $*(1)
-		}
-		* = $*(2 ...)
+runbin = false
+testoutput = false
+estest_debugging = false
+testpath = 'tests'
+
+lets (i = 1; curargs = $*) {
+	while {lte $i $#*} {
+		match $curargs(1) (
+			(-x) { runbin = true }
+			(-v) { testoutput = true }
+			(-d) { estest_debugging = true }
+			(-p) {
+				testpath = <={
+					let(tmp = $curargs(2)) {
+						if {~ $#tmp 0} { estest_usage $0 }
+						if {~ $tmp '-'^*} { estest_usage $0 }
+						curargs = $curargs(2 ...)
+						i = <={add $i 1}
+						if {~ $tmp */} {
+							result <={~~ $tmp */}
+						} {
+							result $tmp
+						}
+					}
+				}
+			}
+			('') { result '' }
+			* { estest_usage $0 }
+		)
+		curargs = $curargs(2 ...)
+		i = <={add $i 1}
 	}
-}
-
-info 'build: '^$buildstring
-info 'running tests in '^$testpath^'/'
-
-testfiles = <={
-	process $testpath/*.es (
-		(*/test_*) {
-			if {access -xf $matchexpr} {
-				result $matchexpr
-			} {
-				result
-			}
-		}
-		(*/util_*) {
-			if {access -xf $matchexpr} {
-				echo >[2=1] 'loading '^$matchexpr
-				. $matchexpr
-			}
-			result
-		}
-		* { result }
-	)
-}
-
-match $#testfiles (
-	0 { info 'found no tests' }
-	1 { info 'found 1 test' }
-	* { info 'found '^$matchexpr^' tests' }
-)
-
-if {~ $#print_failure_output 0} {
-	print_failure_output = true
-}
-if {~ $#print_failure_stderr 0} {
-	print_failure_stderr = true
 }
 
 fn output {
@@ -126,9 +116,55 @@ fn run_all_tests {
 	}
 }
 
-echo -n 'run all tests [yes]? '
-r = <=%read
-if {~ $r '' || ~ $r [yY]*} {
-	run_all_tests
-}
+if {$runbin} {
+	debugarg = <={ if {$estest_debugging} { result '-d' } { result '' }}
+	testoutputarg = <={ if {$testoutput} { result '-v' } { result '' }}
+	echo -n 'running:' $esbin
+	echo -n ' '^$0
+	if {$estest_debugging} { echo -n ' -d' }
+	if {$testoutput} { echo -n ' -v' }
+	echo ' -p '^$testpath
+	$esbin $0 $debugarg $testoutputarg -p $testpath
+} {
+	info 'build: '^$buildstring
+	info 'running tests in '^$testpath^'/'
 
+	testfiles = <={
+		process $testpath/*.es (
+			(*/test_*) {
+				if {access -xf $matchexpr} {
+					result $matchexpr
+				} {
+					result
+				}
+			}
+			(*/util_*) {
+				if {access -xf $matchexpr} {
+					echo >[2=1] 'loading '^$matchexpr
+					. $matchexpr
+				}
+				result
+			}
+			* { result }
+		)
+	}
+
+	match $#testfiles (
+		0 { info 'found no tests' }
+		1 { info 'found 1 test' }
+		* { info 'found '^$matchexpr^' tests' }
+	)
+
+	if {~ $#print_failure_output 0} {
+		print_failure_output = true
+	}
+	if {~ $#print_failure_stderr 0} {
+		print_failure_stderr = true
+	}
+
+	echo -n 'run all tests [yes]? '
+	r = <=%read
+	if {~ $r '' || ~ $r [yY]*} {
+		run_all_tests
+	}
+}
