@@ -117,12 +117,12 @@ fn run_all_tests {
 if {$runbin} {
 	debugarg = <={ if {$estest_debugging} { result '-d' } { result '' }}
 	testoutputarg = <={ if {$testoutput} { result '-v' } { result '' }}
-	echo -n 'running:' $esbin
+	echo -n 'running:' $esbin '--'
 	echo -n ' '^$0
 	if {$estest_debugging} { echo -n ' -d' }
 	if {$testoutput} { echo -n ' -v' }
 	echo ' -p '^$testpath
-	$esbin $0 $debugarg $testoutputarg -p $testpath
+	$esbin -- $0 $debugarg $testoutputarg -p $testpath
 } {
 	info 'build: '^$buildstring
 	info 'running tests in '^$testpath^'/'
