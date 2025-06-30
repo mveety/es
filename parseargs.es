@@ -13,7 +13,9 @@ fn es_canonicalize_args args {
 					res = $res $i
 				}
 			} {
-				res = $res $i
+				if {! ~ <={%count $:i} 0} {
+					res = $res $i
+				}
 			}
 		}
 		result $res

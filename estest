@@ -10,7 +10,7 @@ fn lastelem elems {
 }
 
 fn estest_usage prgm {
-	echo 'usage: '^$prgm^' [-x] [-d] [-v] [-p path]'
+	echo 'usage: '^$prgm^' [-xdv] [-p path]'
 	exit 1
 }
 
@@ -22,39 +22,29 @@ esbin = <={
 	}
 }
 
+dollar0 = $0
 runbin = false
 testoutput = false
 estest_debugging = false
 testpath = 'tests'
 
-lets (i = 1; curargs = $*) {
-	while {lte $i $#*} {
-		match $curargs(1) (
-			(-x) { runbin = true }
-			(-v) { testoutput = true }
-			(-d) { estest_debugging = true }
-			(-p) {
-				testpath = <={
-					let(tmp = $curargs(2)) {
-						if {~ $#tmp 0} { estest_usage $0 }
-						if {~ $tmp '-'^*} { estest_usage $0 }
-						curargs = $curargs(2 ...)
-						i = <={add $i 1}
-						if {~ $tmp */} {
-							result <={~~ $tmp */}
-						} {
-							result $tmp
-						}
-					}
+parseargs @ arg {
+	match $arg (
+		(-x) { runbin = true }
+		(-v) { testoutput = true }
+		(-d) { estest_debugging = true }
+		(-p) {
+			testpath = <={
+				if {~ <=flagarg */} {
+					result <={~~ <=flagarg */}
+				} {
+					result <=flagarg
 				}
 			}
-			('') { result '' }
-			* { estest_usage $0 }
-		)
-		curargs = $curargs(2 ...)
-		i = <={add $i 1}
-	}
-}
+		}
+		* { usage }
+	)
+} @{$fn-estest_usage $dollar0} $*
 
 fn output {
 	if {$print_failute_stderr} {
