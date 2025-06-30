@@ -135,8 +135,9 @@ int main(int argc, char **argv) {
 
 	/* yydebug = 1; */
 
-	while ((c = getopt(argc, argv, "eilxXvnpPodsAVc:?GILNg:S:C:")) != EOF)
+	while ((c = getopt(argc, argv, "+eilxXvnpPodsAVc:?GILNg:S:C:")) != EOF)
 		switch (c) {
+		case '+': break; /* for god damn gnu */
 		case 'c':	cmd = optarg;			break;
 		case 'e':	runflags |= eval_exitonfalse;	break;
 		case 'i':	runflags |= run_interactive;	break;
