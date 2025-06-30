@@ -1,6 +1,8 @@
 #!/usr/bin/env es
 # vi: ft=es
 
+. parseargs.es
+
 fn info {
 	echo '>>> info:' $*
 }
@@ -30,10 +32,10 @@ parseargs @ arg {
 		(-d) { estest_debugging = true }
 		(-p) {
 			testpath = <={
-				if {~ <=flagarg */} {
-					result <={~~ <=flagarg */}
+				if {~ $flagarg */} {
+					result <={~~ $flagarg */}
 				} {
-					result <=flagarg
+					result $flagarg
 				}
 			}
 		}

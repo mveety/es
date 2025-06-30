@@ -29,7 +29,8 @@ fn es_run_parseargs argfn usagefn args {
 		cur =
 		next =
 		advance = 1
-		fn-flagarg = @{
+		flagarg = ''
+		get-flagarg = @{
 			if {~ $next '-'^*} {
 				throw parseargs_error
 			} {~ $#next 0 } {
