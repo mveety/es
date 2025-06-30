@@ -22,12 +22,16 @@ runbin = false
 testoutput = false
 estest_debugging = false
 testpath = 'tests'
+print_failure_output = true
+print_failure_stderr = false
 
 parseargs @ arg {
 	match $arg (
+		(-h) { usage }
 		(-x) { runbin = true }
 		(-v) { testoutput = true }
 		(-d) { estest_debugging = true }
+		(-q) { print_failure_output = false; testoutput = false }
 		(-p) {
 			testpath = <={
 				if {~ $flagarg */} {
@@ -40,13 +44,13 @@ parseargs @ arg {
 		* { usage }
 	)
 } @{
-	echo 'usage: '^$dollar0^' [-xdv] [-p path]'
+	echo 'usage: '^$dollar0^' [-xdvq] [-p path]'
 	exit 1
 } $*
 
 fn output {
-	if {$print_failute_stderr} {
-		echo >[2=1] $*
+	if {$print_failure_stderr} {
+		echo >[1=2] $*
 	} {
 		echo $*
 	}
@@ -83,6 +87,12 @@ fn run_test_file file {
  		echo -n 'test '^$testname^': '
 		if {$passed} {
 			echo 'passed!'
+			if {$testoutput} {
+				output '>>> '^$testname^' output:'
+				for(outline = ``(\n) {cat $test_log}) {
+					output '>>>>>> '^$^outline
+				}
+			}
 		} {
 			echo 'failed!'
 			echo '>>> exception: '^$^test_exception
@@ -142,13 +152,6 @@ if {$runbin} {
 		1 { info 'found 1 test' }
 		* { info 'found '^$matchexpr^' tests' }
 	)
-
-	if {~ $#print_failure_output 0} {
-		print_failure_output = true
-	}
-	if {~ $#print_failure_stderr 0} {
-		print_failure_stderr = true
-	}
 
 	echo -n 'run all tests [yes]? '
 	r = <=%read
