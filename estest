@@ -132,8 +132,7 @@ if {$runbin} {
 	if {$always_yes} { cmdline = $cmdline '-y' }
 	cmdline = $cmdline '-p' $testpath
 	echo 'running:' $cmdline
-	$cmdline
-	# $esbin -- $0 $debugarg $testoutputarg -p $testpath
+	exit <={$cmdline}
 } {
 	info 'build: '^$buildstring
 	info 'using '^<={%gcstats |> %first}^' garbage collector'
@@ -143,14 +142,22 @@ if {$runbin} {
 		process $testpath/*.es (
 			(*/test_*) {
 				if {access -xf $matchexpr} {
+					if {$estest_debugging} {
+						info 'found '^$matchexpr
+					}
 					result $matchexpr
 				} {
+					if {$estest_debugging} {
+						info 'ignoring '^$matchexpr
+					}
 					result
 				}
 			}
 			(*/util_*) {
 				if {access -xf $matchexpr} {
-					echo >[2=1] 'loading '^$matchexpr
+					if {$estest_debugging} {
+						info 'loading '^$matchexpr
+					}
 					. $matchexpr
 				}
 				result
