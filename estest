@@ -34,7 +34,10 @@ always_yes = false
 		(-v) { testoutput = true }
 		(-d) { estest_debugging = true }
 		(-q) { print_failure_output = false; testoutput = false }
-		(-A) { extra_es_args = true; done }
+		(-A) {
+			if {! $runbin} { usage }
+			extra_es_args = true; done
+		}
 		(-y) { always_yes = true }
 		(-p) {
 			testpath = <={
