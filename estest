@@ -9,11 +9,11 @@ fn lastelem elems {
 	result $elems($#elems)
 }
 
-esbin = <={
-	if {access -xf ./es} {
-		result ./es
+fn output {
+	if {$print_failure_stderr} {
+		echo >[1=2] $*
 	} {
-		result <={access -1n es -xf $path}
+		echo $*
 	}
 }
 
@@ -26,6 +26,7 @@ print_failure_output = true
 print_failure_stderr = false
 extra_es_args = false
 always_yes = false
+srcdir = '.'
 
 (_ _ restargs) = <={parseargs @ arg {
 	match $arg (
@@ -39,6 +40,21 @@ always_yes = false
 			extra_es_args = true; done
 		}
 		(-y) { always_yes = true }
+		(-S) {
+			srcdir = <={
+				if {~ $flagarg */ } {
+					result <={~~ $flagarg */}
+				} {
+					result $flagarg
+				}
+			}
+			if {~ <={access -r1d $srcdir |> %count} 0 } {
+				throw error $dollar0 $srcdir^' is not accessible'
+			}
+			if {~ $testpath 'tests'} {
+				testpath = $srcdir/tests
+			}
+		}
 		(-p) {
 			testpath = <={
 				if {~ $flagarg */} {
@@ -51,15 +67,15 @@ always_yes = false
 		* { usage }
 	)
 } @{
-	echo 'usage: '^$dollar0^' [-xdvqy] [-p path] [-A es arguments]'
+	echo 'usage: '^$dollar0^' [-xdvqy] [-S srcdir] [-p path] [-A es arguments]'
 	exit 1
 } $*}
 
-fn output {
-	if {$print_failure_stderr} {
-		echo >[1=2] $*
+esbin = <={
+	if {access -xf $srcdir/es} {
+		result $srcdir/es
 	} {
-		echo $*
+		result <={access -1n es -xf $path}
 	}
 }
 
@@ -130,6 +146,7 @@ if {$runbin} {
 	if {$estest_debugging} { cmdline = $cmdline '-d' }
 	if {$testoutput} { cmdline = $cmdline '-v' }
 	if {$always_yes} { cmdline = $cmdline '-y' }
+	if {! ~ $srcdir '.'} {cmdline = $cmdline '-S' $srcdir}
 	cmdline = $cmdline '-p' $testpath
 	echo 'running:' $cmdline
 	exit <={$cmdline}
