@@ -24,14 +24,18 @@ estest_debugging = false
 testpath = 'tests'
 print_failure_output = true
 print_failure_stderr = false
+extra_es_args = false
+always_yes = false
 
-parseargs @ arg {
+(_ _ restargs) = <={parseargs @ arg {
 	match $arg (
 		(-h) { usage }
 		(-x) { runbin = true }
 		(-v) { testoutput = true }
 		(-d) { estest_debugging = true }
 		(-q) { print_failure_output = false; testoutput = false }
+		(-A) { extra_es_args = true; done }
+		(-y) { always_yes = true }
 		(-p) {
 			testpath = <={
 				if {~ $flagarg */} {
@@ -44,9 +48,9 @@ parseargs @ arg {
 		* { usage }
 	)
 } @{
-	echo 'usage: '^$dollar0^' [-xdvq] [-p path]'
+	echo 'usage: '^$dollar0^' [-xdvqy] [-p path] [-A es arguments]'
 	exit 1
-} $*
+} $*}
 
 fn output {
 	if {$print_failure_stderr} {
@@ -117,14 +121,18 @@ fn run_all_tests {
 if {$runbin} {
 	debugarg = <={ if {$estest_debugging} { result '-d' } { result '' }}
 	testoutputarg = <={ if {$testoutput} { result '-v' } { result '' }}
-	echo -n 'running:' $esbin '--'
-	echo -n ' '^$0
-	if {$estest_debugging} { echo -n ' -d' }
-	if {$testoutput} { echo -n ' -v' }
-	echo ' -p '^$testpath
-	$esbin -- $0 $debugarg $testoutputarg -p $testpath
+	cmdline = $esbin
+	if {$extra_es_args} { cmdline = $cmdline $restargs }
+	cmdline = $cmdline '--' $0
+	if {$estest_debugging} { cmdline = $cmdline '-d' }
+	if {$testoutput} { cmdline = $cmdline '-v' }
+	cmdline = $cmdline '-p' $testpath
+	echo 'running:' $cmdline
+	$cmdline
+	# $esbin -- $0 $debugarg $testoutputarg -p $testpath
 } {
 	info 'build: '^$buildstring
+	info 'using '^<={%gcstats |> %first}^' garbage collector'
 	info 'running tests in '^$testpath^'/'
 
 	testfiles = <={
@@ -153,9 +161,13 @@ if {$runbin} {
 		* { info 'found '^$matchexpr^' tests' }
 	)
 
-	echo -n 'run all tests [yes]? '
-	r = <=%read
-	if {~ $r '' || ~ $r [yY]*} {
+	if {$always_yes} {
 		run_all_tests
+	} {
+		echo -n 'run all tests [yes]? '
+		r = <=%read
+		if {~ $r '' || ~ $r [yY]*} {
+			run_all_tests
+		}
 	}
 }
