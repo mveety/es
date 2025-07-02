@@ -126,6 +126,7 @@ if {$runbin} {
 	cmdline = $cmdline '--' $0
 	if {$estest_debugging} { cmdline = $cmdline '-d' }
 	if {$testoutput} { cmdline = $cmdline '-v' }
+	if {$always_yes} { cmdline = $cmdline '-y' }
 	cmdline = $cmdline '-p' $testpath
 	echo 'running:' $cmdline
 	$cmdline
