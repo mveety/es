@@ -83,6 +83,17 @@ esbin = <={
 	}
 }
 
+fn run_subproc_test testname testfn test_log {
+	info 'running '^$testname^'in pid '^$pid > $test_log
+	catch @ e {
+		echo 'got exception: '^$e
+		exit 1
+	} {
+		$testfn >> $test_log
+	}
+	exit 0
+}
+
 fn run_test_file file {
 	assert2 $0 {eq $#file 1}
 	lets (
@@ -91,10 +102,14 @@ fn run_test_file file {
 		test_exception=
 		test_log='/tmp/es_'^$pid^'_test_'^$testname^'.log'
 		tfp = 'test_'^$testname^'_fail_pass'
+		tsp = 'test_'^$testname^'_subprocess'
 	) {
 		. $file
 		if {~ <={%count $$tfp} 0} {
 			$tfp = false
+		}
+		if {~ <={%count $$tsp} 0} {
+			$tsp = false
 		}
 		catch @ e {
 			test_exception = $e
@@ -104,7 +119,13 @@ fn run_test_file file {
 				passed = false
 			}
 		} {
-			run_test_$testname > $test_log
+			if {$$tsp} {
+				if {! es -c 'run_subproc_test '^$testname^' run_test_'^$testname^' '^$test_log} {
+					throw error run_subproc 'returned false'
+				}
+			} {
+				run_test_$testname > $test_log
+			}
 			if {$$tfp} {
 				passed = false
 			} {
