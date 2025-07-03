@@ -97,10 +97,14 @@ userlib-install : es
 syslib-install : es
 	./es -N libinstall.es $(srcdir)/libraries $(datarootdir)/es
 
-test	: trip
+
+test	: estest
 
 trip	: es $(srcdir)/trip.es
 	./es < $(srcdir)/trip.es
+
+estest : es
+	./es -- ./estest -xy
 
 src	:
 	@echo ${OTHER} ${CFILES} ${HFILES}
