@@ -71,6 +71,10 @@ srcdir = '.'
 	exit 1
 } $*}
 
+if {! access -rd $testpath} {
+	throw error $dollar0 $testpath^' is not accessible'
+}
+
 esbin = <={
 	if {access -xf $srcdir/es} {
 		result $srcdir/es
