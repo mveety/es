@@ -33,7 +33,7 @@ subprocess_default = false
 
 (_ _ restargs) = <={parseargs @ arg {
 	match $arg (
-		(-h) { usage }
+		(-h) { fullhelp = true ; usage }
 		(-x) {
 			runbin = true
 			if {has_argument} {
@@ -78,7 +78,6 @@ subprocess_default = false
 				}
 			}
 		}
-		(-h) { fullhelp = true ; usage }
 		* { usage }
 	)
 } @{
@@ -216,6 +215,7 @@ if {$runbin} {
 	if {$verbose} { cmdline = $cmdline '-v' }
 	if {$testoutput} { cmdline = $cmdline '-V' }
 	if {$always_yes} { cmdline = $cmdline '-y' }
+	if {$subprocess_default} { cmdline = $cmdline '-s' }
 	if {! ~ $srcdir '.'} {cmdline = $cmdline '-S' $srcdir}
 	cmdline = $cmdline '-b' $esbin
 	cmdline = $cmdline '-p' $testpath
