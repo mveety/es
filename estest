@@ -27,16 +27,28 @@ print_failure_stderr = false
 extra_es_args = false
 always_yes = false
 srcdir = '.'
+fullhelp = false
+verbose = false
 
 (_ _ restargs) = <={parseargs @ arg {
 	match $arg (
 		(-h) { usage }
-		(-x) { runbin = true }
-		(-v) { testoutput = true }
+		(-x) {
+			runbin = true
+			if {has_argument} {
+				esbin = $flagarg
+			}
+		}
+		(-b) {
+			if {access -xf $flagarg} {
+				esbin = $flagarg
+			}
+		}
+		(-v) { verbose = true }
+		(-V) { testoutput = true }
 		(-d) { estest_debugging = true }
 		(-q) { print_failure_output = false; testoutput = false }
 		(-A) {
-			if {! $runbin} { usage }
 			extra_es_args = true; done
 		}
 		(-y) { always_yes = true }
@@ -64,29 +76,54 @@ srcdir = '.'
 				}
 			}
 		}
+		(-h) { fullhelp = true ; usage }
 		* { usage }
 	)
 } @{
-	echo 'usage: '^$dollar0^' [-xdvqy] [-S srcdir] [-p path] [-A es arguments]'
-	exit 1
+	echo 'usage: '^$dollar0^' [-dvVqy] [-x [es binary]] [-S srcdir] [-p path] [-A es arguments]'
+	if {$fullhelp} {
+		cat << '%%end'
+    flags:
+        -d -- enable debugging
+        -v -- verbose
+        -V -- show test output in all cases
+        -q -- quiet
+        -y -- automatically answer yes
+        -h -- show this message
+
+        -x [es binary]  -- run estest in a different instance of es
+        -S srcdir       -- es source directory
+        -p path         -- test cases path
+        -A es arguments -- arguments to pass to instances of es
+
+        -b es binary    -- set es binary
+%%end
+		exit 0
+	} {
+		exit 1
+	}
 } $*}
 
 if {! access -rd $testpath} {
 	throw error $dollar0 $testpath^' is not accessible'
 }
 
-esbin = <={
-	if {access -xf $srcdir/es} {
-		result $srcdir/es
-	} {
-		result <={access -1n es -xf $path}
+if {~ $#esbin 0} {
+	esbin = <={
+		if {access -xf $srcdir/es} {
+			result $srcdir/es
+		} {
+			result <={access -1n es -xf $path}
+		}
 	}
 }
 
-fn run_subproc_test testname testfn test_log {
+fn run_subproc_test testname testfn test_log tfp {
 	info 'running '^$testname^'in pid '^$pid > $test_log
 	catch @ e {
-		echo 'got exception: '^$e
+		if {! $$tfp} {
+			echo 'got exception: '^$e
+		}
 		exit 1
 	} {
 		$testfn >> $test_log
@@ -109,7 +146,7 @@ fn run_test_file file {
 			$tfp = false
 		}
 		if {~ <={%count $$tsp} 0} {
-			$tsp = false
+			$tsp = true
 		}
 		catch @ e {
 			test_exception = $e
@@ -120,7 +157,11 @@ fn run_test_file file {
 			}
 		} {
 			if {$$tsp} {
-				if {! es -c 'run_subproc_test '^$testname^' run_test_'^$testname^' '^$test_log} {
+				escmd = $esbin
+				if {$extra_es_args} { escmd = $escmd $restargs }
+				escmd = $escmd -c 'run_subproc_test '^$testname^' run_test_'^$testname^' '^$test_log^' '^$tfp
+				if {$estest_debugging} { info 'running: ' $escmd }
+				if {! $escmd} {
 					throw error run_subproc 'returned false'
 				}
 			} {
@@ -169,10 +210,13 @@ if {$runbin} {
 	if {$extra_es_args} { cmdline = $cmdline $restargs }
 	cmdline = $cmdline '--' $0
 	if {$estest_debugging} { cmdline = $cmdline '-d' }
-	if {$testoutput} { cmdline = $cmdline '-v' }
+	if {$verbose} { cmdline = $cmdline '-v' }
+	if {$testoutput} { cmdline = $cmdline '-V' }
 	if {$always_yes} { cmdline = $cmdline '-y' }
 	if {! ~ $srcdir '.'} {cmdline = $cmdline '-S' $srcdir}
+	cmdline = $cmdline '-b' $esbin
 	cmdline = $cmdline '-p' $testpath
+	if {$extra_es_args} { cmdline = $cmdline '-A' $restargs }
 	echo 'running:' $cmdline
 	exit <={$cmdline}
 } {
@@ -184,12 +228,12 @@ if {$runbin} {
 		process $testpath/*.es (
 			(*/test_*) {
 				if {access -xf $matchexpr} {
-					if {$estest_debugging} {
+					if {$estest_debugging || $verbose} {
 						info 'found '^$matchexpr
 					}
 					result $matchexpr
 				} {
-					if {$estest_debugging} {
+					if {$estest_debugging || $verbose} {
 						info 'ignoring '^$matchexpr
 					}
 					result
@@ -197,7 +241,7 @@ if {$runbin} {
 			}
 			(*/util_*) {
 				if {access -xf $matchexpr} {
-					if {$estest_debugging} {
+					if {$estest_debugging || $verbose} {
 						info 'loading '^$matchexpr
 					}
 					. $matchexpr

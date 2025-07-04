@@ -42,6 +42,7 @@ fn es_run_parseargs argfn usagefn args {
 		}
 		fn-usage = @{ throw parseargs_error }
 		fn-done = @{ throw parseargs_done }
+		fn-has_argument = @{ if {! ~ $next '-'^* && ! ~ $#next 0} { true } { false } }
 	) {
 		catch @ e t m {
 			if {~ $e parseargs_error} {
