@@ -29,6 +29,7 @@ always_yes = false
 srcdir = '.'
 fullhelp = false
 verbose = false
+subprocess_default = false
 
 (_ _ restargs) = <={parseargs @ arg {
 	match $arg (
@@ -52,6 +53,7 @@ verbose = false
 			extra_es_args = true; done
 		}
 		(-y) { always_yes = true }
+		(-s) { subprocess_default = true }
 		(-S) {
 			srcdir = <={
 				if {~ $flagarg */ } {
@@ -90,6 +92,7 @@ verbose = false
         -q -- quiet
         -y -- automatically answer yes
         -h -- show this message
+        -s -- default to using subprocesses for tests
 
         -x [es binary]  -- run estest in a different instance of es
         -S srcdir       -- es source directory
@@ -146,7 +149,7 @@ fn run_test_file file {
 			$tfp = false
 		}
 		if {~ <={%count $$tsp} 0} {
-			$tsp = true
+			$tsp = $subprocess_default
 		}
 		catch @ e {
 			test_exception = $e
