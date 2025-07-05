@@ -4,9 +4,9 @@ library history (init libraries)
 histmax = 25
 history-reload = 25
 
-fn history-filter start usedate commandonly {
+fn history-filter start timeformat commandonly {
 	awk -v 'n='^$start \
-		-v 'usedate='^$usedate \
+		-v 'timeformat='^$timeformat \
 		-v 'platform='^`{uname} \
 		-v 'commandonly='^$commandonly \
 		'
@@ -36,15 +36,17 @@ fn history-filter start usedate commandonly {
 				split(curdatetime, timearr, "_")
 				curdate = timearr[1]
 				curtime = timearr[2]
-				if(commandonly == 1) {
+				if(commandonly == "true") {
 					printf "%s\n", $0
 				} else {
-					if(usedate == 1){
-						printf "%d\t%s  %s  %s\n", n, curdate, curtime, $0
-					} else if (usedate == 2) {
-						printf "%d\t%s  %s\n", n, unixtime, $0
+					if(timeformat == "datetime"){
+						printf "%-6d  %s  %s  %s\n", n, curdate, curtime, $0
+					} else if (timeformat == "unixtime") {
+						printf "%-6d  %s  %s\n", n, unixtime, $0
+					} else if (timeformat == "none") {
+						printf "%-6d  %s\n", n, $0
 					} else {
-						printf "%d\t%s  %s\n", n, curtime, $0
+						printf "%-6d  %s  %s\n", n, curtime, $0
 					}
 				}
 				n++
@@ -63,9 +65,9 @@ fn history {
 		singleevent = false
 		cleanhistory = false
 		lastevent = false
-		commandonly = 0
+		commandonly = false
 		histfile = $history
-		usedate = 0
+		timeformat = time
 		yes = false
 		verbose = false
 		usageexit = false
@@ -78,16 +80,17 @@ fn history {
 				(-a) { limitevents = false; singleevent = false }
 				(-l) { lastevent = true ; maxents = 1 }
 				(-C) { cleanhistory = true }
-				(-c) { commandonly = 1 }
-				(-d) { usedate = 1 }
+				(-c) { commandonly = true }
+				(-d) { timeformat = datetime }
 				(-f) { histfile = $flagarg }
 				(-y) { yes = true }
 				(-v) { verbose = true }
-				(-u) { usedate = 2 }
+				(-u) { timeformat = unixtime }
+				(-N) { timeformat = none }
 				* { usage }
 			)
 		} @{
-			echo 'usage: history [-f histfile] [-dcylCu] [-a | -n events | -e event]'
+			echo 'usage: history [-f histfile] [-dcylCuN] [-a | -n events | -e event]'
 			usageexit = true
 		} $*
 
@@ -124,11 +127,11 @@ fn history {
 		nents = <={ div $fsize(1) 2 }
 		if {$limitevents && ! $singleevent && ! $lastevent} {
 			if {gt $nents $maxents} {
-				nstart = <={add <={sub <={div $fsize(1) 2} $maxents} 1}
+				nstart = <={div $fsize(1) 2 |> @{sub $1 $maxents} |> add 1}
 				nlines = <={mul $maxents 2}
-				tail -n $nlines $histfile | history-filter $nstart $usedate $commandonly
+				tail -n $nlines $histfile | history-filter $nstart $timeformat $commandonly
 			} {
-				history-filter 1 $usedate $commandonly < $histfile
+				history-filter 1 $timeformat $commandonly < $histfile
 			}
 		} {$singleevent} {
 			headarg = <={ mul $eventn 2 }
@@ -136,15 +139,15 @@ fn history {
 				echo 'history: event too large' >[1=2]
 				return 1
 			}
-			if {~ $commandonly 0} {
+			if {$commandonly} {
 				head -n $headarg $histfile \
 				| tail -n 2 \
-				| history-filter $eventn $usedate 0 \
+				| history-filter $eventn $timeformat 0 \
 				| awk '($1 == '^$eventn^'){ print $0 ; exit }'
 			} {
 				head -n $headarg $histfile \
 				| tail -n 2 \
-				| history-filter $eventn $usedate 0 \
+				| history-filter $eventn $timeformat 0 \
 				| awk '($1 == '^$eventn^'){ print substr($0, index($0,$3)) ; exit }'
 			}
 		} {$lastevent} {
@@ -154,19 +157,19 @@ fn history {
 				echo 'history: event too large' >[1=2]
 				return 1
 			}
-			if {~ $commandonly 0} {
+			if {$commandonly} {
 				head -n $headarg $histfile \
 				| tail -n 2 \
-				| history-filter $eventn $usedate 0 \
+				| history-filter $eventn $timeformat 0 \
 				| awk '($1 == '^$eventn^'){ print $0 ; exit }'
 			} {
 				head -n $headarg $histfile \
 				| tail -n 2 \
-				| history-filter $eventn $usedate 0 \
+				| history-filter $eventn $timeformat 0 \
 				| awk '($1 == '^$eventn^'){ print substr($0, index($0,$3)) ; exit }'
 			}
 		} {
-			history-filter 1 $usedate $commandonly < $histfile
+			history-filter 1 $timeformat $commandonly < $histfile
 		}
 	}
 }
