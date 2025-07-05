@@ -69,7 +69,7 @@ fn es_run_parseargs argfn usagefn args {
 }
 
 fn parseargs argfn maybe-usagefn maybe-args {
-	if {~ $maybe-usagefn '@'^*} {
+	if {~ $maybe-usagefn '@'^* || ~ $maybe-usagefn '%closure'^*} {
 		es_run_parseargs $argfn $maybe-usagefn <={es_canonicalize_args $maybe-args}
 	} {
 		es_run_parseargs $argfn \
