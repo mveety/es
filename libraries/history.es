@@ -11,50 +11,45 @@ fn history-filter start usedate commandonly {
 		-v 'commandonly='^$commandonly \
 		'
 		BEGIN{
-			curtime = ""
-			curdate = ""
-			havedate = 0
-			unixtime = 0
+			havetime = 0
+			unixtime = ""
 		}
 
 		/^#\+[0-9]+$/{
 			unixtime = substr($1, 2, length($1))
-			if (platform == "Linux") {
-				cmd = "date -d @" unixtime " +%H:%M"
-				cmd1 = "date -d @" unixtime " +%F"
-			} else {
-				cmd = "date -r " unixtime " +%H:%M"
-				cmd1 = "date -r " unixtime " +%F"
-			}
-			cmd | getline curtime
-			close(cmd)
-			if (usedate == 1) {
-				cmd1 | getline curdate
-				close(cmd1)
-			}
-			havedate = 1
+			havetime = 1
 		}
 
 		!/^#\+[0-9]+$/{
 			if($1 != ""){
-				if(havedate == 0){
-					"date +%H:%M" | getline curtime
-					if(usedate == 1){
-						"date +%F" | getline curdate
+				if(havetime == 0){
+					cmd = "date +%F_%H:%M"
+				} else {
+					if (platform == "Linux") {
+						cmd = "date -d @" unixtime " +%F_%H:%M"
+					} else {
+						cmd = "date -r " unixtime " +%F_%H:%M"
 					}
 				}
+				cmd | getline curdatetime
+				close(cmd)
+				split(curdatetime, timearr, "_")
+				curdate = timearr[1]
+				curtime = timearr[2]
 				if(commandonly == 1) {
 					printf "%s\n", $0
 				} else {
 					if(usedate == 1){
 						printf "%d\t%s  %s  %s\n", n, curdate, curtime, $0
+					} else if (usedate == 2) {
+						printf "%d\t%s  %s\n", n, unixtime, $0
 					} else {
 						printf "%d\t%s  %s\n", n, curtime, $0
 					}
 				}
 				n++
 			}
-			havedate = 0
+			havetime = 0
 		}'
 }
 
@@ -74,6 +69,7 @@ fn history {
 		yes = false
 		verbose = false
 		usageexit = false
+		useunixtime = 0
 	) {
 		parseargs @ arg {
 			match $arg (
@@ -87,10 +83,11 @@ fn history {
 				(-f) { histfile = $flagarg }
 				(-y) { yes = true }
 				(-v) { verbose = true }
+				(-u) { usedate = 2 }
 				* { usage }
 			)
 		} @{
-			echo 'usage: history [-f histfile] [-dcylC] [-a | -n events | -e event]'
+			echo 'usage: history [-f histfile] [-dcylCu] [-a | -n events | -e event]'
 			usageexit = true
 		} $*
 
