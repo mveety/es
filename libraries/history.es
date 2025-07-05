@@ -4,11 +4,10 @@ library history (init libraries)
 histmax = 25
 history-reload = 25
 
-fn history-filter start timeformat commandonly {
+fn history-filter start timeformat {
 	awk -v 'n='^$start \
 		-v 'timeformat='^$timeformat \
 		-v 'platform='^`{uname} \
-		-v 'commandonly='^$commandonly \
 		'
 		BEGIN{
 			havetime = 0
@@ -36,18 +35,16 @@ fn history-filter start timeformat commandonly {
 				split(curdatetime, timearr, "_")
 				curdate = timearr[1]
 				curtime = timearr[2]
-				if(commandonly == "true") {
+				if(timeformat == "datetime"){
+					printf "%-6d  %s  %s  %s\n", n, curdate, curtime, $0
+				} else if (timeformat == "unixtime") {
+					printf "%-6d  %s  %s\n", n, unixtime, $0
+				} else if (timeformat == "none") {
+					printf "%-6d  %s\n", n, $0
+				} else if (timeformat == "noevent") {
 					printf "%s\n", $0
 				} else {
-					if(timeformat == "datetime"){
-						printf "%-6d  %s  %s  %s\n", n, curdate, curtime, $0
-					} else if (timeformat == "unixtime") {
-						printf "%-6d  %s  %s\n", n, unixtime, $0
-					} else if (timeformat == "none") {
-						printf "%-6d  %s\n", n, $0
-					} else {
-						printf "%-6d  %s  %s\n", n, curtime, $0
-					}
+					printf "%-6d  %s  %s\n", n, curtime, $0
 				}
 				n++
 			}
@@ -65,7 +62,6 @@ fn history {
 		singleevent = false
 		cleanhistory = false
 		lastevent = false
-		commandonly = false
 		histfile = $history
 		timeformat = time
 		yes = false
@@ -80,7 +76,7 @@ fn history {
 				(-a) { limitevents = false; singleevent = false }
 				(-l) { lastevent = true ; maxents = 1 }
 				(-C) { cleanhistory = true }
-				(-c) { commandonly = true }
+				(-c) { timeformat = noevent }
 				(-d) { timeformat = datetime }
 				(-f) { histfile = $flagarg }
 				(-y) { yes = true }
@@ -129,9 +125,9 @@ fn history {
 			if {gt $nents $maxents} {
 				nstart = <={div $fsize(1) 2 |> @{sub $1 $maxents} |> add 1}
 				nlines = <={mul $maxents 2}
-				tail -n $nlines $histfile | history-filter $nstart $timeformat $commandonly
+				tail -n $nlines $histfile | history-filter $nstart $timeformat
 			} {
-				history-filter 1 $timeformat $commandonly < $histfile
+				history-filter 1 $timeformat < $histfile
 			}
 		} {$singleevent} {
 			headarg = <={ mul $eventn 2 }
@@ -139,17 +135,9 @@ fn history {
 				echo 'history: event too large' >[1=2]
 				return 1
 			}
-			if {$commandonly} {
 				head -n $headarg $histfile \
 				| tail -n 2 \
-				| history-filter $eventn $timeformat 0 \
-				| awk '($1 == '^$eventn^'){ print $0 ; exit }'
-			} {
-				head -n $headarg $histfile \
-				| tail -n 2 \
-				| history-filter $eventn $timeformat 0 \
-				| awk '($1 == '^$eventn^'){ print substr($0, index($0,$3)) ; exit }'
-			}
+				| history-filter $eventn $timeformat
 		} {$lastevent} {
 			eventn = <={ sub $nents 1 }
 			headarg = <={ mul $eventn 2 }
@@ -157,19 +145,11 @@ fn history {
 				echo 'history: event too large' >[1=2]
 				return 1
 			}
-			if {$commandonly} {
 				head -n $headarg $histfile \
 				| tail -n 2 \
-				| history-filter $eventn $timeformat 0 \
-				| awk '($1 == '^$eventn^'){ print $0 ; exit }'
-			} {
-				head -n $headarg $histfile \
-				| tail -n 2 \
-				| history-filter $eventn $timeformat 0 \
-				| awk '($1 == '^$eventn^'){ print substr($0, index($0,$3)) ; exit }'
-			}
+				| history-filter $eventn $timeformat
 		} {
-			history-filter 1 $timeformat $commandonly < $histfile
+			history-filter 1 $timeformat < $histfile
 		}
 	}
 }
