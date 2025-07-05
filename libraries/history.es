@@ -71,40 +71,55 @@ fn history {
 		commandonly = 0
 		histfile = $history
 		usedate = 0
+		yes = false
+		verbose = false
+		usageexit = false
 	) {
-		while {! ~ $#1 0} {
-			if {~ $1 -n } {
-				limitevents = true
-				* = $*(2 ...)
-				maxents = $1
-			} {~ $1 -e } {
-				singleevent = true
-				* = $*(2 ...)
-				eventn = $1
-			} {~ $1 -a } {
-				limitevents = false
-				singleevent = false
-			} {~ $1 -l} {
-				lastevent = true
-			} {~ $1 -C } {
-				cleanhistory = true
-			} {~ $1 -c } {
-				commandonly = 1
-			} {~ $1 -d} {
-				usedate = 1
-			} {~ $1 -f } {
-				* = $*(2 ...)
-				histfile = $1
-			} {
-				throw usage history 'usage: history [-f histfile] [-d] [-c] [-C| -l | -a | -n events | -e event]'
-			}
-			* = $*(2 ...)
-		}
+		parseargs @ arg {
+			match $arg (
+				(-n) { limitevents = true; maxents = $flagarg }
+				(-e) { singleevent = true; eventn = $flagarg }
+				(-a) { limitevents = false; singleevent = false }
+				(-l) { lastevent = true ; maxents = 1 }
+				(-C) { cleanhistory = true }
+				(-c) { commandonly = 1 }
+				(-d) { usedate = 1 }
+				(-f) { histfile = $flagarg }
+				(-y) { yes = true }
+				(-v) { verbose = true }
+				* { usage }
+			)
+		} @{
+			echo 'usage: history [-f histfile] [-dcylC] [-a | -n events | -e event]'
+			usageexit = true
+		} $*
+
+		if {$usageexit} { return 0 }
 
 		if {$cleanhistory} {
-			cp $histfile $histfile^'.old'
-			nlines = <={ mul $maxents 2}
-			tail -n $nlines $histfile^'.old' > $histfile
+			if {! $yes} {
+				echo -n 'only keep last '
+				match $maxents (
+					1 { echo -n 'entry' }
+					* { echo -n $maxents^' entries' }
+				)
+				echo -n '? [no] '
+				r = <=%read
+				if {%esm~ $r '[yY]([eE][sS]|)'} { yes = true }
+			}
+			if {$yes} {
+				cp $histfile $histfile^'.old'
+				nlines = <={ mul $maxents 2}
+				tail -n $nlines $histfile^'.old' > $histfile
+				if {$verbose} {
+					echo -n 'kept '^$maxents^' '
+					match $maxents (
+						1 { echo -n 'entry' }
+						* { echo -n 'entries' }
+					)
+					echo '. save old history file as '^$histfile^'.old'
+				}
+			}
 			return 0 # success?
 		}
 
