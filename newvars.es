@@ -19,6 +19,7 @@
 
 fn es_old_vars {
 	# choose default options
+	* = <={es_canonicalize_args $*}
 	if {~ $* -a} {
 		* = -v -f -s -g -e -p -i
 	} {
