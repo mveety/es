@@ -228,7 +228,7 @@ fn whatis {
 #	While uses $&noreturn to indicate that, while it is a lambda, it
 #	does not catch the return exception.  It does, however, catch break.
 
-fn-while = $&noreturn @ cond body {
+fn-while = $&noreturn @ cond body else {
 	catch @ e value {
 		if {!~ $e break} {
 			throw $e $value
@@ -238,7 +238,11 @@ fn-while = $&noreturn @ cond body {
 		let (result = <=true)
 			forever {
 				if {!$cond} {
-					throw break $result
+					if {! ~ $#else} {
+						throw break <=$else
+					} {
+						throw break $result
+					}
 				} {
 					result = <=$body
 				}
@@ -280,79 +284,6 @@ fn cd dir {
 		throw usage cd 'usage: cd [directory]'
 	}
 }
-
-#	The vars function is provided for cultural compatibility with
-#	rc's whatis when used without arguments.  The option parsing
-#	is very primitive;  perhaps es should provide a getopt-like
-#	builtin.
-#
-#	The options to vars can be partitioned into two categories:
-#	those which pick variables based on their source (-e for
-#	exported variables, -p for unexported, and -i for internal)
-#	and their type (-f for functions, -s for settor functions,
-#	and -v for all others).
-#
-#	Internal variables are those defined in initial.es (along
-#	with pid and path), and behave like unexported variables,
-#	except that they are known to have an initial value.
-#	When an internal variable is modified, it becomes exportable,
-#	unless it is on the noexport list.
-
-fn vars {
-	# choose default options
-	if {~ $* -a} {
-		* = -v -f -s -g -e -p -i
-	} {
-		if {!~ $* -[vfsg]}	{ * = $* -v }
-		if {!~ $* -[epi]}	{ * = $* -e }
-	}
-	# check args
-	for (i = $*)
-		if {!~ $i -[vfsgepi]} {
-			throw error vars illegal option: $i -- usage: vars '-[vfsgepia]'
-		}
-	let (
-		vars	= false
-		fns	= false
-		sets	= false
-		gets	= false
-		export	= false
-		priv	= false
-		intern	= false
-	) {
-		process $* (
-			(-v) {vars = true}
-			(-f) {fns = true}
-			(-s) {sets = true}
-			(-g) {gets = true}
-			(-e) {export = true}
-			(-p) {priv = true}
-			(-i) {intern = true}
-			* {throw error vars bad option: $i}
-		)
-		let (
-			dovar = @ var {
-				# print functions and/or settor vars
-				if {if {~ $var fn-*} $fns {~ $var set-*} $sets {~ $var get-*} $gets $vars} {
-					echo <={%var $var}
-				}
-			}
-		) {
-			if {$export || $priv} {
-				for (var = <= $&vars)
-					# if not exported but in priv
-					if {if {~ $var $noexport} $priv $export} {
-						$dovar $var
-					}
-			}
-			if {$intern} {
-				for (var = <= $&internals)
-					$dovar $var
-			}
-		}
-	}
-}
-
 
 #
 # Syntactic sugar
@@ -853,7 +784,7 @@ apids = ''
 get-apids = @ { result <=%apids }
 
 unixtime = ''
-get-unixtime = @ { result <=$&unixtime }
+get-unixtime = $&unixtime
 
 #
 # Variables
