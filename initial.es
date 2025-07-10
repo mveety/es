@@ -235,15 +235,16 @@ fn-while = $&noreturn @ cond body else {
 		}
 		result $value
 	} {
-		let (result = <=true)
+		let (result = <=true; hasrun = false)
 			forever {
 				if {!$cond} {
-					if {! ~ $#else} {
+					if {! ~ $#else 0 && ! $hasrun} {
 						throw break <=$else
 					} {
 						throw break $result
 					}
 				} {
+					hasrun = true
 					result = <=$body
 				}
 			}
