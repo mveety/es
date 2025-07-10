@@ -898,6 +898,10 @@ fn %first list {
 	return $list(1)
 }
 
+fn %rest list {
+	return $list(2 ...)
+}
+
 fn try body {
 	catch @ e type msg {
 		if {~ $e error} {
