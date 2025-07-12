@@ -902,6 +902,11 @@ fn %rest list {
 	return $list(2 ...)
 }
 
+fn %slice s e list {
+	if {gt $s $e} { throw error $0 '$s > $e' }
+	result $list($s ... $e)
+}
+
 fn try body {
 	catch @ e type msg {
 		if {~ $e error} {
