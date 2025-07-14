@@ -175,13 +175,13 @@ fn async_clean_glob glob {
 
 fn aclean {
 	if {~ $#async_subprocs 0} {
-		rm -fv $async_tempdir/es_async_temp_file_*.*.*.bin
+		rm -fv $async_tempdir/es_async_temp_file_*.$pid.*.bin
 		return <=true
 	}
 	let (
 		the_living = <={%apids -a}
 		new_subprocs =
-		all_files = <={async_clean_glob $async_tempdir^'/es_async_temp_file_*.*.*.bin'}
+		all_files = <={async_clean_glob $async_tempdir^'/es_async_temp_file_*.'^$pid^'.*.bin'}
 		good_files =
 		verbose = <={ if {~ $1 -v} { result true } { result false } }
 	) {

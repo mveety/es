@@ -698,7 +698,7 @@ fn %interactive-loop {
 		} {
 			forever {
 				if {!~ $#fn-%prompt 0} {
-					%prompt
+					local(bqstatus=) { %prompt }
 				}
 				let (code = <={%parse $prompt}) {
 					if {!~ $#code 0} {
