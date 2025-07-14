@@ -30,6 +30,7 @@ srcdir = '.'
 fullhelp = false
 verbose = false
 subprocess_default = false
+libdir = 'libraries'
 
 (_ _ restargs) = <={parseargs @ arg {
 	match $arg (
@@ -68,6 +69,21 @@ subprocess_default = false
 			if {~ $testpath 'tests'} {
 				testpath = $srcdir/tests
 			}
+			if {~ $libdir 'libraries'} {
+				libdir = $srcdir/libraries
+			}
+		}
+		(-L) {
+			libdir = <={
+				if {~ $flagarg */ } {
+					result <={~~ $flagarg */}
+				} {
+					result $flagarg
+				}
+			}
+			if {~ <={access -r1d $libdir |> %count} 0 } {
+				throw error $dollar0 $libdir^' is no accessible'
+			}
 		}
 		(-p) {
 			testpath = <={
@@ -96,6 +112,7 @@ subprocess_default = false
         -x [es binary]  -- run estest in a different instance of es
         -S srcdir       -- es source directory
         -p path         -- test cases path
+        -L path         -- libraries path
         -A es arguments -- arguments to pass to instances of es
 
         -b es binary    -- set es binary
@@ -219,12 +236,15 @@ if {$runbin} {
 	if {! ~ $srcdir '.'} {cmdline = $cmdline '-S' $srcdir}
 	cmdline = $cmdline '-b' $esbin
 	cmdline = $cmdline '-p' $testpath
+	cmdline = $cmdline '-L' $libdir
 	if {$extra_es_args} { cmdline = $cmdline '-A' $restargs }
 	echo 'running:' $cmdline
 	exit <={$cmdline}
 } {
+	libraries = $libdir
 	info 'build: '^$buildstring
 	info 'using '^<={%gcstats |> %first}^' garbage collector'
+	info 'using libraries in '^$libraries^'/'
 	info 'running tests in '^$testpath^'/'
 
 	testfiles = <={
