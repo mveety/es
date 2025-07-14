@@ -4,10 +4,11 @@
 # libraries globally on a system.
 
 # corelib = '/usr/local/share/es/'
-libraries = ()
-enable-import = true
-import-panic = false
-automatic-import = true
+
+if {~ $#libraries 0} { libraries = () }
+if {~ $#enable-import 0} { enable-import = true }
+if {~ $#import-panic 0} { import-panic = false }
+if {~ $#automatic-import 0} { automatic-import = true }
 
 fn import-core-lib lib {
 	let (libname = <={access -n $lib -1 -r $corelib}) {
@@ -110,6 +111,17 @@ fn library name requirements {
 	} {
 		check_and_load_options $requirements
 		option $name
+	}
+}
+
+fn havelib name {
+	let (
+		syslibname = <={access -n $name.es -1 -r $corelib}
+		userlibname = <={access -n $name.es -1 -r $libraries}
+	) {
+		if {! ~ $#userlibname 0} { return <=true }
+		if {! ~ $#syslibname 0} { return <=true }
+		return <=false
 	}
 }
 
