@@ -157,14 +157,14 @@ fn run_subproc_test testname testfn test_log tfp {
 fn run_test_file file {
 	assert2 $0 {eq $#file 1}
 	lets (
+		islibtest = <={if {~ $file */libtest_*.es} { result true } { result false }}
 		testname = <={
-			if {~ $file libtest_*} {
+			if {$islibtest} {
 				result <={~~ <={%split '/' $file |> lastelem} libtest_*.es}
 			} {
 				result <={~~ <={%split '/' $file |> lastelem} test_*.es}
 			}
 		}
-		islibtest = <={if {~ $file libtest_*.es} { result true } { result false }}
 		passed = false
 		test_exception=
 		test_log='/tmp/es_'^$pid^'_test_'^$testname^'.log'
