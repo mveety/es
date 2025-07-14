@@ -56,5 +56,5 @@ fn string:slice str start end {
 }
 
 fn string:sub str start len {
-	return <={string:slice $str $start <={add $start $len}}
+	return <={string:slice $str $start <={add $start <={sub $len 1}}}
 }
