@@ -31,6 +31,7 @@ fullhelp = false
 verbose = false
 subprocess_default = false
 libdir = 'libraries'
+testlibs = false
 
 (_ _ restargs) = <={parseargs @ arg {
 	match $arg (
@@ -73,6 +74,7 @@ libdir = 'libraries'
 				libdir = $srcdir/libraries
 			}
 		}
+		(-l) { testlibs = true }
 		(-L) {
 			libdir = <={
 				if {~ $flagarg */ } {
@@ -84,6 +86,7 @@ libdir = 'libraries'
 			if {~ <={access -r1d $libdir |> %count} 0 } {
 				throw error $dollar0 $libdir^' is no accessible'
 			}
+			testlibs = true
 		}
 		(-p) {
 			testpath = <={
@@ -108,6 +111,7 @@ libdir = 'libraries'
         -y -- automatically answer yes
         -h -- show this message
         -s -- default to using subprocesses for tests
+        -l -- also test libraries (implicit for -L)
 
         -x [es binary]  -- run estest in a different instance of es
         -S srcdir       -- es source directory
@@ -153,7 +157,14 @@ fn run_subproc_test testname testfn test_log tfp {
 fn run_test_file file {
 	assert2 $0 {eq $#file 1}
 	lets (
-		testname = <={~~ <={lastelem <={%split '/' $file}} test_*.es}
+		testname = <={
+			if {~ $file libtest_*} {
+				result <={~~ <={%split '/' $file |> lastelem} libtest_*.es}
+			} {
+				result <={~~ <={%split '/' $file |> lastelem} test_*.es}
+			}
+		}
+		islibtest = <={if {~ $file libtest_*.es} { result true } { result false }}
 		passed = false
 		test_exception=
 		test_log='/tmp/es_'^$pid^'_test_'^$testname^'.log'
@@ -192,7 +203,11 @@ fn run_test_file file {
 				passed = true
 			}
 		}
- 		echo -n 'test '^$testname^': '
+		if {$islibtest} {
+			echo -n 'library test '^$testname^': '
+		} {
+ 			echo -n 'test '^$testname^': '
+ 		}
 		if {$passed} {
 			echo 'passed!'
 			if {$testoutput} {
@@ -236,15 +251,17 @@ if {$runbin} {
 	if {! ~ $srcdir '.'} {cmdline = $cmdline '-S' $srcdir}
 	cmdline = $cmdline '-b' $esbin
 	cmdline = $cmdline '-p' $testpath
-	cmdline = $cmdline '-L' $libdir
+	if {$testlibs} { cmdline = $cmdline '-L' $libdir }
 	if {$extra_es_args} { cmdline = $cmdline '-A' $restargs }
 	echo 'running:' $cmdline
 	exit <={$cmdline}
 } {
-	libraries = $libdir
 	info 'build: '^$buildstring
 	info 'using '^<={%gcstats |> %first}^' garbage collector'
-	info 'using libraries in '^$libraries^'/'
+	if {$testlibs} {
+		libraries = $libdir
+		info 'using libraries in '^$libraries^'/'
+	}
 	info 'running tests in '^$testpath^'/'
 
 	testfiles = <={
@@ -259,6 +276,23 @@ if {$runbin} {
 					if {$estest_debugging || $verbose} {
 						info 'ignoring '^$matchexpr
 					}
+					result
+				}
+			}
+			(*/libtest_*) {
+				if {$testlibs} {
+					if {access -xf $matchexpr} {
+						if {$estest_debugging || $verbose} {
+							info 'found '^$matchexpr
+						}
+						result $matchexpr
+					} {
+						if {$estest_debugging || $verbose} {
+							info 'ignoring '^$matchexpr
+						}
+						result
+					}
+				} {
 					result
 				}
 			}
