@@ -823,14 +823,25 @@ fn-tobase = @ base n { result <={$&tobase $base $n} }
 fn-frombase = @ base n { result <={$&frombase $base $n} }
 
 fn todecimal1 a {
-	match $a (
-		(0) { result dec 0}
-		(0x*) { result hex <={frombase 16 <={~~ $a 0x*}} }
-		(0b*) { result bin <={frombase 2 <={~~ $a 0b*}} }
-		(0d*) { result dec <={frombase 10 <={~~ $a 0d*}} }
-		(0*) { result oct <={frombase 8 <={~~ $a 0*}} }
-		* { result dec $a }
-	)
+	local (negative = false; abs = $a; r=){
+		if {~ $a -*} {
+			negative = true
+			abs = <={~~ $a -*}
+		}
+		r = <={match $abs (
+			(0) { result dec 0}
+			(0x*) { result hex <={frombase 16 <={~~ $abs 0x*}} }
+			(0b*) { result bin <={frombase 2 <={~~ $abs 0b*}} }
+			(0d*) { result dec <={frombase 10 <={~~ $abs 0d*}} }
+			(0*) { result oct <={frombase 8 <={~~ $abs 0*}} }
+			* { result dec $abs }
+		)}
+		if {$negative} {
+			result $r(1) '-'^$r(2)
+		} {
+			result $r
+		}
+	}
 }
 
 fn todecimal n {
@@ -840,24 +851,33 @@ fn todecimal n {
 	}
 }
 
+fn fromdecimal base n {
+	local (negative = false; abs = $n; r=) {
+		if {~ $n -*} {
+			negative = true
+			abs = <={~~ $n -*}
+		}
+		r = <={match $base (
+			hex { result '0x'^<={tobase 16 $abs} }
+			bin { result '0b'^<={tobase 2 $abs} }
+			oct { result '0'^<={tobase 8 $abs} }
+			dec { result $abs }
+			* { throw assert $base^' != (hex bin oct dec)' }
+		)}
+		if {$negative} {
+			result '-'^$r
+		} {
+			result $r
+		}
+	}
+}
+
 fn %mathfun fun a b {
-	local (
-		base = dec
-		bn =
-		an =
-		res=
-	) {
+	local (base = dec; an =; bn =) {
 		(base bn) = <={todecimal1 $b}
 		(base an) = <={todecimal1 $a}
 
-		res = <={$fun $an $bn}
-		match $base (
-			hex { result '0x'^<={tobase 16 $res} }
-			bin { result '0b'^<={tobase 2 $res} }
-			oct { result '0'^<={tobase 8 $res} }
-			dec { result $res }
-			* { throw assert 'base != (hex bin oct dec)' }
-		)
+		$fun $an $bn |> fromdecimal $base |> result
 	}
 }
 
@@ -866,23 +886,23 @@ fn-sub = @ a b { %mathfun $&sub $a $b }
 fn-mul = @ a b { %mathfun $&mul $a $b }
 fn-div = @ a b { %mathfun $&div $a $b }
 fn-mod = @ a b { %mathfun $&mod $a $b }
-fn-eq = $&eq
-fn-lt = $&lt
-fn-gt = $&gt
+fn-eq = @ a b { $&eq <={todecimal $a} <={todecimal $b}}
+fn-lt = @ a b { $&lt <={todecimal $a} <={todecimal $b}}
+fn-gt = @ a b { $&gt <={todecimal $a} <={todecimal $b}}
 
 fn gte a b {
 	if {eq $a $b || gt $a $b} {
-		result 0
+		result <=true
 	} {
-		result 1
+		result <=false
 	}
 }
 
 fn lte a b {
 	if {eq $a $b || lt $a $b} {
-		result 0
+		result <=true
 	} {
-		result 1
+		result <=false
 	}
 }
 
