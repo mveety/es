@@ -106,7 +106,7 @@ trip	: es $(srcdir)/trip.es
 	./es < $(srcdir)/trip.es
 
 estest : es
-	./es -- ./estest -xy
+	./es -- ./estest -xyl
 
 src	:
 	@echo ${OTHER} ${CFILES} ${HFILES}
