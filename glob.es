@@ -87,7 +87,7 @@ fn esmglob_expandquestions xglob {
 					}
 				}
 				* {
-					throw error assert $0^': unknown state '^$^state
+					throw assert $0^': unknown state '^$^state
 				}
 			)
 		}

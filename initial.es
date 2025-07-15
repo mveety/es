@@ -188,7 +188,7 @@ fn assert body {
 	if {$body} {
 		result 0
 	} {
-		throw error assert $^body
+		throw assert $^body
 	}
 }
 
@@ -196,7 +196,7 @@ fn assert2 loc body {
 	if {$body} {
 		result 0
 	} {
-		throw error assert $^loc^': '^$^body
+		throw assert $^loc^': '^$^body
 	}
 }
 
@@ -645,23 +645,27 @@ fn-%is-interactive = $&isinteractive
 
 fn %batch-loop {
 	catch @ e type msg {
-		if {~ $e error} {
-			if {~ $type assert} {
-				echo >[1=2] 'assert: '^$^msg
-			} {
+		match $e (
+			(error) {
 				echo >[1=2] 'error: '^$type^': '^$^msg
+				return <=false
 			}
-			return <=false
-		} {~ $e usage} {
-			if {~ $#msg 0} {
-				echo >[1=2] $type
-			} {
-				echo >[1=2] $msg
+			(assert) {
+				echo >[1=2] 'assert:' $type $msg
+				return <=false
 			}
-			return <=false
-		} {
-			throw $e $type $msg
-		}
+			(usage) {
+				if {~ $#msg 0} {
+					echo >[1=2] $type
+				} {
+					echo >[1=2] $msg
+				}
+				return <=false
+			}
+			* {
+				throw $e $type $msg
+			}
+		)
 	} {
 		result <={$&batchloop $*}
 	}
@@ -670,31 +674,26 @@ fn %batch-loop {
 fn %interactive-loop {
 	let (result = <=true) {
 		catch @ e type msg {
-			if {~ $e eof} {
-				return $result
-			} {~ $e exit} {
-				throw $e $type $msg
-			} {~ $e error} {
-				if {~ $type assert} {
-					echo >[1=2] 'assert: '^$^msg
-				} {
-					echo >[1=2] 'error: '^$type^': '^$^msg
-					# $fn-%dispatch false
+			match $e (
+				(eof) { return $result }
+				(exit) { throw $e $type $msg}
+				(error) { echo >[1=2] 'error: '^$type^': '^$^msg }
+				(assert) { echo >[1=2] 'assert:' $type $msg }
+				(usage) {
+					if {~ $#msg 0} {
+						echo >[1=2] $type
+					} {
+						echo >[1=2] $msg
+					}
 				}
-			} {~ $e usage} {
-				if {~ $#msg 0} {
-					echo >[1=2] $type
-				} {
-					echo >[1=2] $msg
+				(signal) {
+					if {!~ $type sigint sigterm sigquit} {
+						echo >[1=2] caught unexpected signal: $type
+					}
 				}
-			} {~ $e signal} {
-				if {!~ $type sigint sigterm sigquit} {
-					echo >[1=2] caught unexpected signal: $type
-				}
-			} {
-				echo >[1=2] uncaught exception: $e $type $msg
-			}
-			throw retry # restart forever loop
+				* { echo >[1=2] uncaught exception: $e $type $msg }
+			)
+			throw retry
 		} {
 			forever {
 				if {!~ $#fn-%prompt 0} {
@@ -910,11 +909,9 @@ fn %slice s e list {
 fn try body {
 	catch @ e type msg {
 		if {~ $e error} {
-			if {~ $type assert} {
-				throw $e $type $msg
-			} {
-				result true $type $msg
-			}
+			result true $type $msg
+		} {~ $e assert} {
+			throw $e $type $msg
 		} {~ $e usage} {
 			result true usage
 		} {

@@ -2,7 +2,7 @@
 
 fn run_test_assert {
 	catch @ e t m {
-		if {! ~ $e error || ! ~ $t assert || ! ~ $m false} {
+		if {! ~ $e assert || ! ~ $t false} {
 			throw $e $t $m
 		}
 	} {
@@ -10,7 +10,7 @@ fn run_test_assert {
 	}
 
 	catch @ e t m {
-		if {! ~ $e error || ! ~ $t assert || ! ~ $m 'run_test_assert: false'} {
+		if {! ~ $e assert || ! ~ $t 'run_test_assert: false'} {
 			throw $e $t $m
 		}
 	} {
