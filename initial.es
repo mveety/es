@@ -813,7 +813,7 @@ fn dprint msg {
 	if {~ $#debugging 0} {
 		return 0
 	} {
-		echo 'debug: '^$msg
+		echo 'debug:' $msg
 		return 0
 	}
 }
@@ -822,18 +822,42 @@ fn dprint msg {
 fn-tobase = @ base n { result <={$&tobase $base $n} }
 fn-frombase = @ base n { result <={$&frombase $base $n} }
 
+fn todecimal1 a {
+	match $a (
+		(0) { result dec 0}
+		(0x*) { result hex <={frombase 16 <={~~ $a 0x*}} }
+		(0b*) { result bin <={frombase 2 <={~~ $a 0b*}} }
+		(0d*) { result dec <={frombase 10 <={~~ $a 0d*}} }
+		(0*) { result oct <={frombase 8 <={~~ $a 0*}} }
+		* { result dec $a }
+	)
+}
+
+fn todecimal n {
+	local (b=) {
+		(_ b) = <={todecimal1 $n}
+		result $b
+	}
+}
+
 fn %mathfun fun a b {
 	local (
-		an = <={if {~ $a 0x*} { result <={$&frombase 16 $a} }{ result $a }}
-		bn = <={if {~ $b 0x*} { result <={$&frombase 16 $b} }{ result $b }}
+		base = dec
+		bn =
+		an =
 		res=
 	) {
+		(base bn) = <={todecimal1 $b}
+		(base an) = <={todecimal1 $a}
+
 		res = <={$fun $an $bn}
-		if {! ~ $a $an || ! ~ $b $bn} {
-			result '0x'^<={$&tobase 16 $res}
-		} {
-			result $res
-		}
+		match $base (
+			hex { result '0x'^<={tobase 16 $res} }
+			bin { result '0b'^<={tobase 2 $res} }
+			oct { result '0'^<={tobase 8 $res} }
+			dec { result $res }
+			* { throw assert 'base != (hex bin oct dec)' }
+		)
 	}
 }
 
