@@ -32,6 +32,7 @@ verbose = false
 subprocess_default = false
 libdir = 'libraries'
 testlibs = false
+testcore = true
 
 (_ _ restargs) = <={parseargs @ arg {
 	match $arg (
@@ -74,6 +75,7 @@ testlibs = false
 				libdir = $srcdir/libraries
 			}
 		}
+		(-C) { testcore = false }
 		(-l) { testlibs = true }
 		(-L) {
 			libdir = <={
@@ -100,7 +102,7 @@ testlibs = false
 		* { usage }
 	)
 } @{
-	echo 'usage: '^$dollar0^' [-dvVqy] [-x [es binary]] [-S srcdir] [-p path] [-A es arguments]'
+	echo 'usage: '^$dollar0^' [-dvVqylC] [-x [es binary]] [-S srcdir] [-p path] [-A es arguments]'
 	if {$fullhelp} {
 		cat << '%%end'
     flags:
@@ -111,6 +113,7 @@ testlibs = false
         -y -- automatically answer yes
         -h -- show this message
         -s -- default to using subprocesses for tests
+        -C -- do not run core tests
         -l -- also test libraries (implicit for -L)
 
         -x [es binary]  -- run estest in a different instance of es
@@ -206,7 +209,11 @@ fn run_test_file file {
 		if {$islibtest} {
 			echo -n 'library test '^$testname^': '
 		} {
- 			echo -n 'test '^$testname^': '
+			if {$testlibs} {
+				echo -n 'core test '^$testname^': '
+			} {
+				echo -n 'test '^$testname^': '
+			}
  		}
 		if {$passed} {
 			echo 'passed!'
@@ -248,6 +255,7 @@ if {$runbin} {
 	if {$testoutput} { cmdline = $cmdline '-V' }
 	if {$always_yes} { cmdline = $cmdline '-y' }
 	if {$subprocess_default} { cmdline = $cmdline '-s' }
+	if {! $testcore} { cmdline = $cmdline '-C' }
 	if {! ~ $srcdir '.'} {cmdline = $cmdline '-S' $srcdir}
 	cmdline = $cmdline '-b' $esbin
 	cmdline = $cmdline '-p' $testpath
@@ -256,8 +264,15 @@ if {$runbin} {
 	echo 'running:' $cmdline
 	exit <={$cmdline}
 } {
+	if {! $testcore && ! $testlibs} {
+		echo 'error: must run core and/or library tests'
+		exit 1
+	}
 	info 'build: '^$buildstring
 	info 'using '^<={%gcstats |> %first}^' garbage collector'
+	if {! $testcore} {
+		info 'only running library tests'
+	}
 	if {$testlibs} {
 		libraries = $libdir
 		info 'using libraries in '^$libraries^'/'
@@ -268,14 +283,16 @@ if {$runbin} {
 		let (core_tests =; lib_tests=) {
 			process $testpath/*.es (
 				(*/test_*) {
-					if {access -xf $matchexpr} {
-						if {$estest_debugging || $verbose} {
-							info 'found '^$matchexpr
-						}
-						core_tests = $core_tests $matchexpr
-					} {
-						if {$estest_debugging || $verbose} {
-							info 'ignoring '^$matchexpr
+					if {$testcore} {
+						if {access -xf $matchexpr} {
+							if {$estest_debugging || $verbose} {
+								info 'found '^$matchexpr
+							}
+							core_tests = $core_tests $matchexpr
+						} {
+							if {$estest_debugging || $verbose} {
+								info 'ignoring '^$matchexpr
+							}
 						}
 					}
 				}
