@@ -144,11 +144,12 @@ if {~ $#esbin 0} {
 	}
 }
 
-fn run_subproc_test testname testfn test_log tfp {
-	info 'running '^$testname^'in pid '^$pid > $test_log
+fn run_subproc_test testname testfn test_log tfp libdir {
+	libraries = $libdir
+	info 'running '^$testname^' in pid '^$pid > $test_log
 	catch @ e {
 		if {! $$tfp} {
-			echo 'got exception: '^$e
+			echo 'got exception: '^$^e >> $test_log
 		}
 		exit 1
 	} {
@@ -171,8 +172,20 @@ fn run_test_file file {
 		passed = false
 		test_exception=
 		test_log='/tmp/es_'^$pid^'_test_'^$testname^'.log'
-		tfp = 'test_'^$testname^'_fail_pass'
-		tsp = 'test_'^$testname^'_subprocess'
+		tfp = <={
+			if {$islibtest} {
+				result 'libtest_'^$testname^'_fail_pass'
+			} {
+				result 'test_'^$testname^'_fail_pass'
+			}
+		}
+		tsp = <={
+			if {$islibtest} {
+				result 'libtest_'^$testname^'_subprocess'
+			} {
+				result 'test_'^$testname^'_subprocess'
+			}
+		}
 	) {
 		. $file
 		if {~ <={%count $$tfp} 0} {
@@ -192,7 +205,7 @@ fn run_test_file file {
 			if {$$tsp} {
 				escmd = $esbin
 				if {$extra_es_args} { escmd = $escmd $restargs }
-				escmd = $escmd -c 'run_subproc_test '^$testname^' run_test_'^$testname^' '^$test_log^' '^$tfp
+				escmd = $escmd -c 'run_subproc_test '^$testname^' run_test_'^$testname^' '^$test_log^' '^$tfp^' '^$libdir
 				if {$estest_debugging} { info 'running: ' $escmd }
 				if {! $escmd} {
 					throw error run_subproc 'returned false'
