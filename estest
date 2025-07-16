@@ -257,6 +257,7 @@ fn run_all_tests {
 	}
 }
 
+
 if {$runbin} {
 	debugarg = <={ if {$estest_debugging} { result '-d' } { result '' }}
 	testoutputarg = <={ if {$testoutput} { result '-v' } { result '' }}
@@ -274,7 +275,8 @@ if {$runbin} {
 	cmdline = $cmdline '-p' $testpath
 	if {$testlibs} { cmdline = $cmdline '-L' $libdir }
 	if {$extra_es_args} { cmdline = $cmdline '-A' $restargs }
-	echo 'running:' $cmdline
+	info 'parent build: '^$buildstring
+	info 'running:' $cmdline
 	exit <={$cmdline}
 } {
 	if {! $testcore && ! $testlibs} {
