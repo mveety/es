@@ -1,14 +1,100 @@
 #!/usr/bin/env es
 library history (init libraries)
 
-histmax = 25
-history-reload = 25
+if {~ $#histmax 0} {
+	histmax = 25
+}
+if {~ $#history-reload 0} {
+	history-reload = 25
+}
+
+fn history_call_date {
+	let (utc = false; cmd = date; tmp=) {
+		if {~ $*(1) -u} {
+			utc = true
+			* = $*(2 ...)
+		}
+		match `{uname} (
+			(Linux) {
+				if {$utc} { cmd = $cmd -u }
+				cmd = $cmd -d '@'^$*(1)
+			}
+			* {
+				if {$utc} { cmd = $cmd -u }
+				cmd = $cmd -r $*(1)
+			}
+		)
+		cmd = $cmd '+%H %M'
+		tmp = `{$cmd}
+		result <={__es_nuke_zeros $tmp(1)} <={__es_nuke_zeros $tmp(2)}
+	}
+}
+
+fn gettzoffset {
+	let (
+		current_unixtime = $unixtime
+		localhours =
+		localminutes =
+		localseconds =
+		utchours =
+		utcminutes =
+		utcseconds =
+	) {
+		(localhours localminutes) = <={history_call_date $current_unixtime}
+		localseconds = <={add <={mul <={mul $localhours 60} 60} <={mul $localminutes 60}}
+		(utchours utcminutes) = <={history_call_date -u $current_unixtime}
+		utcseconds = <={add <={mul <={mul $utchours 60} 60} <={mul $utcminutes 60}}
+		result <={sub $localseconds $utcseconds}
+	}
+}
 
 fn history-filter start timeformat {
 	awk -v 'n='^$start \
 		-v 'timeformat='^$timeformat \
 		-v 'platform='^`{uname} \
+		-v 'current_unixtime='^$unixtime \
+		-v 'seconds_offset='^<={gettzoffset} \
 		'
+		function time_format(epoch) {
+			epoch += seconds_offset
+			seconds = epoch % 60
+			epoch -= seconds
+			epoch /= 60
+			minutes = epoch % 60
+			epoch -= minutes
+			epoch /= 60
+			hours = epoch % 24
+
+			return sprintf("%0.2d:%0.2d", hours, minutes)
+		}
+
+		function date_format(epoch) {
+			epoch += seconds_offset
+			JD = (epoch/86400)+2440588
+
+			alpha = int((JD - 1867216.25)/ 36524.25)
+			A = JD + 1 + alpha - int(alpha/4)
+			B = A + 1524
+			C = int((B - 122.1) / 365.25)
+			D = int(365.25 * C)
+			E = int((B - D) / 30.6001)
+			day = B - D - int(30.6001 * E)
+
+			if(E < 14) {
+				month = int(E -1)
+			} else {
+				month = int(E - 13)
+			}
+
+			if(month > 2) {
+				year = int(C - 4716)
+			} else {
+				year = int(C - 4715)
+			}
+
+			return sprintf("%0.4d-%0.2d-%0.2d", year, month, day)
+		}
+
 		BEGIN{
 			havetime = 0
 			unixtime = ""
@@ -22,19 +108,10 @@ fn history-filter start timeformat {
 		!/^#\+[0-9]+$/{
 			if($1 != ""){
 				if(havetime == 0){
-					cmd = "date +%F_%H:%M"
-				} else {
-					if (platform == "Linux") {
-						cmd = "date -d @" unixtime " +%F_%H:%M"
-					} else {
-						cmd = "date -r " unixtime " +%F_%H:%M"
-					}
+					unixtime = current_unixtime
 				}
-				cmd | getline curdatetime
-				close(cmd)
-				split(curdatetime, timearr, "_")
-				curdate = timearr[1]
-				curtime = timearr[2]
+				curdate = date_format(unixtime)
+				curtime = time_format(unixtime)
 				if(timeformat == "datetime"){
 					printf "%-6d  %s  %s  %s\n", n, curdate, curtime, $0
 				} else if (timeformat == "unixtime") {
