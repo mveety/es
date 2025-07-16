@@ -1,5 +1,6 @@
 /* prim-etc.c -- miscellaneous primitives ($Revision: 1.2 $) */
 
+#include <stdlib.h>
 #define	REQUIRE_PWD	1
 
 #include "es.h"
@@ -322,7 +323,8 @@ PRIM(add) {
 
 	if (list == NULL || list->next == NULL)
 		fail("$&add", "missing arguments");
-	a = atoi(getstr(list->term));
+
+	a = (int)strtol(getstr(list->term), NULL, 10);
 	if(a == 0){
 		switch(errno){
 		case EINVAL:
@@ -334,7 +336,7 @@ PRIM(add) {
 		}
 	}
 
-	b = atoi(getstr(list->next->term));
+	b = (int)strtol(getstr(list->next->term), NULL, 10);
 	if(b == 0){
 		switch(errno){
 		case EINVAL:
@@ -357,7 +359,8 @@ PRIM(sub) {
 
 	if (list == NULL || list->next == NULL)
 		fail("$&sub", "missing arguments");
-	a = atoi(getstr(list->term));
+
+	a = (int)strtol(getstr(list->term), NULL, 10);
 	if(a == 0){
 		switch(errno){
 		case EINVAL:
@@ -369,7 +372,7 @@ PRIM(sub) {
 		}
 	}
 
-	b = atoi(getstr(list->next->term));
+	b = (int)strtol(getstr(list->next->term), NULL, 10);
 	if(b == 0){
 		switch(errno){
 		case EINVAL:
@@ -392,7 +395,8 @@ PRIM(mul) {
 
 	if (list == NULL || list->next == NULL)
 		fail("$&mul", "missing arguments");
-	a = atoi(getstr(list->term));
+
+	a = (int)strtol(getstr(list->term), NULL, 10);
 	if(a == 0){
 		switch(errno){
 		case EINVAL:
@@ -404,7 +408,7 @@ PRIM(mul) {
 		}
 	}
 
-	b = atoi(getstr(list->next->term));
+	b = (int)strtol(getstr(list->next->term), NULL, 10);
 	if(b == 0){
 		switch(errno){
 		case EINVAL:
@@ -427,7 +431,8 @@ PRIM(div) {
 
 	if (list == NULL || list->next == NULL)
 		fail("$&div", "missing arguments");
-	a = atoi(getstr(list->term));
+
+	a = (int)strtol(getstr(list->term), NULL, 10);
 	if(a == 0){
 		switch(errno){
 		case EINVAL:
@@ -439,7 +444,7 @@ PRIM(div) {
 		}
 	}
 
-	b = atoi(getstr(list->next->term));
+	b = (int)strtol(getstr(list->next->term), NULL, 10);
 	if(b == 0){
 		switch(errno){
 		case EINVAL:
@@ -464,7 +469,8 @@ PRIM(mod) {
 
 	if (list == NULL || list->next == NULL)
 		fail("$&mod", "missing arguments");
-	a = atoi(getstr(list->term));
+
+	a = (int)strtol(getstr(list->term), NULL, 10);
 	if(a == 0){
 		switch(errno){
 		case EINVAL:
@@ -476,7 +482,7 @@ PRIM(mod) {
 		}
 	}
 
-	b = atoi(getstr(list->next->term));
+	b = (int)strtol(getstr(list->next->term), NULL, 10);
 	if(b == 0){
 		switch(errno){
 		case EINVAL:
@@ -502,8 +508,31 @@ PRIM(eq) {
 		return list_false;
 	if (list->next == NULL)
 		return list_false;
-	a = atoi(getstr(list->term));
-	b = atoi(getstr(list->next->term));
+
+	a = (int)strtol(getstr(list->term), NULL, 10);
+	if(a == 0){
+		switch(errno){
+		case EINVAL:
+			fail("$&eq", "invalid input");
+			break;
+		case ERANGE:
+			fail("$&eq", "conversion overflow");
+			break;
+		}
+	}
+
+	b = (int)strtol(getstr(list->next->term), NULL, 10);
+	if(b == 0){
+		switch(errno){
+		case EINVAL:
+			fail("$&eq", "invalid input");
+			break;
+		case ERANGE:
+			fail("$&eq", "conversion overflow");
+			break;
+		}
+	}
+
 	if (a == b)
 		return list_true;
 	return list_false;
@@ -517,8 +546,31 @@ PRIM(gt) {
 		return list_false;
 	if (list->next == NULL)
 		return list_false;
-	a = atoi(getstr(list->term));
-	b = atoi(getstr(list->next->term));
+
+	a = (int)strtol(getstr(list->term), NULL, 10);
+	if(a == 0){
+		switch(errno){
+		case EINVAL:
+			fail("$&gt", "invalid input");
+			break;
+		case ERANGE:
+			fail("$&gt", "conversion overflow");
+			break;
+		}
+	}
+
+	b = (int)strtol(getstr(list->next->term), NULL, 10);
+	if(b == 0){
+		switch(errno){
+		case EINVAL:
+			fail("$&gt", "invalid input");
+			break;
+		case ERANGE:
+			fail("$&gt", "conversion overflow");
+			break;
+		}
+	}
+
 	if (a > b)
 		return list_true;
 	return list_false;
@@ -532,8 +584,31 @@ PRIM(lt) {
 		return list_false;
 	if (list->next == NULL)
 		return list_false;
-	a = atoi(getstr(list->term));
-	b = atoi(getstr(list->next->term));
+
+	a = (int)strtol(getstr(list->term), NULL, 10);
+	if(a == 0){
+		switch(errno){
+		case EINVAL:
+			fail("$&lt", "invalid input");
+			break;
+		case ERANGE:
+			fail("$&lt", "conversion overflow");
+			break;
+		}
+	}
+
+	b = (int)strtol(getstr(list->next->term), NULL, 10);
+	if(b == 0){
+		switch(errno){
+		case EINVAL:
+			fail("$&lt", "invalid input");
+			break;
+		case ERANGE:
+			fail("$&lt", "conversion overflow");
+			break;
+		}
+	}
+
 	if (a < b)
 		return list_true;
 	return list_false;
@@ -547,7 +622,7 @@ PRIM(tobase) {
 	if(list == NULL || list->next == NULL)
 		fail("$&tobase", "missing arguments");
 
-	base = atoi(getstr(list->term));
+	base = (int)strtol(getstr(list->term), NULL, 10);
 	if(base == 0){
 		switch(errno){
 		case EINVAL:
@@ -559,7 +634,7 @@ PRIM(tobase) {
 		}
 	}
 
-	num = atoi(getstr(list->next->term));
+	num = (int)strtol(getstr(list->next->term), NULL, 10);
 	if(num == 0){
 		switch(errno){
 		case EINVAL:
