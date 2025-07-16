@@ -510,7 +510,7 @@ PRIM(eq) {
 		return list_false;
 
 	a = (int)strtol(getstr(list->term), NULL, 10);
-/*	if(a == 0){
+	if(a == 0){
 		switch(errno){
 		case EINVAL:
 			fail("$&eq", "invalid input");
@@ -519,10 +519,10 @@ PRIM(eq) {
 			fail("$&eq", "conversion overflow");
 			break;
 		}
-	}*/
+	}
 
 	b = (int)strtol(getstr(list->next->term), NULL, 10);
-/*	if(b == 0){
+	if(b == 0){
 		switch(errno){
 		case EINVAL:
 			fail("$&eq", "invalid input");
@@ -531,7 +531,7 @@ PRIM(eq) {
 			fail("$&eq", "conversion overflow");
 			break;
 		}
-	}*/
+	}
 
 	if (a == b)
 		return list_true;
@@ -548,7 +548,7 @@ PRIM(gt) {
 		return list_false;
 
 	a = (int)strtol(getstr(list->term), NULL, 10);
-/*	if(a == 0){
+	if(a == 0){
 		switch(errno){
 		case EINVAL:
 			fail("$&gt", "invalid input");
@@ -557,10 +557,10 @@ PRIM(gt) {
 			fail("$&gt", "conversion overflow");
 			break;
 		}
-	}*/
+	}
 
 	b = (int)strtol(getstr(list->next->term), NULL, 10);
-/*	if(b == 0){
+	if(b == 0){
 		switch(errno){
 		case EINVAL:
 			fail("$&gt", "invalid input");
@@ -569,7 +569,7 @@ PRIM(gt) {
 			fail("$&gt", "conversion overflow");
 			break;
 		}
-	}*/
+	}
 
 	if (a > b)
 		return list_true;
@@ -586,7 +586,7 @@ PRIM(lt) {
 		return list_false;
 
 	a = (int)strtol(getstr(list->term), NULL, 10);
-/*	if(a == 0){
+	if(a == 0){
 		switch(errno){
 		case EINVAL:
 			fail("$&lt", "invalid input");
@@ -595,10 +595,10 @@ PRIM(lt) {
 			fail("$&lt", "conversion overflow");
 			break;
 		}
-	} */
+	} 
 
 	b = (int)strtol(getstr(list->next->term), NULL, 10);
-/*	if(b == 0){
+	if(b == 0){
 		switch(errno){
 		case EINVAL:
 			fail("$&lt", "invalid input");
@@ -607,7 +607,7 @@ PRIM(lt) {
 			fail("$&lt", "conversion overflow");
 			break;
 		}
-	} */
+	} 
 
 	if (a < b)
 		return list_true;

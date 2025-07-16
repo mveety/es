@@ -890,14 +890,40 @@ fn %mathfun fun a b {
 	}
 }
 
-fn-add = $&add
-fn-sub = $&sub
-fn-mul = $&mul
-fn-div = $&div
-fn-mod = $&mod
-fn-eq = $&eq
-fn-lt = $&lt
-fn-gt = $&gt
+fn %numcompfun fun a b {
+	catch @ e t m {
+		if {! ~ $e error} { throw $e $t $m }
+		if {! ~ $t '$&frombase'} { throw $e $t $m }
+		match $m (
+			('invalid input') { result <=false }
+			('conversion overflow') { result <=false }
+			* { throw $e $t $m }
+		)
+	} {
+		local(an = <={todecimal $a}; bn = <={todecimal $b}) {
+			catch @ e t m {
+				if {! ~ $e error} { throw $e $t $m }
+				if {! ~ $t $fun} { throw $e $t $m }
+				match $m (
+					('invalid input') { result <=false }
+					('conversion overflow') { result <=false }
+					* { throw $e $t $m }
+				)
+			} {
+				$fun $an $bn
+			}
+		}
+	}
+}
+
+fn-add = @ a b { %mathfun $&add $a $b }
+fn-sub = @ a b { %mathfun $&sub $a $b }
+fn-mul = @ a b { %mathfun $&mul $a $b }
+fn-div = @ a b { %mathfun $&div $a $b }
+fn-mod = @ a b { %mathfun $&mod $a $b }
+fn-eq = @ a b { %numcompfun $&eq $a $b }
+fn-lt = @ a b { %numcompfun $&lt $a $b }
+fn-gt = @ a b { %numcompfun $&gt $a $b }
 
 fn gte a b {
 	if {eq $a $b || gt $a $b} {
