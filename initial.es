@@ -822,6 +822,15 @@ fn dprint msg {
 fn-tobase = @ base n { result <={$&tobase $base $n} }
 fn-frombase = @ base n { result <={$&frombase $base $n} }
 
+fn __es_nuke_zeros a {
+	let(al = <={%strlist $a}) {
+		while {~ $al(1) 0} {
+			al = $al(2 ...)
+		}
+		result <={%string $al}
+	}
+}
+
 fn todecimal1 a {
 	local (negative = false; abs = $a; r=){
 		if {~ $a -*} {
@@ -830,11 +839,11 @@ fn todecimal1 a {
 		}
 		r = <={match $abs (
 			(0) { result dec 0}
-			(0x*) { result hex <={frombase 16 <={~~ $abs 0x*}} }
-			(0b*) { result bin <={frombase 2 <={~~ $abs 0b*}} }
-			(0d*) { result dec <={frombase 10 <={~~ $abs 0d*}} }
-			(0*) { result oct <={frombase 8 <={~~ $abs 0*}} }
-			* { result dec $abs }
+			(0x*) { result hex <={frombase 16 <={__es_nuke_zeros <={~~ $abs 0x*}}} }
+			(0b*) { result bin <={frombase 2 <={__es_nuke_zeros <={~~ $abs 0b*}}} }
+			(0d*) { result dec <={frombase 10 <={__es_nuke_zeros <={~~ $abs 0d*}}} }
+			(0o*) { result oct <={frombase 8 <={__es_nuke_zeros <={~~ $abs 0o*}}} }
+			* { result dec <={__es_nuke_zeros $abs} }
 		)}
 		if {$negative} {
 			result $r(1) '-'^$r(2)
@@ -860,7 +869,7 @@ fn fromdecimal base n {
 		r = <={match $base (
 			hex { result '0x'^<={tobase 16 $abs} }
 			bin { result '0b'^<={tobase 2 $abs} }
-			oct { result '0'^<={tobase 8 $abs} }
+			oct { result '0o'^<={tobase 8 $abs} }
 			dec { result $abs }
 			* { throw assert $base^' != (hex bin oct dec)' }
 		)}
@@ -881,14 +890,14 @@ fn %mathfun fun a b {
 	}
 }
 
-fn-add = @ a b { %mathfun $&add $a $b }
-fn-sub = @ a b { %mathfun $&sub $a $b }
-fn-mul = @ a b { %mathfun $&mul $a $b }
-fn-div = @ a b { %mathfun $&div $a $b }
-fn-mod = @ a b { %mathfun $&mod $a $b }
-fn-eq = @ a b { $&eq <={todecimal $a} <={todecimal $b}}
-fn-lt = @ a b { $&lt <={todecimal $a} <={todecimal $b}}
-fn-gt = @ a b { $&gt <={todecimal $a} <={todecimal $b}}
+fn-add = $&add
+fn-sub = $&sub
+fn-mul = $&mul
+fn-div = $&div
+fn-mod = $&mod
+fn-eq = $&eq
+fn-lt = $&lt
+fn-gt = $&gt
 
 fn gte a b {
 	if {eq $a $b || gt $a $b} {
