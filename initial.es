@@ -890,6 +890,12 @@ fn %mathfun fun a b {
 	}
 }
 
+fn %noconvert_mathfun fun a b {
+	local (an = <={todecimal $a}; bn = <={todecimal $b}) {
+		$fun $an $bn
+	}
+}
+
 fn %numcompfun fun a b {
 	catch @ e t m {
 		if {! ~ $e error} { throw $e $t $m }
@@ -916,14 +922,58 @@ fn %numcompfun fun a b {
 	}
 }
 
-fn-add = @ a b { %mathfun $&add $a $b }
-fn-sub = @ a b { %mathfun $&sub $a $b }
-fn-mul = @ a b { %mathfun $&mul $a $b }
-fn-div = @ a b { %mathfun $&div $a $b }
-fn-mod = @ a b { %mathfun $&mod $a $b }
-fn-eq = @ a b { %numcompfun $&eq $a $b }
-fn-lt = @ a b { %numcompfun $&lt $a $b }
-fn-gt = @ a b { %numcompfun $&gt $a $b }
+fn %noparse_numcompfun fun a b {
+	catch @ e t m {
+		if {! ~ $e error} { throw $e $t $m }
+		if {! ~ $t '$&frombase'} { throw $e $t $m }
+		match $m (
+			('invalid input') { result <=false }
+			('conversion overflow') { result <=false }
+			* { throw $e $t $m }
+		)
+	} {
+		$fun $a $b
+	}
+}
+
+fn-add = $&add
+fn-sub = $&sub
+fn-mul = $&mul
+fn-div = $&div
+fn-mod = $&mod
+#fn-add = @ a b { %noconvert_mathfun $&add $a $b }
+#fn-sub = @ a b { %noconvert_mathfun $&sub $a $b }
+#fn-mul = @ a b { %noconvert_mathfun $&mul $a $b }
+#fn-div = @ a b { %noconvert_mathfun $&div $a $b }
+#fn-mod = @ a b { %noconvert_mathfun $&mod $a $b }
+fn-eq = @ a b { %noparse_numcompfun $&eq $a $b }
+fn-lt = @ a b { %noparse_numcompfun $&lt $a $b }
+fn-gt = @ a b { %noparse_numcompfun $&gt $a $b }
+
+fn-padd = @ a b { %mathfun $&add $a $b }
+fn-psub = @ a b { %mathfun $&sub $a $b }
+fn-pmul = @ a b { %mathfun $&mul $a $b }
+fn-pdiv = @ a b { %mathfun $&div $a $b }
+fn-pmod = @ a b { %mathfun $&mod $a $b }
+fn-peq = @ a b { %numcompfun $&eq $a $b }
+fn-plt = @ a b { %numcompfun $&lt $a $b }
+fn-pgt = @ a b { %numcompfun $&gt $a $b }
+
+fn pgte a b {
+	if {peq $a $b || pgt $a $b} {
+		result <=true
+	} {
+		result <=false
+	}
+}
+
+fn plte a b {
+	if {peq $a $b || plt $a $b} {
+		result <=true
+	} {
+		result <=false
+	}
+}
 
 fn gte a b {
 	if {eq $a $b || gt $a $b} {
@@ -940,8 +990,6 @@ fn lte a b {
 		result <=false
 	}
 }
-
-
 
 fn waitfor pids {
 	local (res =) {
