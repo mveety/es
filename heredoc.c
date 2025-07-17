@@ -20,7 +20,7 @@ extern Tree
 	char *s;
 	Buffer *buf = openbuffer(0);
 
-	while (!dnw[c = GETC()])
+	while (!dnw[c = input_getc()])
 		buf = bufputc(buf, c);
 
 	len = buf->len;
@@ -31,7 +31,7 @@ extern Tree
 		return NULL;
 	}
 	if (c != '^')
-		UNGETC(c);
+		input_ungetc(c);
 
 	return flatten(mk(nVar, mk(nWord, s)), " ");
 }
@@ -52,7 +52,7 @@ extern Tree *snarfheredoc(const char *eof, Boolean quoted) {
 	for (tree = NULL, tailp = &tree, buf = openbuffer(0);;) {
 		int c;
 		print_prompt2();
-		for (s = (unsigned char *) eof; (c = GETC()) == *s; s++)
+		for (s = (unsigned char *) eof; (c = input_getc()) == *s; s++)
 			;
 		if (*s == '\0' && (c == '\n' || c == EOF)) {
 			if (buf->current == 0 && tree != NULL)
@@ -63,16 +63,16 @@ extern Tree *snarfheredoc(const char *eof, Boolean quoted) {
 		}
 		if (s != (unsigned char *) eof)
 			buf = bufncat(buf, eof, s - (unsigned char *) eof);
-		for (;; c = GETC()) {
+		for (;; c = input_getc()) {
 			if (c == EOF) {
 				yyerror("incomplete here document");
 				freebuffer(buf);
 				disablehistory = FALSE;
 				return NULL;
 			}
-			if (c == '$' && !quoted && (c = GETC()) != '$') {
+			if (c == '$' && !quoted && (c = input_getc()) != '$') {
 				Tree *var;
-				UNGETC(c);
+				input_ungetc(c);
 				if (buf->current == 0)
 					freebuffer(buf);
 				else {

@@ -1,5 +1,15 @@
 library completion (init)
 
+if {~ $#es_complete_debug 0} {
+	es_complete_debug = false
+}
+
+fn escomp_echo {
+	if {$es_complete_debug} {
+		echo $*
+	}
+}
+
 fn es_complete_remove_empty_results files {
 	local(res=){
 		for(i = $files) {
@@ -423,8 +433,10 @@ fn %core_completer linebuf text start end state {
 	}
 	local(cclen=$#es_complete_current_completion){
 		if {~ $cclen 0 || gt <={add $state 1} $cclen} {
+			escomp_echo '''%end_complete'''
 			result '%%end_complete'
 		} {
+			escomp_echo ''''^$es_complete_current_completion(<={add $state 1})^''''
 			result $es_complete_current_completion(<={add $state 1})
 		}
 	}

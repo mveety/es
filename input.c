@@ -216,6 +216,17 @@ static int getverbose(Input *in) {
 	}
 }
 
+int
+input_getc(void) {
+	return (*input->get)(input);
+}
+
+void
+input_ungetc(int c)
+{
+	unget(input, c);
+}
+
 /* eoffill -- report eof when called to fill input buffer */
 static int eoffill(Input *in) {
 	assert(in->fd == -1);

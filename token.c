@@ -18,7 +18,7 @@ static Boolean goterror = FALSE;
 static size_t bufsize = 0;
 static char *tokenbuf = NULL;
 
-#define	InsertFreeCaret()	STMT(if (w != NW) { w = NW; UNGETC(c); return '^'; })
+#define	InsertFreeCaret()	STMT(if (w != NW) { w = NW; input_ungetc(c); return '^'; })
 
 
 /*
@@ -80,7 +80,7 @@ extern void print_prompt2(void) {
 static void scanerror(char *s) {
 	int c;
 	/* TODO: check previous character? rc's last hack? */
-	while ((c = GETC()) != '\n' && c != EOF)
+	while ((c = input_getc()) != '\n' && c != EOF)
 		;
 	goterror = TRUE;
 	yyerror(s);
@@ -104,28 +104,28 @@ static Boolean getfds(int fd[2], int c, int default0, int default1) {
 	fd[1] = default1;
 
 	if (c != '[') {
-		UNGETC(c);
+		input_ungetc(c);
 		return TRUE;
 	}
-	if ((unsigned int) (n = GETC() - '0') > 9) {
+	if ((unsigned int) (n = input_getc() - '0') > 9) {
 		scanerror("expected digit after '['");
 		return FALSE;
 	}
 
-	while ((unsigned int) (c = GETC() - '0') <= 9)
+	while ((unsigned int) (c = input_getc() - '0') <= 9)
 		n = n * 10 + c;
 	fd[0] = n;
 
 	switch (c += '0') {
 	case '=':
-		if ((unsigned int) (n = GETC() - '0') > 9) {
+		if ((unsigned int) (n = input_getc() - '0') > 9) {
 			if (n != ']' - '0') {
 				scanerror("expected digit or ']' after '='");
 				return FALSE;
 			}
 			fd[1] = CLOSED;
 		} else {
-			while ((unsigned int) (c = GETC() - '0') <= 9)
+			while ((unsigned int) (c = input_getc() - '0') <= 9)
 				n = n * 10 + c;
 			if (c != ']' - '0') {
 				scanerror("expected ']' after digit");
@@ -164,7 +164,7 @@ extern int yylex(void) {
 		print_prompt2();
 		newline = FALSE;
 	}
-top:	while ((c = GETC()) == ' ' || c == '\t')
+top:	while ((c = input_getc()) == ' ' || c == '\t')
 		w = NW;
 	if (c == EOF)
 		return ENDFILE;
@@ -176,8 +176,8 @@ top:	while ((c = GETC()) == ' ' || c == '\t')
 			buf[i++] = c;
 			if (i >= bufsize)
 				buf = tokenbuf = erealloc(buf, bufsize *= 2);
-		} while ((c = GETC()) != EOF && !meta[(unsigned char) c]);
-		UNGETC(c);
+		} while ((c = input_getc()) != EOF && !meta[(unsigned char) c]);
+		input_ungetc(c);
 		buf[i] = '\0';
 		w = KW;
 		if (buf[1] == '\0') {
@@ -214,25 +214,25 @@ top:	while ((c = GETC()) == ' ' || c == '\t')
 	case '!':
 		return '!';
 	case '`': /* NOTE: backquote is here */
-		c = GETC();
+		c = input_getc();
 		if (c == '`')
 			return BACKBACK;
-		UNGETC(c);
+		input_ungetc(c);
 		return '`';
 	case '$':
 		dollar = TRUE;
-		switch (c = GETC()) {
+		switch (c = input_getc()) {
 		case '#':	return COUNT;
 		case '^':	return FLAT;
 		case '&':	return PRIM;
 		case '"':	return TOSTR;
 		case ':':	return STRLIST;
-		default:	UNGETC(c); return '$';
+		default:	input_ungetc(c); return '$';
 		}
 	case '\'':
 		w = RW;
 		i = 0;
-		while ((c = GETC()) != '\'' || (c = GETC()) == '\'') {
+		while ((c = input_getc()) != '\'' || (c = input_getc()) == '\'') {
 			buf[i++] = c;
 			if (c == '\n')
 				print_prompt2();
@@ -244,25 +244,25 @@ top:	while ((c = GETC()) == ' ' || c == '\t')
 			if (i >= bufsize)
 				buf = tokenbuf = erealloc(buf, bufsize *= 2);
 		}
-		UNGETC(c);
+		input_ungetc(c);
 		buf[i] = '\0';
 		y->str = gcdup(buf);
 		return QWORD;
 	case '\\':
-		if ((c = GETC()) == '\n') {
+		if ((c = input_getc()) == '\n') {
 			print_prompt2();
-			UNGETC(' ');
+			input_ungetc(' ');
 			goto top; /* Pretend it was just another space. */
 		}
 		if (c == EOF) {
-			UNGETC(EOF);
+			input_ungetc(EOF);
 			goto badescape;
 		}
-		UNGETC(c);
+		input_ungetc(c);
 		c = '\\';
 		InsertFreeCaret();
 		w = RW;
-		c = GETC();
+		c = input_getc();
 		switch (c) {
 		case 'a':	*buf = '\a';	break;
 		case 'b':	*buf = '\b';	break;
@@ -274,7 +274,7 @@ top:	while ((c = GETC()) == ' ' || c == '\t')
 		case 'x': case 'X': {
 			int n = 0;
 			for (;;) {
-				c = GETC();
+				c = input_getc();
 				if (!isxdigit(c))
 					break;
 				n = (n << 4)
@@ -282,7 +282,7 @@ top:	while ((c = GETC()) == ' ' || c == '\t')
 			}
 			if (n == 0)
 				goto badescape;
-			UNGETC(c);
+			input_ungetc(c);
 			*buf = n;
 			break;
 		}
@@ -290,11 +290,11 @@ top:	while ((c = GETC()) == ' ' || c == '\t')
 			int n = 0;
 			do {
 				n = (n << 3) | (c - '0');
-				c = GETC();
+				c = input_getc();
 			} while (isodigit(c));
 			if (n == 0)
 				goto badescape;
-			UNGETC(c);
+			input_ungetc(c);
 			*buf = n;
 			break;
 		}
@@ -311,7 +311,7 @@ top:	while ((c = GETC()) == ' ' || c == '\t')
 		y->str = gcdup(buf);
 		return QWORD;
 	case '#':
-		while ((c = GETC()) != '\n') /* skip comment until newline */
+		while ((c = input_getc()) != '\n') /* skip comment until newline */
 			if (c == EOF)
 				return ENDFILE;
 		/* FALLTHROUGH */
@@ -333,16 +333,16 @@ top:	while ((c = GETC()) == ' ' || c == '\t')
 		return c;
 	case '&':
 		w = NW;
-		c = GETC();
+		c = input_getc();
 		if (c == '&')
 			return ANDAND;
-		UNGETC(c);
+		input_ungetc(c);
 		return '&';
 
 	case '|': {
 		int p[2];
 		w = NW;
-		c = GETC();
+		c = input_getc();
 		if (c == '|')
 			return OROR;
 		if (c == '>')
@@ -362,15 +362,15 @@ top:	while ((c = GETC()) == ' ' || c == '\t')
 		int fd[2];
 	case '<':
 		fd[0] = 0;
-		if ((c = GETC()) == '>')
-			if ((c = GETC()) == '>') {
-				c = GETC();
+		if ((c = input_getc()) == '>')
+			if ((c = input_getc()) == '>') {
+				c = input_getc();
 				cmd = "%open-append";
 			} else
 				cmd = "%open-write";
 		else if (c == '<')
-			if ((c = GETC()) == '<') {
-				c = GETC();
+			if ((c = input_getc()) == '<') {
+				c = input_getc();
 				cmd = "%here";
 			} else
 				cmd = "%heredoc";
@@ -383,14 +383,14 @@ top:	while ((c = GETC()) == ' ' || c == '\t')
 		goto redirection;
 	case '>':
 		fd[0] = 1;
-		if ((c = GETC()) == '>')
-			if ((c = GETC()) == '<') {
-				c = GETC();
+		if ((c = input_getc()) == '>')
+			if ((c = input_getc()) == '<') {
+				c = input_getc();
 				cmd = "%open-append";
 			} else
 				cmd = "%append";
 		else if (c == '<') {
-			c = GETC();
+			c = input_getc();
 			cmd = "%open-create";
 		} else
 			cmd = "%create";

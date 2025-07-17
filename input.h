@@ -18,15 +18,12 @@ struct Input {
 	int runflags;
 };
 
-
-#define	GETC()		(*input->get)(input)
-#define	UNGETC(c)	unget(input, c)
-
-
 /* input.c */
 
 extern Input *input;
 extern void unget(Input *in, int c);
+extern void input_ungetc(int c);
+extern int input_getc(void);
 extern Boolean disablehistory;
 extern void yyerror(char *s);
 
