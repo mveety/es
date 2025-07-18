@@ -5,25 +5,6 @@
 
 /* simple allocator */
 
-typedef struct Region Region;
-typedef struct Block Block;
-
-struct Region {
-	size_t start;
-	size_t size;
-	Block *startp;
-	Region *next;
-};
-
-struct Block {
-//	size_t intype;
-//	size_t alloc;
-	Block *prev;
-	Block *next;
-	size_t size; /* includes the size of this header */
-//	Header *h;
-};
-
 Region *regions;
 
 Block *usedlist;
@@ -33,6 +14,9 @@ size_t nallocs = 0;
 size_t bytesfree = 0;
 size_t bytesused = 0;
 size_t allocations = 0;
+size_t nregions = 0;
+size_t nsort = 0;
+size_t ncoalesce = 0;
 volatile int rangc;
 volatile int ms_gc_blocked;
 volatile size_t ngcs = 0;
@@ -64,6 +48,7 @@ create_block(size_t sz)
 	r->size = sz;
 	r->next = regions;
 	regions = r;
+	nregions++;
 	return b;
 }
 
@@ -151,7 +136,7 @@ sort_list(Block *list, size_t len)
 	if(pivot->prev)
 		pivot->prev->next = pivot->next;
 	if(pivot->next)
-	pivot->next->prev = pivot->prev;
+		pivot->next->prev = pivot->prev;
 	p = list;
 	pivot->next = pivot->prev = nil;
 
@@ -407,6 +392,10 @@ gc_getstats(GcStats *stats)
 	stats->coalesce_after = gc_coalesce_after_n;
 	stats->ncoalescegc = ncoalescegc;
 	stats->gc_after = gc_after;
+	stats->nregions = nregions;
+	stats->nsort = nsort;
+	stats->ncoalesce = ncoalesce;
+	stats->blocksz = blocksize;
 }
 
 int
@@ -540,7 +529,10 @@ gc_print_stats(GcStats *stats)
 	dprintf(2, "gc_coalesce_after_n = %d, ncoalescegc = %d\n",
 			stats->coalesce_after, stats->ncoalescegc);
 	dprintf(2, "gc_after = %d\n", stats->gc_after);
-
+	dprintf(2, "nregions = %lu\n", stats->nregions);
+	dprintf(2, "nsort = %lu\n", stats->nsort);
+	dprintf(2, "ncoalesce = %lu\n", stats->ncoalesce);
+	dprintf(2, "blocksz = %lu\n", stats->blocksz);
 }
 
 void
@@ -604,10 +596,12 @@ ms_gc(Boolean full)
 	if(nsortgc >= gc_sort_after_n || full){
 		freelist = sort_list(freelist, nfrees);
 		nsortgc = 0;
+		nsort++;
 	}
 	if(ncoalescegc >= gc_coalesce_after_n || full){
 		freelist = coalesce_list(freelist);
 		ncoalescegc = 0;
+		ncoalesce++;
 	}
 
 	ngcs++;

@@ -64,6 +64,15 @@ fn %gcinfo {
 			echo 'coalesce_after =' $matchexpr(14)
 			echo 'ncoalescegc =' $matchexpr(15)
 			echo 'gc_after =' $matchexpr(16)
+			echo 'nregions =' $matchexpr(17)
+			echo 'nsort =' $matchexpr(18)
+			echo 'ncoalesce =' $matchexpr(19)
+			echo 'blocksize =' $matchexpr(20)
+			if {~ $1 -v || ~ $1 -r} {
+				for (r = <={$&dumpregions}; n = <={%range 1 $matchexpr(17)}) {
+					echo '    region '^$n^': '^$r
+				}
+			}
 		}
 	)
 }

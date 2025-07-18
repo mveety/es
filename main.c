@@ -2,7 +2,7 @@
 
 #include "es.h"
 #include "gc.h"
-#include "token.h"
+// #include "token.h"
 
 Boolean gcverbose	= FALSE;	/* -G */
 Boolean gcinfo		= FALSE;	/* -I */
@@ -16,6 +16,7 @@ Boolean verbose_parser = FALSE; /* -P */
 extern int optind;
 extern char *optarg;
 extern int yydebug;
+extern size_t blocksize;
 
 /* extern int isatty(int fd); */
 extern char **environ;
@@ -73,7 +74,7 @@ static void runesrc(void) {
 /* usage -- print usage message and die */
 static noreturn usage(void) {
 	eprint(
-		"usage: es [-c command] [-sileVxnNpodIGXLAvPgSC] [file [args ...]]\n"
+		"usage: es [-c command] [-sileVxnNpodIGXLAvPgSCB] [file [args ...]]\n"
 		"	-c cmd execute argument\n"
 		"	-s	read commands from standard input; stop option parsing\n"
 		"	-i	interactive shell\n"
@@ -96,6 +97,7 @@ static noreturn usage(void) {
 		"	-g n	(new gc) collection frequency\n"
 		"	-S n	(new gc) freelist sort frequency\n"
 		"	-C n	(new gc) freelist coalesce frequency\n"
+		"	-B n	(new gc) block size in megabytes\n"
 	);
 	exit(1);
 }
@@ -137,7 +139,7 @@ int main(int argc, char **argv) {
 
 	/* yydebug = 1; */
 
-	while ((c = getopt(argc, argv, "+eilxXvnpPodsAVc:?GILNg:S:C:")) != EOF)
+	while ((c = getopt(argc, argv, "+eilxXvnpPodsAVc:?hGILNg:S:C:B:")) != EOF)
 		switch (c) {
 		case '+': break; /* for god damn gnu */
 		case 'c':	cmd = optarg;			break;
@@ -166,6 +168,21 @@ int main(int argc, char **argv) {
 		case 'C':
 			gc_coalesce_after_n = atoi(optarg);
 			break;
+		case 'B':
+			blocksize = strtoul(optarg, NULL, 10);
+			if(blocksize == 0) {
+				initgc();
+				initconv();
+				usage();
+			}
+			blocksize *= 1024*1024;
+			if(blocksize < MIN_minspace){
+				dprintf(2, "error: blocksize < %d\n", (MIN_minspace/1024));
+				initgc();
+				initconv();
+				usage();
+			}
+			break;
 		case 'v':
 			initgc();
 			initconv();
@@ -174,6 +191,7 @@ int main(int argc, char **argv) {
 		case 'P':
 			verbose_parser = TRUE;
 			break;
+		case 'h':
 		default:
 			initgc();
 			initconv();

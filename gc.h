@@ -28,6 +28,8 @@ typedef struct Header Header;
 typedef struct GcStats GcStats;
 typedef struct Buffer Buffer;
 typedef struct AnonSpace AnonSpace;
+typedef struct Region Region;
+typedef struct Block Block;
 
 struct Tag {
 	void *(*copy)(void *);
@@ -67,12 +69,32 @@ struct GcStats {
 	int coalesce_after;
 	int ncoalescegc;
 	int gc_after;
+	size_t nregions;
+	size_t nsort;
+	size_t ncoalesce;
+	size_t blocksz;
 };
 
 struct Buffer {
 	size_t len;
 	size_t current;
 	char str[1];
+};
+
+struct Region {
+	size_t start;
+	size_t size;
+	Block *startp;
+	Region *next;
+};
+
+struct Block {
+//	size_t intype;
+//	size_t alloc;
+	Block *prev;
+	Block *next;
+	size_t size; /* includes the size of this header */
+//	Header *h;
 };
 
 /* Tags */

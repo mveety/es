@@ -13,6 +13,8 @@
 # define BSD_LIMITS 0
 #endif
 
+extern Region *regions;
+
 PRIM(newpgrp) {
 	int pid;
 	if (list != NULL)
@@ -511,6 +513,10 @@ PRIM(gcstats) {
 
 	if(gctype == NewGc){
 		gc_getstats(&stats);
+		res = mklist(mkstr(str("%lud", stats.blocksz)), res);
+		res = mklist(mkstr(str("%lud", stats.ncoalesce)), res);
+		res = mklist(mkstr(str("%lud", stats.nsort)), res);
+		res = mklist(mkstr(str("%lud", stats.nregions)), res);
 		res = mklist(mkstr(str("%d", stats.gc_after)), res);
 		res = mklist(mkstr(str("%d", stats.ncoalescegc)), res);
 		res = mklist(mkstr(str("%d", stats.coalesce_after)), res);
@@ -546,6 +552,22 @@ PRIM(gc) {
 	return NULL;
 }
 
+PRIM(dumpregions) {
+	List *res = NULL; Root r_res;
+	Region *r;
+
+	if(gctype == OldGc)
+		fail("$&dumpregions", "using old gc");
+
+	gcref(&r_res, (void**)&res);
+
+	for(r = regions; r != NULL; r = r->next)
+		res = mklist(mkstr(str("%lud", r->size)), res);
+
+	gcderef(&r_res, (void**)&res);
+	return res;
+}
+
 extern Dict *initprims_sys(Dict *primdict) {
 	X(newpgrp);
 	X(background);
@@ -565,5 +587,6 @@ extern Dict *initprims_sys(Dict *primdict) {
 #endif /* !KERNEL_POUNDBANG */
 	X(gcstats);
 	X(gc);
+	X(dumpregions);
 	return primdict;
 }
