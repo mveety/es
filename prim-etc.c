@@ -343,10 +343,10 @@ PRIM(add) {
 	if(a == 0){
 		switch(errno){
 		case EINVAL:
-			fail("$&add", "invalid input");
+			fail("$&add", str("invalid input: $1 = '%s'", getstr(list->term)));
 			break;
 		case ERANGE:
-			fail("$&add", "conversion overflow");
+			fail("$&add", str("conversion overflow: $1 = '%s'", getstr(list->term)));
 			break;
 		}
 	}
@@ -355,10 +355,10 @@ PRIM(add) {
 	if(b == 0){
 		switch(errno){
 		case EINVAL:
-			fail("$&add", "invalid input");
+			fail("$&add", str("invalid input: $2 = '%s'", getstr(list->next->term)));
 			break;
 		case ERANGE:
-			fail("$&add", "conversion overflow");
+			fail("$&add", str("conversion overflow: $2 = '%s'", getstr(list->next->term)));
 			break;
 		}
 	}
@@ -379,10 +379,10 @@ PRIM(sub) {
 	if(a == 0){
 		switch(errno){
 		case EINVAL:
-			fail("$&sub", "invalid input");
+			fail("$&sub", str("invalid input: $1 = '%s'", getstr(list->term)));
 			break;
 		case ERANGE:
-			fail("$&sub", "conversion overflow");
+			fail("$&sub", str("conversion overflow: $1 = '%s'", getstr(list->term)));
 			break;
 		}
 	}
@@ -391,10 +391,10 @@ PRIM(sub) {
 	if(b == 0){
 		switch(errno){
 		case EINVAL:
-			fail("$&sub", "invalid input");
+			fail("$&sub", str("invalid input: $2 = '%s'", getstr(list->next->term)));
 			break;
 		case ERANGE:
-			fail("$&sub", "conversion overflow");
+			fail("$&sub", str("conversion overflow: $2 = '%s'", getstr(list->next->term)));
 			break;
 		}
 	}
@@ -415,11 +415,10 @@ PRIM(mul) {
 	if(a == 0){
 		switch(errno){
 		case EINVAL:
-			dprintf(2, "mul: a = %s\n", getstr(list->term));
-			fail("$&mul", "invalid input");
+			fail("$&mul", str("invalid input: $1 = '%s'", getstr(list->term)));
 			break;
 		case ERANGE:
-			fail("$&mul", "conversion overflow");
+			fail("$&mul", str("conversion overflow: $1 = '%s'", getstr(list->term)));
 			break;
 		}
 	}
@@ -428,11 +427,10 @@ PRIM(mul) {
 	if(b == 0){
 		switch(errno){
 		case EINVAL:
-			dprintf(2, "mul: b = %s\n", getstr(list->term));
-			fail("$&mul", "invalid input");
+			fail("$&mul", str("invalid input: $2 = '%s'", getstr(list->next->term)));
 			break;
 		case ERANGE:
-			fail("$&mul", "conversion overflow");
+			fail("$&mul", str("conversion overflow: $2 = '%s'", getstr(list->next->term)));
 			break;
 		}
 	}
@@ -453,10 +451,10 @@ PRIM(div) {
 	if(a == 0){
 		switch(errno){
 		case EINVAL:
-			fail("$&div", "invalid input");
+			fail("$&div", str("invalid input: $1 = '%s'", getstr(list->term)));
 			break;
 		case ERANGE:
-			fail("$&div", "conversion overflow");
+			fail("$&div", str("conversion overflow: $1 = '%s'", getstr(list->term)));
 			break;
 		}
 	}
@@ -465,10 +463,10 @@ PRIM(div) {
 	if(b == 0){
 		switch(errno){
 		case EINVAL:
-			fail("$&div", "invalid input");
+			fail("$&div", str("invalid input: $2 = '%s'", getstr(list->next->term)));
 			break;
 		case ERANGE:
-			fail("$&div", "conversion overflow");
+			fail("$&div", str("conversion overflow: $2 = '%s'", getstr(list->next->term)));
 			break;
 		}
 	}
@@ -491,10 +489,10 @@ PRIM(mod) {
 	if(a == 0){
 		switch(errno){
 		case EINVAL:
-			fail("$&mod", "invalid input");
+			fail("$&mod", str("invalid input: $1 = '%s'", getstr(list->term)));
 			break;
 		case ERANGE:
-			fail("$&mod", "conversion overflow");
+			fail("$&mod", str("conversion overflow: $1 = '%s'", getstr(list->term)));
 			break;
 		}
 	}
@@ -503,10 +501,10 @@ PRIM(mod) {
 	if(b == 0){
 		switch(errno){
 		case EINVAL:
-			fail("$&mod", "invalid input");
+			fail("$&mod", str("invalid input: $2 = '%s'", getstr(list->next->term)));
 			break;
 		case ERANGE:
-			fail("$&mod", "conversion overflow");
+			fail("$&mod", str("conversion overflow: $2 = '%s'", getstr(list->next->term)));
 			break;
 		}
 	}
@@ -625,26 +623,26 @@ PRIM(tobase) {
 	if(base == 0){
 		switch(errno){
 		case EINVAL:
-			fail("$&tobase", "invalid input");
+			fail("$&tobase", str("invalid input: $1 = '%s'", getstr(list->term)));
 			break;
 		case ERANGE:
-			fail("$&tobase", "conversion overflow");
+			fail("$&tobase", str("conversion overflow: $1 = '%s'", getstr(list->term)));
 			break;
 		}
+
 	}
 
 	num = (int)strtol(getstr(list->next->term), NULL, 10);
 	if(num == 0){
 		switch(errno){
 		case EINVAL:
-			fail("$&tobase", "invalid input");
+			fail("$&tobase", str("invalid input: $2 = '%s'", getstr(list->next->term)));
 			break;
 		case ERANGE:
-			fail("$&tobase", "conversion overflow");
+			fail("$&tobase", str("conversion overflow: $2 = '%s'", getstr(list->next->term)));
 			break;
 		}
 	}
-
 
 	if(base < 2)
 		fail("$&tobase", "base < 2");
@@ -694,10 +692,10 @@ PRIM(frombase) {
 	if(base == 0){
 		switch(errno){
 		case EINVAL:
-			fail("$&frombase", "invalid input");
+			fail("$&frombase", str("invalid input: $1 = '%s'", getstr(list->next->term)));
 			break;
 		case ERANGE:
-			fail("$&frombase", "conversion overflow");
+			fail("$&frombase", str("conversion overflow: $1 = '%s'", getstr(list->next->term)));
 			break;
 		}
 	}
@@ -711,10 +709,10 @@ PRIM(frombase) {
 	if(num == 0){
 		switch(errno){
 		case EINVAL:
-			fail("$&frombase", "invalid input");
+			fail("$&frombase", str("invalid input: $2 = '%s'", getstr(list->next->term)));
 			break;
 		case ERANGE:
-			fail("$&frombase", "conversion overflow");
+			fail("$&frombase", str("conversion overflow: $2 = '%s'", getstr(list->next->term)));
 			break;
 		}
 	}
@@ -733,10 +731,10 @@ PRIM(range) {
 	if(start == 0){
 		switch(errno){
 		case EINVAL:
-			fail("$&range", "invalid input");
+			fail("$&range", str("invalid input: $1 = '%s'", getstr(list->term)));
 			break;
 		case ERANGE:
-			fail("$&range", "conversion overflow");
+			fail("$&range", str("conversion overflow: $1 = '%s'", getstr(list->term)));
 			break;
 		}
 	}
@@ -745,10 +743,10 @@ PRIM(range) {
 	if(start == 0){
 		switch(errno){
 		case EINVAL:
-			fail("$&range", "invalid input");
+			fail("$&range", str("invalid input: $2 = '%s'", getstr(list->term)));
 			break;
 		case ERANGE:
-			fail("$&range", "conversion overflow");
+			fail("$&range", str("conversion overflow: $2 = '%s'", getstr(list->term)));
 			break;
 		}
 	}
