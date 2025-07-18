@@ -4,6 +4,8 @@ if {~ $#bench_run_caret_srcdata 0} {
 	bench_run_caret_srcdata = false
 }
 
+timecmd = time
+
 let (srcdata=;srcdata_len=;no_srcdata=true){
 
 	fn populate_source_data elems {
@@ -113,7 +115,7 @@ let (srcdata=;srcdata_len=;no_srcdata=true){
 }
 
 fn run-bench bench {
-	time { bench-^$bench }
+	$timecmd { bench-^$bench }
 }
 
 fn bench-usage {
@@ -121,6 +123,10 @@ fn bench-usage {
 }
 
 fn bench args {
+	if {~ $args(1) -q} {
+		timecmd =
+		args = $args(2 ...)
+	}
 	if {~ $#args 0} { bench-usage }
 	local (
 		cmd = $args(1)
@@ -164,7 +170,7 @@ fn bench args {
 				return <=true
 			}
 			go {
-				bench setup
+				bench setup $cmdargs
 				bench run-all
 			}
 			* { bench-usage }
