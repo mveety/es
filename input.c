@@ -3,6 +3,8 @@
 
 #include "es.h"
 #include "readline/readline.h"
+#include "stdenv.h"
+#include <stdio.h>
 #include <string.h>
 #include "input.h"
 
@@ -32,6 +34,7 @@ Boolean resetterminal = FALSE;
 static char *history;
 char *lastcmd, *nextlastcmd;
 static int historyfd = -1;
+extern Boolean verbose_parser;
 
 #if READLINE
 /* int rl_meta_chars;	* for editline; ignored for gnu readline */
@@ -218,13 +221,43 @@ static int getverbose(Input *in) {
 
 int
 input_getc(void) {
-	return (*input->get)(input);
+	int cc;
+
+	cc = (*input->get)(input);
+	assert(input->tokstatusi < MAXTOKBUF);
+	input->tokstatus[input->tokstatusi] = (char)cc;
+	input->tokstatusi++;
+	return cc;
 }
 
 void
 input_ungetc(int c)
 {
+	assert(input->tokstatusi > 0);
+	input->tokstatusi--;
 	unget(input, c);
+}
+
+void
+input_resettokstatus(void)
+{
+	char *s;
+
+	s = input_dumptokstatus();
+	if(verbose_parser == TRUE)
+		dprintf(2, "input %s(%p): last tokstatus = \"%s\"\n", input->name, input, s);
+	if(input->lasttokstatus != NULL) {
+		free(input->lasttokstatus);
+		input->lasttokstatus = NULL;
+	}
+	input->tokstatusi = 0;
+}
+
+char*
+input_dumptokstatus(void) {
+	input->tokstatus[input->tokstatusi] = 0;
+	input->lasttokstatus = strndup(&input->tokstatus[0], MAXTOKBUF);
+	return input->lasttokstatus;
 }
 
 /* eoffill -- report eof when called to fill input buffer */
@@ -594,6 +627,7 @@ extern Tree *parse(char *pr1, char *pr2) {
 
 	inityy();
 	emptyherequeue();
+	
 
 	if (ISEOF(input))
 		throw(mklist(mkstr("eof"), NULL));
@@ -616,7 +650,7 @@ extern Tree *parse(char *pr1, char *pr2) {
 		assert(error != NULL);
 		e = error;
 		error = NULL;
-		fail("$&parse", "yyparse: %s", e);
+		fail("$&parse", "yyparse: %s: \"%s\"", e, input_dumptokstatus());
 	}
 	if (input->runflags & run_lisptrees)
 		eprint("%B\n", parsetree);

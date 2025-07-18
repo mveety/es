@@ -7,6 +7,7 @@
 Boolean gcverbose	= FALSE;	/* -G */
 Boolean gcinfo		= FALSE;	/* -I */
 Boolean assertions = FALSE;		/* -A */
+Boolean verbose_parser = FALSE; /* -P */
 
 /* #if 0 && !HPUX && !defined(linux) && !defined(sgi) */
 /* extern int getopt (int argc, char **argv, const char *optstring); */
@@ -169,6 +170,9 @@ int main(int argc, char **argv) {
 			initconv();
 			print_version();
 			break;
+		case 'P':
+			verbose_parser = TRUE;
+			break;
 		default:
 			initgc();
 			initconv();
@@ -244,11 +248,12 @@ getopt_done:
 
 		if (termeq(e->term, "exit"))
 			return exitstatus(e->next);
-		else if (termeq(e->term, "error"))
-			eprint("root handler: %L\n",
-			       e->next == NULL ? NULL : e->next->next,
-			       " ");
-		else if (!issilentsignal(e))
+		else if (termeq(e->term, "error")) {
+			eprint("root handler: %L\n", e, " ");
+			//eprint("root handler: %L\n",
+			//       e->next == NULL ? NULL : e->next->next,
+			//       " ");
+		} else if (!issilentsignal(e))
 			eprint("uncaught exception: %L\n", e, " ");
 		return 1;
 

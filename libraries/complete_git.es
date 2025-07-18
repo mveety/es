@@ -36,7 +36,7 @@ fn complete_git_filter_list str {
 				res = $res <={es_complete_trim $i}
 			}
 		}
-		result $res
+		return $res
 	}
 }
 

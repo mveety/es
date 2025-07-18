@@ -827,7 +827,11 @@ fn __es_nuke_zeros a {
 		while {~ $al(1) 0} {
 			al = $al(2 ...)
 		}
-		result <={%string $al}
+		if {~ $#al 0} {
+			result '0'
+		} {
+			result <={%string $al}
+		}
 	}
 }
 
@@ -901,8 +905,8 @@ fn %numcompfun fun a b {
 		if {! ~ $e error} { throw $e $t $m }
 		if {! ~ $t '$&frombase'} { throw $e $t $m }
 		match $m (
-			('invalid input') { result <=false }
-			('conversion overflow') { result <=false }
+			('invalid input') { false }
+			('conversion overflow') { false }
 			* { throw $e $t $m }
 		)
 	} {
@@ -911,8 +915,8 @@ fn %numcompfun fun a b {
 				if {! ~ $e error} { throw $e $t $m }
 				if {! ~ $t $fun} { throw $e $t $m }
 				match $m (
-					('invalid input') { result <=false }
-					('conversion overflow') { result <=false }
+					('invalid input') { false }
+					('conversion overflow') { false }
 					* { throw $e $t $m }
 				)
 			} {
@@ -922,33 +926,23 @@ fn %numcompfun fun a b {
 	}
 }
 
-fn %noparse_numcompfun fun a b {
-	catch @ e t m {
-		if {! ~ $e error} { throw $e $t $m }
-		if {! ~ $t '$&frombase'} { throw $e $t $m }
-		match $m (
-			('invalid input') { result <=false }
-			('conversion overflow') { result <=false }
-			* { throw $e $t $m }
-		)
-	} {
-		$fun $a $b
-	}
-}
+#fn-add = $&add
+#fn-sub = $&sub
+#fn-mul = $&mul
+#fn-div = $&div
+#fn-mod = $&mod
+#fn-eq = $&eq
+#fn-lt = $&lt
+#fn-gt = $&gt
 
-fn-add = $&add
-fn-sub = $&sub
-fn-mul = $&mul
-fn-div = $&div
-fn-mod = $&mod
-#fn-add = @ a b { %noconvert_mathfun $&add $a $b }
-#fn-sub = @ a b { %noconvert_mathfun $&sub $a $b }
-#fn-mul = @ a b { %noconvert_mathfun $&mul $a $b }
-#fn-div = @ a b { %noconvert_mathfun $&div $a $b }
-#fn-mod = @ a b { %noconvert_mathfun $&mod $a $b }
-fn-eq = @ a b { %noparse_numcompfun $&eq $a $b }
-fn-lt = @ a b { %noparse_numcompfun $&lt $a $b }
-fn-gt = @ a b { %noparse_numcompfun $&gt $a $b }
+fn-add = @ a b { %mathfun $&add $a $b }
+fn-sub = @ a b { %mathfun $&sub $a $b }
+fn-mul = @ a b { %mathfun $&mul $a $b }
+fn-div = @ a b { %mathfun $&div $a $b }
+fn-mod = @ a b { %mathfun $&mod $a $b }
+fn-eq = @ a b { %numcompfun $&eq $a $b }
+fn-lt = @ a b { %numcompfun $&lt $a $b }
+fn-gt = @ a b { %numcompfun $&gt $a $b }
 
 fn-padd = @ a b { %mathfun $&add $a $b }
 fn-psub = @ a b { %mathfun $&sub $a $b }
@@ -961,33 +955,37 @@ fn-pgt = @ a b { %numcompfun $&gt $a $b }
 
 fn pgte a b {
 	if {peq $a $b || pgt $a $b} {
-		result <=true
+		true
 	} {
-		result <=false
+		false
 	}
 }
 
 fn plte a b {
 	if {peq $a $b || plt $a $b} {
-		result <=true
+		true
 	} {
-		result <=false
+		false
 	}
 }
 
 fn gte a b {
-	if {eq $a $b || gt $a $b} {
-		result <=true
+	if {eq $a $b} {
+		true
+	} {gt $a $b} {
+		true
 	} {
-		result <=false
+		false
 	}
 }
 
 fn lte a b {
-	if {eq $a $b || lt $a $b} {
-		result <=true
+	if {eq $a $b} {
+		true
+	} {lt $a $b} {
+		true
 	} {
-		result <=false
+		false
 	}
 }
 

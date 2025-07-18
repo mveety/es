@@ -156,6 +156,7 @@ extern int yylex(void) {
 		return NL;
 	}
 
+	input_resettokstatus();
 	/* rc variable-names may contain only alnum, '*' and '_', so use dnw if we are scanning one. */
 	meta = (dollar ? dnw : nw);
 	dollar = FALSE;

@@ -26,7 +26,7 @@ fn history_call_date {
 		)
 		cmd = $cmd '+%H %M'
 		tmp = `{$cmd}
-		result <={__es_nuke_zeros $tmp(1)} <={__es_nuke_zeros $tmp(2)}
+		result $tmp(1) $tmp(2)
 	}
 }
 

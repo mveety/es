@@ -286,6 +286,21 @@ PRIM(noreturn) {
 	RefReturn(lp);
 }
 
+PRIM(catch_noreturn) {
+	if (list == NULL)
+		fail("$&catch_noreturn", "usage: $&catch_noreturn lambda args ...");
+	Ref(List *, lp, list);
+	Ref(Closure *, closure, getclosure(lp->term));
+	if (closure == NULL || closure->tree->kind != nLambda)
+		fail("$&catch_noreturn", "$&catch_noreturn: %E is not a lambda", lp->term);
+	Ref(Tree *, tree, closure->tree);
+	Ref(Binding *, context, bindargs(tree->u[0].p, lp->next, closure->binding));
+	lp = walk(tree->u[1].p, context, evalflags);
+	RefEnd3(context, tree, closure);
+	RefReturn(lp);
+}
+
+
 PRIM(setmaxevaldepth) {
 	char *s;
 	long n;
@@ -400,6 +415,7 @@ PRIM(mul) {
 	if(a == 0){
 		switch(errno){
 		case EINVAL:
+			dprintf(2, "mul: a = %s\n", getstr(list->term));
 			fail("$&mul", "invalid input");
 			break;
 		case ERANGE:
@@ -412,6 +428,7 @@ PRIM(mul) {
 	if(b == 0){
 		switch(errno){
 		case EINVAL:
+			dprintf(2, "mul: b = %s\n", getstr(list->term));
 			fail("$&mul", "invalid input");
 			break;
 		case ERANGE:
@@ -513,11 +530,8 @@ PRIM(eq) {
 	if(a == 0){
 		switch(errno){
 		case EINVAL:
-			fail("$&eq", "invalid input");
-			break;
 		case ERANGE:
-			fail("$&eq", "conversion overflow");
-			break;
+			return list_false;
 		}
 	}
 
@@ -525,11 +539,8 @@ PRIM(eq) {
 	if(b == 0){
 		switch(errno){
 		case EINVAL:
-			fail("$&eq", "invalid input");
-			break;
 		case ERANGE:
-			fail("$&eq", "conversion overflow");
-			break;
+			return list_false;
 		}
 	}
 
@@ -551,11 +562,8 @@ PRIM(gt) {
 	if(a == 0){
 		switch(errno){
 		case EINVAL:
-			fail("$&gt", "invalid input");
-			break;
 		case ERANGE:
-			fail("$&gt", "conversion overflow");
-			break;
+			return list_false;
 		}
 	}
 
@@ -563,11 +571,8 @@ PRIM(gt) {
 	if(b == 0){
 		switch(errno){
 		case EINVAL:
-			fail("$&gt", "invalid input");
-			break;
 		case ERANGE:
-			fail("$&gt", "conversion overflow");
-			break;
+			return list_false;
 		}
 	}
 
@@ -589,11 +594,8 @@ PRIM(lt) {
 	if(a == 0){
 		switch(errno){
 		case EINVAL:
-			fail("$&lt", "invalid input");
-			break;
 		case ERANGE:
-			fail("$&lt", "conversion overflow");
-			break;
+			return list_false;
 		}
 	} 
 
@@ -601,11 +603,8 @@ PRIM(lt) {
 	if(b == 0){
 		switch(errno){
 		case EINVAL:
-			fail("$&lt", "invalid input");
-			break;
 		case ERANGE:
-			fail("$&lt", "conversion overflow");
-			break;
+			return list_false;
 		}
 	} 
 
@@ -818,6 +817,7 @@ extern Dict *initprims_etc(Dict *primdict) {
 	X(isinteractive);
 	X(exitonfalse);
 	X(noreturn);
+	X(catch_noreturn);
 	X(setmaxevaldepth);
 	X(getevaldepth);
 #if READLINE
