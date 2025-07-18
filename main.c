@@ -73,7 +73,7 @@ static void runesrc(void) {
 /* usage -- print usage message and die */
 static noreturn usage(void) {
 	eprint(
-		"usage: es [-c command] [-silevxnpoIGL] [file [args ...]]\n"
+		"usage: es [-c command] [-sileVxnNpodIGXLAvPgSC] [file [args ...]]\n"
 		"	-c cmd execute argument\n"
 		"	-s	read commands from standard input; stop option parsing\n"
 		"	-i	interactive shell\n"
@@ -92,6 +92,7 @@ static noreturn usage(void) {
 		"	-L	print parser results in LISP format\n"
 		"	-A	enable assertions (slow)\n"
 		"	-v	print version\n"
+		"	-P	very verbose parser\n"
 		"	-g n	(new gc) collection frequency\n"
 		"	-S n	(new gc) freelist sort frequency\n"
 		"	-C n	(new gc) freelist coalesce frequency\n"
