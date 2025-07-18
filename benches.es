@@ -4,8 +4,6 @@ if {~ $#bench_run_caret_srcdata 0} {
 	bench_run_caret_srcdata = false
 }
 
-timecmd = time
-
 let (srcdata=;srcdata_len=;no_srcdata=true){
 
 	fn populate_source_data elems {
@@ -115,7 +113,7 @@ let (srcdata=;srcdata_len=;no_srcdata=true){
 }
 
 fn run-bench bench {
-	$timecmd { bench-^$bench }
+	time { bench-^$bench }
 }
 
 fn bench-usage {
@@ -123,10 +121,6 @@ fn bench-usage {
 }
 
 fn bench args {
-	if {~ $args(1) -q} {
-		timecmd =
-		args = $args(2 ...)
-	}
 	if {~ $#args 0} { bench-usage }
 	local (
 		cmd = $args(1)
@@ -175,6 +169,63 @@ fn bench args {
 			}
 			* { bench-usage }
 		)
+	}
+}
+
+fn power x y {
+	if {lt $y 0} { throw error $0 '$y < 0' }
+	if {eq $y 0} { return 1 }
+	if {eq $y 1} { return $x}
+	let (res = 1) {
+		for(i = <={%range 1 $y}) {
+			res = <={mul $res $x}
+		}
+		result $res
+	}
+}
+
+fn qdbench1_work {
+	benchcmd = {. benches.es ; bench go 2500 ; %gcinfo -v}
+	escmd = ./es -X -S 25 -C 25 -B
+
+	for (i = <={%range 1 4 |> iterator |> do @{power 2 $1}}) {
+		echo '>>>' $escmd $i -c $benchcmd
+		time $escmd $i -c $benchcmd
+	}
+	echo '>>> ./es -c' $benchcmd
+	time ./es -c $benchcmd
+}
+
+fn qdbench1 file {
+	if {~ $#file 0} {
+		qdbench1_work
+	} {
+		echo 'piping output to' $file
+		qdbench1_work >[2=1] > $file
+	}
+}
+
+
+fn qdbench2_work {
+	escmd = '%range 1 100000 |> reverse ; %gcinfo -v'
+
+	for (i = <={%range 1 4 |> iterator |> do @{power 2 $1}}) {
+		cmd = ./es -X -B $i -c $escmd
+		echo '>>> running:' $cmd
+		time $cmd
+	}
+
+	cmd = ./es -c $escmd
+	echo '>>> running:' $cmd
+	time $cmd
+}
+
+fn qdbench2 file {
+	if {~ $#file 0} {
+		qdbench2_work
+	} {
+		echo 'piping output to' $file
+		qdbench2_work >[2=1] > $file
 	}
 }
 
