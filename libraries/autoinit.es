@@ -15,6 +15,7 @@ if {~ $#esrcd_debugging 0} {
 }
 
 if {~ $#autoloaded 0} {
+	noexport = $noexport autoloaded
 	autoloaded = (autoinit)
 }
 
