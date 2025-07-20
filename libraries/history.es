@@ -92,7 +92,7 @@ fn history-filter start timeformat {
 				year = int(C - 4715)
 			}
 
-			return sprintf("%0.4d-%0.2d-%0.2d", year, month, day)
+			return sprintf("%0.4d-%0.2d-%0.2d",year, month, day)
 		}
 
 		BEGIN{
@@ -129,6 +129,36 @@ fn history-filter start timeformat {
 		}'
 }
 
+fn fix-history file {
+	let(tmpfile = $file^'.'^<={gensym tmp}){
+		awk \
+		'
+		BEGIN{
+			state = 0
+		}
+
+		/^#\+[0-9]+$/{
+			if (state == 0) {
+				print $0
+				state = 1
+			}
+		}
+
+		!/^#\+[0-9]+$/{
+			if (state == 1) {
+				print $0
+				state = 0
+			}
+		}
+
+		' $file > $tmpfile
+		cp $file $file.old
+		rm $file
+		cp $tmpfile $file
+		rm $tmpfile
+	}
+}
+
 fn history {
 	if {~ $#history 0 } {
 		throw error history '$history not set'
@@ -145,6 +175,8 @@ fn history {
 		verbose = false
 		usageexit = false
 		useunixtime = 0
+		fixhistory = false
+		analyze = false
 	) {
 		parseargs @ arg {
 			match $arg (
@@ -156,18 +188,43 @@ fn history {
 				(-c) { timeformat = noevent }
 				(-d) { timeformat = datetime }
 				(-f) { histfile = $flagarg }
+				(-F) { fixhistory = true }
 				(-y) { yes = true }
 				(-v) { verbose = true }
 				(-u) { timeformat = unixtime }
 				(-N) { timeformat = none }
+				(-A) { analyze = true }
 				* { usage }
 			)
 		} @{
-			echo 'usage: history [-f histfile] [-dcylCuN] [-a | -n events | -e event]'
+			echo 'usage: history [-f histfile] [-dcylCuNAF] [-a | -n events | -e event]'
 			usageexit = true
 		} $*
 
 		if {$usageexit} { return 0 }
+
+		if {$analyze} {
+			nlines = `{wc -l $histfile | awk '{print $1}'}
+			if {! eq <={mod $nlines 2} 0} {
+				echo 'error: '^$histfile^' is corrupted. run history -F.'
+				return <=false
+			}
+			echo $histfile^' seems to be okay'
+			return <=true
+		}
+
+		if {$fixhistory} {
+			if {! $yes} {
+				echo -n 'fix history file? [no] '
+				r = <=%read
+				if {%esm~ $r '[yY]([eE][sS]|)'} { yes = true }
+			}
+			if {$yes} {
+				fix-history $histfile
+				echo 'old history file saved as '^$histfile^'.old'
+			}
+			return 0
+		}
 
 		if {$cleanhistory} {
 			if {! $yes} {
