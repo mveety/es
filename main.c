@@ -221,23 +221,19 @@ int main(int argc, char **argv) {
 				}
 			}
 			break;
-		case 'c':	cmd = optarg;			break;
-		case 'e':	runflags |= eval_exitonfalse;	break;
-		case 'i':	runflags |= run_interactive;	break;
-		case 'n':	runflags |= run_noexec;		break;
-		case 'N':	readesrc = FALSE; break;
-		case 'V':	runflags |= run_echoinput;	break;
-		case 'x':	runflags |= run_printcmds;	break;
-//		case 'L':	runflags |= run_lisptrees;	break;
-		case 'l':	loginshell = TRUE;		break;
-		case 'p':	protected = TRUE;		break;
-		case 'o':	keepclosed = TRUE;		break;
-		case 'd':	allowquit = TRUE;		break;
-		case 's':	cmd_stdin = TRUE;			goto getopt_done;
-//		case 'G':	gcverbose = TRUE;		break;
-//		case 'I':	gcinfo = TRUE;			break;
-		case 'X':	gctype = NewGc;			break;
-//		case 'A':	assertions = TRUE;		break;
+		case 'c': cmd = optarg; break;
+		case 'e': runflags |= eval_exitonfalse; break;
+		case 'i': runflags |= run_interactive; break;
+		case 'n': runflags |= run_noexec; break;
+		case 'N': readesrc = FALSE; break;
+		case 'V': runflags |= run_echoinput; break;
+		case 'x': runflags |= run_printcmds; break;
+		case 'l': loginshell = TRUE; break;
+		case 'p': protected = TRUE; break;
+		case 'o': keepclosed = TRUE; break;
+		case 'd': allowquit = TRUE; break;
+		case 's': cmd_stdin = TRUE; goto getopt_done;
+		case 'X': gctype = NewGc; break;
 		case 'g':
 			gc_after = atoi(optarg);
 			break;
@@ -262,7 +258,6 @@ int main(int argc, char **argv) {
 			initconv();
 			print_version();
 			break;
-//		case 'P': verbose_parser = TRUE; break;
 		case 'h':
 		default:
 			do_usage();
@@ -285,12 +280,10 @@ getopt_done:
 		checkfd(2, oCreate);
 	}
 
-	if (
-		cmd == NULL
-	     && (optind == argc || cmd_stdin)
-	     && (runflags & run_interactive) == 0
-	     && isatty(0)
-	)
+	if (cmd == NULL &&
+		(optind == argc || cmd_stdin) &&
+		(runflags & run_interactive) == 0 &&
+		isatty(0))
 		runflags |= run_interactive;
 
 	ac = argc;
@@ -339,9 +332,6 @@ getopt_done:
 			return exitstatus(e->next);
 		else if (termeq(e->term, "error")) {
 			eprint("root handler: %L\n", e, " ");
-			//eprint("root handler: %L\n",
-			//       e->next == NULL ? NULL : e->next->next,
-			//       " ");
 		} else if (!issilentsignal(e))
 			eprint("uncaught exception: %L\n", e, " ");
 		return 1;
