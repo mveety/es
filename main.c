@@ -146,7 +146,7 @@ run_flag_usage(void)
 		"	e -- exitonfalse\n",
 		"	i -- interactive\n",
 		"	n -- noexec\n",
-		"	V -- echoinput\n",
+		"	v -- echoinput\n",
 		"	x -- printcmds\n",
 		"	L -- lisptrees\n"
 	);
@@ -208,7 +208,7 @@ int main(int argc, char **argv) {
 				case 'e': runflags |= eval_exitonfalse; break;
 				case 'i': runflags |= run_interactive; break;
 				case 'n': runflags |= run_noexec; break;
-				case 'V': runflags |= run_echoinput; break;
+				case 'v': runflags |= run_echoinput; break;
 				case 'x': runflags |= run_printcmds; break;
 				case 'L': runflags |= run_lisptrees; break;
 				case '?':
