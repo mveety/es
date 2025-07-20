@@ -49,16 +49,17 @@ PRIM(dot) {
 	int c, fd;
 	Push zero, star;
 	volatile int runflags = (evalflags & eval_inchild);
-	const char * const usage = ". [-einvx] file [arg ...]";
+	const char * const usage = ". [-einvxL] file [arg ...]";
 
 	esoptbegin(list, "$&dot", usage);
-	while ((c = esopt("einvx")) != EOF)
+	while ((c = esopt("einvxL")) != EOF)
 		switch (c) {
 		case 'e':	runflags |= eval_exitonfalse;	break;
 		case 'i':	runflags |= run_interactive;	break;
 		case 'n':	runflags |= run_noexec;		break;
 		case 'v':	runflags |= run_echoinput;	break;
 		case 'x':	runflags |= run_printcmds;	break;
+		case 'L':	runflags |= run_lisptrees; break;
 		}
 
 	Ref(List *, result, NULL);
