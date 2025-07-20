@@ -213,6 +213,7 @@ int main(int argc, char **argv) {
 				case 'L': runflags |= run_lisptrees; break;
 				case '?':
 					run_flag_usage();
+					break;
 				default:
 					dprintf(2, "error: invalid run flag: %c\n", *rs);
 					run_flag_usage();
