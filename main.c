@@ -75,7 +75,7 @@ static void runesrc(void) {
 /* usage -- print usage message and die */
 static noreturn usage(void) {
 	eprint(
-		"usage: es [-c command] [-sileVxnNpodvgSCB] [-D flags] [-r flags] [file [args ...]]\n"
+		"usage: es [-c command] [-sileVxXnNpodvgSCB] [-D flags] [-r flags] [file [args ...]]\n"
 		"	-c	cmd execute argument\n"
 		"	-s	read commands from standard input; stop option parsing\n"
 		"	-i	interactive shell\n"
@@ -90,7 +90,7 @@ static noreturn usage(void) {
 		"	-d	don't ignore SIGQUIT or SIGTERM\n"
 //		"	-I	print garbage collector information\n"
 //		"	-G	print verbose garbage collector information\n"
-//		"	-X	use experimental gc\n"
+		"	-X	use experimental gc\n"
 //		"	-L	print parser results in LISP format\n"
 //		"	-A	enable assertions (slow)\n"
 		"	-v	print version\n"
@@ -181,10 +181,9 @@ int main(int argc, char **argv) {
 
 	/* yydebug = 1; */
 
-	// removed IGXAPL
-	while ((c = getopt(argc, argv, "+eilxvnpodsVc:?hNg:S:C:B:D:r:")) != EOF)
+	// removed IGAPL
+	while ((c = getopt(argc, argv, "+eilxXvnpodsVc:?hNg:S:C:B:D:r:")) != EOF)
 		switch (c) {
-		case '+': break; /* for god damn gnu */
 		case 'D':
 			for(ds = optarg; *ds != 0; ds++){
 				switch(*ds){
@@ -236,7 +235,7 @@ int main(int argc, char **argv) {
 		case 's':	cmd_stdin = TRUE;			goto getopt_done;
 //		case 'G':	gcverbose = TRUE;		break;
 //		case 'I':	gcinfo = TRUE;			break;
-//		case 'X':	gctype = NewGc;			break;
+		case 'X':	gctype = NewGc;			break;
 //		case 'A':	assertions = TRUE;		break;
 		case 'g':
 			gc_after = atoi(optarg);
