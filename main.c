@@ -2,6 +2,7 @@
 
 #include "es.h"
 #include "gc.h"
+#include <stdio.h>
 // #include "token.h"
 
 Boolean gcverbose	= FALSE;	/* -G */
@@ -74,8 +75,8 @@ static void runesrc(void) {
 /* usage -- print usage message and die */
 static noreturn usage(void) {
 	eprint(
-		"usage: es [-c command] [-sileVxnNpodIGXLAvPgSCB] [file [args ...]]\n"
-		"	-c cmd execute argument\n"
+		"usage: es [-c command] [-sileVxnNpodvgSCB] [-D flags] [-r flags] [file [args ...]]\n"
+		"	-c	cmd execute argument\n"
 		"	-s	read commands from standard input; stop option parsing\n"
 		"	-i	interactive shell\n"
 		"	-l	login shell\n"
@@ -87,17 +88,19 @@ static noreturn usage(void) {
 		"	-p	don't load functions from the environment\n"
 		"	-o	don't open stdin, stdout, and stderr if they were closed\n"
 		"	-d	don't ignore SIGQUIT or SIGTERM\n"
-		"	-I	print garbage collector information\n"
-		"	-G	print verbose garbage collector information\n"
-		"	-X	use experimental gc\n"
-		"	-L	print parser results in LISP format\n"
-		"	-A	enable assertions (slow)\n"
+//		"	-I	print garbage collector information\n"
+//		"	-G	print verbose garbage collector information\n"
+//		"	-X	use experimental gc\n"
+//		"	-L	print parser results in LISP format\n"
+//		"	-A	enable assertions (slow)\n"
 		"	-v	print version\n"
-		"	-P	very verbose parser\n"
+//		"	-P	very verbose parser\n"
 		"	-g n	(new gc) collection frequency\n"
 		"	-S n	(new gc) freelist sort frequency\n"
 		"	-C n	(new gc) freelist coalesce frequency\n"
 		"	-B n	(new gc) block size in megabytes\n"
+		"	-D flags	debug flags (? for more info)\n"
+		"	-r flags	run flags (? for more info)\n"
 	);
 	exit(1);
 }
@@ -113,11 +116,50 @@ extern int gc_after;
 extern int gc_sort_after_n;
 extern int gc_coalesce_after_n;
 
+void
+do_usage(void)
+{
+	initgc();
+	initconv();
+	usage();
+}
+
+void
+debug_flag_usage(void)
+{
+	dprintf(2, "debug flags: es -D [GIaEP]\n%s%s%s%s%s%s",
+		"	? -- show this message\n",
+		"	G -- gcverbose\n",
+		"	I -- gcinfo\n",
+		"	a -- assertions\n",
+		"	E -- debug_exceptions\n",
+		"	P -- verbose_parser\n"
+	);
+	exit(1);
+}
+
+void
+run_flag_usage(void)
+{
+	dprintf(2, "run flags: es -r [einVxL]\n%s%s%s%s%s%s%s",
+		"	? -- show this message\n",
+		"	e -- exitonfalse\n",
+		"	i -- interactive\n",
+		"	n -- noexec\n",
+		"	V -- echoinput\n",
+		"	x -- printcmds\n",
+		"	L -- lisptrees\n"
+	);
+	exit(1);
+}
+
 /* main -- initialize, parse command arguments, and start running */
 int main(int argc, char **argv) {
 	int c;
 	volatile int ac;
 	char **volatile av;
+	char *ds;
+	char *rs;
 
 	volatile int runflags = 0;		/* -[einvxL] */
 	volatile Boolean protected = FALSE;	/* -p */
@@ -139,9 +181,46 @@ int main(int argc, char **argv) {
 
 	/* yydebug = 1; */
 
-	while ((c = getopt(argc, argv, "+eilxXvnpPodsAVc:?hGILNg:S:C:B:")) != EOF)
+	// removed IGXAPL
+	while ((c = getopt(argc, argv, "+eilxvnpodsVc:?hNg:S:C:B:D:r:")) != EOF)
 		switch (c) {
 		case '+': break; /* for god damn gnu */
+		case 'D':
+			for(ds = optarg; *ds != 0; ds++){
+				switch(*ds){
+				case 'G': gcverbose = TRUE; break;
+				case 'I': gcinfo = TRUE; break;
+				case 'a': assertions = TRUE; break;
+				case 'E': debug_exceptions = TRUE; break;
+				case 'P': verbose_parser = TRUE; break;
+				case '?':
+					debug_flag_usage();
+					break;
+				default:
+					dprintf(2, "error: invalid debug flag: %c\n", *ds);
+					debug_flag_usage();
+					break;
+				}
+			}
+			break;
+		case 'r':
+			for(rs = optarg; *rs != 0; rs++){
+				switch (*rs) {
+				case 'e': runflags |= eval_exitonfalse; break;
+				case 'i': runflags |= run_interactive; break;
+				case 'n': runflags |= run_noexec; break;
+				case 'V': runflags |= run_echoinput; break;
+				case 'x': runflags |= run_printcmds; break;
+				case 'L': runflags |= run_lisptrees; break;
+				case '?':
+					run_flag_usage();
+				default:
+					dprintf(2, "error: invalid run flag: %c\n", *rs);
+					run_flag_usage();
+					break;
+				}
+			}
+			break;
 		case 'c':	cmd = optarg;			break;
 		case 'e':	runflags |= eval_exitonfalse;	break;
 		case 'i':	runflags |= run_interactive;	break;
@@ -149,16 +228,16 @@ int main(int argc, char **argv) {
 		case 'N':	readesrc = FALSE; break;
 		case 'V':	runflags |= run_echoinput;	break;
 		case 'x':	runflags |= run_printcmds;	break;
-		case 'L':	runflags |= run_lisptrees;	break;
+//		case 'L':	runflags |= run_lisptrees;	break;
 		case 'l':	loginshell = TRUE;		break;
 		case 'p':	protected = TRUE;		break;
 		case 'o':	keepclosed = TRUE;		break;
 		case 'd':	allowquit = TRUE;		break;
 		case 's':	cmd_stdin = TRUE;			goto getopt_done;
-		case 'G':	gcverbose = TRUE;		break;
-		case 'I':	gcinfo = TRUE;			break;
-		case 'X':	gctype = NewGc;			break;
-		case 'A':	assertions = TRUE;		break;
+//		case 'G':	gcverbose = TRUE;		break;
+//		case 'I':	gcinfo = TRUE;			break;
+//		case 'X':	gctype = NewGc;			break;
+//		case 'A':	assertions = TRUE;		break;
 		case 'g':
 			gc_after = atoi(optarg);
 			break;
@@ -170,17 +249,12 @@ int main(int argc, char **argv) {
 			break;
 		case 'B':
 			blocksize = strtoul(optarg, NULL, 10);
-			if(blocksize == 0) {
-				initgc();
-				initconv();
-				usage();
-			}
+			if(blocksize == 0)
+				do_usage();
 			blocksize *= 1024*1024;
 			if(blocksize < MIN_minspace){
 				dprintf(2, "error: blocksize < %d\n", (MIN_minspace/1024));
-				initgc();
-				initconv();
-				usage();
+				do_usage();
 			}
 			break;
 		case 'v':
@@ -188,14 +262,10 @@ int main(int argc, char **argv) {
 			initconv();
 			print_version();
 			break;
-		case 'P':
-			verbose_parser = TRUE;
-			break;
+//		case 'P': verbose_parser = TRUE; break;
 		case 'h':
 		default:
-			initgc();
-			initconv();
-			usage();
+			do_usage();
 			break;
 		}
 

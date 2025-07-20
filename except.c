@@ -2,12 +2,14 @@
 
 #include "es.h"
 #include "print.h"
+#include "stdenv.h"
 
 /* globals */
 Handler *tophandler = NULL;
 Handler *roothandler = NULL;
 List *exception = NULL;
 Push *pushlist = NULL;
+Boolean debug_exceptions = FALSE;
 
 /* pophandler -- remove a handler */
 extern void pophandler(Handler *handler) {
@@ -71,10 +73,10 @@ extern void newchildcatcher(void) {
 	tophandler = roothandler;
 }
 
-#if DEBUG_EXCEPTIONS
 /* raised -- print exceptions as we climb the exception stack */
 extern List *raised(List *e) {
-	eprint("raised (sp @ %x) %L\n", &e, e, " ");
+	if(debug_exceptions == TRUE)
+		eprint("raised (sp @ %x) %L\n", &e, e, " ");
 	return e;
 }
-#endif
+

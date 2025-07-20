@@ -473,6 +473,8 @@ struct Push {
  *
  */
 
+extern Boolean debug_exceptions;
+
 typedef struct Handler Handler;
 struct Handler {
 	Handler *up;
@@ -488,12 +490,7 @@ extern void pophandler(Handler *handler);
 extern noreturn throw(List *exc);
 extern noreturn fail(const char *from, const char *name, ...);
 extern void newchildcatcher(void);
-
-#if DEBUG_EXCEPTIONS
 extern List *raised(List *e);
-#else
-#define	raised(e)	(e)
-#endif
 
 #define ExceptionHandler \
 	{ \
