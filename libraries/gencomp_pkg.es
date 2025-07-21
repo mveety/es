@@ -43,7 +43,11 @@ fn gencomp_pkg_hook curline partial {
 	}
 }
 
-%complete_cmd_hook pkg @ curline partial {
-	gencomp_pkg_hook $curline $partial
+if {~ `{uname} 'FreeBSD'} {
+	%complete_cmd_hook pkg @ curline partial {
+		gencomp_pkg_hook $curline $partial
+	}
+} {
+	throw error gencomp_pkg 'only supports FreeBSD'
 }
 
