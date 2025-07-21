@@ -322,6 +322,15 @@ fn es_complete_remove2 elem list {
 	}
 }
 
+fn %complete_cmd_unhook cmdname {
+	if {~ $cmdname $es_complete_hooked_commands} {
+		es_complete_hooked_commands = <={es_complete_remove $cmdname $es_complete_hooked_commands}
+		es_complete_command_hooks = <={es_complete_remove2 $cmdname $es_complete_command_hooks}
+		return <=true
+	}
+	false
+}
+
 fn %complete_cmd_hook cmdname completefn {
 	if {~ $cmdname $es_complete_hooked_commands} {
 		es_complete_hooked_commands = <={es_complete_remove $cmdname $es_complete_hooked_commands}
