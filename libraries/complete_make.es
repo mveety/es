@@ -1,14 +1,8 @@
 library complete_make (init completion)
 
-if {~ $#complete_make_lastcwd 0} {
-	complete_make_lastcwd = ''
-}
-if {~ $#complete_make_lastmd5 0} {
-	complete_make_lastmd5 = ''
-}
-if {~ $#complete_make_last_targets 0} {
-	complete_make_last_targets = ''
-}
+complete_make_lastcwd = ''
+complete_make_lastmd5 = ''
+complete_make_last_targets = ''
 
 fn complete_make_get_targets {
 	if {! access -r Makefile } { throw error complete_make no_makefile }

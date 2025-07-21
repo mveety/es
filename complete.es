@@ -219,9 +219,19 @@ fn es_complete_get_last_cmdline cmdline {
 	}
 }
 
-fn es_complete_get_last_command cmdline {
+fn es_complete_get_last_raw_command cmdline {
 	es_complete_get_last_cmdline $cmdline |> %fsplit ' ' |>
 		%elem 1 |> result
+}
+
+fn es_complete_get_last_command cmdline {
+	let (cll = <={es_complete_get_last_cmdline $cmdline |> %fsplit ' '}){
+		if {~ $cll(1) 'doas' || ~ $cll(1) 'sudo'} {
+			result $cll(2)
+		} {
+			result $cll(1)
+		}
+	}
 }
 
 fn es_complete_is_command curline {
