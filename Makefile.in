@@ -63,7 +63,7 @@ OTHER	= Makefile parse.y mksignal getsigfiles
 SYSLIB = initial.es config.es macros.es applymap.es libraries.es \
 		 range.es glob.es complete.es gc.es parseargs.es \
 		 doiterator.es newvars.es \
-		 suffix.es
+		 suffix.es initialize.es
 GEN	= esdump y.tab.c y.tab.h y.output token.h sigmsgs.c system.c config.es
 
 es	: ${OFILES} system.o

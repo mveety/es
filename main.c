@@ -72,6 +72,35 @@ static void runesrc(void) {
 	}
 }
 
+static int
+runinitialize(void) {
+	List *initialize;
+	List *result; Root r_result;
+
+	result = NULL;
+
+	initialize = varlookup("fn-%initialize", NULL);
+	if(initialize == NULL)
+		return 0;
+
+	gcref(&r_result, (void**)&result);
+
+	ExceptionHandler
+		result = eval(initialize, NULL, 0);
+	CatchException(e)
+		if (termeq(e->term, "exit"))
+			exit(exitstatus(e->next));
+		else if (termeq(e->term, "error")){
+			eprint("init handler: %L\n", e, " ");
+			exit(-1);
+		} else if(!issilentsignal(e))
+			eprint("init handler: uncaught exception: %L\n", e, " ");
+	EndExceptionHandler
+	
+	gcderef(&r_result, (void**)&result);
+	return 0;
+}
+
 /* usage -- print usage message and die */
 static noreturn usage(void) {
 	eprint(
@@ -141,14 +170,15 @@ debug_flag_usage(void)
 void
 run_flag_usage(void)
 {
-	dprintf(2, "run flags: es -r [einVxL]\n%s%s%s%s%s%s%s",
+	dprintf(2, "run flags: es -r [einVxL]\n%s%s%s%s%s%s%s%s",
 		"	? -- show this message\n",
 		"	e -- exitonfalse\n",
 		"	i -- interactive\n",
 		"	n -- noexec\n",
 		"	v -- echoinput\n",
 		"	x -- printcmds\n",
-		"	L -- lisptrees\n"
+		"	L -- lisptrees\n",
+		"	a -- assertions\n"
 	);
 	exit(1);
 }
@@ -211,6 +241,7 @@ int main(int argc, char **argv) {
 				case 'v': runflags |= run_echoinput; break;
 				case 'x': runflags |= run_printcmds; break;
 				case 'L': runflags |= run_lisptrees; break;
+				case 'a': assertions = TRUE; break;
 				case '?':
 					run_flag_usage();
 					break;
@@ -303,7 +334,9 @@ getopt_done:
 		initsignals(runflags & run_interactive, allowquit);
 		hidevariables();
 		initenv(environ, protected);
-	
+
+		runinitialize();
+
 		if (loginshell)
 			if(readesrc)
 				runesrc();

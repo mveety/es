@@ -844,6 +844,97 @@ extern Boolean isinteractive(void) {
 	return input == NULL ? FALSE : ((input->runflags & run_interactive) != 0);
 }
 
+int
+getrunflags(char *s, size_t sz)
+{
+	int i = 0;
+
+	if(sz < 8)
+		return -1;
+	memset(s, 0, sz);
+
+	if(input == NULL)
+		return 0;
+	if(assertions == TRUE)
+		s[i++] = 'a';
+	if(input->runflags & eval_exitonfalse)
+		s[i++] = 'e';
+	if(input->runflags & run_interactive)
+		s[i++] = 'i';
+	if(input->runflags & run_noexec)
+		s[i++] = 'n';
+	if(input->runflags & run_echoinput)
+		s[i++] = 'v';
+	if(input->runflags & run_printcmds)
+		s[i++] = 'x';
+	if(input->runflags & run_lisptrees)
+		s[i++] = 'L';
+
+	if(i == 0)
+		s[0] = '-';
+
+	return 0;
+}
+
+int
+setrunflags(char *s, size_t sz)
+{
+	char *si;
+	size_t i = 0;
+	int state = 0; // 0 -- add flag, 1 -- remove flag
+	int new_runflags;
+	int nextflag;
+
+	if(input == NULL)
+		return -1;
+	if(sz == 0)
+		return 0;
+	new_runflags = input->runflags;
+
+	for(si = s; *si != 0 && i < sz; si++, i++) {
+		switch(*si){
+		case '-':
+			state = 1;
+			continue;
+			break;
+		case 'a':
+			if(state)
+				assertions = FALSE;
+			else
+				assertions = TRUE;
+			state = 0;
+			continue;
+			break;
+		case 'e':
+			nextflag = eval_exitonfalse;
+			break;
+		case 'i':
+			nextflag = run_interactive;
+			break;
+		case 'n':
+			nextflag = run_noexec;
+			break;
+		case 'v':
+			nextflag = run_echoinput;
+			break;
+		case 'x':
+			nextflag = run_printcmds;
+			break;
+		case 'L':
+			nextflag = run_lisptrees;
+			break;
+		}
+		if(state)
+			new_runflags &= ~nextflag;
+		else
+			new_runflags |= nextflag;
+
+		state = 0;
+	}
+
+	input->runflags = new_runflags;
+	return 0;
+}
 
 /*
  * initialization

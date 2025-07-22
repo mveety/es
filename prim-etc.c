@@ -787,6 +787,31 @@ PRIM(unixtime) {
 	return mklist(mkstr(str("%lud", curtime)), NULL);
 }
 
+PRIM(getrunflags) {
+	char rf[9];
+
+	memset(&rf[0], 0, sizeof(rf));
+	getrunflags(&rf[0], sizeof(rf));
+
+	return mklist(mkstr(str("%s", rf)), NULL);
+}
+
+PRIM(setrunflags) {
+	char *s;
+	size_t slen;
+
+	if(list == NULL)
+		fail("$&setrunflags", "missing arguement");
+
+	s = getstr(list->term);
+	slen = strlen(s);
+
+	if(setrunflags(s, slen) < 0)
+		return list_false;
+
+	return list_true;
+}
+
 /*
  * initialization
  */
@@ -839,6 +864,8 @@ extern Dict *initprims_etc(Dict *primdict) {
 	X(range);
 	X(reverse);
 	X(unixtime);
+	X(getrunflags);
+	X(setrunflags);
 	return primdict;
 }
 

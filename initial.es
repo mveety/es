@@ -184,7 +184,7 @@ fn-%whatis	= $&whatis
 
 # assert and assert2 are used for debugging and error checking
 
-fn assert body {
+es_assert_def = @ body {
 	if {$body} {
 		result 0
 	} {
@@ -192,12 +192,25 @@ fn assert body {
 	}
 }
 
-fn assert2 loc body {
+es_assert2_def = @ loc body {
 	if {$body} {
 		result 0
 	} {
 		throw assert $^loc^': '^$^body
 	}
+}
+
+fn-assert = $es_assert_def
+fn-assert2 = $es_assert2_def
+
+fn %enable-assert {
+	fn-assert = $es_assert_def
+	fn-assert2 = $es_assert2_def
+}
+
+fn %disable-assert {
+	fn-assert = @ { true }
+	fn-assert2 = @ { true }
 }
 
 #	These builtins are only around as a matter of convenience, so
@@ -1068,5 +1081,4 @@ fn __es_getbody argsbody {
 		result <={%last $argsbody}
 	}
 }
-
 
