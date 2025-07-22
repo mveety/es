@@ -775,7 +775,11 @@ if {~ <=$&primitives resetterminal} {
 # the getter function. If the variable is not defined the getter is not
 # called.
 last = ''
-get-last = $&getlast
+get-last = @ {
+	$&getlast |>
+		%fsplit ' ' |>
+		@{ let(r=) { for (i = $*) { if {! ~ $i ''} {r = $r $i} } ; result $r }}
+}
 
 eval-depth = ''
 get-eval-depth = $&getevaldepth
