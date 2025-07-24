@@ -9,6 +9,9 @@ Boolean gcverbose	= FALSE;	/* -G */
 Boolean gcinfo		= FALSE;	/* -I */
 Boolean assertions = FALSE;		/* -A */
 Boolean verbose_parser = FALSE; /* -P */
+Boolean use_initialize_esrc = TRUE; /* -Dr */
+volatile Boolean loginshell = TRUE; /* -l or $0[0] == '-' */
+volatile Boolean readesrc = TRUE;
 
 /* #if 0 && !HPUX && !defined(linux) && !defined(sgi) */
 /* extern int getopt (int argc, char **argv, const char *optstring); */
@@ -46,9 +49,15 @@ static void initpath(void) {
 	RefEnd(list);
 }
 
-/* initpid -- set $pid for this shell */
-static void initpid(void) {
+static void init_internal_vars(void) {
+	char *loginshell_st = loginshell ? "true" : "false";
+	char *initialize_st = use_initialize_esrc ? "true" : "false";
+	char *readesrc_st = readesrc ? "true" : "false";
+
 	vardef("pid", NULL, mklist(mkstr(str("%d", getpid())), NULL));
+	vardef("__es_loginshell", NULL, mklist(mkstr(str("%s", loginshell_st)), NULL));
+	vardef("__es_initialize_esrc", NULL, mklist(mkstr(str("%s", initialize_st)), NULL));
+	vardef("__es_readesrc", NULL, mklist(mkstr(str("%s", readesrc_st)), NULL));
 }
 
 /* runesrc -- run the user's profile, if it exists */
@@ -156,13 +165,14 @@ do_usage(void)
 void
 debug_flag_usage(void)
 {
-	dprintf(2, "debug flags: es -D [GIaEP]\n%s%s%s%s%s%s",
+	dprintf(2, "debug flags: es -D [GIaEP]\n%s%s%s%s%s%s%s",
 		"	? -- show this message\n",
 		"	G -- gcverbose\n",
 		"	I -- gcinfo\n",
 		"	a -- assertions\n",
 		"	E -- debug_exceptions\n",
-		"	P -- verbose_parser\n"
+		"	P -- verbose_parser\n",
+		"	r -- run esrc from C instead of from %initialize\n"
 	);
 	exit(1);
 }
@@ -195,8 +205,7 @@ int main(int argc, char **argv) {
 	volatile Boolean protected = FALSE;	/* -p */
 	volatile Boolean allowquit = FALSE;	/* -d */
 	volatile Boolean cmd_stdin = FALSE;		/* -s */
-	volatile Boolean loginshell = TRUE;	/* -l or $0[0] == '-' */
-	volatile Boolean readesrc = TRUE;
+	volatile Boolean loginshell = TRUE;
 	Boolean keepclosed = FALSE;		/* -o */
 	const char *volatile cmd = NULL;	/* -c */
 
@@ -222,6 +231,7 @@ int main(int argc, char **argv) {
 				case 'a': assertions = TRUE; break;
 				case 'E': debug_exceptions = TRUE; break;
 				case 'P': verbose_parser = TRUE; break;
+				case 'r': use_initialize_esrc = FALSE; break;
 				case '?':
 					debug_flag_usage();
 					break;
@@ -329,15 +339,15 @@ getopt_done:
 	
 		runinitial();
 	
-		initpath();
-		initpid();
+		initpath(); /* $path */
+		init_internal_vars(); /* $pid, $__es_loginshell, $__es_initialize_esrc, $__es_readesrc */
 		initsignals(runflags & run_interactive, allowquit);
 		hidevariables();
 		initenv(environ, protected);
 
 		runinitialize();
 
-		if (loginshell)
+		if (loginshell && !use_initialize_esrc)
 			if(readesrc)
 				runesrc();
 	
