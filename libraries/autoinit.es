@@ -70,6 +70,7 @@ fn esrcd_extract_name name {
 
 fn esrcd_all_scripts {
 	process <=esrcd_getall (
+		*^'*'^* { result }
 		* { esrcd_extract_name $matchexpr |> result }
 	)
 }
