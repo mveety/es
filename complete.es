@@ -289,7 +289,7 @@ fn es_complete_run_command_hook curline partial {
 	let (pcmd = <={es_complete_get_last_command $curline}) {
 		for ((cmdname function) = $es_complete_command_hooks) {
 			if {~ $pcmd $cmdname} {
-				return <={$function $curline $partial}
+				return <={$function <={es_complete_get_last_cmdline $curline} $partial}
 			}
 		}
 	}
