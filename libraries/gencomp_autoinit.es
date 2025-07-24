@@ -17,13 +17,12 @@ fn gencomp_autoinit_inactive_scripts {
 }
 
 fn gencomp_autoinit_hook curline partial {
-	let (force = false ; cmdline = <={gencomp_split_cmdline $curline}) {
-		while {~ <={%last $cmdline} -[vhfy]} {
-			if {~ <={%last $cmdline} -f} {
-				force = true
-			}
-			cmdline = $cmdline(1 ... <={sub $#cmdline 1})
+	let (force = false ; cmdline = <={gencomp_split_cmdline $curline}; t=) {
+		for (i = $cmdline) {
+			if {~ $i -f} {force = true}
+			if {! ~ $i -[vhfy]} { t = $t $i }
 		}
+		cmdline = $t
 
 		if {~ <={%last $cmdline} 'autoinit'} {
 			gencomp_filter_list $partial $gencomp_autoinit_cmds
