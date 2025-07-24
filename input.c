@@ -882,8 +882,8 @@ setrunflags(char *s, size_t sz)
 	char *si;
 	size_t i = 0;
 	int state = 0; // 0 -- add flag, 1 -- remove flag
-	int new_runflags;
-	int nextflag;
+	int new_runflags = 0;
+	int nextflag = 0;
 
 	if(input == NULL)
 		return -1;
