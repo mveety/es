@@ -376,7 +376,7 @@ getopt_done:
 		else if (termeq(e->term, "error")) {
 			eprint("root handler: %L\n", e, " ");
 		} else if (!issilentsignal(e))
-			eprint("uncaught exception: %L\n", e, " ");
+			eprint("root handler: uncaught exception: %L\n", e, " ");
 		return 1;
 
 	EndExceptionHandler
