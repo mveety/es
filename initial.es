@@ -961,31 +961,6 @@ fn-eq = @ a b { %numcompfun $&eq $a $b }
 fn-lt = @ a b { %numcompfun $&lt $a $b }
 fn-gt = @ a b { %numcompfun $&gt $a $b }
 
-fn-padd = @ a b { %mathfun $&add $a $b }
-fn-psub = @ a b { %mathfun $&sub $a $b }
-fn-pmul = @ a b { %mathfun $&mul $a $b }
-fn-pdiv = @ a b { %mathfun $&div $a $b }
-fn-pmod = @ a b { %mathfun $&mod $a $b }
-fn-peq = @ a b { %numcompfun $&eq $a $b }
-fn-plt = @ a b { %numcompfun $&lt $a $b }
-fn-pgt = @ a b { %numcompfun $&gt $a $b }
-
-fn pgte a b {
-	if {peq $a $b || pgt $a $b} {
-		true
-	} {
-		false
-	}
-}
-
-fn plte a b {
-	if {peq $a $b || plt $a $b} {
-		true
-	} {
-		false
-	}
-}
-
 fn gte a b {
 	if {eq $a $b} {
 		true
