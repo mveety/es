@@ -15,6 +15,14 @@ fn glob patternstr list {
 	}
 }
 
+fn glob_test patternstr list {
+	if {! ~ <={glob $patternstr $list |> %count} 0} {
+		true
+	} {
+		false
+	}
+}
+
 fn isextendedglob glob {
 	local(state=0) {
 		process $:glob (
