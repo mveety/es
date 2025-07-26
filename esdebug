@@ -358,3 +358,5 @@ if ($trapall) {
 }
 
 . -i -v $_program $*
+
+# vim: filetype=es
