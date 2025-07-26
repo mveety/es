@@ -19,6 +19,8 @@ syn keyword esCmd eq lets tobase frombase
 syn keyword esCmd reverse waitfor assert assert2 gensym
 syn keyword esCmd apply bqmap fbqmap map macro import library
 syn keyword esCmd whatis panic option match matchall process
+syn keyword esCmd try iterator iterator2 do do2 accumulate
+syn keyword esCmd accumulate2 dolist glob parseargs
 syn match eskeyList /[a-zA-Z0-9]*\s*(/
 syn match esHook /[%][a-zA-Z0-9_]*/
 syn match esComment  /#.*$/

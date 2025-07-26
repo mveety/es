@@ -11,7 +11,7 @@
   '(
     
     ("\\<\\(let\\|if\\|for\\|while\\|fn\\)\\>" . 'font-lock-keyword-face)
-    ("\\<\\(access\\|break\\|catch\\|cd\\|echo\\|eval\\|exec\\|exit\\|false\\|forever\\|fork\\|if\\|limit\\|newpgrp\\|result\\|return\\|throw\\|time\\|true\\|umask\\|unwind-protect\\|var\\|vars\\|wait\\|whatis\\|while\\|%read\\|add\\|sub\\|mul\\|div\\|mod\\|lt\\|gt\\|eq\\)\\>" . 'font-lock-builtin-face)
+    ("\\<\\(access\\|break\\|catch\\|cd\\|echo\\|eval\\|exec\\|exit\\|false\\|forever\\|fork\\|if\\|limit\\|newpgrp\\|result\\|return\\|throw\\|time\\|true\\|umask\\|unwind-protect\\|var\\|vars\\|wait\\|whatis\\|while\\|%read\\|add\\|sub\\|mul\\|div\\|mod\\|lt\\|gt\\|eq\\lets\\|tobase\\|frombase\\|reverse\\|assert\\|assert2\\|gensym\\|apply\\|bqmap\\|fbqmap\\|map\\|macro\\|import\\|library\\|whatis\\|panic\\|option\\|match\\|matchall\\|process\\|try\\)\\>" . 'font-lock-builtin-face)
     ("'[^']*'" . 'font-lock-string-face)
     ("`{[^}]*}" . 'font-lock-variable-name-face)
     ("\\<-\\w*\\>" . 'font-lock-reference-face)
