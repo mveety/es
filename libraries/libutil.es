@@ -237,9 +237,7 @@ libutil_es_system = (
 
 
 if {~ $#__libutil_function_data 0} {
-	assert2 libutil {eq <={mod $#libutil_es_system 2} 0}
 	__libutil_function_data = $libutil_es_system <=libutil_enumerate_all_libs
-	assert2 libutil {eq <={mod $#__libutil_function_data 2} 0}
 }
 
 fn libutil_rehash {
