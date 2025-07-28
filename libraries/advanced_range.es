@@ -21,13 +21,9 @@ let (
 	}
 
 	fn range_number2allletter n { range_number2list $n $letters $capletters }
-	fn range_number2allletter1 n { add $n 1 |> range_number2allletter }
 	fn range_number2capletter n { range_number2list $n $capletters }
-	fn range_number2capletter1 n { add $n 1 |> range_number2capletter }
 	fn range_number2letter n { range_number2list $n $letters }
-	fn range_number2letter1 n { add $n 1 |> range_number2letter }
 	fn range_number2all n { range_number2list $n $numbers $letters $capletters }
-	fn range_number2all1 n { add $n 1 |> range_number2all }
 
 	fn range_list2number l list {
 		assert2 letter2number {eq 1 <={%count $:l}}
@@ -45,12 +41,6 @@ let (
 	fn range_capletter2number l { range_list2number $l $capletters }
 	fn range_allletter2number l { range_list2number $l $letters $capletters }
 	fn range_all2number l { range_list2number $l $numbers $letters $capletters }
-
-	fn range_nletters { result $#letters }
-	fn range_ncapletters { result $#capletters }
-	fn range_nallletters { %count $letters $capletters }
-	fn range_nnumbers { result $#numbers }
-	fn range_nall { %count $numbers $letters $capletters }
 
 	fn range_getchartype c {
 		let (
@@ -84,30 +74,7 @@ let (
 
 }
 
-fn range_range start0 end0 {
-	local(
-		start = <={if{gt $start0 $end0}{result $end0}{result $start0}}
-		end = <={if{gt $start0 $end0}{result $start0}{result $end0}}
-		rev = <={if{gt $start0 $end0}{result true}{result false}}
-		res = ()
-		i=
-	){
-		if {$es_%range_use_primitive} {
-			res = <={$&range $start $end}
-		} {
-			i = $start
-			while {lte $i $end} {
-				res = $res $i
-				i = <={add $i 1}
-			}
-		}
-		if{$rev} {
-			reverse $res |> result
-		} {
-			result $res
-		}
-	}
-}
+fn-old_range = $fn-%range
 
 fn range_allrange start0 end0 {
 	let (
@@ -175,6 +142,5 @@ fn range_allrange start0 end0 {
 	}
 }
 
-fn-old_range = $fn-%range
 fn-%range = $fn-range_allrange
 
