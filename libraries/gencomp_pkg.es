@@ -38,7 +38,7 @@ fn gencomp_pkg_hook curline partial {
 				('remove' 'delete' 'info' 'remove' 'upgrade' 'lock') {
 					gencomp_pkg_installed_search $partial
 				}
-				* { result '' }
+				* { result () }
 			)
 		}
 	}
