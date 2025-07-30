@@ -210,11 +210,12 @@ run_flag_usage(void)
 
 /* main -- initialize, parse command arguments, and start running */
 int main(int argc, char **argv) {
-	int c;
+	int c, fd;
 	volatile int ac;
 	char **volatile av;
 	char *ds;
 	char *rs;
+	char *file;
 
 	volatile int runflags = 0;		/* -[einvxL] */
 	volatile Boolean protected = FALSE;	/* -p */
@@ -375,8 +376,7 @@ getopt_done:
 				runesrc();
 	
 		if (cmd == NULL && !cmd_stdin && optind < ac) {
-			int fd;
-			char *file = av[optind++];
+			file = av[optind++];
 			if ((fd = eopen(file, oOpen)) == -1) {
 				eprint("%s: %s\n", file, esstrerror(errno));
 				return 1;
