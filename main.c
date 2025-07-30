@@ -12,6 +12,8 @@ Boolean verbose_parser = FALSE; /* -P */
 Boolean use_initialize_esrc = TRUE; /* -Dr */
 volatile Boolean loginshell = TRUE; /* -l or $0[0] == '-' */
 volatile Boolean readesrc = TRUE;
+Boolean different_esrc = FALSE; /* -I */
+Boolean additional_esrc = FALSE; /* -A */
 
 /* #if 0 && !HPUX && !defined(linux) && !defined(sgi) */
 /* extern int getopt (int argc, char **argv, const char *optstring); */
@@ -24,6 +26,10 @@ extern size_t blocksize;
 
 /* extern int isatty(int fd); */
 extern char **environ;
+
+/* for -I */
+char *altesrc = NULL;
+char *extraesrc = NULL;
 
 /* checkfd -- open /dev/null on an fd if it is closed */
 static void checkfd(int fd, OpenKind r) {
@@ -53,17 +59,29 @@ static void init_internal_vars(void) {
 	char *loginshell_st = loginshell ? "true" : "false";
 	char *initialize_st = use_initialize_esrc ? "true" : "false";
 	char *readesrc_st = readesrc ? "true" : "false";
+	char *diffesrc_st = different_esrc ? "true" : "false";
+	char *esrcfile = different_esrc ? str("%s", altesrc) : "";
+	char *addesrc_st = additional_esrc ? "true" : "false" ;
+	char *addesrcfile = additional_esrc ? str("%s", extraesrc) : "" ;
 
 	vardef("pid", NULL, mklist(mkstr(str("%d", getpid())), NULL));
 	vardef("__es_loginshell", NULL, mklist(mkstr(str("%s", loginshell_st)), NULL));
 	vardef("__es_initialize_esrc", NULL, mklist(mkstr(str("%s", initialize_st)), NULL));
 	vardef("__es_readesrc", NULL, mklist(mkstr(str("%s", readesrc_st)), NULL));
+	vardef("__es_different_esrc", NULL, mklist(mkstr(str("%s", diffesrc_st)), NULL));
+	vardef("__es_esrcfile", NULL, mklist(mkstr(esrcfile), NULL));
+	vardef("__es_extra_esrc", NULL, mklist(mkstr(str("%s", addesrc_st)), NULL));
+	vardef("__es_extra_esrcfile", NULL, mklist(mkstr(addesrcfile), NULL));
+
 }
 
 /* runesrc -- run the user's profile, if it exists */
 static void runesrc(void) {
-	char *esrc = str("%L/.esrc", varlookup("home", NULL), "\001");
-	int fd = eopen(esrc, oOpen);
+	char *esrc;
+	int fd;
+
+	esrc = different_esrc ? altesrc : str("%L/.esrc", varlookup("home", NULL), "\001");
+	fd = eopen(esrc, oOpen);
 	if (fd != -1) {
 		ExceptionHandler
 			runfd(fd, esrc, 0);
@@ -117,6 +135,8 @@ static noreturn usage(void) {
 		"	-c	cmd execute argument\n"
 		"	-s	read commands from standard input; stop option parsing\n"
 		"	-i	interactive shell\n"
+		"	-I file	alternative init file\n"
+		"	-A file	additional init file\n"
 		"	-l	login shell\n"
 		"	-e	exit if any command exits with false status\n"
 		"	-V	print input to standard error\n"
@@ -126,13 +146,8 @@ static noreturn usage(void) {
 		"	-p	don't load functions from the environment\n"
 		"	-o	don't open stdin, stdout, and stderr if they were closed\n"
 		"	-d	don't ignore SIGQUIT or SIGTERM\n"
-//		"	-I	print garbage collector information\n"
-//		"	-G	print verbose garbage collector information\n"
 		"	-X	use experimental gc\n"
-//		"	-L	print parser results in LISP format\n"
-//		"	-A	enable assertions (slow)\n"
 		"	-v	print version\n"
-//		"	-P	very verbose parser\n"
 		"	-g n	(new gc) collection frequency\n"
 		"	-S n	(new gc) freelist sort frequency\n"
 		"	-C n	(new gc) freelist coalesce frequency\n"
@@ -221,7 +236,7 @@ int main(int argc, char **argv) {
 	/* yydebug = 1; */
 
 	// removed IGAPL
-	while ((c = getopt(argc, argv, "+eilxXvnpodsVc:?hNg:S:C:B:D:r:")) != EOF)
+	while ((c = getopt(argc, argv, "+eiI:A:lxXvnpodsVc:?hNg:S:C:B:D:r:")) != EOF)
 		switch (c) {
 		case 'D':
 			for(ds = optarg; *ds != 0; ds++){
@@ -261,6 +276,14 @@ int main(int argc, char **argv) {
 					break;
 				}
 			}
+			break;
+		case 'I':
+			different_esrc = TRUE;
+			altesrc = strdup(optarg);
+			break;
+		case 'A':
+			additional_esrc = TRUE;
+			extraesrc = strdup(optarg);
 			break;
 		case 'c': cmd = optarg; break;
 		case 'e': runflags |= eval_exitonfalse; break;

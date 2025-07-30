@@ -1,0 +1,9 @@
+#!/usr/bin/env es
+# vi: ft=es
+# testing esrc
+# this esrc is for testing es. it's not really meant to be used, though
+# you could use this as a base for your esrc
+
+cwd = `{pwd}
+libraries = $cwd/libraries
+

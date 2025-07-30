@@ -15,7 +15,17 @@ fn %initialize {
 				* { echo 'uncaught exception:' $e $t $m }
 			)
 		} {
-			. $home/.esrc
+			if {! $__es_different_esrc} {
+				__es_esrcfile = $home/.esrc
+			}
+			. $__es_esrcfile
+			if {$__es_extra_esrc} {
+				if {access -r $__es_extra_esrcfile} {
+					. $__es_extra_esrcfile
+				} {
+					echo 'warning: '^$__es_extra_esrcfile^' not found!'
+				}
+			}
 		}
 	}
 }
