@@ -32,12 +32,13 @@ fn gencomp_pkg_hook curline partial {
 				cmdline = $cmdline(2 ...)
 			}
 			match $cmdline(1) (
-				('install' 'updating' 'add' 'fetch') {
+				('install' 'updating' 'add' 'fetch' 'search') {
 					gencomp_pkg_search $partial
 				}
 				('remove' 'delete' 'info' 'remove' 'upgrade' 'lock') {
 					gencomp_pkg_installed_search $partial
 				}
+				* { result '' }
 			)
 		}
 	}
