@@ -93,7 +93,9 @@ static Boolean iscounting(const char *name) {
  */
 
 /* validatevar -- ensure that a variable name is valid */
-extern void validatevar(const char *var) {
+void
+validatevar(const char *var)
+{
 	if (*var == '\0')
 		fail("es:var", "zero-length variable name");
 	if (iscounting(var))
@@ -103,7 +105,9 @@ extern void validatevar(const char *var) {
 }
 
 /* isexported -- is a variable exported? */
-static Boolean isexported(const char *name) {
+Boolean
+isexported(const char *name)
+{
 	if (specialvar(name))
 		return FALSE;
 	if (noexport == NULL)
@@ -112,7 +116,9 @@ static Boolean isexported(const char *name) {
 }
 
 /* setnoexport -- mark a list of variable names not for export */
-extern void setnoexport(List *list) {
+void
+setnoexport(List *list)
+{
 	isdirty = TRUE;
 	if (list == NULL) {
 		noexport = NULL;
