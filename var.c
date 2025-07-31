@@ -381,72 +381,79 @@ extern void initvars(void) {
 }
 
 /* importvar -- import a single environment variable */
-static void importvar(char *name0, char *value) {
+void
+importvar(char *name0, char *value)
+{
 	char sep[2] = { ENV_SEPARATOR, '\0' };
+	char *str, *str2, *word, *escape;
+	int offset;
+	List *list;
+	char *name; Root r_name;
+	List *defn; Root r_defn;
 
-	Ref(char *, name, name0);
-	Ref(List *, defn, NULL);
+	name = name0;
+	defn = NULL;
+	gcref(&r_name, (void**)&name);
+	gcref(&r_defn, (void**)&defn);
+
 	defn = fsplit(sep, mklist(mkstr(value + 1), NULL), FALSE);
 
 	if (strchr(value, ENV_ESCAPE) != NULL) {
-		List *list;
 		gcdisable();
 		for (list = defn; list != NULL; list = list->next) {
-			int offset = 0;
-			const char *word = list->term->str;
-			const char *escape;
-			while ((escape = strchr(word + offset, ENV_ESCAPE))
-			       != NULL) {
+			offset = 0;
+			word = list->term->str;
+			while ((escape = strchr(word + offset, ENV_ESCAPE)) != NULL) {
 				offset = escape - word + 1;
 				switch (escape[1]) {
 				    case '\0':
-					if (list->next != NULL) {
-						const char *str2
-						  = list->next->term->str;
-						char *str = gcalloc(offset+strlen(str2) + 1, tString);
-						memcpy(str, word, offset - 1);
-						str[offset - 1]
-						  = ENV_SEPARATOR;
-						strcpy(str + offset, str2);
+						if (list->next != NULL) {
+							str2 = list->next->term->str;
+							str = gcalloc(offset+strlen(str2) + 1, tString);
+							memcpy(str, word, offset - 1);
+							str[offset - 1] = ENV_SEPARATOR;
+							strcpy(str + offset, str2);
+							list->term->str = str;
+							list->next = list->next->next;
+						}
+						break;
+				    case ENV_ESCAPE:
+						str = gcalloc(strlen(word), tString);
+						memcpy(str, word, offset);
+						strcpy(str + offset, escape + 2);
 						list->term->str = str;
-						list->next = list->next->next;
-					}
-					break;
-				    case ENV_ESCAPE: {
-					char *str = gcalloc(strlen(word), tString);
-					memcpy(str, word, offset);
-					strcpy(str + offset, escape + 2);
-					list->term->str = str;
-					offset += 1;
-					break;
-				    }
+						offset += 1;
+						break;
 				}
 			}
 		}
 		gcenable();
 	}
 	vardef(name, NULL, defn);
-	RefEnd2(defn, name);
+
+	gcderef(&r_defn, (void**)&defn);
+	gcderef(&r_name, (void**)&name);
 }
 
 
 /* initenv -- load variables from the environment */
-extern void initenv(char **envp, Boolean protected) {
-	char *envstr;
+void
+initenv(char **envp, Boolean protected)
+{
+	char *envstr, *eq, *name, *buf;
 	size_t bufsize = 1024;
-	char *buf = ealloc(bufsize);
+	size_t nlen;
+	Vector *newenv;
 
+	buf = ealloc(bufsize);
 	for (; (envstr = *envp) != NULL; envp++) {
-		size_t nlen;
-		char *eq = strchr(envstr, '=');
-		char *name;
+		eq = strchr(envstr, '=');
 		if (eq == NULL) {
 			env->vector[env->count++] = envstr;
 			if (env->count == env->alloclen) {
-				Vector *newenv = mkvector(env->alloclen * 2);
+				newenv = mkvector(env->alloclen * 2);
 				newenv->count = env->count;
-				memcpy(newenv->vector, env->vector,
-				       env->count * sizeof *env->vector);
+				memcpy(newenv->vector, env->vector, env->count * sizeof(*env->vector));
 				env = newenv;
 			}
 			continue;
@@ -456,8 +463,7 @@ extern void initenv(char **envp, Boolean protected) {
 		memcpy(buf, envstr, nlen);
 		buf[nlen] = '\0';
 		name = str(ENV_DECODE, buf);
-		if (!protected
-		    || (!hasprefix(name, "fn-") && !hasprefix(name, "set-")))
+		if (!protected || (!hasprefix(name, "fn-") && !hasprefix(name, "set-")))
 			importvar(name, eq);
 	}
 
