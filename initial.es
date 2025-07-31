@@ -770,6 +770,7 @@ set-signals		= $&setsignals
 set-noexport		= $&setnoexport
 set-max-eval-depth	= $&setmaxevaldepth
 
+
 #	If the primitive $&resetterminal is defined (meaning that readline
 #	or editline is being used), setting the variables $TERM or $TERMCAP
 #	should notify the line editor library.
@@ -1054,6 +1055,34 @@ fn __es_getbody argsbody {
 		result $argsbody
 	} {
 		result <={%last $argsbody}
+	}
+}
+
+if {~ <=$&primitives getrunflags} {
+	runflags = ''
+
+	get-runflags = $&getrunflags
+
+	set-runflags = @ args {
+		local (
+			fargs = <={%strlist $args}
+			trf = <={$&getrunflags |> %strlist}
+			aflags=; rflags=
+		) {
+			for (i = $fargs) {
+				if {! ~ $i $trf} {
+					aflags = $aflags $i
+				}
+			}
+			for (i = $trf) {
+				if {! ~ $i $fargs} {
+					rflags = $rflags $i
+				}
+			}
+			for (i = $aflags) { $&setrunflags $i }
+			for (i = $rflags) { $&setrunflags -$i }
+			result <=$&getrunflags
+		}
 	}
 }
 
