@@ -56,27 +56,22 @@ static void initpath(void) {
 }
 
 static void init_internal_vars(void) {
-	char *loginshell_st = loginshell ? "true" : "false";
-	char *initialize_st = use_initialize_esrc ? "true" : "false";
-	char *readesrc_st = readesrc ? "true" : "false";
-	char *diffesrc_st = different_esrc ? "true" : "false";
-	char *esrcfile = different_esrc ? str("%s", altesrc) : "";
-	char *addesrc_st = additional_esrc ? "true" : "false" ;
-	char *addesrcfile = additional_esrc ? str("%s", extraesrc) : "" ;
-
 	vardef("ppid", NULL, mklist(mkstr(str("%d", getpid())), NULL));
-	vardef("__es_loginshell", NULL, mklist(mkstr(str("%s", loginshell_st)), NULL));
-	vardef("__es_initialize_esrc", NULL, mklist(mkstr(str("%s", initialize_st)), NULL));
-	vardef("__es_readesrc", NULL, mklist(mkstr(str("%s", readesrc_st)), NULL));
-	vardef("__es_different_esrc", NULL, mklist(mkstr(str("%s", diffesrc_st)), NULL));
-	vardef("__es_esrcfile", NULL, mklist(mkstr(esrcfile), NULL));
-	vardef("__es_extra_esrc", NULL, mklist(mkstr(str("%s", addesrc_st)), NULL));
-	vardef("__es_extra_esrcfile", NULL, mklist(mkstr(addesrcfile), NULL));
-
+	vardef("__es_loginshell", NULL, mklist(mkstr(str("%s", loginshell ? "true" : "false")), NULL));
+	vardef("__es_initialize_esrc", NULL,
+			mklist(mkstr(str("%s", use_initialize_esrc ? "true" : "false")), NULL));
+	vardef("__es_readesrc", NULL, mklist(mkstr(str("%s", readesrc ? "true" : "false")), NULL));
+	vardef("__es_different_esrc", NULL,
+			mklist(mkstr(str("%s", different_esrc ? "true" : "false")), NULL));
+	vardef("__es_esrcfile", NULL, mklist(mkstr(different_esrc ? str("%s", altesrc) : ""), NULL));
+	vardef("__es_extra_esrc", NULL,
+			mklist(mkstr(str("%s", additional_esrc ? "true" : "false")), NULL));
+	vardef("__es_extra_esrcfile", NULL,
+			mklist(mkstr(additional_esrc ? str("%s", extraesrc) : ""), NULL));
 }
 
 /* runesrc -- run the user's profile, if it exists */
-static void runesrc(void) {
+/*static void runesrc(void) {
 	char *esrc;
 	int fd;
 
@@ -97,7 +92,7 @@ static void runesrc(void) {
 			return;
 		EndExceptionHandler
 	}
-}
+}*/
 
 static int
 runinitialize(void) {
@@ -248,7 +243,7 @@ main(int argc, char *argv[]) {
 				case 'a': assertions = TRUE; break;
 				case 'E': debug_exceptions = TRUE; break;
 				case 'P': verbose_parser = TRUE; break;
-				case 'r': use_initialize_esrc = FALSE; break;
+				/*case 'r': use_initialize_esrc = FALSE; break;*/
 				case '?':
 					debug_flag_usage();
 					break;
@@ -372,9 +367,9 @@ getopt_done:
 
 		runinitialize();
 
-		if (loginshell && !use_initialize_esrc)
+		/*if (loginshell && !use_initialize_esrc)
 			if(readesrc)
-				runesrc();
+				runesrc();*/
 	
 		if (cmd == NULL && !cmd_stdin && optind < ac) {
 			file = av[optind++];
