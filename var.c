@@ -98,10 +98,8 @@ extern void validatevar(const char *var) {
 		fail("es:var", "zero-length variable name");
 	if (iscounting(var))
 		fail("es:var", "illegal variable name: %S", var);
-#if !PROTECT_ENV
 	if (strchr(var, '=') != NULL)
 		fail("es:var", "'=' in variable name: %S", var);
-#endif
 }
 
 /* isexported -- is a variable exported? */
@@ -316,18 +314,21 @@ void
 mkenv0(void *dummy, char *key, void *value)
 {
 	Var *var = value;
+	char *envstr;
+	Vector *newenv;
+
 	assert(gcisblocked());
 	if (var == NULL || var->defn == NULL || (var->flags & var_isinternal) || !isexported(key))
 		return;
 
 	if (var->env == NULL || (rebound && (var->flags & var_hasbindings))) {
-		char *envstr = str(ENV_FORMAT, key, var->defn);
+		envstr = str(ENV_FORMAT, key, var->defn);
 		var->env = envstr;
 	}
 	assert(env->count < env->alloclen);
 	env->vector[env->count++] = var->env;
 	if (env->count == env->alloclen) {
-		Vector *newenv = mkvector(env->alloclen * 2);
+		newenv = mkvector(env->alloclen * 2);
 		newenv->count = env->count;
 		memcpy(newenv->vector, env->vector, env->count * sizeof *env->vector);
 		env = newenv;
