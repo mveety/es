@@ -148,40 +148,42 @@ etags : ${HFILES} ${CFILES} parse.y
 
 # --- dependencies ---
 
-access.o : access.c es.h config.h stdenv.h prim.h esconfig.h
-closure.o : closure.c es.h config.h stdenv.h gc.h esconfig.h
-conv.o : conv.c es.h config.h stdenv.h print.h esconfig.h
-dict.o : dict.c es.h config.h stdenv.h gc.h esconfig.h
-eval.o : eval.c es.h config.h stdenv.h esconfig.h
-except.o : except.c es.h config.h stdenv.h print.h esconfig.h
-fd.o : fd.c es.h config.h stdenv.h esconfig.h
-gc.o : gc.c es.h config.h stdenv.h gc.h esconfig.h
-glob.o : glob.c es.h config.h stdenv.h gc.h esconfig.h
-glom.o : glom.c es.h config.h stdenv.h gc.h esconfig.h
-input.o : input.c es.h config.h stdenv.h input.h esconfig.h
-heredoc.o : heredoc.c es.h config.h stdenv.h gc.h input.h syntax.h esconfig.h
-list.o : list.c es.h config.h stdenv.h gc.h esconfig.h
-main.o : main.c es.h config.h stdenv.h esconfig.h token.h
-match.o : match.c es.h config.h stdenv.h esconfig.h
-open.o : open.c es.h config.h stdenv.h esconfig.h
-opt.o : opt.c es.h config.h stdenv.h esconfig.h
-prim.o : prim.c es.h config.h stdenv.h prim.h esconfig.h
-prim-ctl.o : prim-ctl.c es.h config.h stdenv.h prim.h esconfig.h
-prim-etc.o : prim-etc.c es.h config.h stdenv.h prim.h esconfig.h
-prim-io.o : prim-io.c es.h config.h stdenv.h gc.h prim.h esconfig.h
-prim-sys.o : prim-sys.c es.h config.h stdenv.h prim.h esconfig.h
-print.o : print.c es.h config.h stdenv.h print.h esconfig.h
-proc.o : proc.c es.h config.h stdenv.h prim.h esconfig.h
-signal.o : signal.c es.h config.h stdenv.h sigmsgs.h esconfig.h
-split.o : split.c es.h config.h stdenv.h gc.h esconfig.h
-status.o : status.c es.h config.h stdenv.h esconfig.h
-str.o : str.c es.h config.h stdenv.h gc.h print.h esconfig.h
-syntax.o : syntax.c es.h config.h stdenv.h input.h syntax.h token.h esconfig.h
-term.o : term.c es.h config.h stdenv.h gc.h esconfig.h
-token.o : token.c es.h config.h stdenv.h input.h syntax.h token.h esconfig.h
-tree.o : tree.c es.h config.h stdenv.h gc.h esconfig.h
-util.o : util.c es.h config.h stdenv.h esconfig.h
-var.o : var.c es.h config.h stdenv.h gc.h var.h esconfig.h
-vec.o : vec.c es.h config.h stdenv.h gc.h esconfig.h
-version.o : version.c es.h config.h stdenv.h esconfig.h
+stdenv.h : esconfig.h
+es.h : config.h stdenv.h
+access.o : access.c es.h prim.h
+closure.o : closure.c es.h gc.h
+conv.o : conv.c es.h print.h
+dict.o : dict.c es.h gc.h
+eval.o : eval.c es.h
+except.o : except.c es.h print.h
+fd.o : fd.c es.h
+gc.o : gc.c es.h gc.h
+glob.o : glob.c es.h gc.h
+glom.o : glom.c es.h gc.h
+input.o : input.c es.h input.h
+heredoc.o : heredoc.c es.h gc.h input.h syntax.h
+list.o : list.c es.h gc.h
+main.o : main.c es.h token.h
+match.o : match.c es.h
+open.o : open.c es.h
+opt.o : opt.c es.h
+prim.o : prim.c es.h prim.h
+prim-ctl.o : prim-ctl.c es.h prim.h
+prim-etc.o : prim-etc.c es.h prim.h
+prim-io.o : prim-io.c es.h gc.h prim.h
+prim-sys.o : prim-sys.c es.h prim.h
+print.o : print.c es.h print.h
+proc.o : proc.c es.h prim.h
+signal.o : signal.c es.h sigmsgs.h
+split.o : split.c es.h gc.h
+status.o : status.c es.h
+str.o : str.c es.h gc.h print.h
+syntax.o : syntax.c es.h input.h syntax.h token.h
+term.o : term.c es.h gc.h
+token.o : token.c es.h input.h syntax.h token.h
+tree.o : tree.c es.h gc.h
+util.o : util.c es.h
+var.o : var.c es.h gc.h var.h
+vec.o : vec.c es.h gc.h
+version.o : version.c es.h
 
