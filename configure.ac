@@ -17,10 +17,14 @@ rm -f conftest*
 
 use_readline=yes
 use_editline=no
+ENABLE_LOGINSHELL=false
 
 AC_ARG_WITH(readline,
 --with-readline		Use GNU Readline, use_readline=yes)
+AC_ARG_WITH(loginshell,
+--with-loginshell	Only load esrc if a login shell, ENABLE_LOGINSHELL=true)
 
+AC_SUBST(ENABLE_LOGINSHELL)
 AC_CANONICAL_HOST
 
 dnl saved_CFLAGS="$CFLAGS"

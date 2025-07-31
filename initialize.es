@@ -4,8 +4,17 @@ noexport = $noexport __es_initialize_esrc __es_loginshell __es_readesrc
 noexport = $noexport __es_different_esrc __es_esrcfile __es_extra_esrc
 noexport = $noexport __es_extra_esrcfile
 
+fn __es_esrc_check {
+	if {$es_enable_loginshell} {
+		result <={$__es_initialize_esrc && $__es_readesrc && $__es_loginshell}
+	} {
+		result <={$__es_initialize_esrc && $__es_readesrc}
+	}
+}
+
 fn %initialize {
-	if {$__es_initialize_esrc && $__es_loginshell && $__es_readesrc} {
+	if {__es_esrc_check} {
+		# optionally you can test for $__es_loginshell
 		catch @ e t m {
 			if {! ~ $e 'exit' && ! ~ $e 'signal' && ! ~ $t 'sigint'} {
 				echo -n 'esrc handler: '

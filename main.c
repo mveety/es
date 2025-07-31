@@ -10,7 +10,7 @@ Boolean gcinfo		= FALSE;	/* -I */
 Boolean assertions = FALSE;		/* -A */
 Boolean verbose_parser = FALSE; /* -P */
 Boolean use_initialize_esrc = TRUE; /* -Dr */
-volatile Boolean loginshell = TRUE; /* -l or $0[0] == '-' */
+volatile Boolean loginshell = FALSE; /* -l or $0[0] == '-' */
 volatile Boolean readesrc = TRUE;
 Boolean different_esrc = FALSE; /* -I */
 Boolean additional_esrc = FALSE; /* -A */
@@ -221,7 +221,6 @@ int main(int argc, char **argv) {
 	volatile Boolean protected = FALSE;	/* -p */
 	volatile Boolean allowquit = FALSE;	/* -d */
 	volatile Boolean cmd_stdin = FALSE;		/* -s */
-	volatile Boolean loginshell = TRUE;
 	Boolean keepclosed = FALSE;		/* -o */
 	const char *volatile cmd = NULL;	/* -c */
 
