@@ -14,7 +14,6 @@ fn __es_esrc_check {
 
 fn %initialize {
 	if {__es_esrc_check} {
-		# optionally you can test for $__es_loginshell
 		catch @ e t m {
 			if {! ~ $e 'exit' && ! ~ $e 'signal' && ! ~ $t 'sigint'} {
 				echo -n 'esrc handler: '

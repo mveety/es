@@ -5,8 +5,9 @@ options = 'init'
 # this is the es-mveety version info. the format is
 # $esversion-mveety-$rev
 
-version = <={$&version}
-buildstring = <={$&buildstring}
+version = <=$&version
+buildstring = <=$&buildstring
+pid = <=$&getpid
 
 #
 # Introduction
@@ -769,7 +770,8 @@ set-history		= $&sethistory
 set-signals		= $&setsignals
 set-noexport		= $&setnoexport
 set-max-eval-depth	= $&setmaxevaldepth
-
+# protect $ppid
+set-ppid = @{ result $ppid } 
 
 #	If the primitive $&resetterminal is defined (meaning that readline
 #	or editline is being used), setting the variables $TERM or $TERMCAP
@@ -803,6 +805,8 @@ get-apids = @ { result <=%apids }
 
 unixtime = ''
 get-unixtime = $&unixtime
+
+get-pid = $&getpid
 
 #
 # Variables

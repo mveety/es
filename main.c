@@ -64,7 +64,7 @@ static void init_internal_vars(void) {
 	char *addesrc_st = additional_esrc ? "true" : "false" ;
 	char *addesrcfile = additional_esrc ? str("%s", extraesrc) : "" ;
 
-	vardef("pid", NULL, mklist(mkstr(str("%d", getpid())), NULL));
+	vardef("ppid", NULL, mklist(mkstr(str("%d", getpid())), NULL));
 	vardef("__es_loginshell", NULL, mklist(mkstr(str("%s", loginshell_st)), NULL));
 	vardef("__es_initialize_esrc", NULL, mklist(mkstr(str("%s", initialize_st)), NULL));
 	vardef("__es_readesrc", NULL, mklist(mkstr(str("%s", readesrc_st)), NULL));
@@ -129,7 +129,8 @@ runinitialize(void) {
 }
 
 /* usage -- print usage message and die */
-static noreturn usage(void) {
+void
+usage(void) {
 	eprint(
 		"usage: es [-c command] [-siIAleVxXnNpodvgSCB] [-D flags] [-r flags] [file [args ...]]\n"
 		"	-c	cmd execute argument\n"
@@ -209,7 +210,8 @@ run_flag_usage(void)
 }
 
 /* main -- initialize, parse command arguments, and start running */
-int main(int argc, char **argv) {
+int
+main(int argc, char *argv[]) {
 	int c, fd;
 	volatile int ac;
 	char **volatile av;

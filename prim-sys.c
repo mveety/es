@@ -1,6 +1,7 @@
 /* prim-sys.c -- system call primitives ($Revision: 1.2 $) */
 
 #include <sys/resource.h>
+#include <unistd.h>
 #define	REQUIRE_IOCTL	1
 
 #include "es.h"
@@ -568,6 +569,18 @@ PRIM(dumpregions) {
 	return res;
 }
 
+PRIM(getpid) {
+	List *res = NULL; Root r_res;
+
+	gcref(&r_res, (void**)&res);
+
+	res = mklist(mkstr(str("%d", getpid())), NULL);
+
+	gcderef(&r_res, (void**)&res);
+
+	return res;
+}
+
 extern Dict *initprims_sys(Dict *primdict) {
 	X(newpgrp);
 	X(background);
@@ -588,5 +601,6 @@ extern Dict *initprims_sys(Dict *primdict) {
 	X(gcstats);
 	X(gc);
 	X(dumpregions);
+	X(getpid);
 	return primdict;
 }
