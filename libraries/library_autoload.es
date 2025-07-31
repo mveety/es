@@ -1,28 +1,27 @@
 library library_autoload (init libraries libutil)
 
-fn-old_%pathsearch = $fn-%pathsearch
-
-fn %pathsearch name {
-	catch @ e t m {
-		if {~ $e 'error' && ~ $t '$&access'} {
-			let (s=; lib=) {
-				(s lib) = <={try libutil_function_search $name $__libutil_function_data}
-				if {$s} { throw $e $t $m }
-				import $lib
-				if {%is-interactive} {
-					throw autoload_error
-				} {
-					throw error '%pathsearch' 'library '^$lib^' autoloaded'
+let (fn-old_%pathsearch = $fn-%pathsearch) {
+	fn %pathsearch name {
+		catch @ e t m {
+			if {~ $e 'error' && ~ $t '$&access'} {
+				let (s=; lib=) {
+					(s lib) = <={try libutil_function_search $name $__libutil_function_data}
+					if {$s} { throw $e $t $m }
+					import $lib
+					if {%is-interactive} {
+						throw autoload_error
+					} {
+						throw error '%pathsearch' 'library '^$lib^' autoloaded'
+					}
 				}
+			} {
+				throw $e $t $m
 			}
 		} {
-			throw $e $t $m
+			old_%pathsearch $name
 		}
-	} {
-		old_%pathsearch $name
 	}
 }
-
 
 fn %interactive-loop {
 	let (result = <=true) {

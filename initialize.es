@@ -1,5 +1,9 @@
 #!/usr/bin/env es
 
+noexport = $noexport __es_initialize_esrc __es_loginshell __es_readesrc
+noexport = $noexport __es_different_esrc __es_esrcfile __es_extra_esrc
+noexport = $noexport __es_extra_esrcfile
+
 fn %initialize {
 	if {$__es_initialize_esrc && $__es_loginshell && $__es_readesrc} {
 		catch @ e t m {
