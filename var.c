@@ -162,7 +162,9 @@ extern List *varlookup(char *name, Binding *bp) {
 	return defn;
 }
 
-extern List *varlookup2(char *name1, char *name2, Binding *bp) {
+List*
+varlookup2(char *name1, char *name2, Binding *bp)
+{
 	Var *var;
 	
 	for (; bp != NULL; bp = bp->next)
@@ -175,26 +177,38 @@ extern List *varlookup2(char *name1, char *name2, Binding *bp) {
 	return var->defn;
 }
 
-static List *callsettor(char *name, List *defn) {
+List*
+callsettor(char *name, List *defn)
+{
 	Push p;
 	List *settor;
+	List *lp; Root r_lp;
+	List *fn; Root r_fn;
 
 	if (specialvar(name) || (settor = varlookup2("set-", name, NULL)) == NULL)
 		return defn;
 
-	Ref(List *, lp, defn);
-	Ref(List *, fn, settor);
+	lp = defn;
+	fn = settor;
+	gcref(&r_lp, (void**)&lp);
+	gcref(&r_fn, (void**)&fn);
+
 	varpush(&p, "0", mklist(mkstr(name), NULL));
 
 	lp = listcopy(eval(append(fn, lp), NULL, 0));
 
 	varpop(&p);
-	RefEnd(fn);
-	RefReturn(lp);
+
+	gcderef(&r_fn, (void**)&fn);
+	gcderef(&r_lp, (void**)&lp);
+	return lp;
 }
 
-extern void vardef(char *name, Binding *binding, List *defn) {
+void
+vardef(char *name, Binding *binding, List *defn)
+{
 	Var *var;
+	Root r_name;
 
 	validatevar(name);
 	for (; binding != NULL; binding = binding->next)
@@ -204,7 +218,8 @@ extern void vardef(char *name, Binding *binding, List *defn) {
 			return;
 		}
 
-	RefAdd(name);
+	gcref(&r_name, (void**)&name);
+
 	defn = callsettor(name, defn);
 	if (isexported(name))
 		isdirty = TRUE;
@@ -221,10 +236,13 @@ extern void vardef(char *name, Binding *binding, List *defn) {
 		var = mkvar(defn);
 		vars = dictput(vars, name, var);
 	}
-	RefRemove(name);
+
+	gcderef(&r_name, (void**)&name);
 }
 
-extern void varpush(Push *push, char *name, List *defn) {
+void
+varpush(Push *push, char *name, List *defn)
+{
 	Var *var;
 
 	validatevar(name);
@@ -262,7 +280,9 @@ extern void varpush(Push *push, char *name, List *defn) {
 	rootlist = &push->defnroot;
 }
 
-extern void varpop(Push *push) {
+void
+varpop(Push *push)
+{
 	Var *var;
 	
 	assert(pushlist == push);
@@ -292,16 +312,14 @@ extern void varpop(Push *push) {
 	rootlist = rootlist->next->next;
 }
 
-static void mkenv0(void *dummy, char *key, void *value) {
+void
+mkenv0(void *dummy, char *key, void *value)
+{
 	Var *var = value;
 	assert(gcisblocked());
-	if (
-		   var == NULL
-		|| var->defn == NULL
-		|| (var->flags & var_isinternal)
-		|| !isexported(key)
-	)
+	if (var == NULL || var->defn == NULL || (var->flags & var_isinternal) || !isexported(key))
 		return;
+
 	if (var->env == NULL || (rebound && (var->flags & var_hasbindings))) {
 		char *envstr = str(ENV_FORMAT, key, var->defn);
 		var->env = envstr;
@@ -316,7 +334,9 @@ static void mkenv0(void *dummy, char *key, void *value) {
 	}
 }
 	
-extern Vector *mkenv(void) {
+Vector
+*mkenv(void)
+{
 	if (isdirty || rebound) {
 		env->count = envmin;
 		gcdisable();		/* TODO: make this a good guess */
@@ -352,11 +372,18 @@ static void listinternal(void *arg, char *key, void *value) {
 }
 
 /* listvars -- return a list of all the (dynamic) variables */
-extern List *listvars(Boolean internal) {
-	Ref(List *, varlist, NULL);
+List*
+listvars(Boolean internal) {
+	List *varlist; Root r_varlist;
+
+	varlist = NULL;
+	gcref(&r_varlist, (void**)&varlist);
+
 	dictforall(vars, internal ? listinternal : listexternal, &varlist);
 	varlist = sortlist(varlist);
-	RefReturn(varlist);
+
+	gcderef(&r_varlist, (void**)&varlist);
+	return varlist;
 }
 
 /* hide -- worker function for dictforall to hide initial state */
