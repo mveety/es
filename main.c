@@ -2,8 +2,8 @@
 
 #include "es.h"
 #include "gc.h"
+#include "stdenv.h"
 #include <stdio.h>
-// #include "token.h"
 
 Boolean gcverbose	= FALSE;	/* -G */
 Boolean gcinfo		= FALSE;	/* -I */
@@ -13,23 +13,15 @@ Boolean use_initialize_esrc = TRUE; /* -Dr */
 volatile Boolean loginshell = FALSE; /* -l or $0[0] == '-' */
 volatile Boolean readesrc = TRUE;
 Boolean different_esrc = FALSE; /* -I */
+char *altesrc = NULL; /* for -I */
 Boolean additional_esrc = FALSE; /* -A */
-
-/* #if 0 && !HPUX && !defined(linux) && !defined(sgi) */
-/* extern int getopt (int argc, char **argv, const char *optstring); */
-/* #endif */
+char *extraesrc = NULL; /* for -A */
 
 extern int optind;
 extern char *optarg;
 extern int yydebug;
 extern size_t blocksize;
-
-/* extern int isatty(int fd); */
 extern char **environ;
-
-/* for -I */
-char *altesrc = NULL;
-char *extraesrc = NULL;
 
 /* checkfd -- open /dev/null on an fd if it is closed */
 static void checkfd(int fd, OpenKind r) {
@@ -41,21 +33,19 @@ static void checkfd(int fd, OpenKind r) {
 		mvfd(new, fd);
 }
 
-/* initpath -- set $path based on the configuration default */
-static void initpath(void) {
+void
+init_internal_vars(void)
+{
 	int i;
-	static const char * const path[] = { INITIAL_PATH };
-	
-	Ref(List *, list, NULL);
-	for (i = arraysize(path); i-- > 0;) {
-		Term *t = mkstr((char *) path[i]);
-		list = mklist(t, list);
-	}
-	vardef("path", NULL, list);
-	RefEnd(list);
-}
+	static const char* const path[] = { INITIAL_PATH };
+	List *list = NULL; Root r_list;
 
-static void init_internal_vars(void) {
+	gcref(&r_list, (void**)&list);
+
+	for(i = arraysize(path); i-- > 0;)
+		list = mklist(mkstr((char*)path[i]), list);
+
+	vardef("path", NULL, list);
 	vardef("ppid", NULL, mklist(mkstr(str("%d", getpid())), NULL));
 	vardef("__es_loginshell", NULL, mklist(mkstr(str("%s", loginshell ? "true" : "false")), NULL));
 	vardef("__es_initialize_esrc", NULL,
@@ -68,31 +58,9 @@ static void init_internal_vars(void) {
 			mklist(mkstr(str("%s", additional_esrc ? "true" : "false")), NULL));
 	vardef("__es_extra_esrcfile", NULL,
 			mklist(mkstr(additional_esrc ? str("%s", extraesrc) : ""), NULL));
+
+	gcderef(&r_list, (void**)&list);
 }
-
-/* runesrc -- run the user's profile, if it exists */
-/*static void runesrc(void) {
-	char *esrc;
-	int fd;
-
-	esrc = different_esrc ? altesrc : str("%L/.esrc", varlookup("home", NULL), "\001");
-	fd = eopen(esrc, oOpen);
-	if (fd != -1) {
-		ExceptionHandler
-			runfd(fd, esrc, 0);
-		CatchException (e)
-			if (termeq(e->term, "exit"))
-				exit(exitstatus(e->next));
-			else if (termeq(e->term, "error"))
-				eprint("%L\n",
-				       e->next == NULL ? NULL : e->next->next,
-				       " ");
-			else if (!issilentsignal(e))
-				eprint("uncaught exception: %L\n", e, " ");
-			return;
-		EndExceptionHandler
-	}
-}*/
 
 static int
 runinitialize(void) {
@@ -276,11 +244,11 @@ main(int argc, char *argv[]) {
 			break;
 		case 'I':
 			different_esrc = TRUE;
-			altesrc = strdup(optarg);
+			altesrc = optarg;
 			break;
 		case 'A':
 			additional_esrc = TRUE;
-			extraesrc = strdup(optarg);
+			extraesrc = optarg;
 			break;
 		case 'c': cmd = optarg; break;
 		case 'e': runflags |= eval_exitonfalse; break;
@@ -359,18 +327,13 @@ getopt_done:
 	
 		runinitial();
 	
-		initpath(); /* $path */
-		init_internal_vars(); /* $pid, $__es_loginshell, $__es_initialize_esrc, $__es_readesrc */
+		init_internal_vars();
 		initsignals(runflags & run_interactive, allowquit);
 		hidevariables();
 		initenv(environ, protected);
 
 		runinitialize();
 
-		/*if (loginshell && !use_initialize_esrc)
-			if(readesrc)
-				runesrc();*/
-	
 		if (cmd == NULL && !cmd_stdin && optind < ac) {
 			file = av[optind++];
 			if ((fd = eopen(file, oOpen)) == -1) {
