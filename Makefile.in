@@ -174,14 +174,14 @@ print.o : print.c es.h config.h stdenv.h print.h esconfig.h
 proc.o : proc.c es.h config.h stdenv.h prim.h esconfig.h
 signal.o : signal.c es.h config.h stdenv.h sigmsgs.h esconfig.h
 split.o : split.c es.h config.h stdenv.h gc.h esconfig.h
-status.o : status.c es.h config.h stdenv.h term.h esconfig.h
+status.o : status.c es.h config.h stdenv.h esconfig.h
 str.o : str.c es.h config.h stdenv.h gc.h print.h esconfig.h
 syntax.o : syntax.c es.h config.h stdenv.h input.h syntax.h token.h esconfig.h
-term.o : term.c es.h config.h stdenv.h gc.h term.h esconfig.h
+term.o : term.c es.h config.h stdenv.h gc.h esconfig.h
 token.o : token.c es.h config.h stdenv.h input.h syntax.h token.h esconfig.h
 tree.o : tree.c es.h config.h stdenv.h gc.h esconfig.h
 util.o : util.c es.h config.h stdenv.h esconfig.h
-var.o : var.c es.h config.h stdenv.h gc.h var.h term.h esconfig.h
+var.o : var.c es.h config.h stdenv.h gc.h var.h esconfig.h
 vec.o : vec.c es.h config.h stdenv.h gc.h esconfig.h
 version.o : version.c es.h config.h stdenv.h esconfig.h
 
