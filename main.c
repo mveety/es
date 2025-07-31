@@ -131,7 +131,7 @@ runinitialize(void) {
 /* usage -- print usage message and die */
 static noreturn usage(void) {
 	eprint(
-		"usage: es [-c command] [-sileVxXnNpodvgSCB] [-D flags] [-r flags] [file [args ...]]\n"
+		"usage: es [-c command] [-siIAleVxXnNpodvgSCB] [-D flags] [-r flags] [file [args ...]]\n"
 		"	-c	cmd execute argument\n"
 		"	-s	read commands from standard input; stop option parsing\n"
 		"	-i	interactive shell\n"
