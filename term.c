@@ -2,7 +2,6 @@
 
 #include "es.h"
 #include "gc.h"
-#include "term.h"
 
 DefineTag(Term, static);
 

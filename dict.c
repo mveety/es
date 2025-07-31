@@ -56,17 +56,6 @@ static unsigned long strhash(const char *str) {
 
 DefineTag(Dict, static);
 
-typedef struct {
-	char *name;
-	void *value;
-} Assoc;
-
-struct Dict {
-	int size, remain;
-	Assoc table[1];		/* variable length */
-};
-
-
 static Dict *mkdict0(int size) {
 	size_t len = offsetof(Dict, table[size]);
 	Dict *dict = gcalloc(len, tDict);

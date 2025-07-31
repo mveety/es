@@ -20,6 +20,14 @@ typedef struct Term Term;
 typedef struct List List;
 typedef struct Binding Binding;
 typedef struct Closure Closure;
+typedef struct Assoc Assoc;
+typedef struct Dict Dict;
+
+struct Term {
+	char *str;
+	Closure *closure;
+	Dict *dict;
+};
 
 struct List {
 	Term *term;
@@ -36,7 +44,6 @@ struct Closure {
 	Binding	*binding;
 	Tree *tree;
 };
-
 
 /*
  * parse trees
@@ -57,6 +64,15 @@ struct Tree {
 	} u[2];
 };
 
+struct Assoc {
+	char *name;
+	char *value;
+};
+
+struct Dict {
+	int size, remain;
+	Assoc table[1];
+};
 
 /*
  * miscellaneous data structures
@@ -230,7 +246,6 @@ extern int ewaitfor(int pid);
 
 /* dict.c */
 
-typedef struct Dict Dict;
 extern Dict *mkdict(void);
 extern void dictforall(Dict *dict, void (*proc)(void *, char *, void *), void *arg);
 extern void *dictget(Dict *dict, const char *name);

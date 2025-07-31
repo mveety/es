@@ -403,20 +403,7 @@ char *tree2name(NodeKind k) {
 	}
 }
 
-/* having these here violates every data hiding rule in the book */
-
-	typedef struct {
-		char *name;
-		void *value;
-	} Assoc;
-	struct Dict {
-		int size, remain;
-		Assoc table[1];		/* variable length */
-	};
-
 #include "var.h"
-#include "term.h"
-
 
 size_t dump(Tag *t, void *p) {
 	char *s = t->typename;

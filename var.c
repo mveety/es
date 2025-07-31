@@ -3,7 +3,6 @@
 #include "es.h"
 #include "gc.h"
 #include "var.h"
-#include "term.h"
 
 #if PROTECT_ENV
 #define	ENV_FORMAT	"%F=%W"
