@@ -268,7 +268,7 @@ fn autoinit command arg {
 							r = <=%read
 							if {~ $r [yY]*} { yes = true }
 						}
-						esrcd_delete $be_verbose $file
+						if {$yes} { esrcd_delete $be_verbose $file }
 					}
 				}
 			}
