@@ -54,6 +54,39 @@ PRIM(dictput) {
 	return mklist(mkdictterm(d), NULL);
 }
 
+typedef struct {
+	List *fn;
+	Binding *binding;
+	int evalflags;
+} DictForAllArgs;
+
+void
+dicteval(void *vdfaargs, char *name, void *vdata)
+{
+	DictForAllArgs *dfaargs;
+	List *fn; Root r_fn;
+	List *data; Root r_data;
+	List *res; Root r_res;
+	List *args; Root r_args;
+
+	dfaargs = vdfaargs;
+	fn = dfaargs->fn;
+	gcref(&r_fn, (void**)&fn);
+	data = vdata;
+	gcref(&r_data, (void**)&data);
+	gcref(&r_args, (void**)&args);
+	gcref(&r_res, (void**)&res);
+
+	args = mklist(mkstr(name), data);
+	args = append(fn, args);
+
+	res = eval(args, dfaargs->binding, dfaargs->evalflags);
+
+	gcrderef(&r_res);
+	gcrderef(&r_args);
+	gcrderef(&r_data);
+}
+
 Dict*
 initprims_dict(Dict *primdict)
 {
