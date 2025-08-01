@@ -283,7 +283,7 @@ if {$runbin} {
 		echo 'error: must run core and/or library tests'
 		exit 1
 	}
-	info 'build: '^$buildstring
+	info 'test build: '^$buildstring
 	info 'using '^<={%gcstats |> %first}^' garbage collector'
 	if {! $testcore} {
 		info 'only running library tests'
