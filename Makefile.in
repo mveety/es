@@ -54,12 +54,14 @@ CFILES	= access.c closure.c conv.c dict.c eval.c except.c fd.c gc.c glob.c \
 	  glom.c input.c heredoc.c list.c main.c match.c open.c opt.c \
 	  prim-ctl.c prim-etc.c prim-io.c prim-sys.c prim.c print.c proc.c \
 	  sigmsgs.c signal.c split.c status.c str.c syntax.c term.c token.c \
-	  tree.c util.c var.c vec.c version.c y.tab.c dump.c gc_common.c ms_gc.c
+	  tree.c util.c var.c vec.c version.c y.tab.c dump.c gc_common.c ms_gc.c \
+	  prim-dict.c
 OFILES	= access.o closure.o conv.o dict.o eval.o except.o fd.o gc.o glob.o \
 	  glom.o input.o heredoc.o list.o main.o match.o open.o opt.o \
 	  prim-ctl.o prim-etc.o prim-io.o prim-sys.o prim.o print.o proc.o \
 	  sigmsgs.o signal.o split.o status.o str.o syntax.o term.o token.o \
-	  tree.o util.o var.o vec.o version.o y.tab.o gc_common.o ms_gc.o
+	  tree.o util.o var.o vec.o version.o y.tab.o gc_common.o ms_gc.o \
+	  prim-dict.o
 OTHER	= Makefile parse.y mksignal getsigfiles
 SYSLIB = initial.es config.es macros.es applymap.es libraries.es \
 		 range.es glob.es complete.es gc.es parseargs.es \
@@ -172,6 +174,7 @@ prim-ctl.o : prim-ctl.c es.h prim.h
 prim-etc.o : prim-etc.c es.h prim.h
 prim-io.o : prim-io.c es.h gc.h prim.h
 prim-sys.o : prim-sys.c es.h prim.h
+prim-dict.o : prim-dict.c es.h prim.h
 print.o : print.c es.h print.h
 proc.o : proc.c es.h prim.h
 signal.o : signal.c es.h sigmsgs.h

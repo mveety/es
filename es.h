@@ -139,12 +139,12 @@ extern void undefer(int ticket);
 
 extern Term *mkterm(char *str, Closure *closure);
 extern Term *mkstr(char *str);
+extern Term *mkdictterm(void);
 extern char *getstr(Term *term);
 extern Closure *getclosure(Term *term);
 extern Term *termcat(Term *t1, Term *t2);
 extern Boolean termeq(Term *term, const char *s);
 extern Boolean isclosure(Term *term);
-
 
 /* list.c */
 

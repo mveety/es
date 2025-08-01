@@ -7,11 +7,11 @@
 DefineTag(Term, static);
 
 Term*
-mkterm(char *str, Closure *closure)
+mkterm1(char *str, Closure *closure, Dict *dict)
 {
 	Term *term; Root r_term;
 
-	assert(str != NULL || closure != NULL);
+	assert(str != NULL || closure != NULL || dict != NULL);
 	gcdisable();
 	term = gcnew(Term);
 	gcref(&r_term, (void**)&term);
@@ -19,9 +19,17 @@ mkterm(char *str, Closure *closure)
 		*term = (Term){tkString, str, NULL, NULL};
 	else if(closure != NULL)
 		*term = (Term){tkClosure, NULL, closure, NULL};
+	else if(dict != NULL)
+		*term = (Term){tkDict, NULL, NULL, dict};
 	gcenable();
 	gcderef(&r_term, (void**)&term);
 	return term;
+}
+
+Term*
+mkterm(char *str, Closure *closure)
+{
+	return mkterm1(str, closure, NULL);
 }
 
 Term*
@@ -35,6 +43,12 @@ mkstr(char *str)
 	term = mkterm(string, NULL);
 	gcderef(&r_string, (void**)&string);
 	return term;
+}
+
+Term*
+mkdictterm(void)
+{
+	return mkterm1(NULL, NULL, mkdict());
 }
 
 int
@@ -55,6 +69,8 @@ getclosure(Term *term)
 	Term *tp; Root r_tp;
 	Tree *np; Root r_np;
 
+	if(term->kind == tkDict)
+		return NULL;
 	if (term->closure == NULL) {
 		assert(term->str != NULL);
 		if(isfunction(term->str)){
@@ -100,8 +116,9 @@ getstr(Term *term)
 		return str("%C", term->closure);
 	case tkDict:
 		assert(term->dict != NULL);
-		return str("dict%p", term->dict);
+		return str("dict(%ulx)", term->dict);
 	}
+	return NULL;
 }
 
 Term*

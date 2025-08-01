@@ -58,6 +58,7 @@ init_internal_vars(void)
 			mklist(mkstr(str("%s", additional_esrc ? "true" : "false")), NULL));
 	vardef("__es_extra_esrcfile", NULL,
 			mklist(mkstr(additional_esrc ? str("%s", extraesrc) : ""), NULL));
+	vardef("__es_test_dict", NULL, mklist(mkdictterm(), NULL));
 
 	gcderef(&r_list, (void**)&list);
 }

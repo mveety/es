@@ -105,7 +105,7 @@ DictMark(void *p)
  * private operations
  */
 
-static char DEAD[] = "DEAD";
+static char DEAD[] = "%%DEAD%%";
 
 static Assoc *get(Dict *dict, const char *name) {
 	Assoc *ap;
