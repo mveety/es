@@ -46,9 +46,11 @@ mkstr(char *str)
 }
 
 Term*
-mkdictterm(void)
+mkdictterm(Dict *d)
 {
-	return mkterm1(NULL, NULL, mkdict());
+	if(!d)
+		return mkterm1(NULL, NULL, mkdict());
+	return mkterm1(NULL, NULL, d);
 }
 
 int
@@ -118,6 +120,14 @@ getstr(Term *term)
 		assert(term->dict != NULL);
 		return str("dict(%ulx)", term->dict);
 	}
+	return NULL;
+}
+
+Dict*
+getdict(Term *term)
+{
+	if(term->kind == tkDict)
+		return term->dict;
 	return NULL;
 }
 
