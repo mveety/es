@@ -117,6 +117,24 @@ PRIM(dictforall) {
 	return list_true;
 }
 
+PRIM(termtypeof) {
+	if(!list)
+		fail("$&termtypeof", "missing argument");
+
+	switch(list->term->kind){
+	case tkString:
+		return mklist(mkstr(str("string")), NULL);
+	case tkClosure:
+		return mklist(mkstr(str("closure")), NULL);
+	case tkDict:
+		return mklist(mkstr(str("dict")), NULL);
+	default:
+		fail("$&termtypeof", "invalid term type!");
+		break;
+	}
+	return list_false;
+}
+
 Dict*
 initprims_dict(Dict *primdict)
 {
@@ -124,6 +142,7 @@ initprims_dict(Dict *primdict)
 	X(dictget);
 	X(dictput);
 	X(dictforall);
+	X(termtypeof);
 	return primdict;
 }
 
