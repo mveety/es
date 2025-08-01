@@ -3,8 +3,8 @@
 #include "es.h"
 
 static const Term
-	trueterm	= { "0", NULL },
-	falseterm	= { "1", NULL };
+	trueterm	= { tkString, "0", NULL, NULL },
+	falseterm	= { tkString, "1", NULL, NULL };
 static const List
 	truelist	= { (Term *) &trueterm, NULL },
 	falselist	= { (Term *) &falseterm, NULL };

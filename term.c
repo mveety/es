@@ -5,24 +5,54 @@
 
 DefineTag(Term, static);
 
-extern Term *mkterm(char *str, Closure *closure) {
+Term*
+mkterm(char *str, Closure *closure) {
+	Term *term; Root r_term;
+
+	assert(str != NULL || closure != NULL);
 	gcdisable();
-	Ref(Term *, term, gcnew(Term));
-	term->str = str;
-	term->closure = closure;
+	term = gcnew(Term);
+	gcref(&r_term, (void**)&term);
+	if(str != NULL) {
+		*term = (Term){tkString, str, NULL, NULL};
+/*		term->kind = tkString;
+		term->str = str;
+		term->closure = NULL;
+		term->dict = NULL;*/
+	} else if(closure != NULL) {
+		*term = (Term){tkClosure, NULL, closure, NULL};
+/*		term->kind = tkClosure;
+		term->str = NULL;
+		term->closure = closure;
+		term->dict = NULL;*/
+	}
 	gcenable();
-	RefReturn(term);
+	gcderef(&r_term, (void**)&term);
+	return term;
 }
 
-extern Term *mkstr(char *str) {
+Term*
+mkstr(char *str)
+{
+	Term *term;
+	char *string; Root r_string;
+
+	string = str;
+	gcref(&r_string, (void**)&string);
+	term = mkterm(string, NULL);
+	gcderef(&r_string, (void**)&string);
+	return term;
+}
+
+/*extern Term *mkstr(char *str) {
 	Term *term;
 	Ref(char *, string, str);
 	term = gcnew(Term);
-        term->str = string;
+    term->str = string;
 	term->closure = NULL;
         RefEnd(string);
         return term;
-}
+}*/
 
 extern Closure *getclosure(Term *term) {
 	if (term->closure == NULL) {
@@ -48,37 +78,56 @@ extern Closure *getclosure(Term *term) {
 	return term->closure;
 }
 
-extern char *getstr(Term *term) {
-	char *s = term->str;
-	Closure *closure = term->closure;
-	assert((s == NULL) != (closure == NULL));
-	if (s != NULL)
-		return s;
+char*
+getstr(Term *term)
+{
+	Term *tp; Root r_tp;
 
-#if 0	/* TODO: decide whether getstr() leaves term in closure or string form */
-	Ref(Term *, tp, term);
-	s = str("%C", closure);
-	tp->str = s;
-	tp->closure = NULL;
-	RefEnd(tp);
-	return s;
-#else
-	return str("%C", closure);
-#endif
+	switch(term->kind) {
+	case tkString:
+		/* TODO: This is wrong, but I still need to hunt down places where
+		 * strings are defined improperly
+		 */
+		if(term->str == NULL){
+			tp = term;
+			gcref(&r_tp, (void**)&tp);
+			tp->str = str("%C", term->closure);
+			gcderef(&r_tp, (void**)&tp);
+		}
+		return term->str;
+	case tkClosure:
+		assert(term->closure != NULL);
+		return str("%C", term->closure);
+	case tkDict:
+		assert(term->dict != NULL);
+		return str("dict%p", term->dict);
+	}
 }
 
-extern Term *termcat(Term *t1, Term *t2) {
+Term*
+termcat(Term *t1, Term *t2)
+{
+	Term *term; Root r_term;
+	char *str1; Root r_str1;
+	char *str2; Root r_str2;
+
 	if (t1 == NULL)
 		return t2;
 	if (t2 == NULL)
 		return t1;
 
-	Ref(Term *, term, mkstr(NULL));
-	Ref(char *, str1, getstr(t1));
-	Ref(char *, str2, getstr(t2));
-	term->str = str("%s%s", str1, str2);
-	RefEnd2(str2, str1);
-	RefReturn(term);
+	gcref(&r_term, (void**)&term);
+	str1 = getstr(t1);
+	gcref(&r_str1, (void**)&str1);
+	str2 = getstr(t2);
+	gcref(&r_str2, (void**)&str2);
+
+	term = mkstr(str("%s%s", str1, str2));
+
+	gcderef(&r_str2, (void**)&str2);
+	gcderef(&r_str1, (void**)&str1);
+	gcderef(&r_term, (void**)&term);
+	return term;
 }
 
 

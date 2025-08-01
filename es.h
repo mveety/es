@@ -23,7 +23,14 @@ typedef struct Closure Closure;
 typedef struct Assoc Assoc;
 typedef struct Dict Dict;
 
+typedef enum {
+	tkString,
+	tkClosure,
+	tkDict,
+} TermKind;
+
 struct Term {
+	TermKind kind;
 	char *str;
 	Closure *closure;
 	Dict *dict;
