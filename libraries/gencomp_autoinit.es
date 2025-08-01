@@ -1,8 +1,8 @@
-library gencomp_autoinit (init completion autoinit general_completion)
+library gencomp_autoinit (init completion autoinit general_completion complete_git)
 
 gencomp_autoinit_cmds = (
 	'load' 'load-all' 'enable' 'disable' 'list-all' 'list-enabled'
-	'list-loaded' 'file' 'new' 'delete' 'dir' 'help'
+	'list-loaded' 'file' 'new' 'delete' 'dir' 'help' 'git'
 )
 
 fn gencomp_autoinit_inactive_scripts {
@@ -43,6 +43,9 @@ fn gencomp_autoinit_hook curline partial {
 				}
 				('enable') {
 					gencomp_filter_list $partial <=gencomp_autoinit_inactive_scripts
+				}
+				('git') {
+					complete_git_filter_list $partial
 				}
 				* { return () }
 			)

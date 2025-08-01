@@ -126,6 +126,10 @@ fn esrcd_load_all_scripts verbose {
 	}
 }
 
+fn esrcd_in_git_repo dir {
+	result <={git -C $dir rev-parse --is-inside-work-tree >/dev/null >[2=1]}
+}
+
 fn esrcd_usage {
 	throw usage autoinit 'usage: autoinit [-v|-h] command [script]'
 }
@@ -148,6 +152,7 @@ usage: autoinit [-v|-h] command [script]
         new [script]         -- print the path to a new script
         delete [-y] [script] -- delete a script
         dir                  -- list esrc.d directories
+        git [git args]       -- run git in esrc.d
         help                 -- print this message
 %%end
 }
@@ -270,6 +275,30 @@ fn autoinit command arg {
 			(dir*) {
 				for (i = $libraries/esrc.d) {
 					if {access -r -d $i} { esrcd_print $i }
+				}
+			}
+			(git) {
+				let (
+					cwd = `{pwd}
+					esrcd_dir = ()
+				) {
+					for (i = $libraries/esrc.d) {
+						if {access -rw -d $i && esrcd_in_git_repo $i} {
+							esrcd_dir = $i
+							break
+						}
+					}
+					if {~ $#esrcd_dir 0} {
+						echo 'error: no esrc.d in git repo found!' >[1=2]
+						return <=false
+					}
+					if {~ $#arg 0} {
+						return <=true
+					}
+					cd $esrcd_dir
+					git $arg
+					cd $cwd
+					return <=true
 				}
 			}
 			(help) {
