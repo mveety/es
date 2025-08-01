@@ -2,6 +2,7 @@
 
 #include "es.h"
 #include "gc.h"
+#include "stdenv.h"
 
 DefineTag(Term, static);
 
@@ -36,25 +37,41 @@ mkstr(char *str)
 	return term;
 }
 
-extern Closure *getclosure(Term *term) {
+int
+isfunction(char *s)
+{
+	if((s[0] == '{' || s[0] == '@') && s[strlen(s) - 1] == '}')
+		return 1;
+	if(s[0] == '$' && s[1] == '&')
+		return 1;
+	if(hasprefix(s, "%closure"))
+		return 1;
+	return 0;
+}
+
+Closure*
+getclosure(Term *term)
+{
+	Term *tp; Root r_tp;
+	Tree *np; Root r_np;
+
 	if (term->closure == NULL) {
-		char *s = term->str;
-		assert(s != NULL);
-		if (
-			((*s == '{' || *s == '@') && s[strlen(s) - 1] == '}')
-			|| (*s == '$' && s[1] == '&')
-			|| hasprefix(s, "%closure")
-		) {
-			Ref(Term *, tp, term);
-			Ref(Tree *, np, parsestring(s));
+		assert(term->str != NULL);
+		if(isfunction(term->str)){
+			gcref(&r_tp, (void**)&tp);
+			gcref(&r_np, (void**)&np);
+			tp = term;
+			np = parsestring(term->str);
 			if (np == NULL) {
-				RefPop2(np, tp);
+				gcrderef(&r_np);
+				gcrderef(&r_tp);
 				return NULL;
 			}
 			tp->closure = extractbindings(np);
 			tp->str = NULL;
 			term = tp;
-			RefEnd2(np, tp);
+			gcrderef(&r_np);
+			gcrderef(&r_tp);
 		}
 	}
 	return term->closure;
@@ -74,6 +91,7 @@ getstr(Term *term)
 			tp = term;
 			gcref(&r_tp, (void**)&tp);
 			tp->str = str("%C", term->closure);
+			tp->kind = tkClosure;
 			gcderef(&r_tp, (void**)&tp);
 		}
 		return term->str;
