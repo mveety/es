@@ -6,26 +6,18 @@
 DefineTag(Term, static);
 
 Term*
-mkterm(char *str, Closure *closure) {
+mkterm(char *str, Closure *closure)
+{
 	Term *term; Root r_term;
 
 	assert(str != NULL || closure != NULL);
 	gcdisable();
 	term = gcnew(Term);
 	gcref(&r_term, (void**)&term);
-	if(str != NULL) {
+	if(str != NULL)
 		*term = (Term){tkString, str, NULL, NULL};
-/*		term->kind = tkString;
-		term->str = str;
-		term->closure = NULL;
-		term->dict = NULL;*/
-	} else if(closure != NULL) {
+	else if(closure != NULL)
 		*term = (Term){tkClosure, NULL, closure, NULL};
-/*		term->kind = tkClosure;
-		term->str = NULL;
-		term->closure = closure;
-		term->dict = NULL;*/
-	}
 	gcenable();
 	gcderef(&r_term, (void**)&term);
 	return term;
@@ -43,16 +35,6 @@ mkstr(char *str)
 	gcderef(&r_string, (void**)&string);
 	return term;
 }
-
-/*extern Term *mkstr(char *str) {
-	Term *term;
-	Ref(char *, string, str);
-	term = gcnew(Term);
-    term->str = string;
-	term->closure = NULL;
-        RefEnd(string);
-        return term;
-}*/
 
 extern Closure *getclosure(Term *term) {
 	if (term->closure == NULL) {
@@ -131,17 +113,26 @@ termcat(Term *t1, Term *t2)
 }
 
 
-static void *TermCopy(void *op) {
-	void *np = gcnew(Term);
-	memcpy(np, op, sizeof (Term));
+void*
+TermCopy(void *op)
+{
+	void *np;
+
+	np = gcnew(Term);
+	memcpy(np, op, sizeof(Term));
 	return np;
 }
 
-static size_t TermScan(void *p) {
-	Term *term = p;
+size_t
+TermScan(void *p)
+{
+	Term *term;
+
+	term = p;
 	term->closure = forward(term->closure);
 	term->str = forward(term->str);
-	return sizeof (Term);
+	term->dict = forward(term->dict);
+	return sizeof(Term);
 }
 
 void
@@ -153,6 +144,7 @@ TermMark(void *p)
 	gc_set_mark(header(p));
 	gcmark(t->closure);
 	gcmark(t->str);
+	gcmark(t->dict);
 }
 
 extern Boolean termeq(Term *term, const char *s) {
