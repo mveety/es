@@ -615,7 +615,7 @@ PRIM(lt) {
 PRIM(tobase) {
 	int base, num;
 	char *s, *se;
-	List *res; Root r_res;
+	List *res = NULL; Root r_res;
 
 	if(list == NULL || list->next == NULL)
 		fail("$&tobase", "missing arguments");

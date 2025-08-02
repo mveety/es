@@ -65,7 +65,7 @@ init_internal_vars(void)
 static int
 runinitialize(void) {
 	List *initialize;
-	List *result; Root r_result;
+	List *result = NULL; Root r_result;
 
 	result = NULL;
 

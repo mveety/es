@@ -10,7 +10,7 @@
 DefineTag(Closure, static);
 
 extern Closure *mkclosure(Tree *tree, Binding *binding) {
-	Closure *closure; Root r_closure;
+	Closure *closure = NULL; Root r_closure;
 
 	gcdisable();
 
@@ -131,7 +131,7 @@ extractbindings(Tree *tree0)
 	Chain me;
 	Tree *volatile tree = tree0;
 	Binding *volatile bindings = NULL;
-	Closure *result; Root r_result;
+	Closure *result = NULL; Root r_result;
 
 	gcdisable();
 
@@ -183,7 +183,7 @@ extractbindings(Tree *tree0)
 DefineTag(Binding, static);
 
 extern Binding *mkbinding(char *name, List *defn, Binding *next) {
-	Binding *binding; Root r_binding;
+	Binding *binding = NULL; Root r_binding;
 
 	assert(next == NULL || next->name != NULL);
 	validatevar(name);

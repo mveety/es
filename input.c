@@ -368,7 +368,7 @@ run_es_completer(const char *text, int state)
 	List *args;
 	List *completer;
 	char *res;
-	List *result; Root r_result;
+	List *result = NULL; Root r_result;
 
 	result = NULL;
 	gcref(&r_result, (void**)&result);
@@ -540,7 +540,7 @@ static int fdfill(Input *in) {
 	char *line_in;
 	List *history_hook;
 	List *args;
-	List *result; Root r_result;
+	List *result = NULL; Root r_result;
 	size_t i;
 
 	assert(in->buf == in->bufend);

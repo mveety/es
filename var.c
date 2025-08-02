@@ -185,8 +185,8 @@ callsettor(char *name, List *defn)
 {
 	Push p;
 	List *settor;
-	List *lp; Root r_lp;
-	List *fn; Root r_fn;
+	List *lp = NULL; Root r_lp;
+	List *fn = NULL; Root r_fn;
 
 	if (specialvar(name) || (settor = varlookup2("set-", name, NULL)) == NULL)
 		return defn;
@@ -380,7 +380,7 @@ static void listinternal(void *arg, char *key, void *value) {
 /* listvars -- return a list of all the (dynamic) variables */
 List*
 listvars(Boolean internal) {
-	List *varlist; Root r_varlist;
+	List *varlist = NULL; Root r_varlist;
 
 	varlist = NULL;
 	gcref(&r_varlist, (void**)&varlist);
@@ -421,8 +421,8 @@ importvar(char *name0, char *value)
 	char *str, *str2, *word, *escape;
 	int offset;
 	List *list;
-	char *name; Root r_name;
-	List *defn; Root r_defn;
+	char *name = NULL; Root r_name;
+	List *defn = NULL; Root r_defn;
 
 	name = name0;
 	defn = NULL;

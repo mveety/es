@@ -10,7 +10,7 @@ DefineTag(Tree2, static);
 extern Tree *mk(NodeKind t, ...) {
 	va_list ap;
 	Tree *n;
-	Tree *tree; Root r_tree;
+	Tree *tree = NULL; Root r_tree;
 
 	gcdisable();
 	va_start(ap, t);

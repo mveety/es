@@ -6,13 +6,14 @@ PRIM(dictnew) {
 }
 
 PRIM(dictget) {
-	List *res; Root r_res;
-	Dict *d; Root r_d;
+	List *res = NULL; Root r_res;
+	Dict *d = NULL; Root r_d;
 	char *name;
 
 	if(!list || !list->next)
 		fail("$&dictget", "missing arguments");
 
+	res = NULL;
 	gcref(&r_res, (void**)&res);
 
 	d = getdict(list->term);
@@ -31,9 +32,9 @@ PRIM(dictget) {
 }
 
 PRIM(dictput) {
-	Dict *d; Root r_d;
+	Dict *d = NULL; Root r_d;
 	char *name;
-	List *v; Root r_v;
+	List *v = NULL; Root r_v;
 
 	if(!list || !list->next || !list->next->next)
 		fail("$&dictput", "missing arguments");
@@ -55,7 +56,7 @@ PRIM(dictput) {
 }
 
 typedef struct {
-	List *fn;
+	Term *fn;
 	Binding *binding;
 	int evalflags;
 } DictForAllArgs;
@@ -64,23 +65,24 @@ void
 dicteval(void *vdfaargs, char *name, void *vdata)
 {
 	DictForAllArgs *dfaargs;
-	List *fn; Root r_fn;
-	List *data; Root r_data;
-	List *res; Root r_res;
-	List *args; Root r_args;
+	Term *fn = NULL; Root r_fn;
+	List *data = NULL; Root r_data;
+	List *res = NULL; Root r_res;
+	List *args = NULL; Root r_args;
 
 	dfaargs = vdfaargs;
 	fn = dfaargs->fn;
 	gcref(&r_fn, (void**)&fn);
 	data = vdata;
 	gcref(&r_data, (void**)&data);
+	args = NULL;
 	gcref(&r_args, (void**)&args);
+	res = NULL;
 	gcref(&r_res, (void**)&res);
 
-	args = mklist(mkstr(name), data);
-	args = append(fn, args);
+	args = mklist(fn, mklist(mkstr(name), data));
 
-	res = eval(args, dfaargs->binding, dfaargs->evalflags);
+	res = eval(args, dfaargs->binding, dfaargs->evalflags & ~run_interactive);
 
 	gcrderef(&r_res);
 	gcrderef(&r_args);
@@ -90,8 +92,8 @@ dicteval(void *vdfaargs, char *name, void *vdata)
 
 PRIM(dictforall) {
 	DictForAllArgs args;
-	List *fn; Root r_fn;
-	Dict *d; Root r_dict;
+	Term *fn = NULL; Root r_fn;
+	Dict *d = NULL; Root r_dict;
 
 	if(!list || !list->next)
 		fail("$&dictforall", "missing arguments");
@@ -100,7 +102,7 @@ PRIM(dictforall) {
 	if(!d)
 		fail("$&dictforall", "term not valid dict");
 	gcref(&r_dict, (void**)&d);
-	fn = list->next;
+	fn = list->next->term;
 	gcref(&r_fn, (void**)&fn);
 
 	args = (DictForAllArgs){

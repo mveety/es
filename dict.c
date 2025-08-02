@@ -121,9 +121,9 @@ static void putwrapper(void*, char*, void*); //shut up clang
 static Dict *put(Dict *dict, char *name, void *value) {
 	unsigned long n, mask;
 	Assoc *ap;
-	Dict *old; Root r_old;
-	char *np; Root r_np;
-	void *vp; Root r_vp;
+	Dict *old = NULL; Root r_old;
+	char *np = NULL; Root r_np;
+	void *vp = NULL; Root r_vp;
 	Dict *new;
 
 	assert(get(dict, name) == NULL);
@@ -215,8 +215,8 @@ extern Dict *dictput(Dict *dict, char *name, void *value) {
 
 extern void dictforall(Dict *dp, void (*proc)(void *, char *, void *), void *arg) {
 	int i;
-	Dict *dict; Root r_dict;
-	void *argp; Root r_argp;
+	Dict *dict = NULL; Root r_dict;
+	void *argp = NULL; Root r_argp;
 
 	dict = dp;
 	gcref(&r_dict, (void**)&dict);

@@ -101,7 +101,7 @@ PRIM(access) {
 	Boolean first = FALSE, exception = FALSE;
 	char *suffix = NULL;
 	List *lp;
-	List *result; Root r_result;
+	List *result = NULL; Root r_result;
 	const char * const usage = "access [-n name] [-1e] [-rwx] [-fdcblsp] path ...";
 
 	gcdisable();

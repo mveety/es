@@ -10,7 +10,7 @@ failexec(char *file, List *args)
 {
 	List *fn;
 	int olderror;
-	List *list; Root r_list;
+	List *list = NULL; Root r_list;
 	Root r_file;
 
 	assert(gcisblocked());
@@ -61,12 +61,12 @@ List*
 assign(Tree *varform, Tree *valueform0, Binding *binding0)
 {
 	List *value;
-	List *result; Root r_result;
-	Tree *valueform; Root r_valueform;
-	Binding *binding; Root r_binding;
-	List *vars; Root r_vars;
-	List *values; Root r_values;
-	char *name; Root r_name;
+	List *result = NULL; Root r_result;
+	Tree *valueform = NULL; Root r_valueform;
+	Binding *binding = NULL; Root r_binding;
+	List *vars = NULL; Root r_vars;
+	List *values = NULL; Root r_values;
+	char *name = NULL; Root r_name;
 
 	result = NULL;
 	gcref(&r_result, (void**)&result);
@@ -116,13 +116,13 @@ Binding*
 letbindings1(Tree *defn0, Binding *outer0,
 		Binding *context0, int evalflags, int letstar)
 {
-	Binding *binding; Root r_binding;
-	Binding *context; Root r_context;
-	Tree *defn; Root r_defn;
-	Tree *assign; Root r_assign;
-	List *vars; Root r_vars;
-	List *values; Root r_values;
-	char *name; Root r_name;
+	Binding *binding = NULL; Root r_binding;
+	Binding *context = NULL; Root r_context;
+	Tree *defn = NULL; Root r_defn;
+	Tree *assign = NULL; Root r_assign;
+	List *vars = NULL; Root r_vars;
+	List *values = NULL; Root r_values;
+	char *name = NULL; Root r_name;
 	List *value;
 
 	binding = outer0;
@@ -192,10 +192,10 @@ List*
 localbind(Binding *dynamic0, Binding *lexical0, Tree *body0, int evalflags)
 {
 	Push p;
-	List *result; Root r_result;
-	Tree *body; Root r_body;
-	Binding *dynamic; Root r_dynamic;
-	Binding *lexical; Root r_lexical;
+	List *result = NULL; Root r_result;
+	Tree *body = NULL; Root r_body;
+	Binding *dynamic = NULL; Root r_dynamic;
+	Binding *lexical = NULL; Root r_lexical;
 
 	if (dynamic0 == NULL)
 		return walk(body0, lexical0, evalflags);

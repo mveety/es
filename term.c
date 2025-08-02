@@ -9,7 +9,7 @@ DefineTag(Term, static);
 Term*
 mkterm1(char *str, Closure *closure, Dict *dict)
 {
-	Term *term; Root r_term;
+	Term *term = NULL; Root r_term;
 
 	assert(str != NULL || closure != NULL || dict != NULL);
 	gcdisable();
@@ -36,7 +36,7 @@ Term*
 mkstr(char *str)
 {
 	Term *term;
-	char *string; Root r_string;
+	char *string = NULL; Root r_string;
 
 	string = str;
 	gcref(&r_string, (void**)&string);
@@ -68,8 +68,8 @@ isfunction(char *s)
 Closure*
 getclosure(Term *term)
 {
-	Term *tp; Root r_tp;
-	Tree *np; Root r_np;
+	Term *tp = NULL; Root r_tp;
+	Tree *np = NULL; Root r_np;
 
 	if(term->kind == tkDict)
 		return NULL;
@@ -98,7 +98,7 @@ getclosure(Term *term)
 char*
 getstr(Term *term)
 {
-	Term *tp; Root r_tp;
+	Term *tp = NULL; Root r_tp;
 
 	switch(term->kind) {
 	case tkString:
@@ -134,9 +134,9 @@ getdict(Term *term)
 Term*
 termcat(Term *t1, Term *t2)
 {
-	Term *term; Root r_term;
-	char *str1; Root r_str1;
-	char *str2; Root r_str2;
+	Term *term = NULL; Root r_term;
+	char *str1 = NULL; Root r_str1;
+	char *str2 = NULL; Root r_str2;
 
 	if (t1 == NULL)
 		return t2;
