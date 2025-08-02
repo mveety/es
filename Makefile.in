@@ -63,10 +63,10 @@ OFILES	= access.o closure.o conv.o dict.o eval.o except.o fd.o gc.o glob.o \
 	  tree.o util.o var.o vec.o version.o y.tab.o gc_common.o ms_gc.o \
 	  prim-dict.o
 OTHER	= Makefile parse.y mksignal getsigfiles
-SYSLIB = initial.es config.es macros.es applymap.es libraries.es \
-		 range.es glob.es complete.es gc.es parseargs.es \
-		 doiterator.es newvars.es \
-		 suffix.es initialize.es
+SYSLIB = initial.es config.es macros.es dict.es applymap.es \
+		 libraries.es range.es glob.es complete.es gc.es \
+		 parseargs.es doiterator.es newvars.es suffix.es \
+		 initialize.es
 GEN	= esdump y.tab.c y.tab.h y.output token.h sigmsgs.c system.c config.es
 
 es	: ${OFILES} system.o
