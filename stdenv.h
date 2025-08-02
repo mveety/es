@@ -181,7 +181,7 @@ typedef GETGROUPS_T gidset_t;
 #define	assert(expr) \
 	STMT( \
 		if (!(expr)) { \
-			eprint("%s:%d: assertion failed (%s)\n", \
+			dprintf(2, "%s:%d: assertion failed (%s)\n", \
 				__FILE__, __LINE__, STRING(expr)); \
 			abort(); \
 		} \
