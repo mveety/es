@@ -260,6 +260,9 @@ extern int getgroups(int, int *);
 #endif
 */
 
+#if defined(linux) || defined(__GLIBC__)
+#define setpgrp(a, b) setpgid(a, b)
+#endif
 
 /*
  * macros for picking apart statuses
