@@ -150,43 +150,45 @@ etags : ${HFILES} ${CFILES} parse.y
 
 # --- dependencies ---
 
+ESHFILES = config.h esconfig.h stdenv.h es.h
+
 stdenv.h : esconfig.h
 es.h : config.h stdenv.h
-access.o : access.c es.h prim.h
-closure.o : closure.c es.h gc.h
-conv.o : conv.c es.h print.h
-dict.o : dict.c es.h gc.h
-eval.o : eval.c es.h
-except.o : except.c es.h print.h
-fd.o : fd.c es.h
-gc.o : gc.c es.h gc.h
-glob.o : glob.c es.h gc.h
-glom.o : glom.c es.h gc.h
-input.o : input.c es.h input.h
-heredoc.o : heredoc.c es.h gc.h input.h syntax.h
-list.o : list.c es.h gc.h
-main.o : main.c es.h token.h
-match.o : match.c es.h
-open.o : open.c es.h
-opt.o : opt.c es.h
-prim.o : prim.c es.h prim.h
-prim-ctl.o : prim-ctl.c es.h prim.h
-prim-etc.o : prim-etc.c es.h prim.h
-prim-io.o : prim-io.c es.h gc.h prim.h
-prim-sys.o : prim-sys.c es.h prim.h
-prim-dict.o : prim-dict.c es.h prim.h
-print.o : print.c es.h print.h
-proc.o : proc.c es.h prim.h
-signal.o : signal.c es.h sigmsgs.h
-split.o : split.c es.h gc.h
-status.o : status.c es.h
-str.o : str.c es.h gc.h print.h
-syntax.o : syntax.c es.h input.h syntax.h token.h
-term.o : term.c es.h gc.h
-token.o : token.c es.h input.h syntax.h token.h
-tree.o : tree.c es.h gc.h
-util.o : util.c es.h
-var.o : var.c es.h gc.h var.h
-vec.o : vec.c es.h gc.h
-version.o : version.c es.h
+access.o : access.c ${ESHFILES} prim.h
+closure.o : closure.c ${ESHFILES} gc.h
+conv.o : conv.c ${ESHFILES} print.h
+dict.o : dict.c ${ESHFILES} gc.h
+eval.o : eval.c ${ESHFILES}
+except.o : except.c ${ESHFILES} print.h
+fd.o : fd.c ${ESHFILES}
+gc.o : gc.c ${ESHFILES} gc.h
+glob.o : glob.c ${ESHFILES} gc.h
+glom.o : glom.c ${ESHFILES} gc.h
+input.o : input.c ${ESHFILES} input.h
+heredoc.o : heredoc.c ${ESHFILES} gc.h input.h syntax.h
+list.o : list.c ${ESHFILES} gc.h
+main.o : main.c ${ESHFILES} token.h
+match.o : match.c ${ESHFILES}
+open.o : open.c ${ESHFILES}
+opt.o : opt.c ${ESHFILES}
+prim.o : prim.c ${ESHFILES} prim.h
+prim-ctl.o : prim-ctl.c ${ESHFILES} prim.h
+prim-etc.o : prim-etc.c ${ESHFILES} prim.h
+prim-io.o : prim-io.c ${ESHFILES} gc.h prim.h
+prim-sys.o : prim-sys.c ${ESHFILES} prim.h
+prim-dict.o : prim-dict.c ${ESHFILES} prim.h
+print.o : print.c ${ESHFILES} print.h
+proc.o : proc.c ${ESHFILES} prim.h
+signal.o : signal.c ${ESHFILES} sigmsgs.h
+split.o : split.c ${ESHFILES} gc.h
+status.o : status.c ${ESHFILES}
+str.o : str.c ${ESHFILES} gc.h print.h
+syntax.o : syntax.c ${ESHFILES} input.h syntax.h token.h
+term.o : term.c ${ESHFILES} gc.h
+token.o : token.c ${ESHFILES} input.h syntax.h token.h
+tree.o : tree.c ${ESHFILES} gc.h
+util.o : util.c ${ESHFILES}
+var.o : var.c ${ESHFILES} gc.h var.h
+vec.o : vec.c ${ESHFILES} gc.h
+version.o : version.c ${ESHFILES}
 

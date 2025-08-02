@@ -156,6 +156,8 @@ typedef GETGROUPS_T gidset_t;
  * variable argument lists
  */
 
+/* we only support systems that have stdarg.h */
+/*
 #if HAVE_STDARG_H
 
 #define	VARARGS				, ...
@@ -163,7 +165,7 @@ typedef GETGROUPS_T gidset_t;
 #define	VARARGS2(t1, v1, t2, v2)	(t1 v1, t2 v2, ...)
 #define	VA_START(ap, v)			va_start(ap, v)
 
-#else	/* !HAVE_STDARG_H */
+#else	* !HAVE_STDARG_H *
 
 #define	VARARGS
 #define	VARARGS1(t1, v1)		(v1, va_alist) t1 v1; va_dcl
@@ -171,7 +173,7 @@ typedef GETGROUPS_T gidset_t;
 #define	VA_START(ap, var)		va_start(ap)
 
 #endif
-
+*/
 
 /*
  * assertion checking
@@ -234,6 +236,8 @@ extern int getgroups(int, int *);
  * hacks to present a standard system call interface
  */
 
+/* basically all platforms I want to support have the appropriate
+ * interface, so this logic isn't really needed.
 #ifdef HAVE_SETSID
 # define setpgrp(a, b)	setsid()
 #else
@@ -254,7 +258,7 @@ extern int getgroups(int, int *);
 #if !HAVE_LSTAT
 #define	lstat	stat
 #endif
-
+*/
 
 
 /*
@@ -266,11 +270,19 @@ extern int getgroups(int, int *);
  *	terms of the W* forms.
  */
 
+#ifndef USE_WAIT_W_FORMS
 #define	SIFSIGNALED(status)	(((status) & 0xff) != 0)
 #define	STERMSIG(status)	((status) & 0x7f)
 #define	SCOREDUMP(status)	((status) & 0x80)
 #define	SIFEXITED(status)	(!SIFSIGNALED(status))
 #define	SEXITSTATUS(status)	(((status) >> 8) & 0xff)
+#else
+#define	SIFSIGNALED(status)	WIFSIGNALED(status)
+#define	STERMSIG(status)	WTERMSIG(status)
+#define	SCOREDUMP(status)	WCOREDUMP(status)
+#define	SIFEXITED(status)	WIFEXITED(status)
+#define	SEXITSTATUS(status)	WEXITSTATUS(status)
+#endif
 
 #endif
 

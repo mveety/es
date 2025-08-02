@@ -139,3 +139,6 @@
 
 /* does sigsetjmp exist? */
 #undef HAVE_SIGSETJMP
+
+/* use W* forms from sys/wait.h */
+#undef USE_WAIT_W_FORMS
