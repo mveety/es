@@ -2,6 +2,7 @@
 fn-dictnew = $&dictnew
 fn-dictget = $&dictget
 fn-dictput = $&dictput
+fn-dictsize = $&dictsize
 fn-dictforall = $&dictforall
 
 fn dictnames dict {
@@ -30,7 +31,7 @@ fn dictdump dict {
 					let (vfmt = '(') {
 						for (i = $v) { vfmt = $vfmt ''''^$i^'''' }
 						vfmt = $vfmt ')'
-						stmts = $stmts $varname^' = <={$&dictput $'^$varname^' '^$n^' '^$^vfmt^'}'
+						stmts = $stmts $varname^' = <={$&dictput $'^$varname^' '''^$n^''' '^$^vfmt^'}'
 					}
 				}
 				result $stmts

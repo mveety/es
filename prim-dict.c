@@ -83,6 +83,15 @@ dicteval(void *vdfaargs, char *name, void *vdata)
 	gcrderef(&r_data);
 }
 
+void
+dictsize(void *vsz, char *name, void *vdata)
+{
+	unsigned int *sz;
+
+	sz = vsz;
+	*sz = *sz + 1;
+}
+
 PRIM(dictforall) {
 	DictForAllArgs args;
 	List *lp = NULL; Root r_lp;
@@ -115,6 +124,29 @@ PRIM(dictforall) {
 	return list_true;
 }
 
+PRIM(dictsize) {
+	List *lp = NULL; Root r_lp;
+	Dict *d = NULL; Root r_d;
+	unsigned int sz = 0;
+
+	if(!list)
+		fail("$&dictsize", "missing argument");
+
+	lp = list;
+	gcref(&r_lp, (void**)&lp);
+	d = getdict(lp->term);
+	if(!d)
+		fail("$&dictforall", "term not valid dict");
+	gcref(&r_d, (void**)&d);
+
+	dictforall(d, &dictsize, &sz);
+
+	gcrderef(&r_d);
+	gcrderef(&r_lp);
+
+	return mklist(mkstr(str("%ud", sz)), NULL);
+}
+
 PRIM(termtypeof) {
 	if(!list)
 		fail("$&termtypeof", "missing argument");
@@ -140,6 +172,7 @@ initprims_dict(Dict *primdict)
 	X(dictget);
 	X(dictput);
 	X(dictforall);
+	X(dictsize);
 	X(termtypeof);
 	return primdict;
 }
