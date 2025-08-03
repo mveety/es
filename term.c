@@ -187,12 +187,9 @@ TermMark(void *p)
 
 	t = (Term*)p;
 	gc_set_mark(header(p));
-	if(t->kind == tkString || t->kind == tkClosure) {
-		gcmark(t->closure);
-		gcmark(t->str);
-	} else if(t->kind == tkDict) {
-		gcmark(t->dict);
-	}
+	gcmark(t->closure);
+	gcmark(t->str);
+	gcmark(t->dict);
 }
 
 extern Boolean termeq(Term *term, const char *s) {

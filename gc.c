@@ -13,7 +13,7 @@ struct Space {
 	Space *next;
 };
 
-#define	SPACESIZE(sp)	(((sp)->top - (sp)->bot))
+#define	SPACESIZE(sp)	((size_t)((sp)->top - (sp)->bot))
 #define	SPACEFREE(sp)	(((sp)->top - (sp)->current))
 #define	SPACEUSED(sp)	(((sp)->current - (sp)->bot))
 #define	INSPACE(p, sp)	((sp)->bot <= (char *) (p) && (char *) (p) < (sp)->top)

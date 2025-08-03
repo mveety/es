@@ -70,17 +70,23 @@ static void *DictCopy(void *op) {
 	size_t len = offsetof(Dict, table[dict->size]);
 	void *np = gcalloc(len, tDict);
 	memcpy(np, op, len);
+	if(gcverbose)
+		dprintf(2, "dict %p -> dict %p\n", op, np);
 	return np;
 }
 
 static size_t DictScan(void *p) {
 	Dict *dict = p;
 	int i;
+	if(gcverbose)
+		dprintf(2, "scanning dict %p\n", dict);
 	for (i = 0; i < dict->size; i++) {
 		Assoc *ap = &dict->table[i];
 		ap->name  = forward(ap->name);
 		ap->value = forward(ap->value);
 	}
+	if(gcverbose)
+		dprintf(2, "done scanning %p\n", dict);
 	return offsetof(Dict, table[dict->size]);
 }
 

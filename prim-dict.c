@@ -56,7 +56,6 @@ PRIM(dictput) {
 }
 
 typedef struct {
-	Term *fn;
 	Binding *binding;
 	int evalflags;
 } DictForAllArgs;
@@ -65,56 +64,53 @@ void
 dicteval(void *vdfaargs, char *name, void *vdata)
 {
 	DictForAllArgs *dfaargs;
-	Term *fn = NULL; Root r_fn;
 	List *data = NULL; Root r_data;
 	List *res = NULL; Root r_res;
 	List *args = NULL; Root r_args;
 
-	dfaargs = vdfaargs;
-	fn = dfaargs->fn;
-	gcref(&r_fn, (void**)&fn);
-	data = vdata;
 	gcref(&r_data, (void**)&data);
-	args = NULL;
 	gcref(&r_args, (void**)&args);
-	res = NULL;
 	gcref(&r_res, (void**)&res);
 
-	args = mklist(fn, mklist(mkstr(name), data));
+	dfaargs = vdfaargs;
+	data = vdata;
+	args = mklist(mkstr("__es_dictforall"), mklist(mkstr(name), data));
 
-	res = eval(args, dfaargs->binding, dfaargs->evalflags & ~run_interactive);
+	res = eval(args, NULL, dfaargs->evalflags);
 
 	gcrderef(&r_res);
 	gcrderef(&r_args);
 	gcrderef(&r_data);
-	gcrderef(&r_fn);
 }
 
 PRIM(dictforall) {
 	DictForAllArgs args;
-	Term *fn = NULL; Root r_fn;
+	List *lp = NULL; Root r_lp;
 	Dict *d = NULL; Root r_dict;
+	Push dfafn;
 
 	if(!list || !list->next)
 		fail("$&dictforall", "missing arguments");
 
-	d = getdict(list->term);
+	lp = list;
+	gcref(&r_lp, (void**)&lp);
+	d = getdict(lp->term);
 	if(!d)
 		fail("$&dictforall", "term not valid dict");
 	gcref(&r_dict, (void**)&d);
-	fn = list->next->term;
-	gcref(&r_fn, (void**)&fn);
+	lp = lp->next;
+	varpush(&dfafn, "fn-__es_dictforall", mklist(lp->term, NULL));
 
 	args = (DictForAllArgs){
-		.fn = fn,
-		.evalflags = (evalflags & eval_exitonfalse),
+		.evalflags = evalflags,
 		.binding = binding,
 	};
 
 	dictforall(d, &dicteval, &args);
 
-	gcrderef(&r_fn);
+	varpop(&dfafn);
 	gcrderef(&r_dict);
+	gcrderef(&r_lp);
 
 	return list_true;
 }
