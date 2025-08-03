@@ -105,16 +105,19 @@ if {$libutil_enable_build} {
 		import format
 		let (
 			init_funs =
+			init_fmt_funs =
 			initfiles = (initial.es applymap.es range.es glob.es
 						gc.es parseargs.es doiterator.es newvars.es
-						initialize.es)
+						dict.es initialize.es)
 			macros_funs =
+			macros_fmt_funs =
 			macrosfiles = macros.es
 			libraries_funs =
+			libraries_fmt_funs =
 			librariesfiles = libraries.es
 			completion_funs =
+			completion_fmt_funs =
 			completionfiles = complete.es
-			funs = ()
 		) {
 			echo -n 'hashing...' >[1=2]
 			for (file = $initfiles) {
@@ -133,108 +136,151 @@ if {$libutil_enable_build} {
 				echo -n $file^'...' >[1=2]
 				completion_funs = $completion_funs <={libutil_enumerate_file_functions $file}
 			}
+			init_funs = <={let (t=) {
+				for (i = $init_funs) {
+					if {! ~ $i __es_*} {
+						t = $t $i
+					}
+				}
+				result $t
+			}}
 			echo '' >[1=2]
-			echo 'generating list...' >[1=2]
+			echo 'generating lists...' >[1=2]
 		
 			for (i = $init_funs) {
-				funs = $funs $i init
+				init_fmt_funs = $init_fmt_funs $i init
 			}
+			assert {eq <={mod $#init_fmt_funs 2} 0}
 			for (i = $macros_funs) {
-				funs = $funs $i macros
+				macros_fmt_funs = $macros_fmt_funs $i macros
 			}
+			assert {eq <={mod $#macros_fmt_funs 2} 0}
 			for (i = $libraries_funs) {
-				funs = $funs $i libraries
+				libraries_fmt_funs = $libraries_fmt_funs $i libraries
 			}
+			assert {eq <={mod $#libraries_fmt_funs 2} 0}
 			for (i = $completion_funs) {
-				funs = $funs $i completion
+				completion_fmt_funs = $completion_fmt_funs $i completion
 			}
-			echo 'libutil_es_system = '^<={format $funs}
+			assert {eq <={mod $#completion_fmt_funs 2} 0}
+			echo 'libutil_es_system = ('
+			lets (
+				col = 0
+				ts =
+				fn-fmtecho = @ s {
+					if {gte $col 65} {
+						echo ''
+						col = 0
+					}
+					if {eq $col 0} {
+						echo -n \t
+						col = 4
+					}
+					ts = ''''^$s^''''
+					if {gt $col 4} { ts = ' '^$ts }
+					echo -n $ts
+					col = <={%count $:ts |> add $col}
+				}
+			) {
+				echo '    # init'
+				for (f = $init_fmt_funs) {
+					fmtecho $f
+				}
+				echo ''
+				col = 0
+				echo '    # macros'
+				for (f = $macros_fmt_funs) {
+					fmtecho $f
+				}
+				echo ''
+				col = 0
+				echo '    # libraries'
+				for (f = $libraries_fmt_funs) {
+					fmtecho $f
+				}
+				echo ''
+				col = 0
+				echo '    # completion'
+				for (f = $completion_fmt_funs) {
+					fmtecho $f
+				}
+				echo ''
+				echo ')'
+			}
 		}
 	}
-
 }
 
 libutil_es_system = (
-	# init
-	'.' 'init' 'access' 'init' 'break' 'init' 'catch' 'init'
-	'echo' 'init' 'exec' 'init' 'forever' 'init' 'fork' 'init'
-	'if' 'init' 'newpgrp' 'init' 'result' 'init' 'throw' 'init'
-	'umask' 'init' 'wait' 'init' '%read' 'init' 'reverse' 'init'
-	'eval' 'init' 'true' 'init' 'false' 'init' 'break' 'init'
-	'exit' 'init' 'return' 'init' 'unwind-protect' 'init'
-	'%block' 'init' '%apids' 'init' '%fsplit' 'init' '%newfd' 'init'
-	'%run' 'init' '%split' 'init' '%var' 'init' '%whatis' 'init'
-	'assert' 'init' 'assert2' 'init' '%enable-assert' 'init'
-	'%disable-assert' 'init' 'var' 'init' 'whatis' 'init'
-	'while' 'init' 'cd' 'init' '%count' 'init' '%flatten' 'init' 
-	'%strlist' 'init' '%backquote' 'init' '%stbackquote' 'init'
-	'%seq' 'init' '%not' 'init' '%and' 'init' '%or' 'init'
-	'%background' 'init' '%openfile' 'init' '%open' 'init'
-	'%create' 'init' '%append' 'init' '%open-write' 'init'
-	'%open-create' 'init' '%open-append' 'init' '%one' 'init'
-	'%here' 'init' '%close' 'init' '%dup' 'init' '%pipe' 'init'
-	'%home' 'init' '%pathsearch' 'init' '%parse' 'init'
-	'%is-interactive' 'init' '%batch-loop' 'init'
-	'%interactive-loop' 'init' '%eval-noprint' 'init'
-	'%eval-print' 'init' '%noeval-noprint' 'init'
-	'%noeval-print' 'init' '%exit-on-false' 'init' 'panic' 'init'
-	'dprint' 'init' 'tobase' 'init' 'frombase' 'init'
-	'__es_nuke_zeros' 'init' 'todecimal1' 'init' 'todecimal' 'init'
-	'fromdecimal' 'init' '%mathfun' 'init' '%noconvert_mathfun' 'init'
-	'%numcompfun' 'init' 'add' 'init' 'sub' 'init' 'mul' 'init'
-	'div' 'init' 'mod' 'init' 'eq' 'init' 'lt' 'init' 'gt' 'init'
-	'gte' 'init' 'lte' 'init' 'waitfor' 'init' '%elem' 'init'
-	'%last' 'init' '%first' 'init' '%rest' 'init' '%slice' 'init'
-	'try' 'init' '__es_getargs' 'init' '__es_getbody' 'init'
-	'apply' 'init' 'map' 'init' 'bqmap' 'init' 'fbqmap' 'init'
-	'%range' 'init' 'glob' 'init' 'glob_test' 'init'
-	'isextendedglob' 'init' 'esmglob_expandquestions' 'init'
-	'dirlist2glob' 'init' 'esmglob_repeat_string' 'init'
-	'matchlist_elem' 'init' 'esmglob_expand_qmacro' 'init'
-	'esmglob_alllen1' 'init' 'esmglob_optimize_mid' 'init'
-	'esmglob_partialcompilation' 'init'
-	'esmglob_double_wild_removal' 'init' 'esmglob_parse_escapes' 'init'
-	'esmglob_add_unique' 'init' 'esmglob_compile0' 'init'
-	'esmglob_compile' 'init' 'esmglob_do_glob' 'init'
-	'esmglob_compmatch' 'init' '%esmglob' 'init' '%esmglob_match' 'init'
-	'%esm~' 'init' '%gcstats' 'init' '%gc' 'init' '%gcinfo' 'init'
-	'es_canonicalize_args' 'init' 'es_run_parseargs' 'init'
+    # init
+	'.' 'init' 'access' 'init' 'break' 'init' 'catch' 'init' 'echo'
+	'init' 'exec' 'init' 'forever' 'init' 'fork' 'init' 'if' 'init'
+	'newpgrp' 'init' 'result' 'init' 'throw' 'init' 'umask' 'init'
+	'wait' 'init' '%read' 'init' 'reverse' 'init' 'eval' 'init' 'true'
+	'init' 'false' 'init' 'break' 'init' 'exit' 'init' 'return' 'init'
+	'unwind-protect' 'init' '%block' 'init' '%apids' 'init' '%fsplit'
+	'init' '%newfd' 'init' '%run' 'init' '%split' 'init' '%var' 'init'
+	'%whatis' 'init' 'assert' 'init' 'assert2' 'init' '%enable-assert'
+	'init' '%disable-assert' 'init' 'var' 'init' 'whatis' 'init' 'while'
+	'init' 'cd' 'init' '%count' 'init' '%flatten' 'init' '' 'init'
+	'%strlist' 'init' '%backquote' 'init' '%stbackquote' 'init' '%seq'
+	'init' '%not' 'init' '%and' 'init' '%or' 'init' '%background'
+	'init' '%openfile' 'init' '%open' 'init' '%create' 'init' '%append'
+	'init' '%open-write' 'init' '%open-create' 'init' '%open-append'
+	'init' '%one' 'init' '%here' 'init' '%close' 'init' '%dup' 'init'
+	'%pipe' 'init' '%home' 'init' '%pathsearch' 'init' '%parse' 'init'
+	'%is-interactive' 'init' '%batch-loop' 'init' '%interactive-loop'
+	'init' '%eval-noprint' 'init' '%eval-print' 'init' '%noeval-noprint'
+	'init' '%noeval-print' 'init' '%exit-on-false' 'init' 'panic'
+	'init' 'dprint' 'init' 'tobase' 'init' 'frombase' 'init' 'todecimal1'
+	'init' 'todecimal' 'init' 'fromdecimal' 'init' '%mathfun' 'init'
+	'%noconvert_mathfun' 'init' '%numcompfun' 'init' 'add' 'init'
+	'sub' 'init' 'mul' 'init' 'div' 'init' 'mod' 'init' 'eq' 'init'
+	'lt' 'init' 'gt' 'init' 'gte' 'init' 'lte' 'init' 'waitfor' 'init'
+	'%elem' 'init' '%last' 'init' '%first' 'init' '%rest' 'init' '%slice'
+	'init' 'try' 'init' 'apply' 'init' 'map' 'init' 'bqmap' 'init'
+	'fbqmap' 'init' '%range' 'init' 'glob' 'init' 'glob_test' 'init'
+	'isextendedglob' 'init' 'esmglob_expandquestions' 'init' 'dirlist2glob'
+	'init' 'esmglob_repeat_string' 'init' 'matchlist_elem' 'init'
+	'esmglob_expand_qmacro' 'init' 'esmglob_alllen1' 'init' 'esmglob_optimize_mid'
+	'init' 'esmglob_partialcompilation' 'init' 'esmglob_double_wild_removal'
+	'init' 'esmglob_parse_escapes' 'init' 'esmglob_add_unique' 'init'
+	'esmglob_compile0' 'init' 'esmglob_compile' 'init' 'esmglob_do_glob'
+	'init' 'esmglob_compmatch' 'init' '%esmglob' 'init' '%esmglob_match'
+	'init' '%esm~' 'init' '%gcstats' 'init' '%gc' 'init' '%gcinfo'
+	'init' 'es_canonicalize_args' 'init' 'es_run_parseargs' 'init'
 	'parseargs' 'init' 'iterator' 'init' 'iterator2' 'init' 'do' 'init'
-	'do2' 'init' 'accumulate' 'init' 'accumulate2' 'init' 'dolist' 'init'
-	'es_old_vars' 'init' 'es_new_vars' 'init' 'vars' 'init'
-	'%initialize' 'init'
-	# macros 
+	'do2' 'init' 'accumulate' 'init' 'accumulate2' 'init' 'dolist'
+	'init' 'es_old_vars' 'init' 'es_new_vars' 'init' 'vars' 'init'
+	'dictnew' 'init' 'dictget' 'init' 'dictput' 'init' 'dictsize'
+	'init' 'dictforall' 'init' 'dictnames' 'init' 'dictvalues' 'init'
+	'dictdump' 'init' '%initialize' 'init'
+    # macros
 	'gensym' 'macros' 'nrfn' 'macros' 'macro' 'macros'
-	# libraries
-	'import-core-lib' 'libraries' 'import-user-lib' 'libraries'
-	'import_file' 'libraries' 'import' 'libraries' 'checkoption' 'libraries'
-	'option' 'libraries' 'check_and_load_options' 'libraries'
-	'library' 'libraries' 'havelib' 'libraries'
-	# completion
-	'escomp_echo' 'completion' 'es_complete_remove_empty_results' 'completion'
-	'es_complete_only_executable' 'completion'
-	'es_complete_executable_filter' 'completion'
-	'es_complete_access' 'completion' 'es_complete_only_names' 'completion'
-	'es_complete_run_glob' 'completion' 'complete_executables' 'completion'
-	'complete_files' 'completion' 'complete_all_variables' 'completion'
-	'complete_functions' 'completion' 'complete_variables' 'completion'
-	'complete_primitives' 'completion'
-	'es_complete_strip_leading_whitespace' 'completion'
-	'es_complete_is_sub_command' 'completion'
-	'es_complete_left_trim' 'completion'
-	'es_complete_right_trim' 'completion' 'es_complete_trim' 'completion'
-	'es_complete_get_last_cmdline' 'completion'
-	'es_complete_get_last_raw_command' 'completion'
-	'es_complete_get_last_command' 'completion'
-	'es_complete_is_command' 'completion'
-	'es_complete_run_command_hook' 'completion'
-	'es_complete_remove' 'completion' 'es_complete_remove2' 'completion'
-	'%complete_cmd_unhook' 'completion' '%complete_cmd_hook' 'completion'
-	'%complete' 'completion' 'es_complete_cc_checkstate' 'completion'
-	'es_complete_format_list' 'completion' 'es_complete_dump_state' 'completion'
-	'%core_completer' 'completion'
+    # libraries
+	'import-core-lib' 'libraries' 'import-user-lib' 'libraries' 'import_file'
+	'libraries' 'import' 'libraries' 'checkoption' 'libraries' 'option'
+	'libraries' 'check_and_load_options' 'libraries' 'library' 'libraries'
+	'havelib' 'libraries'
+    # completion
+	'escomp_echo' 'completion' 'es_complete_remove_empty_results'
+	'completion' 'es_complete_only_executable' 'completion' 'es_complete_executable_filter'
+	'completion' 'es_complete_access' 'completion' 'es_complete_only_names'
+	'completion' 'es_complete_run_glob' 'completion' 'complete_executables'
+	'completion' 'complete_files' 'completion' 'complete_all_variables'
+	'completion' 'complete_functions' 'completion' 'complete_variables'
+	'completion' 'complete_primitives' 'completion' 'es_complete_strip_leading_whitespace'
+	'completion' 'es_complete_is_sub_command' 'completion' 'es_complete_left_trim'
+	'completion' 'es_complete_right_trim' 'completion' 'es_complete_trim'
+	'completion' 'es_complete_get_last_cmdline' 'completion' 'es_complete_get_last_raw_command'
+	'completion' 'es_complete_get_last_command' 'completion' 'es_complete_is_command'
+	'completion' 'es_complete_run_command_hook' 'completion' 'es_complete_remove'
+	'completion' 'es_complete_remove2' 'completion' '%complete_cmd_unhook'
+	'completion' '%complete_cmd_hook' 'completion' '%complete' 'completion'
+	'es_complete_cc_checkstate' 'completion' 'es_complete_format_list'
+	'completion' 'es_complete_dump_state' 'completion' '%core_completer'
+	'completion'
 )
-
 
 if {~ $#__libutil_function_data 0} {
 	__libutil_function_data = $libutil_es_system <=libutil_enumerate_all_libs
