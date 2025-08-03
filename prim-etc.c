@@ -339,6 +339,7 @@ PRIM(add) {
 
 	if (list == NULL || list->next == NULL)
 		fail("$&add", "missing arguments");
+	errno = 0;
 
 	a = (int)strtol(getstr(list->term), NULL, 10);
 	if(a == 0){
@@ -375,6 +376,7 @@ PRIM(sub) {
 
 	if (list == NULL || list->next == NULL)
 		fail("$&sub", "missing arguments");
+	errno = 0;
 
 	a = (int)strtol(getstr(list->term), NULL, 10);
 	if(a == 0){
@@ -411,6 +413,7 @@ PRIM(mul) {
 
 	if (list == NULL || list->next == NULL)
 		fail("$&mul", "missing arguments");
+	errno = 0;
 
 	a = (int)strtol(getstr(list->term), NULL, 10);
 	if(a == 0){
@@ -447,6 +450,7 @@ PRIM(div) {
 
 	if (list == NULL || list->next == NULL)
 		fail("$&div", "missing arguments");
+	errno = 0;
 
 	a = (int)strtol(getstr(list->term), NULL, 10);
 	if(a == 0){
@@ -485,6 +489,7 @@ PRIM(mod) {
 
 	if (list == NULL || list->next == NULL)
 		fail("$&mod", "missing arguments");
+	errno = 0;
 
 	a = (int)strtol(getstr(list->term), NULL, 10);
 	if(a == 0){
@@ -524,6 +529,7 @@ PRIM(eq) {
 		return list_false;
 	if (list->next == NULL)
 		return list_false;
+	errno = 0;
 
 	a = (int)strtol(getstr(list->term), NULL, 10);
 	if(a == 0){
@@ -556,6 +562,7 @@ PRIM(gt) {
 		return list_false;
 	if (list->next == NULL)
 		return list_false;
+	errno = 0;
 
 	a = (int)strtol(getstr(list->term), NULL, 10);
 	if(a == 0){
@@ -588,6 +595,7 @@ PRIM(lt) {
 		return list_false;
 	if (list->next == NULL)
 		return list_false;
+	errno = 0;
 
 	a = (int)strtol(getstr(list->term), NULL, 10);
 	if(a == 0){
@@ -619,6 +627,7 @@ PRIM(tobase) {
 
 	if(list == NULL || list->next == NULL)
 		fail("$&tobase", "missing arguments");
+	errno = 0;
 
 	base = (int)strtol(getstr(list->term), NULL, 10);
 	if(base == 0){
@@ -688,6 +697,7 @@ PRIM(frombase) {
 
 	if(list == NULL || list->next == NULL)
 		fail("$&frombase", "missing arguments");
+	errno = 0;
 
 	base = (int)strtol(getstr(list->term), NULL, 10);
 	if(base == 0){
@@ -727,6 +737,7 @@ PRIM(range) {
 
 	if(list == NULL || list->next == NULL)
 		fail("$&range", "missing arguments");
+	errno = 0;
 
 	start = (int)strtol(getstr(list->term), NULL, 10);
 	if(start == 0){
