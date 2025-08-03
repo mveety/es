@@ -5,6 +5,10 @@ fn info {
 	echo '>>> info:' $*
 }
 
+fn warning {
+	echo '>>> warning:' $*
+}
+
 fn lastelem elems {
 	result $elems($#elems)
 }
@@ -33,6 +37,7 @@ subprocess_default = false
 libdir = 'libraries'
 testlibs = false
 testcore = true
+commit = <={%fsplit ' ' $buildstring |> %elem 3 |> %fsplit '-' |> %elem 3}
 
 (_ _ restargs) = <={parseargs @ arg {
 	match $arg (
@@ -257,6 +262,14 @@ fn run_all_tests {
 	}
 }
 
+fn get-git-rev dir {
+	let (cwd = `{pwd}; rev=) {
+		cd $dir
+		rev = `{git log -n1 '--format=%h'}
+		cd $cwd
+		result $rev
+	}
+}
 
 if {$runbin} {
 	debugarg = <={ if {$estest_debugging} { result '-d' } { result '' }}
@@ -284,6 +297,9 @@ if {$runbin} {
 		exit 1
 	}
 	info 'test build: '^$buildstring
+	if {! ~ <={get-git-rev $srcdir} $commit} {
+		warning 'estest commit and es commit do not match (es '^$commit^', commit '^<={get-git-rev $srcdir}^')'
+	}
 	info 'using '^<={%gcstats |> %first}^' garbage collector'
 	if {! $testcore} {
 		info 'only running library tests'
