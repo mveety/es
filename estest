@@ -298,7 +298,7 @@ if {$runbin} {
 	}
 	info 'test build: '^$buildstring
 	if {! ~ <={get-git-rev $srcdir} $commit} {
-		warning 'estest commit and es commit do not match (es '^$commit^', commit '^<={get-git-rev $srcdir}^')'
+		warning 'estest commit and es commit do not match (es '^$commit^', estest '^<={get-git-rev $srcdir}^')'
 	}
 	info 'using '^<={%gcstats |> %first}^' garbage collector'
 	if {! $testcore} {
