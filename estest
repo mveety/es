@@ -274,7 +274,7 @@ fn get-git-rev dir {
 if {$runbin} {
 	debugarg = <={ if {$estest_debugging} { result '-d' } { result '' }}
 	testoutputarg = <={ if {$testoutput} { result '-v' } { result '' }}
-	cmdline = $esbin
+	cmdline = $esbin -Np
 	if {$extra_es_args} { cmdline = $cmdline $restargs }
 	cmdline = $cmdline '--' $0
 	if {$estest_debugging} { cmdline = $cmdline '-d' }
