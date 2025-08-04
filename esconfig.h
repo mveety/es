@@ -266,7 +266,7 @@
  */
 
 #ifndef	ASSERTIONS
-#define	ASSERTIONS		1
+#define	ASSERTIONS		0
 #endif
 
 #ifndef	BUILTIN_TIME

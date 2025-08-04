@@ -83,7 +83,7 @@ static Binding *extract(Tree *tree, Binding *bindings) {
 			assert(name->kind == nWord || name->kind == nQword);
 			defn = revtree(defn->u[1].p);
 			for (; defn != NULL; defn = defn->u[1].p) {
-				Term *term;
+				Term *term = NULL;
 				Tree *word = defn->u[0].p;
 				NodeKind k = word->kind;
 				assert(defn->kind == nList);
@@ -91,7 +91,7 @@ static Binding *extract(Tree *tree, Binding *bindings) {
 				if (k == nPrim) {
 					char *prim = word->u[0].s;
 					if (streq(prim, "nestedbinding")) {
-						int i, count;
+						int i, count = 0;
 						Chain *cp;
 						if (
 							(defn = defn->u[1].p) == NULL

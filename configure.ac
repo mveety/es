@@ -19,6 +19,7 @@ use_readline=yes
 use_editline=no
 ENABLE_LOGINSHELL=false
 sys_wait_w_forms=yes
+assertions=yes
 
 AC_ARG_WITH(readline,
 --with-readline		Use GNU Readline, use_readline=yes)
@@ -26,6 +27,8 @@ AC_ARG_WITH(loginshell,
 --with-loginshell	Only load esrc if a login shell, ENABLE_LOGINSHELL=true)
 AC_ARG_WITH(internalwaitforms,
 --with-internalwaitforms	Do not use W forms of IFSIGNALED and friends from sys/wait.h, sys_wait_w_forms=no)
+AC_ARG_WITH(noassert,
+--with-noassert	Disable asserts, assertions=no)
 
 AC_SUBST(ENABLE_LOGINSHELL)
 AC_CANONICAL_HOST
@@ -166,6 +169,11 @@ AC_DEFINE_UNQUOTED(LIMIT_T, $es_cv_rlimit_t)
 if test "$sys_wait_w_forms" = "yes"
 then
 	AC_DEFINE(USE_WAIT_W_FORMS)
+fi
+
+if test "$assertions" = "yes"
+then
+	AC_DEFINE(ASSERTIONS)
 fi
 
 AC_CONFIG_FILES([Makefile])

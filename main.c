@@ -23,6 +23,12 @@ extern int yydebug;
 extern size_t blocksize;
 extern char **environ;
 
+void*
+used(void *v)
+{
+	return v;
+}
+
 /* checkfd -- open /dev/null on an fd if it is closed */
 static void checkfd(int fd, OpenKind r) {
 	int new;

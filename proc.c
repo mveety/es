@@ -198,6 +198,7 @@ top:
 	}
 	fail("es:ewait", "wait: %d is not a child of this shell", pid);
 	NOTREACHED;
+	return s;
 }
 
 extern WaitStatus
@@ -250,7 +251,7 @@ PRIM(apids) {
 }
 
 PRIM(wait) {
-	int pid;
+	int pid = 0;
 	Boolean print = TRUE;
 	Boolean onlystatus = FALSE;
 	WaitStatus s;

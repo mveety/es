@@ -142,3 +142,6 @@
 
 /* use W* forms from sys/wait.h */
 #undef USE_WAIT_W_FORMS
+
+/* enable assertions */
+#undef ASSERTIONS

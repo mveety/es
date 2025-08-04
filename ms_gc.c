@@ -182,10 +182,11 @@ sort_list(Block *list, size_t len)
 void
 add_to_freelist(Block *b)
 {
-	size_t len;
+	size_t len = 0;
 
 	nfrees++;
 	bytesfree += b->size;
+	used(&len);
 
 	if(assertions)
 		len = checklist(freelist);
@@ -200,10 +201,11 @@ add_to_freelist(Block *b)
 void
 add_to_usedlist(Block *b)
 {
-	size_t len;
+	size_t len = 0;
 
 	nallocs++;
 	bytesused += b->size;
+	used(&len);
 
 	if(assertions)
 		len = checklist(usedlist);

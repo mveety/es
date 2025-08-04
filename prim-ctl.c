@@ -44,6 +44,7 @@ PRIM(throw) {
 		fail("$&throw", "usage: throw exception [args ...]");
 	throw(list);
 	NOTREACHED;
+	return NULL;
 }
 
 PRIM(catch) {
