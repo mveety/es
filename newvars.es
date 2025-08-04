@@ -143,7 +143,7 @@ fn es_new_vars {
 				echo '    -s        -- settors'
 				echo '    -g        -- getters'
 				echo '    -O        -- all objects'
-				echo 'modifiers'
+				echo 'object types'
 				echo '    -e        -- exported (default)'
 				echo '    -p        -- private'
 				echo '    -i        -- internal'

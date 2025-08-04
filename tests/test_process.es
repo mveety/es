@@ -21,3 +21,7 @@ fn run_test_process {
 	}
 }
 
+if {~ $#inside_estest 0 || ! $inside_estest} {
+	run_test_process
+}
+

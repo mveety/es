@@ -7,3 +7,7 @@ fn run_test_fail {
 	throw error test_$testname 'this test has failed!'
 }
 
+if {~ $#inside_estest 0 || ! $inside_estest} {
+	run_test_fail
+}
+

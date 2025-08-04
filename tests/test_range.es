@@ -35,3 +35,7 @@ fn run_test_range {
 	}
 }
 
+if {~ $#inside_estest 0 || ! $inside_estest} {
+	run_test_range
+}
+

@@ -19,3 +19,7 @@ fn run_test_comparisons {
 	assert {lt 0b100 0x100}
 }
 
+if {~ $#inside_estest 0 || ! $inside_estest} {
+	run_test_comparisons
+}
+

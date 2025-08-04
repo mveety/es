@@ -6,3 +6,7 @@ fn run_test_accumulate {
 		accumulate 0 @ r e { add $r $e } |> @{assert {eq $1 50}}
 }
 
+if {~ $#inside_estest 0 || ! $inside_estest} {
+	run_test_accumulate
+}
+

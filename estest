@@ -310,6 +310,8 @@ if {$runbin} {
 	}
 	info 'running tests in '^$testpath^'/'
 
+	inside_estest = true
+
 	testfiles = <={
 		let (core_tests =; lib_tests=) {
 			process $testpath/*.es (
