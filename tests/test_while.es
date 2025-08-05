@@ -20,10 +20,19 @@ fn run_test_while {
 			}
 			result $x
 		}}
+		t4 = <={let (x = 10) {
+			while {lt $x 10} {
+				x = <={add $x 1}
+			} {
+				x = <={sub $x 1}
+			}
+			result $x
+		}}
 	) {
 		assert {eq $t1 10}
 		assert {eq $t2 13}
 		assert {eq $t3 10}
+		assert {eq $t4 9}
 	}
 }
 
