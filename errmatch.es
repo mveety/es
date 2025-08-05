@@ -22,6 +22,8 @@ fn __es_getnextcase cases {
 	}
 }
 
+# I might turn this into a rewrite like match. This works fine for now and
+# I don't know if the potential performance gain is really needed.
 fn errmatch errobj cases {
 	assert {~ <={$&termtypeof $errobj} closure && ~ <={$&gettermtag $errobj} error}
 	let (
@@ -53,7 +55,7 @@ fn errmatch errobj cases {
 					}
 				}
 			}
-		} { throw error $0 "missing arguments" }
+		} { throw error $0 'missing arguments' }
 		local (err = $oe; type = $ot; msg = $om) {
 			if {! ~ $#wildcase 0} {
 				return <={$wildcase}
