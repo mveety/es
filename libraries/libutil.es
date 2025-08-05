@@ -108,7 +108,7 @@ if {$libutil_enable_build} {
 			init_fmt_funs =
 			initfiles = (initial.es applymap.es range.es glob.es
 						gc.es parseargs.es doiterator.es newvars.es
-						dict.es initialize.es)
+						dict.es errmatch.es initialize.es)
 			macros_funs =
 			macros_fmt_funs =
 			macrosfiles = macros.es
@@ -254,7 +254,7 @@ libutil_es_system = (
 	'dolist' 'init' 'es_old_vars' 'init' 'es_new_vars' 'init' 'vars'
 	'init' 'dictnew' 'init' 'dictget' 'init' 'dictput' 'init' 'dictsize'
 	'init' 'dictforall' 'init' 'dictnames' 'init' 'dictvalues' 'init'
-	'dictdump' 'init' '%initialize' 'init'
+	'dictdump' 'init' 'errmatch' 'init' '%initialize' 'init'
     # macros
 	'gensym' 'macros' 'nrfn' 'macros' 'macro' 'macros'
     # libraries
