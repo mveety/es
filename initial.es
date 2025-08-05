@@ -1028,17 +1028,28 @@ fn %slice s e list {
 	result $list($s ... $e)
 }
 
+fn makeerror err type msg {
+	result @ m {
+		if {~ $#m 0} {
+			result <=true
+		} {~ $m type } {
+			result $err
+		} {~ $m info } {
+			result $err $type $msg
+		} {~ $m throw } {
+			throw $err $type $msg
+		} {
+			result <=true
+		}
+	}
+}
+
 fn try body {
 	catch @ e type msg {
-		if {~ $e error} {
-			result true $type $msg
-		} {~ $e assert} {
-			throw $e $type $msg
-		} {~ $e usage} {
-			result true usage
-		} {
-			throw $e $type $msg
-		}
+		match $e (
+			(assert error usage) { result <={makeerror $e $type $msg} }
+			* { throw $e $type $msg }
+		)
 	} {
 		local(res = <={$body}) {
 			result false $res
