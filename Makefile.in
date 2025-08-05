@@ -90,6 +90,7 @@ MANIFEST:
 
 install : es
 	$(MKDIR_P) $(bindir)
+	./es -N preinstall.es $(bindir)
 	$(INSTALL) -s $(srcdir)/es $(bindir)
 	$(INSTALL) $(srcdir)/esdebug $(bindir)
 	chmod +x $(bindir)/esdebug
