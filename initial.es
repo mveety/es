@@ -1037,6 +1037,8 @@ fn makeerror err type msg {
 				result $err
 			} {~ $m info } {
 				result $err $type $msg
+			} {~ $m typemsg} {
+				result $type $msg
 			} {~ $m throw } {
 				$&throw $err $type $msg
 			} {
