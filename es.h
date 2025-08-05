@@ -29,8 +29,14 @@ typedef enum {
 	tkDict,
 } TermKind;
 
+typedef enum {
+	ttNone,
+	ttError,
+} Termtag;
+
 struct Term {
 	TermKind kind;
+	Termtag tag;
 	char *str;
 	Closure *closure;
 	Dict *dict;

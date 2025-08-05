@@ -16,11 +16,11 @@ mkterm1(char *str, Closure *closure, Dict *dict)
 	term = gcnew(Term);
 	gcref(&r_term, (void**)&term);
 	if(str != NULL)
-		*term = (Term){tkString, str, NULL, NULL};
+		*term = (Term){tkString, ttNone, str, NULL, NULL};
 	else if(closure != NULL)
-		*term = (Term){tkClosure, NULL, closure, NULL};
+		*term = (Term){tkClosure, ttNone, NULL, closure, NULL};
 	else if(dict != NULL)
-		*term = (Term){tkDict, NULL, NULL, dict};
+		*term = (Term){tkDict, ttNone, NULL, NULL, dict};
 	gcenable();
 	gcderef(&r_term, (void**)&term);
 	return term;

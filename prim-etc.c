@@ -823,6 +823,54 @@ PRIM(setrunflags) {
 	return list_true;
 }
 
+PRIM(settermtag) {
+	char *tagname = NULL;
+	List *lp = NULL; Root r_lp;
+	Term *term = NULL; Root r_term;
+
+	if(list == NULL || list->next == NULL)
+		fail("$&settermtag", "missing arguments");
+
+	gcref(&r_lp, (void**)&lp);
+	gcref(&r_term, (void**)&term);
+	lp = list;
+	gcdisable();
+	tagname = getstr(lp->term);
+	term = lp->next->term;
+
+	if(strcmp(tagname, "error") == 0)
+		term->tag = ttError;
+	else if(strcmp(tagname, "none") == 0)
+		term->tag = ttNone;
+	else {
+		gcenable();
+		gcrderef(&r_term);
+		gcrderef(&r_lp);
+		fail("$&settermtag", "invalid tag type");
+	}
+
+	gcenable();
+	gcrderef(&r_term);
+	gcrderef(&r_lp);
+
+	return list_true;
+}
+
+PRIM(gettermtag) {
+	if(list == NULL)
+		fail("$&gettermtag", "missing argument");
+
+	switch(list->term->tag){
+	case ttNone:
+		return mklist(mkstr(str("none")), NULL);
+	case ttError:
+		return mklist(mkstr(str("error")), NULL);
+	default:
+		fail("$&gettermtag", "invalid tag %d", list->term->tag);
+		return list_false;
+	}
+}
+
 /*
  * initialization
  */
@@ -877,6 +925,8 @@ extern Dict *initprims_etc(Dict *primdict) {
 	X(unixtime);
 	X(getrunflags);
 	X(setrunflags);
+	X(settermtag);
+	X(gettermtag);
 	return primdict;
 }
 

@@ -190,7 +190,7 @@ static char *dumpterm(Term *term) {
 	name = str("&E_%ulx", term);
 	if (dictget(cvars, name) == NULL) {
 		print(
-			"static const Term %s = {%s, (char *) %s, (Closure *) %s, (Dict*) NULL };\n",
+			"static const Term %s = {%s, ttNone, (char *) %s, (Closure *) %s, (Dict*) NULL };\n",
 			name + 1,
 			termtype(term),
 			dumpstring(term->str),

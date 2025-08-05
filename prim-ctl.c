@@ -42,6 +42,8 @@ PRIM(forever) {
 PRIM(throw) {
 	if (list == NULL)
 		fail("$&throw", "usage: throw exception [args ...]");
+	if(list->term->tag == ttError && list->term->kind == tkClosure)
+		eval(mklist(list->term, mklist(mkstr(str("throw")), NULL)), binding, evalflags);
 	throw(list);
 	NOTREACHED;
 	return NULL;
