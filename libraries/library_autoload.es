@@ -45,6 +45,7 @@ fn %interactive-loop {
 						echo >[1=2] caught unexpected signal: $type
 					}
 				}
+				(continue) { throw retry }
 				* { echo >[1=2] uncaught exception: $e $type $msg }
 			)
 			throw retry

@@ -296,7 +296,14 @@ forloop(Tree *defn0, Tree *body0, Binding *binding, int evalflags)
 				RefPop(bp);
 				break;
 			}
-			result = walk(body, bp, evalflags & eval_exitonfalse);
+
+			ExceptionHandler
+				result = walk(body, bp, evalflags & eval_exitonfalse);
+			CatchException (e)
+				if(!termeq(e->term, "continue"))
+					throw(e);
+			EndExceptionHandler
+
 			RefEnd(bp);
 			SIGCHK();
 		}

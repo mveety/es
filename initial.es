@@ -111,6 +111,7 @@ fn-false	= result 1
 fn-break	= throw break
 fn-exit		= throw exit
 fn-return	= throw return
+fn-continue = throw continue
 
 #	unwind-protect is a simple wrapper around catch that is used
 #	to ensure that some cleanup code is run after running a code
@@ -251,15 +252,23 @@ fn-while = $&noreturn @ cond body else {
 	} {
 		let (result = <=true; hasrun = false)
 			forever {
-				if {!$cond} {
-					if {! ~ $#else 0 && ! $hasrun} {
-						throw break <=$else
+				catch @ e rest {
+					if {~ $e continue} {
+						throw retry
 					} {
-						throw break $result
+						throw $e $rest
 					}
 				} {
-					hasrun = true
-					result = <=$body
+					if {!$cond} {
+						if {! ~ $#else 0 && ! $hasrun} {
+							throw break <=$else
+						} {
+							throw break $result
+						}
+					} {
+						hasrun = true
+						result = <=$body
+					}
 				}
 			}
 	}
@@ -705,6 +714,7 @@ fn %interactive-loop {
 						echo >[1=2] caught unexpected signal: $type
 					}
 				}
+				(continue) { throw retry }
 				* { echo >[1=2] uncaught exception: $e $type $msg }
 			)
 			throw retry
