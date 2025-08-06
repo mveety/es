@@ -460,6 +460,10 @@ importvar(char *name0, char *value)
 
 	name = name0;
 	defn = NULL;
+
+	if(strcmp(name, "_") == 0)
+		return;
+
 	gcref(&r_name, (void**)&name);
 	gcref(&r_defn, (void**)&defn);
 
