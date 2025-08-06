@@ -38,6 +38,8 @@ libdir = 'libraries'
 testlibs = false
 testcore = true
 commit = <={%fsplit ' ' $buildstring |> %elem 3 |> %fsplit '-' |> %elem 3}
+run_one = false
+test_to_run = ()
 
 (_ _ restargs) = <={parseargs @ arg {
 	match $arg (
@@ -104,6 +106,14 @@ commit = <={%fsplit ' ' $buildstring |> %elem 3 |> %fsplit '-' |> %elem 3}
 				}
 			}
 		}
+		(-R) {
+			run_one = true
+			if {~ $flagarg *^','^*} {
+				test_to_run = $test_to_run <={%fsplit ',' $flagarg}
+			} {
+				test_to_run = $test_to_run $flagarg
+			}
+		}
 		* { usage }
 	)
 } @{
@@ -122,6 +132,7 @@ commit = <={%fsplit ' ' $buildstring |> %elem 3 |> %fsplit '-' |> %elem 3}
         -l -- also test libraries (implicit for -L)
 
         -x [es binary]  -- run estest in a different instance of es
+        -R [test,...]   -- run selected tests
         -S srcdir       -- es source directory
         -p path         -- test cases path
         -L path         -- libraries path
@@ -262,6 +273,14 @@ fn run_all_tests {
 	}
 }
 
+fn run_one_test single_test {
+	for (i = $testfiles) {
+		if {~ $i *^'/test_'^$single_test^'.es'} {
+			run_test_file $i
+		}
+	}
+}
+
 fn get-git-rev dir {
 	let (cwd = `{pwd}; rev=) {
 		cd $dir
@@ -287,6 +306,7 @@ if {$runbin} {
 	cmdline = $cmdline '-b' $esbin
 	cmdline = $cmdline '-p' $testpath
 	if {$testlibs} { cmdline = $cmdline '-L' $libdir }
+	if {$run_one} { for (i = $test_to_run) { cmdline = $cmdline '-R' $i } }
 	if {$extra_es_args} { cmdline = $cmdline '-A' $restargs }
 	info 'parent build: '^$buildstring
 	info 'running:' $cmdline
@@ -361,14 +381,17 @@ if {$runbin} {
 		1 { info 'found 1 test' }
 		* { info 'found '^$matchexpr^' tests' }
 	)
-
-	if {$always_yes} {
-		run_all_tests
+	if {$run_one} {
+		run_one_test $test_to_run
 	} {
-		echo -n 'run all tests [yes]? '
-		r = <=%read
-		if {~ $r '' || ~ $r [yY]*} {
+		if {$always_yes} {
 			run_all_tests
+		} {
+			echo -n 'run all tests [yes]? '
+			r = <=%read
+			if {~ $r '' || ~ $r [yY]*} {
+				run_all_tests
+			}
 		}
 	}
 	exit <=true
