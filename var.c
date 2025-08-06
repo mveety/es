@@ -2,7 +2,7 @@
 
 #include "es.h"
 #include "gc.h"
-#include "var.h"
+#include "stdenv.h"
 
 #if PROTECT_ENV
 #define	ENV_FORMAT	"%F=%W"
@@ -178,6 +178,40 @@ varlookup2(char *name1, char *name2, Binding *bp)
 	if (var == NULL)
 		return NULL;
 	return var->defn;
+}
+
+Var*
+varobjlookup(char *name)
+{
+	Var *v = NULL;
+
+	if(iscounting(name))
+		return NULL;
+
+	validatevar(name);
+
+	v = dictget(vars, name);
+	return v;
+}
+
+void
+varhide(Var *v)
+{
+	v->flags |= var_isinternal;
+}
+
+void
+varunhide(Var *v)
+{
+	v->flags &= ~var_isinternal;
+}
+
+Boolean
+varishidden(Var *v)
+{
+	if(v->flags & var_isinternal)
+		return TRUE;
+	return FALSE;
 }
 
 List*

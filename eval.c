@@ -99,7 +99,8 @@ assign(Tree *varform, Tree *valueform0, Binding *binding0)
 			value = mklist(values->term, NULL);
 			values = values->next;
 		}
-		vardef(name, binding, value);
+		if(!termeq(vars->term, "_"))
+			vardef(name, binding, value);
 		gcderef(&r_name, (void**)&name);
 	}
 
@@ -160,8 +161,9 @@ letbindings1(Tree *defn0, Binding *outer0,
 				value = mklist(values->term, NULL);
 				values = values->next;
 			}
-			binding = mkbinding(name, value, binding);
-			if(letstar)
+			if(!termeq(vars->term, "_"))
+				binding = mkbinding(name, value, binding);
+			if(letstar && !termeq(vars->term, "_"))
 				context = mkbinding(name, value, binding);
 			gcrderef(&r_name);
 		}
@@ -261,7 +263,8 @@ forloop(Tree *defn0, Tree *body0, Binding *binding, int evalflags)
 			fail("es:for", "null variable name");
 		for (; vars != NULL; vars = vars->next) {
 			char *var = getstr(vars->term);
-			looping = mkbinding(var, list, looping);
+			if(!termeq(vars->term, "_"))
+				looping = mkbinding(var, list, looping);
 			list = &MULTIPLE;
 		}
 		RefEnd3(list, vars, assign);

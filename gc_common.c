@@ -403,8 +403,6 @@ char *tree2name(NodeKind k) {
 	}
 }
 
-#include "var.h"
-
 size_t dump(Tag *t, void *p) {
 	char *s = t->typename;
 	print("%8ux %s\t", p, s);

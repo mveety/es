@@ -22,6 +22,7 @@ typedef struct Binding Binding;
 typedef struct Closure Closure;
 typedef struct Assoc Assoc;
 typedef struct Dict Dict;
+typedef struct Var Var;
 
 typedef enum {
 	tkString,
@@ -107,6 +108,13 @@ struct WaitStatus {
 	int pid;
 	int status;
 };
+
+struct Var {
+	List *defn;
+	char *env;
+	int flags;
+};
+
 
 /*
  * our programming environment
@@ -219,12 +227,20 @@ extern List *extractmatches(List *subjects, List *patterns, StrList *quotes);
 
 /* var.c */
 
+#define	var_hasbindings		1
+#define	var_isinternal		2
+
+extern Dict *vars;
 extern void initvars(void);
 extern void initenv(char **envp, Boolean protected);
 extern void hidevariables(void);
 extern void validatevar(const char *var);
 extern List *varlookup(char *name, Binding *binding);
 extern List *varlookup2(char *name1, char *name2, Binding *binding);
+extern Var *varobjlookup(char *name);
+extern void varhide(Var *v);
+extern void varunhide(Var *v);
+extern Boolean varishidden(Var *v);
 extern void vardef(char *, Binding *, List *);
 extern Vector *mkenv(void);
 extern void setnoexport(List *list);

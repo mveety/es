@@ -2,7 +2,6 @@
 
 #include "es.h"
 #include "stdenv.h"
-#include "var.h"
 
 #define	MAXVARNAME 20
 
