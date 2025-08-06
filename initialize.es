@@ -17,13 +17,13 @@ fn %initialize {
 		catch @ el {
 			errmatch <={makeerror $el} (
 				exit { exit $type }
-				error { echo 'esrc:' $err^':' $type^':' $msg }
+				error { echo >[1=2] 'esrc:' $err^':' $type^':' $msg }
 				signal {
 					if {! ~ $type 'sigint'} {
-						echo 'esrc: uncaught signal:' $err $type $msg
+						echo >[1=2] 'esrc: uncaught signal:' $err $type $msg
 					}
 				}
-				{ echo 'esrc: uncaught exception:' $err $type $msg }
+				{ echo >[1=2] 'esrc: uncaught exception:' $err $type $msg }
 			)
 		} {
 			if {! $__es_different_esrc} {
@@ -39,5 +39,40 @@ fn %initialize {
 			}
 		}
 	}
+	if {! ~ $#fn-%user-init 0} {
+		let (e=) {
+			(e _) = <={try %user-init}
+			if {! $e} { return <=true }
+			errmatch $e (
+				continue { return <=true }
+				eof { return <=true }
+				exit { exit $type }
+				error {
+					echo >[1=2] '%user-init: error:' $type^':' $msg
+					return <=false
+				}
+				assert {
+					echo >[1=2] '%user-init: assert:' $type $msg
+					return <=false
+				}
+				usage {
+					if {~ $#msg 0} {
+						echo >[1=2] '%user-init:' $type
+					} {
+						echo >[1=2] '%user-init:' $msg
+					}
+					return <=false
+				}
+				signal {
+					if {!~ $type sigint sigterm sigquit} {
+						echo >[1=2] '%user-init: caught unexpected signal:' $type
+					}
+					return <=false
+				}
+				{ echo >[1=2] '%user-init: uncaught exception:' $err $type $msg }
+			)
+		}
+	}
+	return <=true
 }
 
