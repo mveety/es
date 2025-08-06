@@ -177,7 +177,7 @@ dumptree(Tree *tree)
 	if (tree == NULL)
 		return "NULL";
 
-	dictforall(cvars, treededup, &tree);
+	/* dictforall(cvars, treededup, &tree); */
 
 	name = str("&T_%ulx", tree);
 	if (dictget(cvars, name) == NULL) {
