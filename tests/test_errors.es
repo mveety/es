@@ -7,9 +7,9 @@ fn run_test_errors {
 		assert {~ <={$&termtypeof $e} closure}
 		assert {$e}
 		assert {~ $#s 0}
-		assert {~ <={$e type} error}
-		assert {~ <={$e typemsg |> %elem 1} test1}
-		assert {~ <={$e typemsg |> %elem 2} okay}
+		assert {~ <={$e error} error}
+		assert {~ <={$e type} test1}
+		assert {~ <={$e msg} okay}
 		catch @ err type msg {
 			assert {~ $err error}
 			assert {~ $type test1}

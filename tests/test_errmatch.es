@@ -25,17 +25,17 @@ fn run_test_errmatch {
 	let (e=) {
 		(e _) = <={try errmatch}
 		assert {$e}
-		assert {~ <={$e type} error &&
-			~ <={$e typemsg |> %elem 1} $&termtypeof &&
-			~ <={$e typemsg |> %elem 2} 'missing argument'}
+		assert {~ <={$e error} error &&
+			~ <={$e type} $&termtypeof &&
+			~ <={$e msg} 'missing argument'}
 		(e _) = <={try errmatch @{result hello}}
 		assert {$e}
-		assert {~ <={$e type} assert}
+		assert {~ <={$e error} assert}
 		(e _) = <={try errmatch <={makeerror error 1 2}}
 		assert {$e}
-		assert {~ <={$e type} error &&
-			~ <={$e typemsg |> %elem 1} errmatch &&
-			~ <={$e typemsg |> %elem 2} 'missing arguments'}
+		assert {~ <={$e error} error &&
+			~ <={$e type} errmatch &&
+			~ <={$e msg} 'missing arguments'}
 	}
 }
 

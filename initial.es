@@ -1031,19 +1031,15 @@ fn %slice s e list {
 fn makeerror err type msg {
 	local (e=) {
 		e = @ m {
-			if {~ $#m 0} {
-				result <=true
-			} {~ $m type } {
-				result $err
-			} {~ $m info } {
-				result $err $type $msg
-			} {~ $m typemsg} {
-				result $type $msg
-			} {~ $m throw } {
-				$&throw $err $type $msg
-			} {
-				result <=true
-			}
+			match $m (
+				error { result $err }
+				type { result $type }
+				msg { result $msg }
+				info { result $err $type $msg }
+				typemsg { result $type $msg }
+				throw { $&throw $err $type $msg }
+				* { result <=true }
+			)
 		}
 		$&settermtag error $e
 		result $e
