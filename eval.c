@@ -263,8 +263,7 @@ forloop(Tree *defn0, Tree *body0, Binding *binding, int evalflags)
 			fail("es:for", "null variable name");
 		for (; vars != NULL; vars = vars->next) {
 			char *var = getstr(vars->term);
-			if(!termeq(vars->term, "_"))
-				looping = mkbinding(var, list, looping);
+			looping = mkbinding(var, list, looping);
 			list = &MULTIPLE;
 		}
 		RefEnd3(list, vars, assign);
@@ -291,7 +290,8 @@ forloop(Tree *defn0, Tree *body0, Binding *binding, int evalflags)
 					sequence->defn = sequence->defn->next;
 					allnull = FALSE;
 				}
-				bp = mkbinding(lp->name, value, bp);
+				if(strcmp(lp->name, "_") != 0)
+					bp = mkbinding(lp->name, value, bp);
 				RefEnd(value);
 			}
 			RefEnd2(sequence, lp);
