@@ -22,10 +22,17 @@ fn __es_getnextcase cases {
 	}
 }
 
+fn iserror err {
+	if {~ <={$&termtypeof $err} closure && ~ <={$&gettermtag $err} error} {
+		return <=true
+	}
+	return <=false
+}
+
 # I might turn this into a rewrite like match. This works fine for now and
 # I don't know if the potential performance gain is really needed.
 fn errmatch errobj cases {
-	assert {~ <={$&termtypeof $errobj} closure && ~ <={$&gettermtag $errobj} error}
+	assert {iserror $errobj}
 	let (
 		l = $cases
 		lf =
