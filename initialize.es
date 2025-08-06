@@ -14,17 +14,16 @@ fn __es_esrc_check {
 
 fn %initialize {
 	if {__es_esrc_check} {
-		catch @ e t m {
-			if {! ~ $e 'exit' && ! ~ $e 'signal' && ! ~ $t 'sigint'} {
-				echo -n 'esrc handler: '
-			}
-			match $e (
-				'exit' { exit $t }
-				'error' { echo $e^':' $t^':' $m }
-				'signal' {
-					if {! ~ $t 'sigint'} { echo 'uncaught signal:' $e $t $m }
+		catch @ el {
+			errmatch <={makeerror $el} (
+				exit { exit $type }
+				error { echo 'esrc:' $err^':' $type^':' $msg }
+				signal {
+					if {! ~ $type 'sigint'} {
+						echo 'esrc: uncaught signal:' $err $type $msg
+					}
 				}
-				* { echo 'uncaught exception:' $e $t $m }
+				{ echo 'esrc: uncaught exception:' $err $type $msg }
 			)
 		} {
 			if {! $__es_different_esrc} {
