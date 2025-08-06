@@ -942,14 +942,12 @@ fn %numcompfun fun a b {
 			* { throw $e $t $m }
 		)
 	} {
-		local(an = <={todecimal $a}; bn = <={todecimal $b}) {
-			catch @ e t m {
-				if {! ~ $e error} { throw $e $t $m }
-				if {! ~ $t $fun} { throw $e $t $m }
-				match $m (
-					('invalid input') { false }
-					('conversion overflow') { false }
-					* { throw $e $t $m }
+		local (an = <={todecimal $a}; bn = <={todecimal $b}) {
+			catch @ el {
+				errmatch <={makeerror $el} (
+					error '*' 'invalid input' { false }
+					error '*' 'conversion overflow' { false }
+					{ throw $err $type $msg }
 				)
 			} {
 				$fun $an $bn

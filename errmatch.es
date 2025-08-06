@@ -55,6 +55,8 @@ fn errmatch errobj cases {
 				} {
 					if {~ $#case 4 && ~ $case(1) $oe && ~ $case(2) $ot && ~ $case(3) $om} {
 						return <={$case(4)}
+					} {~ $#case 4 && ~ $case(1) $oe && ~ $case(2) '*' && ~ $case(3) $om} {
+						return <={$case(4)}
 					} {~ $#case 3 && ~ $case(1) $oe && ~ $case(2) $ot} {
 						return <={$case(3)}
 					} {~ $#case 2 && ~ $case(1) $oe} {
