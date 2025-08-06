@@ -1,6 +1,7 @@
 /* dump.c -- dump es's internal state as a c program ($Revision: 1.1.1.1 $) */
 
 #include "es.h"
+#include "stdenv.h"
 #include "var.h"
 
 #define	MAXVARNAME 20
@@ -32,6 +33,70 @@
  */
 
 static Dict *cvars, *strings;
+
+/* nstreq and deepequal are taken from wryun/es-shell.
+ * formatting has been changed to p9 style (more or less)
+ */
+
+Boolean
+nstreq(char *a, char *b)
+{
+	if(!a && !b)
+		return TRUE;
+	if(!a || !b)
+		return FALSE;
+	return streq(a, b);
+}
+
+Boolean
+deepequal(Tree *t1, Tree *t2)
+{
+	if(!t1 && !t2)
+		return TRUE;
+	if(!t1 || !t2)
+		return FALSE;
+	if(t1->kind != t2->kind)
+		return FALSE;
+
+	switch(t1->kind){
+	case nWord:
+	case nQword:
+	case nPrim:
+		return nstreq(t1->u[0].s, t2->u[0].s);
+	case nCall:
+	case nThunk:
+	case nVar:
+		return deepequal(t1->u[0].p, t2->u[0].p);
+	case nAssign:
+	case nConcat:
+	case nClosure:
+	case nFor:
+	case nLambda:
+	case nLet:
+	case nLets:
+	case nList:
+	case nLocal:
+	case nVarsub:
+	case nMatch:
+	case nExtract:
+		return deepequal(t1->u[0].p, t2->u[0].p) && deepequal(t1->u[1].p, t2->u[1].p);
+	default:
+		panic("deepequal: bad node kind %d", t1->kind);
+		break;
+	}
+	return FALSE;
+}
+
+void
+treededup(void *arg, char *unused, void *v)
+{
+	Tree **new = arg;
+	Tree *old = v;
+
+	used(unused);
+	if(deepequal(*new, old))
+		*new = old;
+}
 
 static Boolean allprintable(const char *s) {
 	int c;
@@ -104,10 +169,16 @@ static const char *nodename(NodeKind k) {
 	}
 }
 
-static char *dumptree(Tree *tree) {
+char*
+dumptree(Tree *tree)
+{
 	char *name;
+
 	if (tree == NULL)
 		return "NULL";
+
+	dictforall(cvars, treededup, &tree);
+
 	name = str("&T_%ulx", tree);
 	if (dictget(cvars, name) == NULL) {
 		switch (tree->kind) {
