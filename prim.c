@@ -33,6 +33,7 @@ extern void initprims(void) {
 	prims = initprims_sys(prims);
 	prims = initprims_proc(prims);
 	prims = initprims_access(prims);
+	prims = initprims_mv(prims);
 	prims = initprims_dict(prims);
 
 #define	primdict prims
