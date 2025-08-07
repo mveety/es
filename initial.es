@@ -694,30 +694,37 @@ fn %batch-loop {
 	}
 }
 
+# the interactive exception handler hook assumes it's getting
+# executed in a catch. we also recommend using this as your exception
+# handler if you write a custom %interactive-loop.
+fn %interactive-exception-handler errobj result {
+	errmatch $errobj (
+		eof { return $result }
+		exit { throw $err $type $msg}
+		error { echo >[1=2] 'error: '^$type^': '^$^msg }
+		assert { echo >[1=2] 'assert:' $type $msg }
+		usage {
+			if {~ $#msg 0} {
+				echo >[1=2] $type
+			} {
+				echo >[1=2] $msg
+			}
+		}
+		signal {
+			if {!~ $type sigint sigterm sigquit} {
+				echo >[1=2] caught unexpected signal: $type
+			}
+		}
+		continue { result <=true }
+		{ echo >[1=2] uncaught exception: $err $type $msg }
+	)
+	throw retry
+}
+
 fn %interactive-loop {
 	let (result = <=true) {
-		catch @ e type msg {
-			match $e (
-				(eof) { return $result }
-				(exit) { throw $e $type $msg}
-				(error) { echo >[1=2] 'error: '^$type^': '^$^msg }
-				(assert) { echo >[1=2] 'assert:' $type $msg }
-				(usage) {
-					if {~ $#msg 0} {
-						echo >[1=2] $type
-					} {
-						echo >[1=2] $msg
-					}
-				}
-				(signal) {
-					if {!~ $type sigint sigterm sigquit} {
-						echo >[1=2] caught unexpected signal: $type
-					}
-				}
-				(continue) { throw retry }
-				* { echo >[1=2] uncaught exception: $e $type $msg }
-			)
-			throw retry
+		catch @ e {
+			%interactive-exception-handler <={makeerror $e} $result
 		} {
 			forever {
 				if {!~ $#fn-%prompt 0} {
