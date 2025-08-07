@@ -54,16 +54,16 @@ HFILES	= config.h es.h gc.h input.h prim.h print.h sigmsgs.h \
 CFILES	= access.c closure.c conv.c dict.c eval.c except.c fd.c gc.c \
 		  gc_common.c glob.c glom.c input.c heredoc.c list.c main.c \
 		  match.c ms_gc.c open.c opt.c prim-ctl.c prim-dict.c prim-etc.c \
-		  prim-io.c prim-mv.c prim-sys.c prim.c print.c proc.c sigmsgs.c \
-		  signal.c split.c status.c str.c syntax.c term.c token.c tree.c \
-		  util.c var.c vec.c version.c y.tab.c dump.c
+		  prim-io.c prim-math.c prim-mv.c prim-sys.c prim.c print.c \
+		  proc.c sigmsgs.c signal.c split.c status.c str.c syntax.c \
+		  term.c token.c tree.c util.c var.c vec.c version.c y.tab.c dump.c
 
 OFILES	= access.o closure.o conv.o dict.o eval.o except.o fd.o gc.o \
 		  gc_common.o glob.o glom.o input.o heredoc.o list.o main.o \
 		  match.o ms_gc.o open.o opt.o prim-ctl.o prim-dict.o prim-etc.o \
-		  prim-io.o prim-mv.o prim-sys.o prim.o print.o proc.o sigmsgs.o \
-		  signal.o split.o status.o str.o syntax.o term.o token.o tree.o \
-		  util.o var.o vec.o version.o y.tab.o
+		  prim-io.o prim-math.o prim-mv.o prim-sys.o prim.o print.o \
+		  proc.o sigmsgs.o signal.o split.o status.o str.o syntax.o \
+		  term.o token.o tree.o util.o var.o vec.o version.o y.tab.o
 
 OTHER	= Makefile parse.y mksignal getsigfiles
 
@@ -181,6 +181,7 @@ prim-ctl.o : prim-ctl.c ${ESHFILES} prim.h
 prim-dict.o : prim-dict.c ${ESHFILES} prim.h
 prim-etc.o : prim-etc.c ${ESHFILES} prim.h
 prim-io.o : prim-io.c ${ESHFILES} gc.h prim.h
+prim-math.o : prim-math.c ${ESHFILES} prim.h
 prim-mv.o : prim-mv.c ${ESHFILES} prim.h
 prim-sys.o : prim-sys.c ${ESHFILES} prim.h
 print.o : print.c ${ESHFILES} print.h

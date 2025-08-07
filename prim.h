@@ -17,4 +17,5 @@ extern Dict *initprims_proc(Dict *primdict);		/* proc.c */
 extern Dict *initprims_access(Dict *primdict);		/* access.c */
 extern Dict *initprims_dict(Dict *primdict); /* prim-dict.c */
 extern Dict *initprims_mv(Dict *primdict); /* prim-mv.c */
+extern Dict *initprims_math(Dict *primdict); /* prim-math.c */
 
