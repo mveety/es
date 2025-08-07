@@ -276,21 +276,25 @@ forloop(Tree *defn0, Tree *body0, Binding *binding, int evalflags)
 
 		for (;;) {
 			Boolean allnull = TRUE;
+			Boolean underscore = FALSE;
 			Ref(Binding *, bp, outer);
 			Ref(Binding *, lp, looping);
 			Ref(Binding *, sequence, NULL);
 			for (; lp != NULL; lp = lp->next) {
+				underscore = FALSE;
+				if(strcmp(lp->name, "_") == 0)
+					underscore = TRUE;
 				Ref(List *, value, NULL);
 				if (lp->defn != &MULTIPLE)
 					sequence = lp;
 				assert(sequence != NULL);
 				if (sequence->defn != NULL) {
-					value = mklist(sequence->defn->term,
-						       NULL);
+					if(underscore == FALSE)
+						value = mklist(sequence->defn->term, NULL);
 					sequence->defn = sequence->defn->next;
 					allnull = FALSE;
 				}
-				if(strcmp(lp->name, "_") != 0)
+				if(underscore == FALSE)
 					bp = mkbinding(lp->name, value, bp);
 				RefEnd(value);
 			}
