@@ -7,8 +7,9 @@
 
 Region *regions;
 
-Block *usedlist;
-Block *freelist;
+Block *usedlist = NULL;
+Block *freelist = NULL;
+Block *oldlist = NULL;
 size_t nfrees = 0;
 size_t nallocs = 0;
 size_t bytesfree = 0;
@@ -26,6 +27,8 @@ volatile int ncoalescegc = 0;
 int gc_after = 5000;
 int gc_sort_after_n = 100;
 int gc_coalesce_after_n = 100;
+uint32_t gc_oldage = 10;
+Boolean generational = FALSE;
 // size_t gen = 0;
 
 size_t blocksize = MIN_minspace;
@@ -44,6 +47,7 @@ create_block(size_t sz)
 	b->size = sz;
 	b->next = nil;
 	b->prev = nil;
+	b->age = 0;
 	r->start = (size_t)b;
 	r->size = sz;
 	r->next = regions;
@@ -217,6 +221,23 @@ add_to_usedlist(Block *b)
 		assert(len+1 == checklist(usedlist));
 }
 
+void
+add_to_oldlist(Block *b)
+{
+	size_t len = 0;
+
+	used(&len);
+	if(assertions)
+		len = checklist(usedlist);
+	b->next = oldlist;
+	if(oldlist)
+		oldlist->prev = b;
+	b->prev = NULL;
+	oldlist = b;
+	if(assertions)
+		assert(len+1 == checklist(oldlist));
+}
+
 int
 coalesce1(Block *a, Block *b)
 {
@@ -230,7 +251,7 @@ coalesce1(Block *a, Block *b)
 	if(a->next == nil || b == nil)
 		return -2;
 	if(gcverbose)
-		dprintf(2, "coalesce: a = %p, a->size = %lx, a+a->size = %lx, b = %p\n",
+		dprintf(2, "coalesce: a = %p, a->size = %x, a+a->size = %lx, b = %p\n",
 				a, a->size, (size_t)((char*)a)+a->size, b);
 	if(((char*)a)+a->size != (void*)b)
 		return -3;
@@ -306,6 +327,7 @@ allocate2(size_t sz)
 
 	new->next = nil;
 	new->prev = nil;
+	new->age = 0;
 	bytesfree -= realsize;
 	p = (void*)(((char*)new)+sizeof(Block));
 	if(assertions){
@@ -490,6 +512,13 @@ gcsweep(void)
 			if(gcverbose)
 				dprintf(2, ">>> unmarking %p\n", h);
 			gc_unset_mark(h);
+			cur->age++;
+			if(cur->age > gc_oldage && generational == TRUE) {
+				cur->prev = NULL;
+				cur->next = NULL;
+				add_to_oldlist(cur);
+				continue;
+			}
 			cur->prev = new_usedlist;
 			cur->next = nil;
 			if(new_usedlist_head == nil)
@@ -545,6 +574,8 @@ ms_initgc(void)
 
 	if(gcverbose || gcinfo)
 		dprintf(2, "Starting mark/sweep GC\n");
+	if(generational == TRUE)
+		dprintf(2, "GC is generational: oldage = %u\n", gc_oldage);
 
 	rangc = 0;
 	b = create_block(blocksize);
@@ -638,6 +669,11 @@ ms_gcallocate(size_t sz, int tag)
 	if(nb)
 		goto done;
 
+	ms_gc(FALSE);
+	nb = allocate1(realsz);
+	if(nb)
+		goto done;
+
 	ms_gc(TRUE);
 	nb = allocate1(realsz);
 	if(nb)
@@ -653,7 +689,6 @@ ms_gcallocate(size_t sz, int tag)
 done:
 	nb->flags = 0;
 	nb->tag = tag;
-	nb->refcount = 0;
 	nb->forward = nil;
 	nb->size = sz;
 	allocations++;

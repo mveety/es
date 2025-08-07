@@ -103,14 +103,9 @@ istracked(void *p)
 void
 gcref(Root *r, void **p)
 {
-	Header *h;
-
 	assert(p);
 	r->p = p;
-	if(istracked(*p)){
-		h = header(*p);
-		h->refcount++;
-	}
+
 	if(rootlist)
 		rootlist->prev = r;
 	r->next = rootlist;
@@ -120,17 +115,9 @@ gcref(Root *r, void **p)
 void
 gcderef(Root *r, void **p)
 {
-	Header *h;
-
 	assert(r == rootlist);
 	assert(r->p == p);
 
-	if(istracked(*p)){
-		h = header(*p);
-		h->refcount--;
-		if(h->refcount == 0)
-			h->flags |= GcDeref;
-	}
 	rootlist = rootlist->next;
 	if(rootlist)
 		rootlist->prev = NULL;

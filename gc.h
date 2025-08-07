@@ -21,7 +21,6 @@ enum {
 	GcFixed = 1<<3,
 	OldGc = 100,
 	NewGc = 101,
-	RefCountGc = 102,
 };
 
 typedef struct Header Header;
@@ -42,16 +41,9 @@ struct Tag {
 struct Header {
 	unsigned short flags;
 	unsigned short tag;
-	unsigned int refcount;
 	size_t size;
 	void *forward;
 };
-
-/*struct Header {
-	unsigned int flags;
-	Tag *tag;
-	void *forward;
-};*/
 
 struct GcStats {
 	size_t total_free;
@@ -89,12 +81,10 @@ struct Region {
 };
 
 struct Block {
-//	size_t intype;
-//	size_t alloc;
 	Block *prev;
 	Block *next;
-	size_t size; /* includes the size of this header */
-//	Header *h;
+	uint32_t size; /* includes the size of this header */
+	uint32_t age;
 };
 
 /* Tags */
