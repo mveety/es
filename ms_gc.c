@@ -29,7 +29,7 @@ int gc_after = 5000;
 int gc_sort_after_n = 10;
 int gc_coalesce_after_n = 10;
 uint32_t gc_oldage = 5;
-int gc_oldsweep_after = 10;
+int gc_oldsweep_after = 25;
 Boolean generational = FALSE;
 // size_t gen = 0;
 
@@ -720,14 +720,16 @@ ms_gcallocate(size_t sz, int tag)
 	gettag(tag);
 
 	realsz = ALIGN(sz + sizeof(Header));
-	nb = allocate1(realsz);
-	if(nb)
-		goto done;
+	if(gcblocked <= 0 || realsz+sizeof(Block) <= blocksize) {
+		nb = allocate1(realsz);
+		if(nb)
+			goto done;
 
-	ms_gc(TRUE, TRUE);
-	nb = allocate1(realsz);
-	if(nb)
-		goto done;
+		ms_gc(TRUE, TRUE);
+		nb = allocate1(realsz);
+		if(nb)
+			goto done;
+	}
 
 	while(realsz+sizeof(Block) >= blocksize)
 		blocksize *= 2;

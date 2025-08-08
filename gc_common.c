@@ -82,7 +82,7 @@ header(void *p)
 {
 	void *v;
 
-	v = (void*)(((char*)p)-sizeof(Header));
+	v = (void*)(p-sizeof(Header));
 	return (Header*)v;
 }
 
