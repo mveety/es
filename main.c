@@ -10,6 +10,7 @@ Boolean gcinfo		= FALSE;	/* -I */
 Boolean assertions = FALSE;		/* -A */
 Boolean verbose_parser = FALSE; /* -P */
 Boolean use_initialize_esrc = TRUE; /* -Dr */
+extern Boolean generational;
 volatile Boolean loginshell = FALSE; /* -l or $0[0] == '-' */
 volatile Boolean readesrc = TRUE;
 Boolean different_esrc = FALSE; /* -I */
@@ -122,6 +123,7 @@ usage(void) {
 		"	-S n	(new gc) freelist sort frequency\n"
 		"	-C n	(new gc) freelist coalesce frequency\n"
 		"	-B n	(new gc) block size in megabytes\n"
+		"	-G		(new gc) make gc generational\n"
 		"	-D flags	debug flags (? for more info)\n"
 		"	-r flags	run flags (? for more info)\n"
 	);
@@ -207,7 +209,7 @@ main(int argc, char *argv[]) {
 	/* yydebug = 1; */
 
 	// removed IGAPL
-	while ((c = getopt(argc, argv, "+eiI:A:lxXvnpodsVc:?hNg:S:C:B:D:r:")) != EOF)
+	while ((c = getopt(argc, argv, "+eiI:A:lxXvnpodsVc:?hNg:S:C:B:GD:r:")) != EOF)
 		switch (c) {
 		case 'D':
 			for(ds = optarg; *ds != 0; ds++){
@@ -287,6 +289,9 @@ main(int argc, char *argv[]) {
 				dprintf(2, "error: blocksize < %d\n", (MIN_minspace/1024));
 				do_usage();
 			}
+			break;
+		case 'G':
+			generational = TRUE;
 			break;
 		case 'v':
 			initgc();

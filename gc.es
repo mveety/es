@@ -13,7 +13,7 @@ fn %gcstats args {
 				nobjects = $matchexpr(4)
 				ngcs = $matchexpr(6)
 			}
-			(new) {
+			(new generational) {
 				type = $matchexpr(1)
 				freemem = $matchexpr(2)
 				usedmem = $matchexpr(4)
@@ -47,7 +47,7 @@ fn %gcinfo {
 			echo 'allocations =' $matchexpr(5)
 			echo 'number of gcs =' $matchexpr(6)
 		}
-		(new) {
+		(new generational) {
 			echo 'type =' $matchexpr(1)
 			echo 'freemem (total) =' $matchexpr(2) '('^<={div $matchexpr(2) 1024} 'kb)'
 			echo 'freemem (real) =' $matchexpr(3) '('^<={div $matchexpr(3) 1024} 'kb)'
@@ -55,6 +55,9 @@ fn %gcinfo {
 			echo 'usedmem (real) =' $matchexpr(5) '('^<={div $matchexpr(5) 1024} 'kb)'
 			echo 'free blocks =' $matchexpr(6)
 			echo 'used blocks =' $matchexpr(7)
+			if {~ $matchexpr(1) generational} {
+				echo 'old blocks =' $matchexpr(21)
+			}
 			echo 'number of frees =' $matchexpr(8)
 			echo 'number of allocs =' $matchexpr(9)
 			echo 'allocations =' $matchexpr(10)
@@ -68,6 +71,10 @@ fn %gcinfo {
 			echo 'nsort =' $matchexpr(18)
 			echo 'ncoalesce =' $matchexpr(19)
 			echo 'blocksize =' $matchexpr(20)
+			if {~ $matchexpr(1) generational} {
+				echo 'oldage =' $matchexpr(22)
+				echo 'oldsweep_after =' $matchexpr(23)
+			}
 			if {~ $1 -v || ~ $1 -r} {
 				for (r = <={$&dumpregions}; n = <={%range 1 $matchexpr(17)}) {
 					echo '    region '^$n^': '^$r^' ('^<={div $r 1024 |> @{div $1 1024}}^' megabytes)'

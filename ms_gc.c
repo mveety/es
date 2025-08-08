@@ -7,9 +7,9 @@
 
 Region *regions;
 
-Block *usedlist = NULL;
-Block *freelist = NULL;
-Block *oldlist = NULL;
+Block *usedlist = nil;
+Block *freelist = nil;
+Block *oldlist = nil;
 size_t nfrees = 0;
 size_t nallocs = 0;
 size_t bytesfree = 0;
@@ -23,11 +23,13 @@ volatile int ms_gc_blocked;
 volatile size_t ngcs = 0;
 volatile int nsortgc = 0;
 volatile int ncoalescegc = 0;
+volatile int noldsweep = 30;
 /* tuning */
 int gc_after = 5000;
-int gc_sort_after_n = 100;
-int gc_coalesce_after_n = 100;
-uint32_t gc_oldage = 10;
+int gc_sort_after_n = 10;
+int gc_coalesce_after_n = 10;
+uint32_t gc_oldage = 5;
+int gc_oldsweep_after = 10;
 Boolean generational = FALSE;
 // size_t gen = 0;
 
@@ -72,7 +74,7 @@ size_t
 checklist2(Block *list, int print, void *b)
 {
 	Block *p;
-	size_t i;
+	size_t i = 0;
 
 	if(list == nil)
 		return 0;
@@ -227,12 +229,13 @@ add_to_oldlist(Block *b)
 	size_t len = 0;
 
 	used(&len);
-	if(assertions)
-		len = checklist(usedlist);
+	if(assertions){
+		len = checklist(oldlist);
+		dprintf(2, "len = %lu\n", len);
+	}
 	b->next = oldlist;
 	if(oldlist)
 		oldlist->prev = b;
-	b->prev = NULL;
 	oldlist = b;
 	if(assertions)
 		assert(len+1 == checklist(oldlist));
@@ -403,10 +406,11 @@ gc_getstats(GcStats *stats)
 {
 	stats->total_free = usage_stats(freelist);
 	stats->real_free = real_usage_stats(freelist);
-	stats->total_used = usage_stats(usedlist);
-	stats->real_used = real_usage_stats(usedlist);
+	stats->total_used = usage_stats(usedlist) + usage_stats(oldlist);
+	stats->real_used = real_usage_stats(usedlist) + real_usage_stats(oldlist);
 	stats->free_blocks = nblocks_stats(freelist);
 	stats->used_blocks = nblocks_stats(usedlist);
+	stats->old_blocks = nblocks_stats(oldlist);
 	stats->nfrees = nfrees;
 	stats->nallocs = nallocs;
 	stats->allocations = allocations;
@@ -420,6 +424,9 @@ gc_getstats(GcStats *stats)
 	stats->nsort = nsort;
 	stats->ncoalesce = ncoalesce;
 	stats->blocksz = blocksize;
+	stats->oldage = gc_oldage;
+	stats->generational = generational;
+	stats->gc_oldsweep_after = gc_oldsweep_after;
 }
 
 int
@@ -489,17 +496,25 @@ gc_markrootlist(Root *r)
 	}
 }
 
-size_t
-gcsweep(void)
+typedef struct {
+	Block *list;
+	Block *olist;
+	size_t frees;
+} SweepData;
+
+SweepData
+sweeplist(Block *list, Block *oolist, Boolean gensort)
 {
-	Block *new_usedlist = nil, *cur, *next;
-	Block *new_usedlist_head = nil;
+	Block *new_list = nil, *cur, *next;
+	Block *new_list_head = nil;
+	Block *olist = oolist;
 	Header *h;
 	size_t frees;
+	SweepData res;
 	
 	if(assertions)
-		checklist(usedlist);
-	cur = usedlist;
+		checklist(list);
+	cur = list;
 	frees = 0;
 	for(;;){
 		if(cur == nil)
@@ -509,23 +524,26 @@ gcsweep(void)
 			next->prev = nil;
 		h = (Header*)block_pointer(cur);
 		if(h->flags & GcUsed){
-			if(gcverbose)
-				dprintf(2, ">>> unmarking %p\n", h);
-			gc_unset_mark(h);
 			cur->age++;
-			if(cur->age > gc_oldage && generational == TRUE) {
-				cur->prev = NULL;
-				cur->next = NULL;
-				add_to_oldlist(cur);
-				continue;
+			if(cur->age > gc_oldage && generational && gensort) {
+				cur->prev = nil;
+				cur->next = nil;
+				cur->next = olist;
+				if(olist)
+					olist->prev = cur;
+				olist = cur;
+			} else {
+				if(gcverbose)
+					dprintf(2, ">>> unmarking %p\n", h);
+				gc_unset_mark(h);
+				cur->prev = new_list;
+				cur->next = nil;
+				if(new_list_head == nil)
+					new_list_head = cur;
+				else
+					new_list->next = cur;
+				new_list = cur;
 			}
-			cur->prev = new_usedlist;
-			cur->next = nil;
-			if(new_usedlist_head == nil)
-				new_usedlist_head = cur;
-			else
-				new_usedlist->next = cur;
-			new_usedlist = cur;
 		} else {
 			if(gcverbose)
 				dprintf(2, ">>> deallocating %p\n", cur);
@@ -533,18 +551,42 @@ gcsweep(void)
 			cur->next = nil;
 			cur->prev = nil;
 			add_to_freelist(cur);
-			//cur = coalesce(cur, cur->next);
-			//if(cur->prev)
-			//	coalesce(cur->prev, cur);
 			frees++;
 			nallocs--;
 		}
 		cur = next;
 	}
-	usedlist = new_usedlist_head;
+	res.list = new_list_head;
+	res.olist = olist;
+	res.frees = frees;
 	if(assertions)
-		checklist(usedlist);
-	return frees;
+		checklist(res.list);
+	if(assertions)
+		checklist(res.olist);
+	return res;
+}
+
+size_t
+gcsweep(void)
+{
+	SweepData d;
+
+	d = sweeplist(usedlist, oldlist, TRUE);
+	usedlist = d.list;
+	oldlist = d.olist;
+
+	return d.frees;
+}
+
+size_t
+gcoldsweep(void)
+{
+	SweepData d;
+
+	d = sweeplist(oldlist, nil, FALSE);
+	assert(d.olist == nil);
+	oldlist = d.list;
+	return d.frees;
 }
 
 void
@@ -553,6 +595,7 @@ gc_print_stats(GcStats *stats)
 	dprintf(2, "tfree = %lu, rfree = %lu\n", stats->total_free, stats->real_free);
 	dprintf(2, "tused = %lu, rused = %lu\n", stats->total_used, stats->real_used);
 	dprintf(2, "free blocks = %lu, used blocks = %lu\n", stats->free_blocks, stats->used_blocks);
+	dprintf(2, "old blocks = %lu\n", stats->old_blocks);
 	dprintf(2, "nfrees = %lu, nallocs = %lu\n", stats->nfrees, stats->nallocs);
 	dprintf(2, "allocations since last gc = %lu\n", stats->allocations);
 	dprintf(2, "number of gc = %lu\n", stats->ngcs);
@@ -588,7 +631,7 @@ ms_initgc(void)
 }
 
 void
-ms_gc(Boolean full)
+ms_gc(Boolean full, Boolean inalloc)
 {
 	GcStats starting, ending;
 
@@ -600,7 +643,7 @@ ms_gc(Boolean full)
 	if(gc_coalesce_after_n < 1)
 		gc_coalesce_after_n = 100;
 
-	if(allocations < (size_t)gc_after && !full)
+	if(allocations < (size_t)gc_after && !(full || inalloc))
 		return;
 
 	if(gcblocked > 0)
@@ -626,20 +669,32 @@ ms_gc(Boolean full)
 	if(gcverbose)
 		dprintf(2, ">> Sweeping\n");
 	gcsweep();
+
 	if(nsortgc >= gc_sort_after_n || full){
+		if(gcverbose)
+			dprintf(2, ">> Sorting freelist\n");
 		freelist = sort_list(freelist, nfrees);
 		nsortgc = 0;
 		nsort++;
 	}
 	if(ncoalescegc >= gc_coalesce_after_n || full){
+		if(gcverbose)
+			dprintf(2, ">> Coalescing blocks\n");
 		freelist = coalesce_list(freelist);
 		ncoalescegc = 0;
 		ncoalesce++;
+	}
+	if(noldsweep >= gc_oldsweep_after){
+		if(gcverbose)
+			dprintf(2, ">> Sweeping geriatric blocks\n");
+		gcoldsweep();
+		noldsweep = 0;
 	}
 
 	ngcs++;
 	nsortgc++;
 	ncoalescegc++;
+	noldsweep++;
 
 	if(gcverbose || gcinfo){
 		gc_getstats(&ending);
@@ -669,12 +724,7 @@ ms_gcallocate(size_t sz, int tag)
 	if(nb)
 		goto done;
 
-	ms_gc(FALSE);
-	nb = allocate1(realsz);
-	if(nb)
-		goto done;
-
-	ms_gc(TRUE);
+	ms_gc(TRUE, TRUE);
 	nb = allocate1(realsz);
 	if(nb)
 		goto done;
@@ -732,7 +782,7 @@ ms_gcenable(void)
 {
 	assert(gcblocked > 0);
 	gcblocked--;
-	ms_gc(FALSE);
+	ms_gc(FALSE, FALSE);
 }
 
 void

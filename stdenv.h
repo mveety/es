@@ -138,7 +138,7 @@ typedef void noreturn;
 
 #undef FALSE
 #undef TRUE
-typedef enum { FALSE, TRUE } Boolean;
+typedef enum { FALSE = 0, TRUE = 1 } Boolean;
 
 
 #if USE_SIG_ATOMIC_T

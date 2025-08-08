@@ -52,6 +52,7 @@ struct GcStats {
 	size_t real_used;
 	size_t free_blocks;
 	size_t used_blocks;
+	size_t old_blocks;
 	size_t nfrees;
 	size_t nallocs;
 	size_t allocations;
@@ -65,6 +66,9 @@ struct GcStats {
 	size_t nsort;
 	size_t ncoalesce;
 	size_t blocksz;
+	size_t oldage;
+	int gc_oldsweep_after;
+	Boolean generational;
 };
 
 struct Buffer {
@@ -144,7 +148,7 @@ extern void gc_markrootlist(Root *r);
 extern void gc_getstats(GcStats *stats);
 extern void gc_print_stats(GcStats *stats);
 extern void ms_initgc(void);
-extern void ms_gc(Boolean);
+extern void ms_gc(Boolean, Boolean);
 extern void *ms_gcallocate(size_t sz, int tag);
 extern void ms_gcenable(void);
 extern void ms_gcdisable(void);
