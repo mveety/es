@@ -76,8 +76,8 @@ fn %gcinfo {
 				echo 'oldsweep_after =' $matchexpr(23)
 			}
 			if {~ $1 -v || ~ $1 -r} {
-				for (r = <={$&dumpregions}; n = <={%range 1 $matchexpr(17)}) {
-					echo '    region '^$n^': '^$r^' ('^<={div $r 1024 |> @{div $1 1024}}^' megabytes)'
+				for ((p r) = <={$&dumpregions}; n = <={%range 1 $matchexpr(17)}) {
+					echo '    '^$n^' region '^$p^': '^$r^' ('^<={div $r 1024 |> @{div $1 1024}}^' megabytes)'
 				}
 			}
 		}
@@ -96,6 +96,11 @@ fn __es_initgc {
 			gc_coalesceaftern = ''
 			set-gc_coalesceaftern = @ v { $&gctuning coalesceaftern $v }
 			get-gc_coalesceaftern = @{ $&gctuning |> %elem 3 }
+			noexport = $noexport (
+				gc_after set-gc_after get-gc_after
+				gc_sortaftern get-gc_sortaftern set-gc_sortaftern 
+				gc_coalesceaftern get-gc_coalesceaftern set-gc_coalesceaftern
+			)
 		}
 		generational {
 			gc_oldage = ''
@@ -104,6 +109,10 @@ fn __es_initgc {
 			gc_oldsweepafter = ''
 			set-gc_oldsweepafter = @ v { $&gctuning oldsweepafter $v }
 			get-gc_oldsweepafter = @{ $&gctuning |> %elem 5 }
+			noexport = $noexport (
+				gc_oldage set-gc_oldage get-gc_oldage
+				gc_oldsweepafter set-gc_oldsweepafter get-gc_oldsweepafter
+			)
 		}
 	)
 }

@@ -5,7 +5,6 @@
 #define	REQUIRE_IOCTL	1
 
 #include "es.h"
-#include "gc.h"
 #include "prim.h"
 
 #ifdef HAVE_SETRLIMIT
@@ -13,8 +12,6 @@
 #else
 # define BSD_LIMITS 0
 #endif
-
-extern Region *regions;
 
 PRIM(newpgrp) {
 	int pid;
@@ -507,74 +504,6 @@ PRIM(execfailure) {
 }
 #endif /* !KERNEL_POUNDBANG */
 
-PRIM(gcstats) {
-	List *res = NULL; Root r_res;
-	GcStats stats;
-
-	gcref(&r_res, (void**)&res);
-
-	if(gctype == NewGc){
-		gc_getstats(&stats);
-		res = mklist(mkstr(str("%d", stats.gc_oldsweep_after)), res);
-		res = mklist(mkstr(str("%lud", stats.oldage)), res);
-		res = mklist(mkstr(str("%lud", stats.old_blocks)), res);
-		res = mklist(mkstr(str("%lud", stats.blocksz)), res);
-		res = mklist(mkstr(str("%lud", stats.ncoalesce)), res);
-		res = mklist(mkstr(str("%lud", stats.nsort)), res);
-		res = mklist(mkstr(str("%lud", stats.nregions)), res);
-		res = mklist(mkstr(str("%d", stats.gc_after)), res);
-		res = mklist(mkstr(str("%d", stats.ncoalescegc)), res);
-		res = mklist(mkstr(str("%d", stats.coalesce_after)), res);
-		res = mklist(mkstr(str("%d", stats.nsortgc)), res);
-		res = mklist(mkstr(str("%d", stats.sort_after_n)), res);
-		res = mklist(mkstr(str("%lud", stats.ngcs)), res);
-		res = mklist(mkstr(str("%lud", stats.allocations)), res);
-		res = mklist(mkstr(str("%lud", stats.nallocs)), res);
-		res = mklist(mkstr(str("%lud", stats.nfrees)), res);
-		res = mklist(mkstr(str("%lud", stats.used_blocks)), res);
-		res = mklist(mkstr(str("%lud", stats.free_blocks)), res);
-		res = mklist(mkstr(str("%lud", stats.real_used)), res);
-		res = mklist(mkstr(str("%lud", stats.total_used)), res);
-		res = mklist(mkstr(str("%lud", stats.real_free)), res);
-		res = mklist(mkstr(str("%lud", stats.total_free)), res);
-		if(stats.generational == TRUE)
-			res = mklist(mkstr(str("generational")), res);
-		else
-			res = mklist(mkstr(str("new")), res);
-	} else if(gctype == OldGc) {
-		old_getstats(&stats);
-		res = mklist(mkstr(str("%lud", stats.ngcs)), res);
-		res = mklist(mkstr(str("%lud", stats.allocations)), res);
-		res = mklist(mkstr(str("%lud", stats.nallocs)), res);
-		res = mklist(mkstr(str("%lud", stats.total_used)), res);
-		res = mklist(mkstr(str("%lud", stats.total_free)), res);
-		res = mklist(mkstr(str("old")), res);
-	}
-
-	gcderef(&r_res, (void**)&res);
-	return res;
-}
-
-PRIM(gc) {
-	gc();
-	return NULL;
-}
-
-PRIM(dumpregions) {
-	List *res = NULL; Root r_res;
-	Region *r;
-
-	if(gctype == OldGc)
-		fail("$&dumpregions", "using old gc");
-
-	gcref(&r_res, (void**)&res);
-
-	for(r = regions; r != NULL; r = r->next)
-		res = mklist(mkstr(str("%lud", r->size)), res);
-
-	gcderef(&r_res, (void**)&res);
-	return res;
-}
 
 PRIM(getpid) {
 	List *res = NULL; Root r_res;
@@ -605,9 +534,7 @@ extern Dict *initprims_sys(Dict *primdict) {
 #if !KERNEL_POUNDBANG
 	X(execfailure);
 #endif /* !KERNEL_POUNDBANG */
-	X(gcstats);
-	X(gc);
-	X(dumpregions);
+
 	X(getpid);
 	return primdict;
 }
