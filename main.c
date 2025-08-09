@@ -23,6 +23,8 @@ extern char *optarg;
 extern int yydebug;
 extern size_t blocksize;
 extern char **environ;
+extern uint32_t gc_oldage;
+extern int gc_oldsweep_after;
 
 void*
 used(void *v)
@@ -123,7 +125,9 @@ usage(void) {
 		"	-S n	(new gc) freelist sort frequency\n"
 		"	-C n	(new gc) freelist coalesce frequency\n"
 		"	-B n	(new gc) block size in megabytes\n"
-		"	-G		(new gc) make gc generational\n"
+		"	-G	(new gc) make gc generational\n"
+		"	-a n	(gen gc) set object age to move to old list\n"
+		"	-w n	(gen gc) set how often to sweep the old list\n"
 		"	-D flags	debug flags (? for more info)\n"
 		"	-r flags	run flags (? for more info)\n"
 	);
@@ -209,7 +213,7 @@ main(int argc, char *argv[]) {
 	/* yydebug = 1; */
 
 	// removed IGAPL
-	while ((c = getopt(argc, argv, "+eiI:A:lxXvnpodsVc:?hNg:S:C:B:GD:r:")) != EOF)
+	while ((c = getopt(argc, argv, "+eiI:A:lxXvnpodsVc:?hNg:S:C:B:GD:r:a:w:")) != EOF)
 		switch (c) {
 		case 'D':
 			for(ds = optarg; *ds != 0; ds++){
@@ -292,6 +296,12 @@ main(int argc, char *argv[]) {
 			break;
 		case 'G':
 			generational = TRUE;
+			break;
+		case 'a':
+			gc_oldage = atoi(optarg);
+			break;
+		case 'w':
+			gc_oldsweep_after = atoi(optarg);
 			break;
 		case 'v':
 			initgc();

@@ -13,6 +13,7 @@ fn __es_esrc_check {
 }
 
 fn %initialize {
+	__es_initgc
 	if {__es_esrc_check} {
 		catch @ el {
 			errmatch <={makeerror $el} (

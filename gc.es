@@ -84,3 +84,27 @@ fn %gcinfo {
 	)
 }
 
+fn __es_initgc {
+	matchall <={$&gcstats |> %first} (
+		(new generational) {
+			gc_after = ''
+			set-gc_after = @ v { $&gctuning gcafter $v }
+			get-gc_after = @{ $&gctuning |> %elem 1 }
+			gc_sortaftern = ''
+			set-gc_sortaftern = @ v { $&gctuning sortaftern $v }
+			get-gc_sortaftern = @{ $&gctuning |> %elem 2 }
+			gc_coalesceaftern = ''
+			set-gc_coalesceaftern = @ v { $&gctuning coalesceaftern $v }
+			get-gc_coalesceaftern = @{ $&gctuning |> %elem 3 }
+		}
+		generational {
+			gc_oldage = ''
+			set-gc_oldage = @ v { $&gctuning oldage $v }
+			get-gc_oldage = @{ $&gctuning |> %elem 4 }
+			gc_oldsweepafter = ''
+			set-gc_oldsweepafter = @ v { $&gctuning oldsweepafter $v }
+			get-gc_oldsweepafter = @{ $&gctuning |> %elem 5 }
+		}
+	)
+}
+

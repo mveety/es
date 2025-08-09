@@ -1,6 +1,11 @@
-#include <stdlib.h>
 #include "es.h"
 #include "prim.h"
+
+extern int gc_after;
+extern int gc_sort_after_n;
+extern int gc_coalesce_after_n;
+extern uint32_t gc_oldage;
+extern int gc_oldsweep_after;
 
 PRIM(version) {
 	return mklist(mkstr((char *) version), NULL);
@@ -244,6 +249,68 @@ PRIM(varishidden) {
 	return list_false;
 }
 
+PRIM(gctuning) {
+	List *res = NULL; Root r_res;
+	int v = 0;
+
+	if (list == NULL) {
+		gcref(&r_res, (void**)&res);
+		res = mklist(mkstr(str("%d", gc_oldsweep_after)), res);
+		res = mklist(mkstr(str("%ud", gc_oldage)), res);
+		res = mklist(mkstr(str("%d", gc_coalesce_after_n)), res);
+		res = mklist(mkstr(str("%d", gc_sort_after_n)), res);
+		res = mklist(mkstr(str("%d", gc_after)), res);
+		gcrderef(&r_res);
+		return res;
+	}
+	if(list->next == NULL)
+		fail("$&gctuning", "missing arguments");
+
+	errno = 0;
+	v = (int)strtol(getstr(list->next->term), NULL, 10);
+	if(v == 0){
+		switch(errno){
+		case EINVAL:
+			fail("$&gctuning", str("invalid input: $2 = '%s'", getstr(list->next->term)));
+			break;
+		case ERANGE:
+			fail("$&gctuning", str("conversion overflow: $2 = '%s'", getstr(list->next->term)));
+			break;
+		}
+	}
+
+	gcdisable();
+	if(termeq(list->term, "gcafter")){
+		gc_after = v;
+		gcenable();
+		return list_true;
+	}
+	if(termeq(list->term, "sortaftern")){
+		gc_sort_after_n = v;
+		gcenable();
+		return list_true;
+	}
+	if(termeq(list->term, "coalesceaftern")){
+		gc_coalesce_after_n = v;
+		gcenable();
+		return list_true;
+	}
+	if(termeq(list->term, "oldage")){
+		gc_oldage = v;
+		gcenable();
+		return list_true;
+	}
+	if(termeq(list->term, "oldsweepafter")){
+		gc_oldsweep_after = v;
+		gcenable();
+		return list_true;
+	}
+
+	gcenable();
+	fail("$&gctuning", str("invalid paramter: '%s'\n", getstr(list->term)));
+	return list_false;
+}
+
 Dict*
 initprims_mv(Dict *primdict)
 {
@@ -266,6 +333,7 @@ initprims_mv(Dict *primdict)
 	X(varhide);
 	X(varunhide);
 	X(varishidden);
+	X(gctuning);
 
 	return primdict;
 }
