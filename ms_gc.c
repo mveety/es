@@ -31,6 +31,7 @@ int gc_coalesce_after_n = 10;
 uint32_t gc_oldage = 5;
 int gc_oldsweep_after = 25;
 Boolean generational = FALSE;
+uint64_t nsortsn = 0;
 // size_t gen = 0;
 
 size_t blocksize = MIN_minspace;
@@ -118,7 +119,7 @@ sort_pivot(Block *list, size_t len)
 {
 	size_t i;
 
-	for(i = 0; i < len/2 && list->next != nil; i++, list = list->next)
+	for(i = 0; i <= len/3 && list->next != nil; i++, list = list->next)
 		;
 	return list;
 }
@@ -179,10 +180,51 @@ sort_list(Block *list, size_t len)
 	pivot->next = right;
 	if(right)
 		right->prev = pivot;
+
+	if(assertions){
+		for(l = head ? head : pivot; l != nil; l = l->next){
+			if(l->prev == nil)
+				continue;
+			assert(l->prev < l);
+		}
+	}
+
 	if(head)
 		return head;
 	else
 		return pivot;
+}
+
+size_t /* number of blocks */
+nblocks_stats(Block *list)
+{
+	size_t stats;
+
+	stats = 0;
+	if(!list)
+		return 0;
+
+	for(; list != nil; list = list->next)
+		stats++;
+
+	return stats;
+}
+
+void
+list_rating(Block *list)
+{
+	Block *l;
+	uint64_t sortrating = 0;
+
+	for(l = list; l != nil; l = l->next){
+		if(l->prev == nil)
+			continue;
+		if(l < l->prev)
+			sortrating++;
+	}
+	nsortsn++;
+	dprintf(2, "%lu: sortrating = %lu (oldlistlen = %lu)\n",
+			nsortsn, sortrating, nblocks_stats(oldlist));
 }
 
 void
@@ -382,21 +424,6 @@ real_usage_stats(Block *list)
 
 	for(; list != nil; list = list->next)
 		stats += (list->size - sizeof(Block));
-
-	return stats;
-}
-
-size_t /* number of blocks */
-nblocks_stats(Block *list)
-{
-	size_t stats;
-
-	stats = 0;
-	if(!list)
-		return 0;
-
-	for(; list != nil; list = list->next)
-		stats++;
 
 	return stats;
 }
@@ -673,6 +700,7 @@ ms_gc(Boolean full, Boolean inalloc)
 	if(nsortgc >= gc_sort_after_n || full){
 		if(gcverbose)
 			dprintf(2, ">> Sorting freelist\n");
+		// list_rating(freelist);
 		freelist = sort_list(freelist, nfrees);
 		nsortgc = 0;
 		nsort++;
@@ -684,7 +712,7 @@ ms_gc(Boolean full, Boolean inalloc)
 		ncoalescegc = 0;
 		ncoalesce++;
 	}
-	if(noldsweep >= gc_oldsweep_after){
+	if(noldsweep >= gc_oldsweep_after || full){
 		if(gcverbose)
 			dprintf(2, ">> Sweeping geriatric blocks\n");
 		gcoldsweep();
@@ -720,16 +748,14 @@ ms_gcallocate(size_t sz, int tag)
 	gettag(tag);
 
 	realsz = ALIGN(sz + sizeof(Header));
-	if(gcblocked <= 0 || realsz+sizeof(Block) <= blocksize) {
-		nb = allocate1(realsz);
-		if(nb)
-			goto done;
+	nb = allocate1(realsz);
+	if(nb)
+		goto done;
 
-		ms_gc(TRUE, TRUE);
-		nb = allocate1(realsz);
-		if(nb)
-			goto done;
-	}
+	ms_gc(TRUE, TRUE);
+	nb = allocate1(realsz);
+	if(nb)
+		goto done;
 
 	while(realsz+sizeof(Block) >= blocksize)
 		blocksize *= 2;
@@ -784,7 +810,7 @@ ms_gcenable(void)
 {
 	assert(gcblocked > 0);
 	gcblocked--;
-	ms_gc(FALSE, FALSE);
+//	ms_gc(FALSE, FALSE);
 }
 
 void
