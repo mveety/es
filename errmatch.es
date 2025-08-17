@@ -32,6 +32,10 @@ fn iserror err {
 # I might turn this into a rewrite like match. This works fine for now and
 # I don't know if the potential performance gain is really needed.
 fn errmatch errobj cases {
+	# do this test initially to filter out successful trys
+	# this lets you roll right into a errmatch after a try without having
+	# to do a test
+	if {~ $errobj false} { return <=false }
 	assert {iserror $errobj}
 	let (
 		l = $cases
