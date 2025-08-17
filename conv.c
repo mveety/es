@@ -30,7 +30,7 @@ Vconv(Format *f)
 	lp = va_arg(f->args, List *);
 	sep = va_arg(f->args, char *);
 
-	if(lp->next == NULL) {
+	if(lp != NULL && lp->next == NULL) {
 		switch(lp->term->kind){
 		case tkString:
 			fmtprint(f, "%S", getstr(lp->term));
