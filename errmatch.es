@@ -49,7 +49,7 @@ fn errmatch errobj cases {
 		while {gte $#l 1} {
 			(e casef lf) = <={try __es_getnextcase $l}
 			if {$e} {
-				throw error $0 <={$e info |> %elem 3}
+				throw error $0 <={$e msg}
 			}
 			l = <={$lf}
 			case = <={$casef}
