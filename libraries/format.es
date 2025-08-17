@@ -104,10 +104,28 @@ fn fmt-list v {
 	}
 }
 
+fn fmt-prim-dict v {
+	let (reslist =; res='') {
+		dictforall $v @ name val {
+			reslist = $reslist '['^<={format $name}^']:'^<={format $val}
+		}
+		while {gt $#reslist 0} {
+			if {eq $#reslist 1} {
+				res = $res^$reslist(1)
+			} {
+				res = $res^$reslist(1)^', '
+			}
+			reslist = $reslist(2 ...)
+		}
+		result 'dict('^$res^')'
+	}
+}
+
 install_format 'nil' @ v { result 'nil' }
 install_format 'number' @ v { result <={fmt-number $v} }
 install_format 'string' @ v { result <={fmt-string $v} }
 install_format 'function' @ v { result <={fmt-fun-prim $v} }
 install_format 'primordial' @ v { result <={fmt-fun-prim $v} }
 install_format 'list' @ v { result <={fmt-list $v} }
+install_format 'dict' @ v { result <={fmt-prim-dict $v} }
 

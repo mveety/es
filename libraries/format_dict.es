@@ -38,5 +38,5 @@ fn fmt-dict dict {
 	}
 }
 
-install_format 'dict' @ v { result <={fmt-dict $v} }
+install_format 'lib_dict' @ v { result <={fmt-dict $v} }
 

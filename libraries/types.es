@@ -134,6 +134,33 @@ fn _is_a_number v {
 	return <=true
 }
 
+fn _is_a_hex_number v {
+	if {! ~ $#v 1} {
+		return <=false
+	}
+	for (i = $:v){
+		if {! ~ $i [1234567890abcdef]} {
+			return <=false
+		}
+	}
+	return <=true
+}
+
+fn _is_a_dict v {
+	if {! ~ $#v 1} {
+		return <=false
+	}
+	if {! ~ $v 'dict('^*^')'} {
+		return <=false
+	}
+	let (n = <={~~ $v 'dict('^*^')'}) {
+		if {! _is_a_hex_number $n} {
+			return <=false
+		}
+	}
+	result <=true
+}
+
 fn _is_a_function v {
 	if {! ~ $#v 1} {
 		return <=false
@@ -207,9 +234,14 @@ fn prim_type_test_list v {
 	}
 }
 
+fn prim_type_test_dict v {
+	_is_a_dict $v
+}
+
 install_any_type primordial 'number' @ v { result <={prim_type_test_number $v} }
 install_any_type primordial 'string' @ v { result <={prim_type_test_string $v} }
 install_any_type primordial 'function' @ v { result <={prim_type_test_function $v} }
 install_any_type primordial 'primordial' @ v { result <={prim_type_test_primordial $v} }
 install_any_type primordial 'list' @ v { result <={prim_type_test_list $v} }
+install_any_type primordial 'dict' @ v { result <={prim_type_test_dict $v} }
 

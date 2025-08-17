@@ -10,5 +10,5 @@ fn type_dict_test v {
 	}
 }
 
-install_type 'dict' @ v { result <={type_dict_test $v} }
+install_type 'lib_dict' @ v { result <={type_dict_test $v} }
 

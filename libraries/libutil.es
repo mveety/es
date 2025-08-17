@@ -41,9 +41,18 @@ fn libutil_enumerate_file_functions file {
 				sline = <={%fsplit <={%flatten \n \t ' '} $line}
 				t=
 			) {
+				while {~ $sline(1) ''} { sline = $sline(2 ...) }
 				match $sline(1) (
-					'fn' { functions = $functions $sline(2) }
-					fn-* { functions = $functions <={~~ $matchexpr fn-*} }
+					'fn' {
+						if {! ~ $sline(2) $functions} {
+							functions = $functions $sline(2)
+						}
+					}
+					fn-* {
+						if {! ~ <={~~ $matchexpr fn-*} $functions} {
+							functions = $functions <={~~ $matchexpr fn-*}
+						}
+					}
 				)
 			}
 		}
