@@ -4,7 +4,17 @@ if {~ $#bench_run_caret_srcdata 0} {
 	bench_run_caret_srcdata = false
 }
 
-let (srcdata=;srcdata_len=;no_srcdata=true){
+if {~ $#bench_print_gcinfo 0} {
+	bench_print_gcinfo = false
+}
+
+lets (
+	srcdata=
+	srcdata_len=
+	no_srcdata=true
+	old_gcinfo = $fn-%gcinfo
+	fn-%gcinfo = @{ if {$bench_print_gcinfo} { $old_gcinfo -r } }
+	){
 
 	fn populate_source_data elems {
 		assert2 $0 {gt $elems 0}
@@ -26,6 +36,7 @@ let (srcdata=;srcdata_len=;no_srcdata=true){
 				y = $i $y
 			}
 		}
+		%gcinfo
 	}
 
 	fn bench-postpend_list {
@@ -35,11 +46,13 @@ let (srcdata=;srcdata_len=;no_srcdata=true){
 				y = $y $i
 			}
 		}
+		%gcinfo
 	}
 
 	fn bench-count {
 		have_srcdata
 		%count $srcdata
+		%gcinfo
 	}
 
 	fn bench-add {
@@ -49,6 +62,7 @@ let (srcdata=;srcdata_len=;no_srcdata=true){
 				res = <={add $res $i}
 			}
 		}
+		%gcinfo
 	}
 
 	fn bench-strings {
@@ -57,6 +71,7 @@ let (srcdata=;srcdata_len=;no_srcdata=true){
 			tmp = <={%string $srcdata}
 			tmp = <={%strlist $tmp}
 		}
+		%gcinfo
 	}
 
 	fn bench-iterate {
@@ -64,12 +79,14 @@ let (srcdata=;srcdata_len=;no_srcdata=true){
 		for (i = $srcdata) {
 			result
 		}
+		%gcinfo
 	}
 
 	fn bench-double_list {
 		local (y=){
 			y = $srcdata $srcdata
 		}
+		%gcinfo
 	}
 
 	fn bench-caret_srcdata {
@@ -80,34 +97,41 @@ let (srcdata=;srcdata_len=;no_srcdata=true){
 		local (y=){
 			y = $srcdata^$srcdata
 		}
+		%gc
+		%gcinfo
 	}
 
 	fn bench-caret_lists {
 		local (y=){
 			y = <={%range 0 10}^$srcdata
 		}
+		%gcinfo
 	}
 
 	fn bench-reverse {
 		local (y=){
 			y = <={reverse $srcdata}
 		}
+		%gcinfo
 	}
 
 	fn bench-last {
 		local (y=){
 			y = <={%last $srcdata}
 		}
+		%gcinfo
 	}
 
 	fn bench-middle_elem {
 		local (y=){
 			y = <={%count $srcdata |> @{div $1 2} |> @{%elem $1 $srcdata}}
 		}
+		%gcinfo
 	}
 
 	fn bench-range {
 		%range 1 $srcdata_len
+		%gcinfo
 	}
 
 }

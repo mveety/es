@@ -76,6 +76,11 @@ fn %gcinfo {
 				echo 'oldsweep_after =' $matchexpr(23)
 			}
 			if {~ $1 -v || ~ $1 -r} {
+				if {gt $matchexpr(17) 100} {
+					echo >[1=2] 'error: not printing regions: more than 100 regions allocated'
+					return <=true
+				}
+				%gc
 				for ((p r) = <={$&dumpregions}; n = <={%range 1 $matchexpr(17)}) {
 					echo '    '^$n^' region '^$p^': '^$r^' ('^<={div $r 1024 |> @{div $1 1024}}^' megabytes)'
 				}

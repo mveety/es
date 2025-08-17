@@ -140,7 +140,7 @@ PRIM(var) {
 	Ref(char *, name, getstr(list->term));
 	Ref(List *, defn, varlookup(name, NULL));
 	rest = prim_var(rest, NULL, evalflags);
-	term = mkstr(str("%S = %#L", name, defn, " "));
+	term = mkstr(str("%S = %V", name, defn, " "));
 	list = mklist(term, rest);
 	RefEnd3(defn, name, rest);
 	return list;

@@ -2,6 +2,7 @@
 
 #include "es.h"
 #include "print.h"
+#include "stdenv.h"
 
 
 /* %L -- print a list */
@@ -16,6 +17,46 @@ static Boolean Lconv(Format *f) {
 		next = lp->next;
 		fmtprint(f, fmt, getstr(lp->term), next == NULL ? "" : sep);
 	}
+	return FALSE;
+}
+
+/* format specifically for $&var */
+Boolean
+Vconv(Format *f)
+{
+	List *lp, *next;
+	char *sep;
+
+	lp = va_arg(f->args, List *);
+	sep = va_arg(f->args, char *);
+
+	if(lp->next == NULL) {
+		switch(lp->term->kind){
+		case tkString:
+			fmtprint(f, "%S", getstr(lp->term));
+			break;
+		case tkClosure:
+		case tkDict:
+			fmtprint(f, "%s", getstr(lp->term));
+			break;
+		}
+		return FALSE;
+	}
+
+	fmtprint(f, "(");
+	for (; lp != NULL; lp = next) {
+		next = lp->next;
+		switch(lp->term->kind){
+		case tkString:
+			fmtprint(f, "%S%s", getstr(lp->term), next == NULL ? "" : sep);
+			break;
+		case tkClosure:
+		case tkDict:
+			fmtprint(f, "%s%s", getstr(lp->term), next == NULL ? "" : sep);
+			break;
+		}
+	}
+	fmtprint(f, ")");
 	return FALSE;
 }
 
@@ -488,5 +529,6 @@ void initconv(void) {
 	fmtinstall('W', Wconv);
 	fmtinstall('Z', Zconv);
 	fmtinstall('B', Bconv);
+	fmtinstall('V', Vconv);
 }
 
