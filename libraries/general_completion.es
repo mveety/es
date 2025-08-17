@@ -75,3 +75,12 @@ fn gencomp_new_list_completer cmdname comps subcmdcomps {
 	}
 }
 
+# usage: cmdname contained_list_of_completions
+fn gencomp_new_simple_completer cmdname comps {
+	local(compfn=;compfuns=) {
+		compfn = @ p l {gencomp_filter_list $p <={$comps} }
+		compfuns = default $compfn
+		gencomp_new_general_completer $cmdname $compfn $compfuns
+	}
+}
+

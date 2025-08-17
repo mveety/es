@@ -28,6 +28,55 @@ fn libutil_getlibfile library {
 	}
 }
 
+fn libutil_remove_nil_elements list {
+	let (res = ()) {
+		for (i = $list) {
+			if {! ~ $i ''} {
+				res = $res $i
+			}
+		}
+		result $res
+	}
+}
+
+fn libutil_enumerate_file_info file {
+	if {! access -r $file} {
+		throw error $0 'file not found'
+	}
+	let (
+		filedata = ``(\n){cat $file}
+		libname = ()
+		deps = ()
+	) {
+		for (line = $filedata) {
+			local (
+				sline = <={%fsplit <={%flatten \n \t ' '} $line}
+				depsstring =
+				tdeps = ()
+			) {
+				sline = <={libutil_remove_nil_elements $sline}
+				match $sline(1) (
+					'library' {
+						if {! ~ $#libname 0 && ! ~ $libname $sline(2)} {
+							throw error $0 'library has multiple definitions'
+						}
+						libname = $sline(2)
+						depsstring = $sline(3 ...)
+						eval 'tdeps = '^$^depsstring
+						for (i = $tdeps) {
+							if {! ~ $i $deps} {
+								deps = $deps $i
+							}
+						}
+					}
+				)
+			}
+		}
+		result $libname $deps
+	}
+}
+
+
 fn libutil_enumerate_file_functions file {
 	if {! access -r $file } {
 		throw error $0 'file not found'
@@ -49,6 +98,11 @@ fn libutil_enumerate_file_functions file {
 						}
 					}
 					fn-* {
+						match $matchexpr (
+							(*^'^'^*) { continue }
+							(*^'*'^*) { continue }
+							('fn-'^*^'$'^*) { continue }
+						)
 						if {! ~ <={~~ $matchexpr fn-*} $functions} {
 							functions = $functions <={~~ $matchexpr fn-*}
 						}
@@ -58,6 +112,17 @@ fn libutil_enumerate_file_functions file {
 		}
 		result $functions
 	}
+}
+
+fn libutil_enumerate_deps library {
+	libutil_getlibfile $library |> libutil_enumerate_file_info |> %rest
+}
+
+fn libutil_check_definition library {
+	if {! ~ $library <={libutil_get_libfile $library |> libutil_enumerate_file_info |> %elem 1}} {
+		throw error $0 'library''s defined name does not match file name'
+	}
+	true
 }
 
 fn libutil_enumerate_functions library {
@@ -80,6 +145,15 @@ fn libutil_all_libraries {
 			}
 		}
 		result $all_libs
+	}
+}
+
+fn libutil_enumerate_all_funs {
+	let (funs = ()) {
+		for (lib = <=libutil_all_libraries) {
+			funs = $funs <={libutil_enumerate_functions $lib}
+		}
+		result $funs
 	}
 }
 
@@ -302,6 +376,9 @@ if {~ $#__libutil_function_data 0} {
 fn libutil_rehash {
 	assert2 libutil {eq <={mod $#libutil_es_system 2} 0}
 	__libutil_function_data = $libutil_es_system <=libutil_enumerate_all_libs
+	if {! ~ $#fn-%libutil_rehash 0} {
+		%libutil_rehash
+	}
 	assert2 libutil {eq <={mod $#__libutil_function_data 2} 0}
 }
 
@@ -313,6 +390,24 @@ fn libutil_whereis fun {
 		} {
 			echo $lib
 		}
+	}
+}
+
+fn libutil_deps libraries {
+	if {~ $#libraries 0} {
+		libraries = <={libutil_all_libraries}
+	}
+	for (library = $libraries) {
+		echo $library^':' <={libutil_enumerate_deps $library}
+	}
+}
+
+fn libutil_funs libraries {
+	if {~ $#libraries 0} {
+		libraries = <={libutil_all_libraries}
+	}
+	for (library = $libraries) {
+		echo $library^':' <={libutil_enumerate_functions $library}
 	}
 }
 
