@@ -44,6 +44,7 @@
 
 #include <string.h>
 #include <stddef.h>
+#include <stdint.h>
 
 #if HAVE_MEMORY_H
 #include <memory.h>
