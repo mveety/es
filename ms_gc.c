@@ -644,7 +644,7 @@ ms_initgc(void)
 
 	if(gcverbose || gcinfo)
 		dprintf(2, "Starting mark/sweep GC\n");
-	if(generational == TRUE)
+	if((gcverbose || gcinfo) && generational == TRUE)
 		dprintf(2, "GC is generational: oldage = %u\n", gc_oldage);
 
 	rangc = 0;
