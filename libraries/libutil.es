@@ -191,25 +191,29 @@ if {$libutil_enable_build} {
 					col = <={%count $:ts |> add $col}
 				}
 			) {
-				echo '    # init'
+				echo -n \t
+				echo '# init'
 				for (f = $init_fmt_funs) {
 					fmtecho $f
 				}
 				echo ''
 				col = 0
-				echo '    # macros'
+				echo -n \t
+				echo '# macros'
 				for (f = $macros_fmt_funs) {
 					fmtecho $f
 				}
 				echo ''
 				col = 0
-				echo '    # libraries'
+				echo -n \t
+				echo '# libraries'
 				for (f = $libraries_fmt_funs) {
 					fmtecho $f
 				}
 				echo ''
 				col = 0
-				echo '    # completion'
+				echo -n \t
+				echo '# completion'
 				for (f = $completion_fmt_funs) {
 					fmtecho $f
 				}
