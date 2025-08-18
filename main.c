@@ -156,14 +156,13 @@ do_usage(void)
 void
 debug_flag_usage(void)
 {
-	dprintf(2, "debug flags: es -D [GIaEP]\n%s%s%s%s%s%s%s",
+	dprintf(2, "debug flags: es -D [GIaEP]\n%s%s%s%s%s%s",
 		"	? -- show this message\n",
 		"	G -- gcverbose\n",
 		"	I -- gcinfo\n",
 		"	a -- assertions\n",
 		"	E -- debug_exceptions\n",
-		"	P -- verbose_parser\n",
-		"	r -- run esrc from C instead of from %initialize\n"
+		"	P -- verbose_parser\n"
 	);
 	exit(1);
 }
