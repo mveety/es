@@ -2,6 +2,7 @@
 fn-dictnew = $&dictnew
 fn-dictget = $&dictget
 fn-dictput = $&dictput
+fn-dictremove = $&dictremove
 fn-dictsize = $&dictsize
 fn-dictforall = $&dictforall
 

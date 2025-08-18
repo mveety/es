@@ -55,6 +55,26 @@ PRIM(dictput) {
 	return mklist(mkdictterm(d), NULL);
 }
 
+PRIM(dictremove) {
+	Dict *d = NULL; Root r_d;
+	char *name;
+
+	if(!list || !list->next)
+		fail("$&dictremove", "missing arguments");
+
+	d = getdict(list->term);
+	if(!d)
+		fail("$&dictremove", "term not valid dict");
+	gcref(&r_d, (void**)&d);
+
+	name = getstr(list->next->term);
+
+	d = dictput(d, name, NULL);
+
+	gcrderef(&r_d);
+	return mklist(mkdictterm(d), NULL);
+}
+
 typedef struct {
 	Binding *binding;
 	int evalflags;
@@ -171,6 +191,7 @@ initprims_dict(Dict *primdict)
 	X(dictnew);
 	X(dictget);
 	X(dictput);
+	X(dictremove);
 	X(dictforall);
 	X(dictsize);
 	X(termtypeof);
