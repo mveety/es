@@ -31,7 +31,7 @@ fn iserror err {
 
 # I might turn this into a rewrite like match. This works fine for now and
 # I don't know if the potential performance gain is really needed.
-fn errmatch errobj cases {
+fn-errmatch = $&noreturn @ errobj cases {
 	# do this test initially to filter out successful trys
 	# this lets you roll right into a errmatch after a try without having
 	# to do a test
@@ -45,6 +45,7 @@ fn errmatch errobj cases {
 		(oe ot om) = <={$errobj info}
 		wildcase =
 		e =
+		matchedcase = false
 	) {
 		while {gte $#l 1} {
 			(e casef lf) = <={try __es_getnextcase $l}
@@ -58,23 +59,31 @@ fn errmatch errobj cases {
 					wildcase = $case
 				} {
 					if {~ $#case 4 && ~ $case(1) $oe && ~ $case(2) $ot && ~ $case(3) $om} {
-						return <={$case(4)}
+						matchedcase = true
+						$case(4)
+						break
 					} {~ $#case 4 && ~ $case(1) $oe && ~ $case(2) '*' && ~ $case(3) $om} {
-						return <={$case(4)}
+						matchedcase = true
+						$case(4)
+						break
 					} {~ $#case 3 && ~ $case(1) $oe && ~ $case(2) $ot} {
-						return <={$case(3)}
+						matchedcase = true
+						$case(3)
+						break
 					} {~ $#case 2 && ~ $case(1) $oe} {
-						return <={$case(2)}
+						matchedcase = true
+						$case(2)
+						break
 					}
 				}
 			}
 		} { throw error $0 'missing arguments' }
 		local (err = $oe; type = $ot; msg = $om) {
-			if {! ~ $#wildcase 0} {
-				return <={$wildcase}
+			if {! $matchedcase && ! ~ $#wildcase 0} {
+				$wildcase
 			}
 		}
-		return <=false
+		false
 	}
 }
 
