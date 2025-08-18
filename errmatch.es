@@ -77,7 +77,7 @@ fn-errmatch = $&noreturn @ errobj cases {
 					}
 				}
 			}
-		} { throw error $0 'missing arguments' }
+		} { throw error errmatch 'missing arguments' }
 		local (err = $oe; type = $ot; msg = $om) {
 			if {! $matchedcase && ! ~ $#wildcase 0} {
 				$wildcase

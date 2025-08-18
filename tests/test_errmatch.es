@@ -6,26 +6,20 @@ fn test_errmatch_test1 x {
 }
 
 fn run_test_errmatch {
-	let (res=) {
-		res = <={errmatch <={makeerror error test1 okay} (
-			error nottest1 notokay { return false }
-			error test1 notokay { return false }
-			error test1 okay { return true }
-			error test2 okay { return false }
-			{ return false }
-		)}
-		assert {$res}
-	}
+	errmatch <={makeerror error test1 okay} (
+		error nottest1 notokay { assert false }
+		error test1 notokay { assert false }
+		error test1 okay { assert true }
+		error test2 okay { assert false }
+		{ assert false }
+	)
 
-	let (res=) {
-		res = <={errmatch <={makeerror assert {~ 0 1}} (
-			error { return false }
-			usage notokay { return false }
-			assert { return true }
-			{ return false }
-		)}
-		assert {$res}
-	}
+	errmatch <={makeerror assert {~ 0 1}} (
+		error { assert false }
+		usage notokay { assert false }
+		assert { assert true }
+		{ assert false }
+	)
 
 	let (e=) {
 		(e _) = <={try errmatch}
@@ -42,7 +36,6 @@ fn run_test_errmatch {
 			~ <={$e type} errmatch &&
 			~ <={$e msg} 'missing arguments'}
 	}
-
 	let (e=<={makeerror error test ohno}; t=) {
 		t = <={test_errmatch_test1 $e}
 		assert {~ $t 'okay'}
