@@ -1,5 +1,10 @@
 #!/usr/bin/env es
 
+fn test_errmatch_test1 x {
+	errmatch $x error { return 'okay' }
+	return 'not okay'
+}
+
 fn run_test_errmatch {
 	let (res=) {
 		res = <={errmatch <={makeerror error test1 okay} (
@@ -36,6 +41,11 @@ fn run_test_errmatch {
 		assert {~ <={$e error} error &&
 			~ <={$e type} errmatch &&
 			~ <={$e msg} 'missing arguments'}
+	}
+
+	let (e=<={makeerror error test ohno}; t=) {
+		t = <={test_errmatch_test1 $e}
+		assert {~ $t 'okay'}
 	}
 }
 
