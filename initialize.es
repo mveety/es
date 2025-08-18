@@ -13,7 +13,11 @@ fn __es_esrc_check {
 }
 
 fn %initialize {
+	# run any setup functions that need to be run in es land
 	__es_initgc
+	__es_complete_initialize
+
+	# run $home/.esrc if applicable
 	if {__es_esrc_check} {
 		catch @ el {
 			errmatch <={makeerror $el} (
@@ -40,6 +44,8 @@ fn %initialize {
 			}
 		}
 	}
+
+	# run %user-init hook if available
 	if {! ~ $#fn-%user-init 0} {
 		let (e=) {
 			(e _) = <={try %user-init}

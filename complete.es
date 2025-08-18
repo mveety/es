@@ -274,29 +274,15 @@ fn es_complete_is_command curline {
 	}
 }
 
-if {~ $#es_complete_hooked_commands 0} {
-	es_complete_hooked_commands = ()
-}
-if {~ $#es_complete_command_hooks 0} {
-	es_complete_command_hooks = ()
-}
-if {~ $#es_complete_default_to_files 0} {
-	es_complete_default_to_files = true
-}
-
 fn es_complete_run_command_hook curline partial {
-	assert2 $0 {~ $#es_complete_command_hooks <={div $#es_complete_command_hooks 2 |> mul 2}}
-	let (pcmd = <={es_complete_get_last_command $curline}) {
-		for ((cmdname function) = $es_complete_command_hooks) {
-			if {~ $pcmd $cmdname} {
-				return <={$function <={es_complete_get_last_cmdline $curline} $partial}
+	let (pcmd = <={es_complete_get_last_command $curline}; err=; function=) {
+		(err function) = <={try dictget $es_complete_command_hooks $pcmd}
+		if {$err} {
+			if {$es_complete_default_to_files} {
+				return <={complete_files $partial}
 			}
 		}
-	}
-	if {$es_complete_default_to_files} {
-		result <={complete_files $partial}
-	} {
-		result ()
+		return <={$function <={es_complete_get_last_cmdline $curline} $partial}
 	}
 }
 
@@ -323,21 +309,16 @@ fn es_complete_remove2 elem list {
 }
 
 fn %complete_cmd_unhook cmdname {
-	if {~ $cmdname $es_complete_hooked_commands} {
-		es_complete_hooked_commands = <={es_complete_remove $cmdname $es_complete_hooked_commands}
-		es_complete_command_hooks = <={es_complete_remove2 $cmdname $es_complete_command_hooks}
-		return <=true
-	}
-	false
+	es_complete_command_hooks = <={dictremove $es_complete_command_hooks $cmdname}
+	true
 }
 
 fn %complete_cmd_hook cmdname completefn {
-	if {~ $cmdname $es_complete_hooked_commands} {
-		es_complete_hooked_commands = <={es_complete_remove $cmdname $es_complete_hooked_commands}
-		es_complete_command_hooks = <={es_complete_remove2 $cmdname $es_complete_command_hooks}
-	}
-	es_complete_hooked_commands = $es_complete_hooked_commands $cmdname
-	es_complete_command_hooks = $es_complete_command_hooks $cmdname $completefn
+	es_complete_command_hooks = <={dictput $es_complete_command_hooks $cmdname $completefn}
+}
+
+fn __es_complete_initialize {
+	es_complete_command_hooks = <=dictnew
 }
 
 # set this to true if you want to list executables before functions
@@ -374,7 +355,7 @@ fn %complete curline partial start end {
 			result <={complete_functions $partial} <={complete_executables $partial}
 		}
 	} {
-		if {~ <={es_complete_get_last_command $curline} $es_complete_hooked_commands} {
+		if {~ <={es_complete_get_last_command $curline} <={dictnames $es_complete_command_hooks}} {
 			result <={es_complete_run_command_hook $curline $partial}
 		} {
 			result <={complete_files $partial}

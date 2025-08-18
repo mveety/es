@@ -15,5 +15,5 @@
 
 noexport = $noexport pid signals apid bqstatus fn-%dispatch path home
 noexport = $noexport version mveetyrev buildstring corelib
-noexport = $noexport apids last eval-depth runflags unixtime
+noexport = $noexport apids last eval-depth runflags unixtime options
 
