@@ -35,55 +35,56 @@ fn-errmatch = $&noreturn @ errobj cases {
 	# do this test initially to filter out successful trys
 	# this lets you roll right into a errmatch after a try without having
 	# to do a test
-	if {~ $errobj false} { return <=false }
-	assert {iserror $errobj}
-	let (
-		l = $cases
-		lf =
-		case =
-		casef =
-		(oe ot om) = <={$errobj info}
-		wildcase =
-		e =
-		matchedcase = false
-	) {
-		while {gte $#l 1} {
-			(e casef lf) = <={try __es_getnextcase $l}
-			if {$e} {
-				throw error $0 <={$e msg}
-			}
-			l = <={$lf}
-			case = <={$casef}
-			local (err = $oe; type = $ot; msg = $om) {
-				if {~ $#case 1 && ~ <={$&termtypeof $case} closure} {
-					wildcase = $case
-				} {
-					if {~ $#case 4 && ~ $case(1) $oe && ~ $case(2) $ot && ~ $case(3) $om} {
-						matchedcase = true
-						$case(4)
-						break
-					} {~ $#case 4 && ~ $case(1) $oe && ~ $case(2) '*' && ~ $case(3) $om} {
-						matchedcase = true
-						$case(4)
-						break
-					} {~ $#case 3 && ~ $case(1) $oe && ~ $case(2) $ot} {
-						matchedcase = true
-						$case(3)
-						break
-					} {~ $#case 2 && ~ $case(1) $oe} {
-						matchedcase = true
-						$case(2)
-						break
+	if {~ $errobj false} { result <=false } {
+		assert {iserror $errobj}
+		let (
+			l = $cases
+			lf =
+			case =
+			casef =
+			(oe ot om) = <={$errobj info}
+			wildcase =
+			e =
+			matchedcase = false
+		) {
+			while {gte $#l 1} {
+				(e casef lf) = <={try __es_getnextcase $l}
+				if {$e} {
+					throw error $0 <={$e msg}
+				}
+				l = <={$lf}
+				case = <={$casef}
+				local (err = $oe; type = $ot; msg = $om) {
+					if {~ $#case 1 && ~ <={$&termtypeof $case} closure} {
+						wildcase = $case
+					} {
+						if {~ $#case 4 && ~ $case(1) $oe && ~ $case(2) $ot && ~ $case(3) $om} {
+							matchedcase = true
+							$case(4)
+							break
+						} {~ $#case 4 && ~ $case(1) $oe && ~ $case(2) '*' && ~ $case(3) $om} {
+							matchedcase = true
+							$case(4)
+							break
+						} {~ $#case 3 && ~ $case(1) $oe && ~ $case(2) $ot} {
+							matchedcase = true
+							$case(3)
+							break
+						} {~ $#case 2 && ~ $case(1) $oe} {
+							matchedcase = true
+							$case(2)
+							break
+						}
 					}
 				}
+			} { throw error errmatch 'missing arguments' }
+			local (err = $oe; type = $ot; msg = $om) {
+				if {! $matchedcase && ! ~ $#wildcase 0} {
+					$wildcase
+				}
 			}
-		} { throw error errmatch 'missing arguments' }
-		local (err = $oe; type = $ot; msg = $om) {
-			if {! $matchedcase && ! ~ $#wildcase 0} {
-				$wildcase
-			}
+			false
 		}
-		false
 	}
 }
 

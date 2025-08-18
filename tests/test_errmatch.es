@@ -5,6 +5,11 @@ fn test_errmatch_test1 x {
 	return 'not okay'
 }
 
+fn test_errmatch_test2 {
+	errmatch false error { return 'not okay' }
+	return 'okay'
+}
+
 fn run_test_errmatch {
 	errmatch <={makeerror error test1 okay} (
 		error nottest1 notokay { assert false }
@@ -40,6 +45,7 @@ fn run_test_errmatch {
 		t = <={test_errmatch_test1 $e}
 		assert {~ $t 'okay'}
 	}
+	assert {~ <={test_errmatch_test2} 'okay'}
 }
 
 if {~ $#inside_estest 0 || ! $inside_estest} {
