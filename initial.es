@@ -666,31 +666,51 @@ if {~ <=$&primitives execfailure} {fn-%exec-failure = $&execfailure}
 fn-%parse	= $&parse
 fn-%is-interactive = $&isinteractive
 
-fn %batch-loop {
-	catch @ e type msg {
-		match $e (
-			(error) {
-				echo >[1=2] 'error: '^$type^': '^$^msg
-				return <=false
+fn %batch-exception-handler errobj {
+	errmatch $errobj (
+		(error) { echo >[1=2] 'error: '^$type^': '^$^msg }
+		(assert) { echo >[1=2] 'assert' $type $msg }
+		(usage) {
+			if {~ $#msg 0} {
+				echo >[1=2] $type
+			} {
+				echo >[1=2] $msg
 			}
-			(assert) {
-				echo >[1=2] 'assert:' $type $msg
-				return <=false
-			}
-			(usage) {
-				if {~ $#msg 0} {
-					echo >[1=2] $type
-				} {
-					echo >[1=2] $msg
-				}
-				return <=false
-			}
-			* {
-				throw $e $type $msg
-			}
-		)
+		}
+		{ throw $errobj }
+	)
+	return <=false
+}
+
+fn %old-batch-loop {
+	catch @ e {
+		%batch-exception-handler <={makeerror $e}
 	} {
 		result <={$&batchloop $*}
+	}
+}
+
+fn %batch-loop {
+	catch @ e {
+		%batch-exception-handler <={makeerror $e}
+	} {
+		let (result = <=true) {
+			catch @ e t m {
+				if {~ $e eof} {
+					result $result
+				} {
+					throw $e $t $m
+				}
+			} {
+				forever {
+					let (code = <={%parse}) {
+						if {! ~ $#code 0} {
+							result = <={$fn-%dispatch $code}
+						}
+					}
+				}
+			}
+		}
 	}
 }
 
