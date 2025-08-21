@@ -79,6 +79,7 @@ fn es_new_vars {
 		fns = false # -f
 		sets = false # -s
 		gets = false # -g
+		config = false # -c
 		export = false # -e
 		priv = false # -p
 		intern = false # -i
@@ -101,6 +102,7 @@ fn es_new_vars {
 				(-f) { fns = true ; selected = true }
 				(-s) { sets = true ; selected = true }
 				(-g) { gets = true ; selected = true }
+				(-c) { config = true ; selected = true }
 				# other
 				(-a) {
 					modified = true
@@ -112,6 +114,7 @@ fn es_new_vars {
 					fns = true
 					sets = true
 					gets = true
+					config = true
 				}
 				(-M) {
 					modified = true
@@ -125,6 +128,7 @@ fn es_new_vars {
 					fns = true
 					sets = true
 					gets = true
+					config = true
 				}
 				(-S) { search = true ; search_glob = $flagarg ; done}
 				(-h) { fullhelp = true ; usage }
@@ -132,7 +136,7 @@ fn es_new_vars {
 				* { usage }
 			)
 		} @ {
-			echo 'usage: vars [-a | -vfsgOepiM] [-S glob]'
+			echo 'usage: vars [-a | -vfsgcOepiM] [-S glob]'
 			if {$fullhelp} {
 				echo '    -a        -- all objects and modifiers'
 				echo '    -S [glob] -- filter selected objects'
@@ -142,12 +146,13 @@ fn es_new_vars {
 				echo '    -f        -- functions'
 				echo '    -s        -- settors'
 				echo '    -g        -- getters'
+				echo '    -c        -- config'
 				echo '    -O        -- all objects'
 				echo 'object types'
 				echo '    -e        -- exported (default)'
 				echo '    -p        -- private'
 				echo '    -i        -- internal'
-				echo '    -M        -- all modifiers'
+				echo '    -M        -- all objects'
 				echo ''
 				echo 'no arguments is the same as vars -ve'
 			}
@@ -168,6 +173,7 @@ fn es_new_vars {
 					(fn-*) { $fns }
 					(set-*) { $sets }
 					(get-*) { $gets }
+					(es_conf_*) { $config }
 					* { $vars }
 				)
 			}
@@ -194,7 +200,7 @@ fn es_new_vars {
 }
 
 fn vars {
-	if {$es_use_new_vars} {
+	if {$es_conf_use_new_vars} {
 		es_new_vars $*
 	} {
 		es_old_vars $*

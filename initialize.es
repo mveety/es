@@ -13,7 +13,8 @@ fn __es_esrc_check {
 }
 
 fn %initialize {
-	# run any setup functions that need to be run in es land
+	# run any setup functions that need to be run in es land, but before the
+	# .esrc is run.
 	__es_initgc
 	__es_complete_initialize
 
@@ -44,6 +45,9 @@ fn %initialize {
 			}
 		}
 	}
+
+	# post .esrc setup functions
+	__es_devfd_init
 
 	# run %user-init hook if available
 	if {! ~ $#fn-%user-init 0} {

@@ -20,6 +20,7 @@ use_editline=no
 ENABLE_LOGINSHELL=false
 sys_wait_w_forms=yes
 assertions=yes
+DEVFD_IMPL=devfd
 
 AC_ARG_WITH(readline,
 --with-readline		Use GNU Readline, use_readline=yes)
@@ -31,6 +32,7 @@ AC_ARG_WITH(noassert,
 --with-noassert	Disable asserts, assertions=no)
 
 AC_SUBST(ENABLE_LOGINSHELL)
+AC_SUBST(DEVFD_IMPL)
 AC_CANONICAL_HOST
 
 dnl saved_CFLAGS="$CFLAGS"

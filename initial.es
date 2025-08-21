@@ -529,67 +529,80 @@ fn-%pipe	= $&pipe
 #		cmd <{input}		%readfrom var {input} {cmd $var}
 #		cmd >{output}		%writeto var {output} {cmd $var}
 
-if {~ <=$&primitives readfrom} {
-	fn-%readfrom = $&readfrom
-} {
-	fn %readfrom var input cmd {
-		local ($var = /tmp/es.$var.$pid) {
-			unwind-protect {
-				$input > $$var
-				# text of $cmd is   command file
-				$cmd
-			} {
-				rm -f $$var
-			}
+fn __es_devfd_init {
+	if {~ $es_conf_devfd_impl devfd} {
+		if {! ~ <=$&primitives readfrom || ! ~ <=$&primitives writeto} {
+			echo >[2=1] 'warning: es_devfd_impl=devfd not supported. defaulting to tmpfile'
+			es_devfd_impl = tmpfile
 		}
 	}
-}
+	match $es_conf_devfd_impl (
+		devfd {
+			fn-%readfrom = $&readfrom
+			fn-%writeto = $&writeto
+		}
+		tmpfile {
+			fn %readfrom var input cmd {
+				local ($var = /tmp/es.$var.$pid) {
+					unwind-protect {
+						$input > $$var
+						# text of $cmd is   command file
+						$cmd
+					} {
+						rm -f $$var
+					}
+				}
+			}
 
-if {~ <=$&primitives writeto} {
-	fn-%writeto = $&writeto
-} {
-	fn %writeto var output cmd {
-		local ($var = /tmp/es.$var.$pid) {
-			unwind-protect {
-				> $$var
-				$cmd
-				$output < $$var
-			} {
-				rm -f $$var
+			fn %writeto var output cmd {
+				local ($var = /tmp/es.$var.$pid) {
+					unwind-protect {
+						> $$var
+						$cmd
+						$output < $$var
+					} {
+						rm -f $$var
+					}
+				}
 			}
 		}
-	}
+		sysv {
+			# These versions of %readfrom and %writeto (contributed by Pete Ho)
+			# support the use of System V FIFO files (aka, named pipes) on systems
+			# that have them.  They seem to work pretty well.  The authors still
+			# recommend using files in /tmp rather than named pipes.
+			# NOTE: the sysv option is not *AT ALL* tested or really used. use at
+			#   your own risk!
+			# NOTE: the sysv option also depends on outside programs. it is possibly
+			#   not usable in restricted environments.
+			# NOTE: named pipes are not supported on all operating systems
+
+			fn %readfrom var cmd body {
+				local ($var = /tmp/es.$var.$pid) {
+					unwind-protect {
+						mknod $$var p
+						$&background { $cmd > $$var; exit }
+						$body
+					} {
+						rm -f $$var
+					}
+				}
+			}
+			fn %writeto var cmd body {
+				local ($var = /tmp/es.$var.$pid) {
+					unwind-protect {
+						mknod $$var p
+						$&background { $cmd < $$var ; exit }
+						$body
+					} {
+						rm -f $$var
+					}
+				}
+			}
+		}
+		* { throw error devfd_init 'invalid implmentation. must be devfd, tmpfile, or sysv' }
+	)
 }
-
-#	These versions of %readfrom and %writeto (contributed by Pete Ho)
-#	support the use of System V FIFO files (aka, named pipes) on systems
-#	that have them.  They seem to work pretty well.  The authors still
-#	recommend using files in /tmp rather than named pipes.
-
-#fn %readfrom var cmd body {
-#	local ($var = /tmp/es.$var.$pid) {
-#		unwind-protect {
-#			/etc/mknod $$var p
-#			$&background {$cmd > $$var; exit}
-#			$body
-#		} {
-#			rm -f $$var
-#		}
-#	}
-#}
-
-#fn %writeto var cmd body {
-#	local ($var = /tmp/es.$var.$pid) {
-#		unwind-protect {
-#			/etc/mknod $$var p
-#			$&background {$cmd < $$var; exit}
-#			$body
-#		} {
-#			rm -f $$var
-#		}
-#	}
-#}
-
 
 #
 # Hook functions
