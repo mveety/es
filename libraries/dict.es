@@ -7,11 +7,11 @@ if {~ $#__es_dict_assert 0} {
 	__es_dict_assert = false
 }
 
-if {~ $#dict_use_prim_dict 0} {
-	dict_use_prim_dict = true
+if {~ $#dict_conf_useprimitive 0} {
+	dict_conf_useprimitive = true
 }
 
-if {$dict_use_prim_dict} {
+if {$dict_conf_useprimitive} {
 	library dict (init macros libraries)
 
 	fn dict:assert loc dict {
@@ -56,14 +56,7 @@ if {$dict_use_prim_dict} {
 	}
 
 	fn dict:delete odict key {
-		let (resdict = <=dictnew) {
-			dictforall $odict @ k v {
-				if {! ~ $k $key} {
-					resdict = <={dictput $resdict $k $v}
-				}
-			}
-			result $resdict
-		}
+		dictremove $odict $key
 	}
 
 	fn dict:free {
