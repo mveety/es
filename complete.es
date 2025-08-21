@@ -321,12 +321,12 @@ fn __es_complete_initialize {
 	es_complete_command_hooks = <=dictnew
 }
 
-if {~ $#es-complete_conf_complete_order 0} {
-	es-complete_conf_complete_order = executables functions variables
+if {~ $#es_conf_complete_order 0} {
+	es_conf_complete_order = executables functions variables
 }
 
 fn complete_base_complete partial {
-	process $es-complete_conf_complete_order (
+	process $es_conf_complete_order (
 		executables { result <={complete_executables $partial} }
 		functions { result <={complete_functions $partial} }
 		variables { result <={complete_variables '' $partial} }
