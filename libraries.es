@@ -5,6 +5,9 @@
 
 # corelib = '/usr/local/share/es/'
 
+set-libraries = @{ local (set-es_conf_libraries =) { es_conf_libraries = $* }; result $* }
+set-es_conf_libraries = @{ local (set-libraries =) { libraries = $* }; result $* }
+
 if {~ $#libraries 0} { libraries = () }
 if {~ $#enable-import 0} { enable-import = true }
 if {~ $#import-panic 0} { import-panic = false }

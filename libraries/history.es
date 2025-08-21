@@ -1,11 +1,11 @@
 #!/usr/bin/env es
 library history (init libraries)
 
-if {~ $#histmax 0} {
-	histmax = 25
+if {~ $#history_conf_maxdisplay 0} {
+	history_conf_maxdisplay = 25
 }
-if {~ $#history-reload 0} {
-	history-reload = 25
+if {~ $#history_conf_reload 0} {
+	history_conf_reload = 25
 }
 
 fn history_call_date {
@@ -164,7 +164,7 @@ fn history {
 		throw error history '$history not set'
 	}
 	let (
-		maxents = $histmax
+		maxents = $history_conf_maxdisplay
 		limitevents = true
 		singleevent = false
 		cleanhistory = false
@@ -317,9 +317,9 @@ set-history = @ file {
 	local(set-history=) {
 		$&sethistory $file
 		history = $file
-		if {! ~ $#history-reload 0} {
+		if {! ~ $#history_conf_reload 0} {
 			%clear-history
-			reload-history $history-reload
+			reload-history $history_conf_reload
 		}
 	}
 	result $file
