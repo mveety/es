@@ -116,7 +116,7 @@ fn es_new_vars {
 					gets = true
 					config = true
 				}
-				(-M) {
+				(-A) {
 					modified = true
 					export = true
 					priv = true
@@ -136,7 +136,7 @@ fn es_new_vars {
 				* { usage }
 			)
 		} @ {
-			echo 'usage: vars [-a | -vfsgcOepiM] [-S glob]'
+			echo 'usage: vars [-a | -vfsgcOepiA] [-S glob]'
 			if {$fullhelp} {
 				echo '    -a        -- all objects and modifiers'
 				echo '    -S [glob] -- filter selected objects'
@@ -152,7 +152,7 @@ fn es_new_vars {
 				echo '    -e        -- exported (default)'
 				echo '    -p        -- private'
 				echo '    -i        -- internal'
-				echo '    -M        -- all objects'
+				echo '    -A        -- all objects'
 				echo ''
 				echo 'no arguments is the same as vars -ve'
 			}
@@ -173,7 +173,7 @@ fn es_new_vars {
 					(fn-*) { $fns }
 					(set-*) { $sets }
 					(get-*) { $gets }
-					(es_conf_*) { $config }
+					(*_conf_*) { $config }
 					* { $vars }
 				)
 			}
