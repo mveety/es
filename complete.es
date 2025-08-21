@@ -321,9 +321,16 @@ fn __es_complete_initialize {
 	es_complete_command_hooks = <=dictnew
 }
 
-# set this to true if you want to list executables before functions
-if {~ $#es_completion_executables_first 0} {
-	es_completion_executables_first = true
+if {~ $#es-complete_conf_complete_order 0} {
+	es-complete_conf_complete_order = executables functions variables
+}
+
+fn complete_base_complete partial {
+	process $es-complete_conf_complete_order (
+		executables { result <={complete_executables $partial} }
+		functions { result <={complete_functions $partial} }
+		variables { result <={complete_variables '' $partial} }
+	)
 }
 
 # %complete returns a list of possible completions based on the context
@@ -349,11 +356,7 @@ fn %complete curline partial start end {
 	} {~ $curline *^'$&'} {
 		result <={complete_primitives false $partial}
 	} {~ $start 1 || es_complete_is_command $curline} {
-		if {$es_completion_executables_first} {
-			result <={complete_executables $partial} <={complete_functions $partial}
-		} {
-			result <={complete_functions $partial} <={complete_executables $partial}
-		}
+		result <={complete_base_complete $partial}
 	} {
 		if {~ <={es_complete_get_last_command $curline} <={dictnames $es_complete_command_hooks}} {
 			result <={es_complete_run_command_hook $curline $partial}
