@@ -314,9 +314,10 @@ set-history = @ file {
 	if {! access -rwf $file } {
 		touch $file
 	}
-	local(set-history=) {
+	local(set-history=; set-history_conf_file=) {
 		$&sethistory $file
 		history = $file
+		history_conf_file = $file
 		if {! ~ $#history_conf_reload 0} {
 			%clear-history
 			reload-history $history_conf_reload
@@ -324,6 +325,8 @@ set-history = @ file {
 	}
 	result $file
 }
+
+set-history_conf_file = @{ history = $* }
 
 fn change-history file {
 	history = $file
