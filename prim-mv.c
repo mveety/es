@@ -384,6 +384,42 @@ PRIM(gctuning) {
 	return list_false;
 }
 
+PRIM(parsestring) {
+	List *result = NULL; Root r_result;
+	List *lp = NULL; Root r_lp;
+	Tree *tree = NULL; Root r_tree;
+	char *str = NULL; Root r_str;
+
+	if(list == NULL)
+		fail("$&parsestring", "missing argument");
+
+	gcref(&r_result, (void**)&result);
+	gcref(&r_lp, (void**)&lp);
+	gcref(&r_tree, (void**)&tree);
+	gcref(&r_str, (void**)&str);
+
+	lp = list;
+	str = getstr(lp->term);
+	if(str == NULL){
+		gcrderef(&r_str);
+		gcrderef(&r_tree);
+		gcrderef(&r_lp);
+		gcrderef(&r_result);
+		fail("$&parsestring", "invalid term");
+	}
+	tree = parsestring((const char*)str);
+	if(tree == NULL)
+		goto done;
+	result = mklist(mkterm(NULL, mkclosure(mk(nThunk, tree), binding)), NULL);
+
+done:
+	gcrderef(&r_str);
+	gcrderef(&r_tree);
+	gcrderef(&r_lp);
+	gcrderef(&r_result);
+	return result;
+}
+
 Dict*
 initprims_mv(Dict *primdict)
 {
@@ -410,6 +446,7 @@ initprims_mv(Dict *primdict)
 	X(gc);
 	X(dumpregions);
 	X(gctuning);
+	X(parsestring);
 
 	return primdict;
 }
