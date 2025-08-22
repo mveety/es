@@ -9,9 +9,10 @@ set-libraries = @{ local (set-es_conf_libraries =) { es_conf_libraries = $* }; r
 set-es_conf_libraries = @{ local (set-libraries =) { libraries = $* }; result $* }
 
 if {~ $#libraries 0} { libraries = () }
-if {~ $#enable-import 0} { enable-import = true }
-if {~ $#import-panic 0} { import-panic = false }
-if {~ $#automatic-import 0} { automatic-import = true }
+if {~ $#es_conf_library-import 0} { es_conf_library-import = true }
+if {~ $#es_conf_import-panic 0} { es_conf_import-panic = false }
+if {~ $#es_conf_automatic-import 0} { es_conf_automatic-import = true }
+if {~ $#es_conf_library-import-once 0} { es_conf_library-import-once = false }
 
 fn import-core-lib lib {
 	let (libname = <={access -n $lib -1 -r $corelib}) {
@@ -46,6 +47,9 @@ fn import_file lib {
 		if {! ~ $e error} {
 			throw $e $type $msg
 		}
+		if {~ $type already_imported} {
+			throw $e $type $msg
+		}
 		import-core-lib $lib
 	} {
 		import-user-lib $lib
@@ -54,7 +58,7 @@ fn import_file lib {
 }
 
 fn import {
-	if {! $enable-import} {
+	if {! $es_conf_library-import} {
 		throw error 'import' 'import is not enabled'
 	}
 	if {~ $#* 0} {
@@ -65,9 +69,19 @@ fn import {
 			if {~ $e error && ~ $type import-core-lib} {
 				throw error import 'library '^$i^' not found'
 			}
+			if {~ $e library_error && ~ $type already_imported} {
+				throw error import 'library '^$msg
+			}
 			throw $e $type $msg
 		} {
-			import_file $i^'.es'
+			catch @ e t m {
+				if {~ $e library_error && ~ $t already_imported && $es_conf_import-panic} {
+					throw $e $t $m
+				}
+				return <=true
+			} {
+				import_file $i^'.es'
+			}
 		}
 	}
 }
@@ -88,7 +102,7 @@ fn option opt {
 fn check_and_load_options opts {
 	for (i = $opts) {
 		if {! checkoption $i} {
-			if { $automatic-import } {
+			if { $es_conf_automatic-import } {
 				catch @ e type msg {
 					if {~ $type import} {
 						throw error library 'unable to load '^$i
@@ -113,6 +127,9 @@ fn library name requirements {
 		throw $e $type $msg
 	} {
 		check_and_load_options $requirements
+		if {checkoption $name && $es_conf_library-import-once} {
+			throw library_error already_imported $name^' is already imported'
+		}
 		option $name
 	}
 }
