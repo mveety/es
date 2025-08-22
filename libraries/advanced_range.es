@@ -74,7 +74,9 @@ let (
 
 }
 
-fn-old_range = $fn-%range
+if {~ $#fn-range_range 0} {
+	fn-range_range = $fn-%range
+}
 
 fn range_allrange start0 end0 {
 	let (
