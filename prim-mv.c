@@ -420,6 +420,33 @@ done:
 	return result;
 }
 
+PRIM(fmtvar) {
+	Term *term = NULL; Root r_term;
+	List *res = NULL; Root r_res;
+	char *name = NULL; Root r_name;
+	List *defn = NULL; Root r_defn;
+
+	if(list == NULL)
+		fail("$&fmtvar", "missing var");
+
+	gcref(&r_term, (void**)&term);
+	gcref(&r_res, (void**)&res);
+	gcref(&r_name, (void**)&name);
+	gcref(&r_defn, (void**)&defn);
+
+	name = getstr(list->term);
+	defn = varlookup(name, NULL);
+	term = mkstr(str("%V", defn, " "));
+	res = mklist(term, NULL);
+
+	gcrderef(&r_defn);
+	gcrderef(&r_name);
+	gcrderef(&r_res);
+	gcrderef(&r_term);
+
+	return res;
+}
+
 Dict*
 initprims_mv(Dict *primdict)
 {
@@ -447,6 +474,7 @@ initprims_mv(Dict *primdict)
 	X(dumpregions);
 	X(gctuning);
 	X(parsestring);
+	X(fmtvar);
 
 	return primdict;
 }
