@@ -435,7 +435,7 @@ PRIM(fmtvar) {
 	gcref(&r_defn, (void**)&defn);
 
 	name = getstr(list->term);
-	defn = varlookup(name, NULL);
+	defn = varlookup(name, binding);
 	term = mkstr(str("%V", defn, " "));
 	res = mklist(term, NULL);
 

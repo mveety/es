@@ -68,7 +68,7 @@ OFILES	= access.o closure.o conv.o dict.o eval.o except.o fd.o gc.o \
 
 OTHER	= Makefile parse.y mksignal getsigfiles
 
-SYSLIB = initial.es config.es macros.es dict.es applymap.es \
+SYSLIB = initial.es config.es conf.es macros.es dict.es applymap.es \
 		 libraries.es errmatch.es range.es glob.es complete.es \
 		 gc.es parseargs.es doiterator.es newvars.es suffix.es \
 		 initialize.es
