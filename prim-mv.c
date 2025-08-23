@@ -410,7 +410,7 @@ PRIM(parsestring) {
 	tree = parsestring((const char*)str);
 	if(tree == NULL)
 		goto done;
-	result = mklist(mkterm(NULL, mkclosure(mk(nThunk, tree), binding)), NULL);
+	result = mklist(mkterm(NULL, mkclosure(mk(nThunk, tree), NULL)), NULL);
 
 done:
 	gcrderef(&r_str);
