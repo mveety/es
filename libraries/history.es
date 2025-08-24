@@ -304,6 +304,13 @@ fn reload-history nelem {
 }
 
 set-history = @ file {
+	if {~ $#file 0} {
+		local (set-history=; set-history_conf_file=) {
+			history =
+			history_conf_file = ''
+		}
+		return ()
+	}
 	local(basename=<={%last <={%split '/' $file}}) {
 		match $file (
 			(~/*) {file = $home^/^<={~~ $matchexpr ~/*}}
