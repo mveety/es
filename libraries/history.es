@@ -339,3 +339,29 @@ fn change-history file {
 	history = $file
 }
 
+if {~ $#history_conf_use-hook 0} {
+	history_conf_use-hook = false
+}
+
+set-history_conf_use-hook = @ arg {
+	if {! ~ $arg true false} { return $history_conf_use-hook }
+	if {$arg} {
+		fn %history cmdline {
+			if {~ $history '' || ~ $#history 0} {
+				return <=false
+			}
+			{
+				echo '#+'^$unixtime
+				echo $cmdline
+			} >> $history
+			%add-history $cmdline
+			ditto = $cmdline
+			result <=false
+		}
+		return true
+	} {
+		fn %history
+		return false
+	}
+}
+

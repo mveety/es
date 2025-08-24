@@ -934,6 +934,11 @@ get-pid = $&getpid
 es_conf_path = ''
 get-es_conf_path = @{ result $path }
 set-es_conf_path = @{ path = $*; result $* }
+
+ditto = ''
+set-ditto = $&setditto
+get-ditto = $&getditto
+
 #
 # Variables
 #

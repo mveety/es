@@ -328,6 +328,8 @@ extern Boolean streq2(const char *s, const char *t1, const char *t2);
 
 extern char *lastcmd;
 extern char *prompt, *prompt2;
+extern void setnextlastcmd(char *str);
+extern char *getnextlastcmd(void);
 extern Tree *parse(char *esprompt1, char *esprompt2);
 extern Tree *parsestring(const char *str);
 extern void sethistory(char *file);

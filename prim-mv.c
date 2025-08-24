@@ -447,6 +447,26 @@ PRIM(fmtvar) {
 	return res;
 }
 
+PRIM(setditto) {
+	if(list == NULL)
+		fail("$&setditto", "missing term");
+
+	gcdisable();
+	setnextlastcmd(getstr(list->term));
+	gcenable();
+
+	return list_true;
+}
+
+PRIM(getditto) {
+	char *s;
+
+	s = getnextlastcmd();
+	if(!s)
+		return mklist(mkstr(str("")), NULL);
+	return mklist(mkstr(str("%s", s, " ")), NULL);
+}
+
 Dict*
 initprims_mv(Dict *primdict)
 {
@@ -475,6 +495,8 @@ initprims_mv(Dict *primdict)
 	X(gctuning);
 	X(parsestring);
 	X(fmtvar);
+	X(setditto);
+	X(getditto);
 
 	return primdict;
 }

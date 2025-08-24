@@ -271,7 +271,8 @@ struct Limret {
 typedef struct Limret Limret;
 
 static Limret
-printlimit(const Limit *limit, Boolean hard, int retlimit) {
+printlimit(const Limit *limit, Boolean hard, int retlimit)
+{
 	struct rlimit rlim;
 	LIMIT_T lim;
 	Limret limret = {FALSE, 0};
@@ -306,7 +307,8 @@ printlimit(const Limit *limit, Boolean hard, int retlimit) {
 }
 
 static long
-parselimit(const Limit *limit, char *s) {
+parselimit(const Limit *limit, char *s)
+{
 	long lim;
 	char *t;
 	const Suffix *suf = limit->suffix;

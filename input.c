@@ -89,6 +89,23 @@ static void warn(char *s) {
  * history
  */
 
+void
+setnextlastcmd(char *str)
+{
+	char *nlcmd = NULL;
+
+	nlcmd = nextlastcmd;
+	nextlastcmd = strdup(str);
+	if(!nlcmd)
+		free(nlcmd);
+}
+
+char*
+getnextlastcmd(void)
+{
+	return nextlastcmd;
+}
+
 /* loghistory -- write the last command out to a file */
 static void loghistory(const char *cmd, size_t len) {
 	const char *s, *end;
