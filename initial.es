@@ -749,9 +749,69 @@ fn %interactive-exception-handler errobj result {
 			}
 		}
 		continue { result <=true }
+		hook_error { result <=true }
 		{ echo >[1=2] uncaught exception: $err $type $msg }
 	)
 	throw retry
+}
+
+fn %interactive-hook-exception-handler hook errobj {
+	errmatch $errobj (
+		exit { throw $err $type $msg}
+		error { echo >[1=2] $hook^' handler: error: '^$type^': '^$^msg }
+		assert { echo >[1=2] $hook^' handler: assert:' $type $msg }
+		usage {
+			echo -n $hook^' handler: '
+			if {~ $#msg 0} {
+				echo >[1=2] $type
+			} {
+				echo >[1=2] $msg
+			}
+		}
+		signal {
+			if {!~ $type sigint sigterm sigquit} {
+				echo >[1=2] $hook^' handler: caught unexpected signal:' $type
+			}
+		}
+		continue { result <=true }
+		{ throw $err $type $msg }
+	)
+	match $hook (
+		preexec { fn-%preexec= }
+		postexec { fn-%postexec= }
+	)
+	throw hook_error
+}
+
+
+fn %interactive-prompt-hook {
+	if {! ~ $#fn-%prompt 0} {
+		local (bqstatus=) { %prompt }
+	}
+}
+
+fn %interactive-preexec-hook {
+	catch @ e {
+		%interactive-hook-exception-handler preexec <={makeerror $e}
+	} {
+		local (bqstatus=) {
+			if {! ~ $#fn-%preexec 0} {
+				%preexec
+			}
+		}
+	}
+}
+
+fn %interactive-postexec-hook res {
+	catch @ e {
+		%interactive-hook-exception-handler postexec <={makeerror $e}
+	} {
+		local (bqstatus=) {
+			if {! ~ $#fn-%postexec 0} {
+				%postexec $res
+			}
+		}
+	}
 }
 
 fn %interactive-loop {
@@ -760,12 +820,12 @@ fn %interactive-loop {
 			%interactive-exception-handler <={makeerror $e} $result
 		} {
 			forever {
-				if {!~ $#fn-%prompt 0} {
-					local(bqstatus=) { %prompt }
-				}
+				%interactive-prompt-hook
 				let (code = <={%parse $prompt}) {
 					if {!~ $#code 0} {
+						%interactive-preexec-hook
 						result = <={$fn-%dispatch $code}
+						%interactive-postexec-hook $result
 					}
 				}
 			}

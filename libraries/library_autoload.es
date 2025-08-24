@@ -31,10 +31,11 @@ fn %interactive-loop {
 			%interactive-exception-handler <={makeerror $e} $result
 		} {
 			forever {
-				if {!~ $#fn-%prompt 0} {
-					local(bqstatus=) { %prompt }
-				}
-				let (code = <={%parse $prompt}) {
+				%interactive-prompt-hook
+				let (
+					code = <={%parse $prompt}
+					coderan = false
+				) {
 					if {!~ $#code 0} {
 						catch @ e r {
 							if {~ $e autoload_error} {
@@ -43,7 +44,12 @@ fn %interactive-loop {
 								throw $e $r
 							}
 						} {
-							result = <={$fn-%dispatch $code}
+							if {! $coderan} {
+								%interactive-preexec-hook
+								result = <={$fn-%dispatch $code}
+								coderan = true
+							}
+							%interactive-postexec-hook $result
 						}
 					}
 				}
