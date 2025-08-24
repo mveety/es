@@ -821,7 +821,20 @@ set-signals		= $&setsignals
 set-noexport		= $&setnoexport
 set-max-eval-depth	= $&setmaxevaldepth
 # protect $ppid
-set-ppid = @{ result $ppid } 
+set-ppid = @{ result $ppid }
+# protect $version
+set-version = @{ result <=$&version }
+# protect $buildstring
+set-buildstring = @{ result <=$&buildstring }
+
+# conf wrappers for version, and buildstring
+
+es_conf_buildstring = ''
+get-es_conf_buildstring = @{ result $buildstring }
+set-es_conf_buildstring = @{ result $buildstring }
+es_conf_version = ''
+get-es_conf_version = @{ result $version }
+set-es_conf_version = @{ result $version }
 
 #	If the primitive $&resetterminal is defined (meaning that readline
 #	or editline is being used), setting the variables $TERM or $TERMCAP
