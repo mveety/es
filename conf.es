@@ -38,7 +38,7 @@ let (
 	}
 
 	fn esconf_havepackage confdict pkg {
-		if {~ $pkg <={esconf_packages $confdict}} {
+		if {~ $pkg <={dictnames $confdict}} {
 			result <=true
 		} {
 			result <=false
