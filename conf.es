@@ -1,4 +1,14 @@
 
+fn defconf pkg name value {
+	local (
+		varname = $pkg^_conf_^$name
+	) {
+		if {~ <={%count $$varname} 0} {
+			$varname = $value
+		}
+	}
+}
+
 let (
 	fn es_get_confvars {
 		let (allvars = <=$&vars <=$&internals) {

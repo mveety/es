@@ -1,20 +1,10 @@
 #!/usr/bin/env es
 library history (init libraries)
 
-if {~ $#history_conf_maxdisplay 0} {
-	history_conf_maxdisplay = 25
-}
-if {~ $#history_conf_reload 0} {
-	history_conf_reload = 25
-}
-
-if {~ $#history_conf_file 0} {
-	history_conf_file = ''
-}
-
-if {~ $#history_conf_load-on-change 0} {
-	history_conf_load-on-change = true
-}
+defconf history maxdisplay 25
+defconf history reload 25
+defconf history file ''
+defconf history load-on-change true
 
 fn history_call_date {
 	let (utc = false; cmd = date; tmp=) {

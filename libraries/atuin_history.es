@@ -1,16 +1,9 @@
 library atuin_history (init history)
 
-if {~ $#atuin_history_conf_update-history-file 0} {
-	atuin_history_conf_update-history-file = true
-}
 
-if {~ $#atuin_history_conf_debugging 0} {
-	atuin_history_conf_debugging = false
-}
-
-if {~ $#atuin_history_conf_load-on-change 0} {
-	atuin_history_conf_load-on-change = true
-}
+defconf atuin_history update-history-file true
+defconf atuin_history debugging false
+defconf atuin_history load-on-change true
 
 if {~ $#__atuin_started 0 || ~ $__atuin_start false} {
 	old_reload-history = $fn-reload-history
