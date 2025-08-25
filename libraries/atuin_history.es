@@ -9,8 +9,8 @@ if {~ $#atuin_history_conf_debugging 0} {
 }
 
 if {~ $#__atuin_started 0 || ~ $__atuin_start false} {
-	old_history = $fn-history
-	__atuin_old_history = ''
+	old_reload-history = $fn-reload-history
+	old_set-history_use-hook = $set-history_conf_use-hook
 	__atuin_started = true
 }
 
@@ -24,7 +24,6 @@ fn __atuin_enable {
 	ATUIN_SESSION = `{atuin uuid}
 	ATUIN_STTY = `{stty -g}
 	ATUIN_HISTORY_ID = ''
-	conf -p history -s use-hook false
 
 	let (
 		cmdstarttime = 0
@@ -40,20 +39,6 @@ fn __atuin_enable {
 			return <=true
 		}
 	) {
-		fn history {
-			if {~ $#__atuin_old_history 0 || ~ $__atuin_old_history ''} {
-				return <=true
-			}
-			if {! $atuin_history_conf_update-history-file} {
-				return <=true
-			}
-			local (set-history=) {
-				local (history = $__atuin_old_history) {
-					$old_history $*
-				}
-			}
-		}
-
 		fn %history cmdline {
 			local (id=; ctime = $unixtime) {
 				__atuin_echo 'id = `{atuin history start ''--'' '^$cmdline
@@ -63,13 +48,13 @@ fn __atuin_enable {
 				ATUIN_HISTORY_ID = $id
 				cmdstarttime = $ctime
 				if {$atuin_history_conf_update-history-file} {
-					if {~ $__atuin_old_history '' || ~ $#__atuin_old_history 0} {
+					if {~ $history '' || ~ $#history 0} {
 						return <=false
 					}
 					{
 						echo '#+'^$ctime
 						echo $cmdline
-					} >> $__atuin_old_history
+					} >> $history
 				}
 				return <=false
 			}
@@ -99,63 +84,34 @@ fn __atuin_enable {
 			cmdstarttime = 0
 		}
 	}
+
+	fn reload-history nelem {
+		if {~ $#nelem 0} {
+			nelem = $history_conf_reload
+		}
+		%clear-history
+		local (hist = ``(\n){atuin history list --cmd-only | tail -n $nelem}) {
+			for (h = $hist) {
+				%add-history $h
+			}
+		}
+	}
 }
 
 fn __atuin_disable {
 	fn %history
 	fn %postexec
-	fn-history = $old_history
-}
-
-fn __atuin_reload-history nelem {
-	if {~ $#nelem 0} {
-		nelem = $history_conf_reload
-	}
-	%clear-history
-	local (hist = ``(\n){atuin history list --cmd-only | tail -n $nelem}) {
-		for (h = $hist) {
-			%add-history $h
-		}
-	}
-}
-
-if {~ $#old_set-history_use-hook 0} {
-	old_set-history_use-hook = $set-history_conf_use-hook
+	fn-reload-history = $old_reload-history
 }
 
 set-history_conf_use-hook = @ arg {
-	if {~ $history atuin} {
+	if {~ $arg atuin} {
+		__atuin_enable
+		reload-history
 		result atuin
 	} {
+		__atuin_disable
 		$old_set-history_use-hook $arg
-	}
-}
-
-if {~ $#old_set-history 0} {
-	old_set-history = $set-history
-}
-
-set-history = @ file {
-	if {~ $file atuin} {
-		local (set-history=; set-history_conf_file=; set-history_conf_use-hook=) {
-			if {! ~ $history atuin} {
-				__atuin_old_history = $history
-				history = $file
-				history_conf_file = $file
-				history_conf_use-hook = atuin
-				__atuin_enable
-				__atuin_reload-history
-				result $file
-			}
-		}
-	} {
-		if {~ $history atuin} {
-			local (set-history_conf_use-hook=) {
-				__atuin_disable
-				history_conf_use-hook = false
-			}
-		}
-		$old_set-history $file
 	}
 }
 
