@@ -38,7 +38,7 @@ fn gencomp_new_general_completer cmdname compfn subcmdcomps {
 						r = $subcmdname $subcmdfn
 					}
 				}
-				subcmdcomps = $r
+				subcmdcomps = $subcmdcomps $r
 			}
 		}
 		result @ cmdline partial {
@@ -49,7 +49,7 @@ fn gencomp_new_general_completer cmdname compfn subcmdcomps {
 				if {~ $#parsed_line 1} {
 					result <={$compfn $partial $parsed_line}
 				} {
-					if {~ $#subcmdcmps 0} { return <={$default_completer $partial} }
+					if {~ $#subcmdcomps 0} { return <={$default_completer $partial} }
 					assert2 $cmdname^'_completer' {eq <={mod $#subcmdcomps 2} 0}
 					for ((subcmdname subcmdfn) = $subcmdcomps) {
 						if {~ $subcmdname <={%last $parsed_line}} {
