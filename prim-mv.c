@@ -31,6 +31,21 @@ PRIM(clearhistory) {
 	return NULL;
 }
 
+PRIM(rlconf) {
+	char *s;
+	int r = -1;
+
+	if(list == NULL)
+		fail("$&rlconf", "usage: $&rlconf [readline inputrc string]");
+
+	gcdisable();
+	s = getstr(list->term);
+	r = es_rl_parse_and_bind(s);
+	gcenable();
+
+	return mklist(mkstr(str("%d", r)), NULL);
+}
+
 #endif
 
 PRIM(sethistory) {
@@ -485,6 +500,7 @@ initprims_mv(Dict *primdict)
 #if READLINE
 	X(addhistory);
 	X(clearhistory);
+	X(rlconf);
 #endif
 	X(sethistory);
 	X(getlast);

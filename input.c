@@ -6,6 +6,7 @@
 #include "stdenv.h"
 #include <stdio.h>
 #include <string.h>
+#include <threads.h>
 #include "input.h"
 
 /*
@@ -953,6 +954,67 @@ setrunflags(char *s, size_t sz)
 	return 0;
 }
 
+#if READLINE
+/* various readline hooks */
+
+int
+es_readline_hook1(int count, int key)
+{
+	used(&count);
+	used(&key);
+
+	int gcblocked = 0;
+	List *hook1 = NULL; Root r_hook1;
+	List *res = NULL; Root r_res;
+	char *resstr;
+	struct readline_state state;
+
+	hook1 = varlookup("fn-%rl-hook1", NULL);
+	if(hook1 == NULL)
+		return 0;
+
+	gcref(&r_hook1, (void**)&hook1);
+	gcref(&r_res, (void**)&res);
+
+	if(gcisblocked()){
+		gcenable();
+		gcblocked = 1;
+	}
+
+	rl_save_prompt();
+	rl_save_state(&state);
+	hook1 = append(hook1, list_true);
+	res = eval(hook1, NULL, 0);
+
+	assert(res != NULL);
+
+
+	rl_restore_state(&state);
+	if(res->next == NULL)
+		goto done;
+	if(termeq(res->term, "0")){
+		resstr = getstr(res->next->term);
+		rl_insert_text(resstr);
+	}
+
+done:
+	rl_restore_prompt();
+	rl_reset_line_state();
+	gcrderef(&r_res);
+	gcrderef(&r_hook1);
+	if(gcblocked) {
+		gcdisable();
+	}
+	return 0;
+}
+
+int
+es_rl_parse_and_bind(char *s)
+{
+	return rl_parse_and_bind(s);
+}
+
+#endif /* READLINE */
 /*
  * initialization
  */
@@ -979,6 +1041,7 @@ extern void initinput(void) {
 	rl_special_prefixes = "$";
 	rl_completer_quote_characters = "'";
 	rl_readline_name = "es-mveety";
+	rl_add_defun("es-hook1", es_readline_hook1, -1);
 
 	rl_attempted_completion_function = es_complete_hook;
 #endif

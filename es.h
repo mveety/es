@@ -351,6 +351,7 @@ extern List *runstring(const char *str, const char *name, int flags);
 
 #if READLINE
 extern Boolean resetterminal;
+extern int es_rl_parse_and_bind(char*);
 #endif
 
 

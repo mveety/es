@@ -1131,12 +1131,26 @@ if {~ <=$&primitives addhistory} {
 	fn %add-history {
 		$&addhistory $1
 	}
+} {
+	fn %add-history { true }
 }
 
 if {~ <=$&primitives clearhistory} {
 	fn %clear-history {
 		$&clearhistory
 	}
+} {
+	fn %clear-history { true }
+}
+
+if {~ <=$&primitives rlconf} {
+	fn %readline lines {
+		for (l = $lines) {
+			$&rlconf $l
+		}
+	}
+} {
+	fn %readline { true }
 }
 
 fn %elem n list {

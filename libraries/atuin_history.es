@@ -4,6 +4,7 @@ library atuin_history (init history)
 defconf atuin_history update-history-file true
 defconf atuin_history debugging false
 defconf atuin_history load-on-change true
+defconf atuin_history enable-readline-hook true
 
 if {~ $#__atuin_started 0 || ~ $__atuin_start false} {
 	old_reload-history = $fn-reload-history
@@ -92,6 +93,25 @@ fn __atuin_enable {
 				%add-history $h
 			}
 		}
+	}
+
+	fn %rl-hook1 {
+		let (
+			atuin_tmpfile = /tmp/es_atuin.$pid
+			atuin_data =
+		) {
+			atuin search -i >[2] $atuin_tmpfile
+			atuin_data = ``(\n){cat $atuin_tmpfile}
+			if {~ $#atuin_data 0} {
+				result <=false
+			} {
+				result <=true $atuin_data
+			}
+		}
+	}
+
+	if {$atuin_history_conf_enable-readline-hook} {
+		%readline '"\C-r": es-hook1'
 	}
 }
 
