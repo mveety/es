@@ -121,6 +121,16 @@ PRIM(unixtime) {
 	return mklist(mkstr(str("%lud", curtime)), NULL);
 }
 
+PRIM(unixtimens) {
+	int64_t curtime;
+	struct timespec ts;
+
+	clock_gettime(CLOCK_REALTIME, &ts);
+
+	curtime = ((int64_t)ts.tv_sec)*1000000000LL + ts.tv_nsec;
+	return mklist(mkstr(str("%ld", curtime)), NULL);
+}
+
 PRIM(getrunflags) {
 	char rf[9];
 
@@ -482,6 +492,7 @@ initprims_mv(Dict *primdict)
 	X(range);
 	X(reverse);
 	X(unixtime);
+	X(unixtimens);
 	X(getrunflags);
 	X(setrunflags);
 	X(settermtag);

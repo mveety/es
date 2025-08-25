@@ -37,7 +37,7 @@ fn __atuin_enable {
 		}
 	) {
 		fn %history cmdline {
-			local (id=; ctime = $unixtime) {
+			local (id=; ctime = $unixtime_ns) {
 				__atuin_echo 'id = `{atuin history start ''--'' '^$cmdline
 				id = `{atuin history start '--' $cmdline}
 				%add-history $cmdline
@@ -61,7 +61,7 @@ fn __atuin_enable {
 			if {~ $ATUIN_HISTORY_ID ''} {
 				return <=true
 			}
-			local (duration = <={sub $unixtime $cmdstarttime}) {
+			local (duration = <={sub $unixtime_ns $cmdstarttime}) {
 				if {~ $#res 0} { res = 1 }
 				res = <={%last res}
 				match $res (
@@ -74,9 +74,9 @@ fn __atuin_enable {
 						}
 					}
 				)
-				__atuin_echo atuin history end -e $res -d $duration^000000000 '--' $ATUIN_HISTORY_ID
+				__atuin_echo atuin history end -e $res -d $duration '--' $ATUIN_HISTORY_ID
 				{ local (ATUIN_LOG = error) {
-					atuin history end -e $res -d $duration^000000000 '--' $ATUIN_HISTORY_ID >/dev/null >[2=1] }} &
+					atuin history end -e $res -d $duration '--' $ATUIN_HISTORY_ID >/dev/null >[2=1] }} &
 			}
 			cmdstarttime = 0
 		}

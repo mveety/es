@@ -929,6 +929,9 @@ get-apids = @ { result <=%apids }
 unixtime = ''
 get-unixtime = $&unixtime
 
+unixtime_ns = ''
+get-unixtime_ns = $&unixtimens
+
 get-pid = $&getpid
 
 es_conf_path = ''

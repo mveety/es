@@ -3,15 +3,15 @@
 #include "prim.h"
 
 PRIM(add) {
-	int a = 0;
-	int b = 0;
-	int res = 0;
+	int64_t a = 0;
+	int64_t b = 0;
+	int64_t res = 0;
 
 	if (list == NULL || list->next == NULL)
 		fail("$&add", "missing arguments");
 	errno = 0;
 
-	a = (int)strtol(getstr(list->term), NULL, 10);
+	a = strtoll(getstr(list->term), NULL, 10);
 	if(a == 0){
 		switch(errno){
 		case EINVAL:
@@ -23,7 +23,7 @@ PRIM(add) {
 		}
 	}
 
-	b = (int)strtol(getstr(list->next->term), NULL, 10);
+	b = strtoll(getstr(list->next->term), NULL, 10);
 	if(b == 0){
 		switch(errno){
 		case EINVAL:
@@ -36,19 +36,19 @@ PRIM(add) {
 	}
 
 	res = a + b;
-	return mklist(mkstr(str("%d", res)), NULL);
+	return mklist(mkstr(str("%ld", res)), NULL);
 }
 
 PRIM(sub) {
-	int a = 0;
-	int b = 0;
-	int res = 0;
+	int64_t a = 0;
+	int64_t b = 0;
+	int64_t res = 0;
 
 	if (list == NULL || list->next == NULL)
 		fail("$&sub", "missing arguments");
 	errno = 0;
 
-	a = (int)strtol(getstr(list->term), NULL, 10);
+	a = strtoll(getstr(list->term), NULL, 10);
 	if(a == 0){
 		switch(errno){
 		case EINVAL:
@@ -60,7 +60,7 @@ PRIM(sub) {
 		}
 	}
 
-	b = (int)strtol(getstr(list->next->term), NULL, 10);
+	b = strtoll(getstr(list->next->term), NULL, 10);
 	if(b == 0){
 		switch(errno){
 		case EINVAL:
@@ -73,19 +73,19 @@ PRIM(sub) {
 	}
 
 	res = a - b;
-	return mklist(mkstr(str("%d", res)), NULL);
+	return mklist(mkstr(str("%ld", res)), NULL);
 }
 
 PRIM(mul) {
-	int a = 0;
-	int b = 0;
-	int res = 0;
+	int64_t a = 0;
+	int64_t b = 0;
+	int64_t res = 0;
 
 	if (list == NULL || list->next == NULL)
 		fail("$&mul", "missing arguments");
 	errno = 0;
 
-	a = (int)strtol(getstr(list->term), NULL, 10);
+	a = strtoll(getstr(list->term), NULL, 10);
 	if(a == 0){
 		switch(errno){
 		case EINVAL:
@@ -97,7 +97,7 @@ PRIM(mul) {
 		}
 	}
 
-	b = (int)strtol(getstr(list->next->term), NULL, 10);
+	b = strtoll(getstr(list->next->term), NULL, 10);
 	if(b == 0){
 		switch(errno){
 		case EINVAL:
@@ -110,19 +110,19 @@ PRIM(mul) {
 	}
 
 	res = a * b;
-	return mklist(mkstr(str("%d", res)), NULL);
+	return mklist(mkstr(str("%ld", res)), NULL);
 }
 
 PRIM(div) {
-	int a = 0;
-	int b = 0;
-	int res = 0;
+	int64_t a = 0;
+	int64_t b = 0;
+	int64_t res = 0;
 
 	if (list == NULL || list->next == NULL)
 		fail("$&div", "missing arguments");
 	errno = 0;
 
-	a = (int)strtol(getstr(list->term), NULL, 10);
+	a = strtoll(getstr(list->term), NULL, 10);
 	if(a == 0){
 		switch(errno){
 		case EINVAL:
@@ -134,7 +134,7 @@ PRIM(div) {
 		}
 	}
 
-	b = (int)strtol(getstr(list->next->term), NULL, 10);
+	b = strtoll(getstr(list->next->term), NULL, 10);
 	if(b == 0){
 		switch(errno){
 		case EINVAL:
@@ -149,19 +149,19 @@ PRIM(div) {
 	if (b == 0)
 		fail("$&div", "divide by zero");
 	res = a / b;
-	return mklist(mkstr(str("%d", res)), NULL);
+	return mklist(mkstr(str("%ld", res)), NULL);
 }
 
 PRIM(mod) {
-	int a = 0;
-	int b = 0;
-	int res = 0;
+	int64_t a = 0;
+	int64_t b = 0;
+	int64_t res = 0;
 
 	if (list == NULL || list->next == NULL)
 		fail("$&mod", "missing arguments");
 	errno = 0;
 
-	a = (int)strtol(getstr(list->term), NULL, 10);
+	a = strtoll(getstr(list->term), NULL, 10);
 	if(a == 0){
 		switch(errno){
 		case EINVAL:
@@ -173,7 +173,7 @@ PRIM(mod) {
 		}
 	}
 
-	b = (int)strtol(getstr(list->next->term), NULL, 10);
+	b = strtoll(getstr(list->next->term), NULL, 10);
 	if(b == 0){
 		switch(errno){
 		case EINVAL:
@@ -188,12 +188,12 @@ PRIM(mod) {
 	if (b == 0)
 		fail("$&mod", "divide by zero");
 	res = a % b;
-	return mklist(mkstr(str("%d", res)), NULL);
+	return mklist(mkstr(str("%ld", res)), NULL);
 }
 
 PRIM(eq) {
-	int a = 0;
-	int b = 0;
+	int64_t a = 0;
+	int64_t b = 0;
 
 	if(list == NULL)
 		return list_false;
@@ -201,7 +201,7 @@ PRIM(eq) {
 		return list_false;
 	errno = 0;
 
-	a = (int)strtol(getstr(list->term), NULL, 10);
+	a = strtoll(getstr(list->term), NULL, 10);
 	if(a == 0){
 		switch(errno){
 		case EINVAL:
@@ -210,7 +210,7 @@ PRIM(eq) {
 		}
 	}
 
-	b = (int)strtol(getstr(list->next->term), NULL, 10);
+	b = strtoll(getstr(list->next->term), NULL, 10);
 	if(b == 0){
 		switch(errno){
 		case EINVAL:
@@ -225,8 +225,8 @@ PRIM(eq) {
 }
 
 PRIM(gt) {
-	int a = 0;
-	int b = 0;
+	int64_t a = 0;
+	int64_t b = 0;
 
 	if (list == NULL)
 		return list_false;
@@ -234,7 +234,7 @@ PRIM(gt) {
 		return list_false;
 	errno = 0;
 
-	a = (int)strtol(getstr(list->term), NULL, 10);
+	a = strtoll(getstr(list->term), NULL, 10);
 	if(a == 0){
 		switch(errno){
 		case EINVAL:
@@ -243,7 +243,7 @@ PRIM(gt) {
 		}
 	}
 
-	b = (int)strtol(getstr(list->next->term), NULL, 10);
+	b = strtoll(getstr(list->next->term), NULL, 10);
 	if(b == 0){
 		switch(errno){
 		case EINVAL:
@@ -258,8 +258,8 @@ PRIM(gt) {
 }
 
 PRIM(lt) {
-	int a = 0;
-	int b = 0;
+	int64_t a = 0;
+	int64_t b = 0;
 
 	if (list == NULL)
 		return list_false;
@@ -267,7 +267,7 @@ PRIM(lt) {
 		return list_false;
 	errno = 0;
 
-	a = (int)strtol(getstr(list->term), NULL, 10);
+	a = strtoll(getstr(list->term), NULL, 10);
 	if(a == 0){
 		switch(errno){
 		case EINVAL:
@@ -276,7 +276,7 @@ PRIM(lt) {
 		}
 	} 
 
-	b = (int)strtol(getstr(list->next->term), NULL, 10);
+	b = strtoll(getstr(list->next->term), NULL, 10);
 	if(b == 0){
 		switch(errno){
 		case EINVAL:
@@ -291,7 +291,7 @@ PRIM(lt) {
 }
 
 PRIM(tobase) {
-	int base, num;
+	int64_t base, num;
 	char *s, *se;
 	List *res = NULL; Root r_res;
 
@@ -299,7 +299,7 @@ PRIM(tobase) {
 		fail("$&tobase", "missing arguments");
 	errno = 0;
 
-	base = (int)strtol(getstr(list->term), NULL, 10);
+	base = strtoll(getstr(list->term), NULL, 10);
 	if(base == 0){
 		switch(errno){
 		case EINVAL:
@@ -312,7 +312,7 @@ PRIM(tobase) {
 
 	}
 
-	num = (int)strtol(getstr(list->next->term), NULL, 10);
+	num = strtoll(getstr(list->next->term), NULL, 10);
 	if(num == 0){
 		switch(errno){
 		case EINVAL:
@@ -363,13 +363,13 @@ PRIM(tobase) {
 }
 
 PRIM(frombase) {
-	int base, num;
+	int64_t base, num;
 
 	if(list == NULL || list->next == NULL)
 		fail("$&frombase", "missing arguments");
 	errno = 0;
 
-	base = (int)strtol(getstr(list->term), NULL, 10);
+	base = strtoll(getstr(list->term), NULL, 10);
 	if(base == 0){
 		switch(errno){
 		case EINVAL:
@@ -386,7 +386,7 @@ PRIM(frombase) {
 	if(base > 16)
 		fail("&frombase", "base > 16");
 
-	num = (int)strtol(getstr(list->next->term), NULL, base);
+	num = strtoll(getstr(list->next->term), NULL, base);
 	if(num == 0){
 		switch(errno){
 		case EINVAL:
@@ -397,7 +397,7 @@ PRIM(frombase) {
 			break;
 		}
 	}
-	return mklist(mkstr(str("%d", num)), NULL);
+	return mklist(mkstr(str("%ld", num)), NULL);
 }
 
 Dict*
