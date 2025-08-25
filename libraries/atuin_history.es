@@ -49,7 +49,7 @@ fn __atuin_enable {
 						return <=false
 					}
 					{
-						echo '#+'^$ctime
+						echo '#+'^$unixtime
 						echo $cmdline
 					} >> $history
 				}
