@@ -40,7 +40,20 @@ fn __atuin_enable {
 			return <=true
 		}
 	) {
-		fn history { result <=true }
+		fn history {
+			if {~ $#__atuin_old_history 0 || ~ $__atuin_old_history ''} {
+				return <=true
+			}
+			if {! $atuin_history_conf_update-history-file} {
+				return <=true
+			}
+			local (set-history=) {
+				local (history = $__atuin_old_history) {
+					$old_history $*
+				}
+			}
+		}
+
 		fn %history cmdline {
 			local (id=; ctime = $unixtime) {
 				__atuin_echo 'id = `{atuin history start ''--'' '^$cmdline
