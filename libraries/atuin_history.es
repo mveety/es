@@ -93,7 +93,7 @@ fn __atuin_enable {
 					}
 				)
 				__atuin_echo atuin history end '--exit' $res '--duration' $duration '--' $ATUIN_HISTORY_ID
-				{ let (ATUIN_LOG = error) {
+				{ local (ATUIN_LOG = error) {
 					atuin history end '--exit' $res '--duration' $duration '--' $ATUIN_HISTORY_ID >/dev/null >[2=1] }} &
 			}
 			cmdstarttime = 0
