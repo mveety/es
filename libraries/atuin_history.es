@@ -102,6 +102,7 @@ fn __atuin_enable {
 		) {
 			atuin search -i >[2] $atuin_tmpfile
 			atuin_data = ``(\n){cat $atuin_tmpfile}
+			rm $atuin_tmpfile
 			if {~ $#atuin_data 0} {
 				result <=false
 			} {
