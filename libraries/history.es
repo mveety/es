@@ -8,6 +8,10 @@ if {~ $#history_conf_reload 0} {
 	history_conf_reload = 25
 }
 
+if {~ $#history_conf_file 0} {
+	history_conf_file = ''
+}
+
 fn history_call_date {
 	let (utc = false; cmd = date; tmp=) {
 		if {~ $*(1) -u} {

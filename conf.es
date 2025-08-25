@@ -71,6 +71,10 @@ let (
 		}
 	}
 
+	fn esconf_printvars confdict pkg {
+		dictget $confdict $pkg
+	}
+
 	fn esconf_printall confdict raw {
 		dictforall $confdict @ n v {
 			echo 'package '^$n^':'
@@ -117,6 +121,7 @@ let (
 			verbose = false # -v
 			setmode = set # -P is prepend, -A is append
 			confdict = <={es_get_confvars |> es_sort_confvars}
+			return_results = false
 		) {
 			(_ rest) = <={parseargs @ arg {
 				match $arg (
@@ -134,6 +139,7 @@ let (
 					(-v) { verbose = true }
 					(-A) { setmode = append }
 					(-P) { setmode = prepend }
+					(-X) { return_results = true}
 					(-h) { mode = help ; usage }
 					* { usage }
 				)
@@ -145,8 +151,12 @@ let (
 			if {$usageexit} { return <=false }
 
 			if {~ $mode printpackages} {
-				echo 'available packages:' <={esconf_packages $confdict}
-				return <=true
+				if {$return_results} {
+					return <={esconf_packages $confdict}
+				} {
+					echo 'available packages:' <={esconf_packages $confdict}
+					return <=true
+				}
 			}
 
 			if {! $all && ~ $package __es_none} {
@@ -171,6 +181,9 @@ let (
 			match $mode (
 				(print) {
 					if {~ $#varname 0} {
+						if {$return_results} {
+							return <={esconf_printvars $confdict $package}
+						}
 						esconf_printpackage $confdict $raw $package
 						return <=true
 					} {
