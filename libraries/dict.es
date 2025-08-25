@@ -7,9 +7,7 @@ if {~ $#__es_dict_assert 0} {
 	__es_dict_assert = false
 }
 
-if {~ $#dict_conf_useprimitive 0} {
-	dict_conf_useprimitive = true
-}
+defconf dict useprimitive true
 
 if {$dict_conf_useprimitive} {
 	library dict (init macros libraries)
