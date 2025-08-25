@@ -8,6 +8,10 @@ if {~ $#atuin_history_conf_debugging 0} {
 	atuin_history_conf_debugging = false
 }
 
+if {~ $#atuin_history_conf_load-on-change 0} {
+	atuin_history_conf_load-on-change = true
+}
+
 if {~ $#__atuin_started 0 || ~ $__atuin_start false} {
 	old_reload-history = $fn-reload-history
 	old_set-history_use-hook = $set-history_conf_use-hook
@@ -107,7 +111,9 @@ fn __atuin_disable {
 set-history_conf_use-hook = @ arg {
 	if {~ $arg atuin} {
 		__atuin_enable
-		reload-history
+		if {$atuin_history_conf_load-on-change} {
+			reload-history
+		}
 		result atuin
 	} {
 		__atuin_disable

@@ -12,6 +12,10 @@ if {~ $#history_conf_file 0} {
 	history_conf_file = ''
 }
 
+if {~ $#history_conf_load-on-change 0} {
+	history_conf_load-on-change = true
+}
+
 fn history_call_date {
 	let (utc = false; cmd = date; tmp=) {
 		if {~ $*(1) -u} {
@@ -298,7 +302,7 @@ fn lastcmd {
 
 fn reload-history nelem {
 	if {~ $#nelem 0} {
-		throw usage reload-history 'usage: reload-history [# of commands]'
+		nelem = $history_conf_reload
 	}
 	local(hist = ``(\n) {history -c -n $nelem}) {
 		for (h = $hist) {
@@ -329,7 +333,7 @@ set-history = @ file {
 		$&sethistory $file
 		history = $file
 		history_conf_file = $file
-		if {! ~ $#history_conf_reload 0} {
+		if {$history_conf_load-on-change} {
 			%clear-history
 			reload-history $history_conf_reload
 		}
