@@ -20,7 +20,7 @@ fn __atuin_echo args {
 
 fn __atuin_enable {
 	ATUIN_SESSION = `{atuin uuid}
-	ATUIN_STTY = `{stty -g}
+	ATUIN_STTY = `{stty -g >[2] /dev/null}
 	ATUIN_HISTORY_ID = ''
 
 	let (
