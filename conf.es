@@ -111,11 +111,17 @@ let (
 		}
 	}
 
+	fn esconf_getvar pkg name {
+		let (var = $pkg^_conf_^$name) {
+			result $$var
+		}
+	}
+
 	fn esconf_printusage {
-		echo >[1=2] 'usage: conf [-vr] -p package [var]'
+		echo >[1=2] 'usage: conf [-vrX] -p package [var]'
 		echo >[1=2] '       conf [-v] [-A | -P] -p package -s var value'
-		echo >[1=2] '       conf [-vr] -a'
-		echo >[1=2] '       conf -p'
+		echo >[1=2] '       conf [-vrX] -a'
+		echo >[1=2] '       conf [-X] -p'
 	}
 ) {
 	fn conf args {
@@ -201,8 +207,12 @@ let (
 							echo >[1=2] 'error var '^$varname^' in '^$package^' not found'
 							return <=false
 						}
-						esconf_printvar $raw $package $varname
-						return <=true
+						if {$return_results} {
+							return <={esconf_getvar $package $varname}
+						} {
+							esconf_printvar $raw $package $varname
+							return <=true
+						}
 					}
 				}
 				(set) {
