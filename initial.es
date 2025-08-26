@@ -1205,6 +1205,19 @@ fn try body {
 	}
 }
 
+fn-%onerror = $&noreturn @ protected handler {
+	let (e=; r=;) {
+		(e r) = <={try $protected}
+		if {$e} {
+			local (fn-error = @ {result $e}) {
+				result <=$handler
+			}
+		} {
+			result $r
+		}
+	}
+}
+
 fn box list {
 	local (fun = @{ result $list }) {
 		$&settermtag box $fun

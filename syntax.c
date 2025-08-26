@@ -159,6 +159,8 @@ mkfunpipe(Tree *t1, Tree *t2)
 {
 	Tree *firstcall, *res;
 
+	if(t1 == NULL || t2 == NULL)
+		fail("$&parse", "syntax error in function pipe");
 	if(t1->kind != nList || t2->kind != nList)
 		fail("&parse", "syntax error in function pipe");
 
@@ -167,6 +169,16 @@ mkfunpipe(Tree *t1, Tree *t2)
 
 	return res;
 }
+
+extern Tree*
+mkonerror(Tree *captured, Tree *handler)
+{
+	captured = thunkify(captured);
+	handler = thunkify(handler);
+
+	return prefix("%onerror", treecons(captured, treecons(handler, NULL)));
+}
+
 /*
  * redirections -- these involve queueing up redirection in the prefix of a
  *	tree and then rewriting the tree to include the appropriate commands

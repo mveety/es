@@ -26,7 +26,7 @@
 %left	LOCAL LET LETS FOR CLOSURE ')'
 %left	ANDAND OROR NL MATCH MATCHALL PROCESS
 %left	'!'
-%left	PIPE FUNPIPE
+%left	PIPE FUNPIPE ONERR
 %right	'$' TOSTR
 %left	SUB
 
@@ -54,6 +54,7 @@ body	: cmd			{ $$ = $1; }
 
 cmdsa	: cmd ';'		{ $$ = $1; }
 	| cmd '&'		{ $$ = prefix("%background", mk(nList, thunkify($1), NULL)); }
+	| cmd '?'		{ $$ = prefix("try", mk(nList, thunkify($1), NULL)); }
 
 cmdsan	: cmdsa			{ $$ = $1; }
 	| cmd NL		{ $$ = $1; if (!readheredocs(FALSE)) YYABORT; }
@@ -68,6 +69,7 @@ cmd	:		%prec LET		{ $$ = NULL; }
 	| cmd OROR nl cmd			{ $$ = mkseq("%or", $1, $4); }
  	| cmd PIPE nl cmd			{ $$ = mkpipe($1, $2->u[0].i, $2->u[1].i, $4); }
 	| cmd FUNPIPE nl cmd		{ $$ = mkfunpipe($1, $4); }
+	| cmd ONERR nl cmd			{ $$ = mkonerror($1, $4); }
 	| '!' caret cmd				{ $$ = prefix("%not", mk(nList, thunkify($3), NULL)); }
 	| '~' word words			{ $$ = mk(nMatch, $2, $3); }
 	| EXTRACT word words			{ $$ = mk(nExtract, $2, $3); }
