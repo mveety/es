@@ -378,9 +378,11 @@ libutil_es_system = (
 	'completion' 'es_complete_dump_state' 'completion' '%core_completer'
 	'completion'
 )
+$&varhide libutil_es_system
 
 if {~ $#__libutil_function_data 0} {
 	__libutil_function_data = $libutil_es_system <=libutil_enumerate_all_libs
+	$&varhide __libutil_function_data
 }
 
 fn libutil_rehash {
