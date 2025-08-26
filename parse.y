@@ -21,7 +21,7 @@
 %token	LOCAL LET LETS FOR CLOSURE FN
 %token	ANDAND BACKBACK STBACK STRLIST FUNPIPE
 %token	EXTRACT CALL COUNT FLAT OROR TOSTR PRIM SUB
-%token	NL ENDFILE ERROR MATCH MATCHALL PROCESS
+%token	NL ENDFILE ERROR MATCH MATCHALL PROCESS TRY
 
 %left	LOCAL LET LETS FOR CLOSURE ')'
 %left	ANDAND OROR NL MATCH MATCHALL PROCESS
@@ -54,7 +54,7 @@ body	: cmd			{ $$ = $1; }
 
 cmdsa	: cmd ';'		{ $$ = $1; }
 	| cmd '&'		{ $$ = prefix("%background", mk(nList, thunkify($1), NULL)); }
-	| cmd '?'		{ $$ = prefix("try", mk(nList, thunkify($1), NULL)); }
+	| cmd TRY		{ $$ = prefix("try", mk(nList, thunkify($1), NULL)); }
 
 cmdsan	: cmdsa			{ $$ = $1; }
 	| cmd NL		{ $$ = $1; if (!readheredocs(FALSE)) YYABORT; }

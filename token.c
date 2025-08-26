@@ -30,7 +30,7 @@ const char nw[] = {
 	1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0,		/*   0 -  15 */
 	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,		/*  16 -  32 */
 	1, 1, 0, 1, 1, 0, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0,		/* ' ' - '/' */
-	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1,		/* '0' - '?' */
+	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 0,		/* '0' - '?' */
 	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,		/* '@' - 'O' */
 	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1, 0,		/* 'P' - '_' */
 	1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,		/* '`' - 'o' */
@@ -230,13 +230,6 @@ top:	while ((c = input_getc()) == ' ' || c == '\t')
 		case ':':	return STRLIST;
 		default:	input_ungetc(c); return '$';
 		}
-	case '?':
-		switch (c = input_getc()) {
-		case '?': return ONERR;
-		default:
-			input_ungetc(c);
-			return '?';
-		}
 	case '\'':
 		w = RW;
 		i = 0;
@@ -342,9 +335,12 @@ top:	while ((c = input_getc()) == ' ' || c == '\t')
 	case '&':
 		w = NW;
 		c = input_getc();
-		if (c == '&')
-			return ANDAND;
-		input_ungetc(c);
+		switch(c) {
+		case '&': return ANDAND;
+		case '?': return TRY;
+		default:
+			input_ungetc(c);
+		}
 		return '&';
 
 	case '|': {
@@ -355,6 +351,8 @@ top:	while ((c = input_getc()) == ' ' || c == '\t')
 			return OROR;
 		if (c == '>')
 			return FUNPIPE;
+		if (c == '?')
+			return ONERR;
 		if (!getfds(p, c, 1, 0))
 			return ERROR;
 		if (p[1] == CLOSED) {
