@@ -677,6 +677,7 @@ if {~ <=$&primitives execfailure} {fn-%exec-failure = $&execfailure}
 #	result gets set to zero when it should not be.
 
 fn-%parse	= $&parse
+fn-%parsestring = $&parsestring
 fn-%is-interactive = $&isinteractive
 
 fn %batch-exception-handler errobj {
