@@ -238,10 +238,28 @@ fn prim_type_test_dict v {
 	_is_a_dict $v
 }
 
+fn prim_type_test_error v {
+	if {~ <={$&gettermtag $v} error && _is_a_function $v} {
+		result <=true
+	} {
+		result <=false
+	}
+}
+
+fn prim_type_test_box v {
+	if {~ <={$&gettermtag $v} box && _is_a_function $v} {
+		result <=true
+	} {
+		result <=false
+	}
+}
+
 install_any_type primordial 'number' @ v { result <={prim_type_test_number $v} }
 install_any_type primordial 'string' @ v { result <={prim_type_test_string $v} }
 install_any_type primordial 'function' @ v { result <={prim_type_test_function $v} }
 install_any_type primordial 'primordial' @ v { result <={prim_type_test_primordial $v} }
 install_any_type primordial 'list' @ v { result <={prim_type_test_list $v} }
 install_any_type primordial 'dict' @ v { result <={prim_type_test_dict $v} }
+install_any_type primordial 'error' @ v { result <={prim_type_test_error $v} }
+install_any_type primordial 'box' @ v { result <={prim_type_test_box $v} }
 

@@ -1205,6 +1205,13 @@ fn try body {
 	}
 }
 
+fn box list {
+	local (fun = @{ result $list }) {
+		$&settermtag box $fun
+		result $fun
+	}
+}
+
 fn __es_getargs argsbody {
 	if {~ $#argsbody 1 } {
 		result ()

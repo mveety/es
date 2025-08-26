@@ -121,6 +121,19 @@ fn fmt-prim-dict v {
 	}
 }
 
+fn fmt-prim-error v {
+	local (err=;type=;msg=){
+		(err type msg) = <={$v info}
+		result 'error(err = '^<={format $err}^', type = '^<={format $type}^', msg = '^<={format $msg}^')'
+	}
+}
+
+fn fmt-prim-box v {
+	local (boxdata = <=$v) {
+		result 'box['^<={format $boxdata}^']'
+	}
+}
+
 install_format 'nil' @ v { result 'nil' }
 install_format 'number' @ v { result <={fmt-number $v} }
 install_format 'string' @ v { result <={fmt-string $v} }
@@ -128,4 +141,6 @@ install_format 'function' @ v { result <={fmt-fun-prim $v} }
 install_format 'primordial' @ v { result <={fmt-fun-prim $v} }
 install_format 'list' @ v { result <={fmt-list $v} }
 install_format 'dict' @ v { result <={fmt-prim-dict $v} }
+install_format 'error' @ v { result <={fmt-prim-error $v} }
+install_format 'box' @ v { result <={fmt-prim-box $v} }
 

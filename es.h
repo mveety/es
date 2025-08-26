@@ -33,6 +33,7 @@ typedef enum {
 typedef enum {
 	ttNone,
 	ttError,
+	ttBox,
 } Termtag;
 
 struct Term {

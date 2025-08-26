@@ -188,6 +188,8 @@ PRIM(settermtag) {
 
 	if(strcmp(tagname, "error") == 0)
 		term->tag = ttError;
+	else if(strcmp(tagname, "box") == 0)
+		term->tag = ttBox;
 	else if(strcmp(tagname, "none") == 0)
 		term->tag = ttNone;
 	else {
@@ -213,6 +215,8 @@ PRIM(gettermtag) {
 		return mklist(mkstr(str("none")), NULL);
 	case ttError:
 		return mklist(mkstr(str("error")), NULL);
+	case ttBox:
+		return mklist(mkstr(str("box")), NULL);
 	default:
 		fail("$&gettermtag", "invalid tag %d", list->term->tag);
 		return list_false;
