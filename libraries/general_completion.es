@@ -18,9 +18,9 @@ fn gencomp_filter_list str list {
 
 # both main gencomp functions take multiple independent lists as arguements.
 # because of how es maps args to variables they need to be contained in a
-# function.
+# function. (migrated this to box)
 fn gencomp_list_container list {
-	result @{ result $list }
+	box $list
 }
 
 # usage: main_command completion_function (subcommand subcommand_completion_function ...)

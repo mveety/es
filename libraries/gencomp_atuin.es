@@ -45,15 +45,15 @@ complete_atuin_server = (
 	start default-config help
 )
 
-fn-gencomp_atuin_hook = <={gencomp_new_list_completer atuin <={gencomp_list_container $complete_atuin_main} (
-	history <={gencomp_list_container $complete_atuin_history}
-	import <={gencomp_list_container $complete_atuin_import}
-	account <={gencomp_list_container $complete_atuin_account}
-	kv <={gencomp_new_list_completer $complete_atuin_kv}
-	store <={gencomp_list_container $complete_atuin_store}
-	dotfiles <={gencomp_list_container $complete_atuin_dotfiles}
-	scripts <={gencomp_list_container $complete_atuin_scripts}
-	server <={gencomp_list_container $complete_atuin_server}
+fn-gencomp_atuin_hook = <={gencomp_new_list_completer atuin <={box $complete_atuin_main} (
+	history <={box $complete_atuin_history}
+	import <={box $complete_atuin_import}
+	account <={box $complete_atuin_account}
+	kv <={box $complete_atuin_kv}
+	store <={box $complete_atuin_store}
+	dotfiles <={box $complete_atuin_dotfiles}
+	scripts <={box $complete_atuin_scripts}
+	server <={box $complete_atuin_server}
 )}
 
 %complete_cmd_hook atuin @ curline partial {
