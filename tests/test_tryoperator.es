@@ -18,7 +18,7 @@ fn run_test_tryoperator {
 }
 
 if {~ $#inside_estest 0 || ! $inside_estest} {
-	run_test_do
+	run_test_tryoperator
 }
 
 
