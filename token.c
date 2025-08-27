@@ -202,6 +202,8 @@ top:	while ((c = input_getc()) == ' ' || c == '\t')
 			return MATCHALL;
 		else if (streq(buf, "process"))
 			return PROCESS;
+		else if (streq(buf, "onerror"))
+			return ONERR;
 		w = RW;
 		y->str = gcdup(buf);
 		return WORD;
@@ -351,8 +353,8 @@ top:	while ((c = input_getc()) == ' ' || c == '\t')
 			return OROR;
 		if (c == '>')
 			return FUNPIPE;
-		if (c == '?')
-			return ONERR;
+/*		if (c == '?')
+			return ONERR; */
 		if (!getfds(p, c, 1, 0))
 			return ERROR;
 		if (p[1] == CLOSED) {

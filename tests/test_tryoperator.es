@@ -12,10 +12,10 @@ fn run_test_tryoperator {
 	local (
 		tests = (
 			'a &?' '{try {a}}'
-			'a |? b' '{%onerror {a} {b}}'
-			'a ; b |? c' '{%seq {a} {%onerror {b} {c}}}'
-			'result <={a &?} |& c' '{%seq {%background {%pipe {result <={try {a}}} 1 0 {}}} {c}}'
-			'a |? b && c &? && d' '{%seq {try {%and {%onerror {a} {b}} {c}}} {%and {} {d}}}'
+			'a onerror b' '{%onerror {a} {b}}'
+			'a ; b onerror c' '{%seq {a} {%onerror {b} {c}}}'
+			'result <={a &?} onerror c | d' '{%pipe {%onerror {result <={try {a}}} {c}} 1 0 {d}}'
+			'a onerror b && c &? && d' '{%seq {try {%and {%onerror {a} {b}} {c}}} {%and {} {d}}}'
 		)
 	) {
 		for ((l r) = $tests) {
@@ -29,9 +29,9 @@ fn run_test_tryoperator {
 		assert {$e && iserror $e}
 		(e r) = <={run_test_tryoperator_testerror noerror &?}
 		assert {! $e && ~ $e false && ~ $r 0}
-		assert {run_test_tryoperator_testerror error |? result <=true}
-		assert {run_test_tryoperator_testerror noerror |? result <=false}
-		assert {run_test_tryoperator_testerror error |? {
+		assert {run_test_tryoperator_testerror error onerror result <=true}
+		assert {run_test_tryoperator_testerror noerror onerror result <=false}
+		assert {run_test_tryoperator_testerror error onerror {
 			assert {iserror <=error}
 			assert {~ <={<=error error} error}
 			assert {~ <={<=error type} run_test_tryoperator_testerror}
