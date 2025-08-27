@@ -30,6 +30,14 @@ fn async_format_error e t m {
 	result @{ result <={makeerror $e $t $m}}
 }
 
+fn async_format_result args {
+	result @{ result $args }
+}
+
+fn async_format_dict arg {
+	result <={dictdump $arg}
+}
+
 fn async1 fun args {
 	let (
 		stdout = <={async_tmpfile_name $pid stdout}
@@ -45,7 +53,11 @@ fn async1 fun args {
 					echo <={async_format_error $e} > $errfile
 				} {
 					rval = <={$fun $args >[2] $stderr > $stdout}
-					echo $rval > $resfile
+					if {~ <={$&termtypeof $rval} dict} {
+						echo <={async_format_dict $rval} > $resfile
+					} {
+						echo <={async_format_result $rval} > $resfile
+					}
 				}
 			}
 		}}
@@ -99,6 +111,7 @@ fn await1 backquote quiet asyncobj {
 		resfile = <={$asyncobj result}
 		errfile = <={$asyncobj error}
 		subpid = <={$asyncobj pid}
+		resfn =
 		resval =
 		stdout_data =
 		errfn =
@@ -106,7 +119,7 @@ fn await1 backquote quiet asyncobj {
 	) {
 		waitfor $subpid
 		if {access -r -f $errfile} {
-			errfn = <={%parsestring ``(\n){cat $errfile}}
+			errfn = <={%parsestring ``(){cat $errfile}}
 			error = <=$errfn
 		}
 		if {$backquote} {
@@ -120,7 +133,8 @@ fn await1 backquote quiet asyncobj {
 			cat $stderr >[1=2]
 		}
 		if {access -r -f $resfile} {
-			resval = `{cat $resfile}
+			resfn = <={%parsestring ``(){cat $resfile}}
+			resval = <=$resfn
 		}
 		if {! $async_keep_files} {
 			async_rm $stdout $stderr $resfile $errfile
