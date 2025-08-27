@@ -117,7 +117,7 @@ test_to_run = ()
 		* { usage }
 	)
 } @{
-	echo 'usage: '^$dollar0^' [-dvVqylC] [-x [es binary]] [-S srcdir] [-p path] [-A es arguments]'
+	echo 'usage: '^$dollar0^' [-dvVqyslC] [-x [es binary]] [-S srcdir] [-p path] [-R test,...] [-L libdir] [-A es arguments]'
 	if {$fullhelp} {
 		cat << '%%end'
     flags:
