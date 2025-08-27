@@ -2,20 +2,12 @@
 
 library async (init libraries)
 
-if {~ $#async_tempdir 0} {
-	async_tempdir = /tmp
-}
-
-if {~ $#async_keep_files 0} {
-	async_keep_files = false
-}
+defconf async tempdir /tmp
+defconf async keep-files false
+defconf async track-procs true
 
 if {~ $#async_subprocs 0} {
 	async_subprocs = ()
-}
-
-if {~ $#async_track_procs 0} {
-	async_track_procs = true
 }
 
 fn async_tmpfile_name subpid stream {
@@ -78,7 +70,7 @@ fn async1 fun args {
 
 fn async args {
 	let (obj = <={async1 $args}) {
-		if {$async_track_procs} {
+		if {$async_conf_track-procs} {
 			async_subprocs = $obj $async_subprocs
 		}
 		result $obj
@@ -136,10 +128,10 @@ fn await1 backquote quiet asyncobj {
 			resfn = <={%parsestring ``(){cat $resfile}}
 			resval = <=$resfn
 		}
-		if {! $async_keep_files} {
+		if {! $async_conf_keep-files} {
 			async_rm $stdout $stderr $resfile $errfile
 		}
-		if {$async_track_procs} {
+		if {$async_conf_track-procs} {
 			async_remove_pid $subpid
 		}
 		if {$error} {
@@ -203,10 +195,10 @@ fn akill obj {
 			kill -9 $subpid
 		}
 		waitfor $subpid
-		if {! $async_keep_files} {
+		if {! $async_conf_keep-files} {
 			async_rm $stdout $stderr $resfile $errfile
 		}
-		if {$async_track_procs} {
+		if {$async_conf_track-procs} {
 			async_remove_pid $subpid
 		}
 		result <=true
