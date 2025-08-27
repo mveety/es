@@ -26,18 +26,27 @@ fn async_tmpfile_name subpid stream {
 	}
 }
 
+fn async_format_error e t m {
+	result @{ result <={makeerror $e $t $m}}
+}
+
 fn async1 fun args {
 	let (
 		stdout = <={async_tmpfile_name $pid stdout}
 		stderr = <={async_tmpfile_name $pid stderr}
 		resfile = <={async_tmpfile_name $pid result}
+		errfile = <={async_tmpfile_name $pid error}
 		subpid = 0
 		subproc_object =
 	) {
 		subpid = <={%background {
 			let (rval = ){
-				rval = <={$fun $args >[2] $stderr > $stdout}
-				echo $rval > $resfile
+				catch @ e {
+					echo <={async_format_error $e} > $errfile
+				} {
+					rval = <={$fun $args >[2] $stderr > $stdout}
+					echo $rval > $resfile
+				}
 			}
 		}}
 		result @ d {
@@ -45,6 +54,7 @@ fn async1 fun args {
 				stdout { result $stdout }
 				stderr { result $stderr }
 				result { result $resfile }
+				error { result $errfile }
 				pid { result $subpid }
 				files { result $stdout $stderr $resfile }
 				all { result $subpid $stdout $stderr $resfile }
@@ -73,16 +83,31 @@ fn async_remove_pid subpid {
 	}
 }
 
+fn async_rm files {
+	for (i = $files) {
+		if {access -w -f $i} {
+			rm $i
+		}
+	}
+}
+
 fn await1 backquote quiet asyncobj {
 	let (
 		stdout = <={$asyncobj stdout}
 		stderr = <={$asyncobj stderr}
 		resfile = <={$asyncobj result}
+		errfile = <={$asyncobj error}
 		subpid = <={$asyncobj pid}
 		resval =
 		stdout_data =
+		errfn =
+		error = false
 	) {
 		waitfor $subpid
+		if {access -r -f $errfile} {
+			errfn = <={%parsestring ``(\n){cat $errfile}}
+			error = <=$errfn
+		}
 		if {$backquote} {
 			stdout_data = `{cat $stdout}
 		} {
@@ -93,12 +118,17 @@ fn await1 backquote quiet asyncobj {
 		if {! $quiet} {
 			cat $stderr >[1=2]
 		}
-		resval = `{cat $resfile}
+		if {access -r -f $resfile} {
+			resval = `{cat $resfile}
+		}
 		if {! $async_keep_files} {
-			rm $stdout $stderr $resfile
+			async_rm $stdout $stderr $resfile $errfile
 		}
 		if {$async_track_procs} {
 			async_remove_pid $subpid
+		}
+		if {$error} {
+			throw $error
 		}
 		if {$backquote} {
 			bqstatus = $resval
@@ -147,6 +177,7 @@ fn akill obj {
 		stdout = <={$obj stdout}
 		stderr = <={$obj stderr}
 		resfile = <={$obj result}
+		errfile = <={$obj error}
 		subpid = <={$obj pid}
 	) {
 		if {~ $subpid $the_living} {
@@ -154,7 +185,7 @@ fn akill obj {
 		}
 		waitfor $subpid
 		if {! $async_keep_files} {
-			rm -f $stdout $stderr $resfile
+			async_rm $stdout $stderr $resfile $errfile
 		}
 		if {$async_track_procs} {
 			async_remove_pid $subpid
