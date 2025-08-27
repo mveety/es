@@ -45,3 +45,17 @@ fn dictdump dict {
 	}
 }
 
+fn dictiter dict {
+	let (names = <={dictnames $dict}) {
+		result @{
+			let (curname = $names(1)) {
+				if {~ $#curname 0} {
+					return ()
+				}
+				names = $names(2 ...)
+				result $curname <={dictget $dict $curname}
+			}
+		}
+	}
+}
+

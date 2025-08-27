@@ -105,20 +105,11 @@ fn fmt-list v {
 }
 
 fn fmt-prim-dict v {
-	let (reslist =; res='') {
-		dictforall $v @ name val {
-			reslist = $reslist '['^<={format $name}^']:'^<={format $val}
-		}
-		while {gt $#reslist 0} {
-			if {eq $#reslist 1} {
-				res = $res^$reslist(1)
-			} {
-				res = $res^$reslist(1)^', '
-			}
-			reslist = $reslist(2 ...)
-		}
-		result 'dict('^$res^')'
-	}
+	dictiter $v |>
+		do @ n v { result <={format $n}^' => '^<={format $v} } |>
+		%flatten ', ' |>
+		@{ result '['^$1^']' } |>
+		result
 }
 
 fn fmt-prim-error v {
@@ -130,7 +121,7 @@ fn fmt-prim-error v {
 
 fn fmt-prim-box v {
 	local (boxdata = <=$v) {
-		result 'box['^<={format $boxdata}^']'
+		result '<'^<={format $boxdata}^'>'
 	}
 }
 
