@@ -56,8 +56,9 @@ fn async1 fun args {
 				result { result $resfile }
 				error { result $errfile }
 				pid { result $subpid }
-				files { result $stdout $stderr $resfile }
-				all { result $subpid $stdout $stderr $resfile }
+				files { result $stdout $stderr $resfile $errfile}
+				alive { ~ $subpid <={%apids -a} }
+				all { result $subpid $stdout $stderr $resfile $errfile}
 			)
 		}
 	}
@@ -153,6 +154,10 @@ fn await args {
 	) {
 		await1 false $quiet $asyncobj
 	}
+}
+
+fn alive asyncobj {
+	$asyncobj alive
 }
 
 fn bqawait args {
