@@ -416,8 +416,35 @@ fn-%or = $&noreturn @ first rest {
 #		cmd &			%background {cmd}
 
 usebg = 'new' # for compatibility
+orphanpids = ()
+
+fn %orphan pid {
+	if {~ $#pid 0} { pid = $apid }
+	orphanpids = $orphanpids $pid
+}
+
+fn %reap-orphans {
+	let (deadpids = <={%apids -d}; neworphans=; deadorphans=){
+
+		for (orphan = $orphanpids) {
+			if {~ $orphan $deadpids} {
+				waitfor $orphan
+				deadorphans = $deadorphans $orphan
+			} {
+				neworphans = $neworphans $orphan
+			}
+		}
+		orphanpids = $neworphans
+		result $deadorphans
+	}
+}
+
+fn %reap-dead-procs {
+	%apids -d |> waitfor
+}
 
 fn %background cmd {
+	%reap-orphans
 	let (pid = <={$&background $cmd}) {
 		if {%is-interactive} {
 			cmds = `` (' ' '{' '}') (echo $cmd)
@@ -795,7 +822,7 @@ fn %interactive-preexec-hook {
 	catch @ e {
 		%interactive-hook-exception-handler preexec <={makeerror $e}
 	} {
-		local (bqstatus=) {
+		local (bqstatus=; apid=) {
 			if {! ~ $#fn-%preexec 0} {
 				%preexec
 			}
@@ -807,7 +834,7 @@ fn %interactive-postexec-hook res {
 	catch @ e {
 		%interactive-hook-exception-handler postexec <={makeerror $e}
 	} {
-		local (bqstatus=) {
+		local (bqstatus=; apid=) {
 			if {! ~ $#fn-%postexec 0} {
 				%postexec $res
 			}

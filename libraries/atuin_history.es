@@ -78,6 +78,7 @@ fn __atuin_enable {
 				__atuin_echo atuin history end -e $res -d $duration '--' $ATUIN_HISTORY_ID
 				{ local (ATUIN_LOG = error) {
 					atuin history end -e $res -d $duration '--' $ATUIN_HISTORY_ID >/dev/null >[2=1] }} &
+				%orphan
 			}
 			cmdstarttime = 0
 		}
