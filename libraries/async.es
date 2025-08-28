@@ -14,7 +14,7 @@ fn async_tmpfile_name subpid stream {
 	let (
 		sym = <={gensym es_async_temp_file_}
 	) {
-		result $async_tempdir^'/'^$sym^'.'^$subpid^'.'^$stream^'.bin'
+		result $async_conf_tempdir^'/'^$sym^'.'^$subpid^'.'^$stream^'.bin'
 	}
 }
 
