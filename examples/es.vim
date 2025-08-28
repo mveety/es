@@ -24,6 +24,7 @@ syn keyword esCmd accumulate2 dolist glob parseargs
 syn keyword esCmd makeerror errmatch iserror continue
 syn keyword esCmd dictnew dictget dictput dictremove dictsize
 syn keyword esCmd dictforall dictnames dictvalues dictdump
+syn keyword esCmd dictiter conf onerror box defconf defconfalias
 syn match eskeyList /[a-zA-Z0-9]*\s*(/
 syn match esHook /[%][a-zA-Z0-9_]*/
 syn match esComment  /#.*$/
