@@ -1194,11 +1194,8 @@ fn makeerror err type msg {
 }
 
 fn try body {
-	catch @ e type msg {
-		match $e (
-			(assert error usage) { result <={makeerror $e $type $msg} }
-			* { throw $e $type $msg }
-		)
+	catch @ e {
+		result <={makeerror $e}
 	} {
 		local(res = <={$body}) {
 			result false $res
