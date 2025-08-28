@@ -60,14 +60,9 @@ fn typeof v {
 					primfound = true
 					primtype = $r
 				} {
-					type = $r
-					found = true
-					break
+					return $r
 				}
 			}
-		}
-		if {$found} {
-			return $type
 		}
 		if {$primfound} {
 			return $primtype

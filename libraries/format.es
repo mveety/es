@@ -7,12 +7,10 @@ if {~ $#__es_formatters 0 || ! ~ <={$&termtypeof $__es_formatters} dict} {
 }
 
 fn is_format_installed t {
-	let (res = false) {
-		dictforall $__es_formatters @ n _ {
-			if {~ $n $t} { res = true; break}
-		}
-		return <=$res
+	dictforall $__es_formatters @ n _ {
+		if {~ $n $t} { return <=true }
 	}
+	return <=false
 }
 
 fn uninstall_format t {

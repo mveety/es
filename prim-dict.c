@@ -128,7 +128,7 @@ PRIM(dictforall) {
 		fail("$&dictforall", "term not valid dict");
 	gcref(&r_dict, (void**)&d);
 	lp = lp->next;
-	varpush(&dfafn, "fn-__es_dictforall", mklist(lp->term, NULL));
+	varpush(&dfafn, "fn-__es_dictforall", mklist(mkstr(str("$&noreturn")), mklist(lp->term, NULL)));
 
 	args = (DictForAllArgs){
 		.evalflags = evalflags,
