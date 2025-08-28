@@ -24,6 +24,23 @@ fn run_test_dict {
 			assert {~ $n $dnames}
 			assert {~ $v $dvals}
 		}
+		local (
+			fn-test1 = @ nm {
+				dictforall $x @ n _ {
+					if {~ $n $nm} {
+						return <=true
+					}
+				}
+				result <=false
+			}
+		) {
+			assert {test1 54}
+			assert {test1 81}
+			assert {! test1 105}
+			assert {! test1 -100}
+			assert {test1 10}
+			assert {! test1 dicks}
+		}
 	}
 }
 
