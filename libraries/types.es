@@ -3,21 +3,26 @@
 library types (init macros libraries)
 
 fn primordial { result <=true }
+fn composite { result <=false }
+
+if {~ $#__es_type_tests 0 || ! ~ <={$&termtypeof $__es_type_tests} dict} {
+	__es_type_tests = <=dictnew
+}
 
 fn is_type_installed t {
-	for(fn = $__es_type_tests) {
-		if {$fn 'search' $t} {
-			return <=true
+	let (res = false) {
+		dictforall $__es_type_tests @ n _ {
+			if {~ $n $t} { res = true; continue }
 		}
+		return <=$res
 	}
-	return <=false
 }
 
 fn install_any_type primordial name test {
 	local(typetest=){
 		typetest = @ op v {
 						if { ~ $op 'test'} {
-							if { $test $v } {
+							if {$test $v} {
 								result $primordial $name
 							} {
 								result false '__es_not_type'
@@ -30,51 +35,44 @@ fn install_any_type primordial name test {
 							result <=false
 						}
 					}
-		if {! is_type_installed $name} {
-			__es_type_tests = $__es_type_tests $typetest
-			result <=true
-		} {
-			result <=false
-		}
+		__es_type_tests = <={dictput $__es_type_tests $name $typetest}
+		return <=true
 	}
 }
 
 fn install_type name test {
-	install_any_type false $name $test
+	install_any_type composite $name $test
 }
 
 fn uninstall_type name {
-	local(typefuns=) {
-		for(fn = $__es_type_tests) {
-			if {! $fn 'search' $name} {
-				typefuns = $typefuns $fn
-			}
-		}
-		__es_type_tests = $typefuns
-	}
+	__es_type_tests = <={dictremove $__es_type_tests $name}
 }
 
 fn typeof v {
 	if {~ $#v 0 } {
 		return 'nil'
-	} {
-		local(res=;prim=;primtype=) {
-			for(testfn = $__es_type_tests) {
-				(prim res) = <={$testfn 'test' $v}
-				if {! ~ $res '__es_not_type'} {
-					if {$prim} {
-						primtype = $res
-					} {
-						return $res
-					}
+	}
+	let (p=;r=;primtype=;primfound=false;type=;found=false) {
+		dictforall $__es_type_tests @ name testfn {
+			(p r) = <={$testfn 'test' $v}
+			if {! ~ $r '__es_not_type'} {
+				if {$p && ! $primfound} {
+					primfound = true
+					primtype = $r
+				} {
+					type = $r
+					found = true
+					break
 				}
 			}
-			if {! ~ $#primtype 0} {
-				return $primtype
-			} {
-				return 'unknown'
-			}
 		}
+		if {$found} {
+			return $type
+		}
+		if {$primfound} {
+			return $primtype
+		}
+		result 'unknown'
 	}
 }
 
@@ -84,16 +82,16 @@ fn typeof v {
 fn prim_typeof v {
 	if {~ $#v 0} {
 		return 'nil'
-	} {
-		local(res=;prim=) {
-			for(testfn = $__es_type_tests) {
-				(prim res) = <={$testfn 'test' $v}
-				if {$prim} {
-					return $res
-				}
-			}
-			return 'unknown'
+	}
+	let (res=;prim=) {
+		dictforall $__es_type_tests @ name testfn {
+			(prim res) = <={$testfn test $v}
+			if {$prim} { break }
 		}
+		if {$prim} {
+			return $res
+		}
+		result 'unknown'
 	}
 }
 
@@ -112,12 +110,7 @@ fn is_prim_type t v {
 }
 
 fn types {
-	local(res=){
-		for(fn = $__es_type_tests) {
-			res = $res <={$fn 'name'}
-		}
-		result $res
-	}
+	dictnames $__es_type_tests
 }
 
 ## below are the test functions for the built-in "types"
@@ -260,6 +253,6 @@ install_any_type primordial 'function' @ v { result <={prim_type_test_function $
 install_any_type primordial 'primordial' @ v { result <={prim_type_test_primordial $v} }
 install_any_type primordial 'list' @ v { result <={prim_type_test_list $v} }
 install_any_type primordial 'dict' @ v { result <={prim_type_test_dict $v} }
-install_any_type primordial 'error' @ v { result <={prim_type_test_error $v} }
-install_any_type primordial 'box' @ v { result <={prim_type_test_box $v} }
+install_any_type composite 'error' @ v { result <={prim_type_test_error $v} }
+install_any_type composite 'box' @ v { result <={prim_type_test_box $v} }
 

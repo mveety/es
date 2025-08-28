@@ -2,76 +2,44 @@
 
 library format (types)
 
+if {~ $#__es_formatters 0 || ! ~ <={$&termtypeof $__es_formatters} dict} {
+	__es_formatters = <=dictnew
+}
+
 fn is_format_installed t {
-	for(fn = $__es_formatters) {
-		if {$fn 'search' $t} {
-			return <=true
+	let (res = false) {
+		dictforall $__es_formatters @ n _ {
+			if {~ $n $t} { res = true; break}
 		}
+		return <=$res
 	}
-	return <=false
 }
 
 fn uninstall_format t {
-	local(fmtfuns=) {
-		for(fn = $__es_formatters) {
-			if {! $fn 'search' $t} {
-				fmtfuns = $fmtfuns $fn
-			}
-		}
-		__es_formatters = $fmtfuns
-	}
+	__es_formatters = <={dictremove $__es_formatters $t}
 }
 
 fn install_format name fmt {
-	local(fmtfn=){
-		fmtfn = @ op v {
-			assert2 format {~ $op 'search' || ~ $op 'run' || ~ $op 'name'}
-			if {~ $op 'search'} {
-				if {~ $v $name} {
-					result <=true
-				} {
-					result <=false
-				}
-			} {~ $op 'run'} {
-				result <={$fmt $v}
-			} {~ $op 'name'} {
-				result $name
-			}
-		}
-		if {is_format_installed $name} {
-			uninstall_format $name
-		}
-		__es_formatters = $__es_formatters $fmtfn
-		result <=true
-	}
+	__es_formatters = <={dictput $__es_formatters $name @ v {
+		$fmt $v
+	}}
 }
 
 fn format v {
 	local(
 		vartype = <={typeof $v}
-		res=
+		fmtfn =
 	){
 		assert2 $0 {! ~ $vartype 'unknown'}
-		for(fmtfn = $__es_formatters) {
-			if {$fmtfn 'search' $vartype} {
-				return <={$fmtfn 'run' $v}
-			}
-		}
-		throw error format 'formatter for '^$^vartype^' is not installed'
-	}
-}
-
-fn _formatters1 head rest {
-	assert2 $0 {! ~ $#head 0}
-	if {~ $#rest 0} {
-		result <={$head 'name'}
-	} {
-		result <={$head 'name'} <={_formatters1 $rest}
+		fmtfn = <={dictget $__es_formatters $vartype onerror {
+			throw error format 'formatter for '^$^vartype^' is not installed'
+		}}
+		$fmtfn $v
 	}
 }
 
 fn formatters {
-	result <={_formatters1 $__es_formatters}
+	dictnames $__es_formatters
 }
 
 fn fmt-number v {
