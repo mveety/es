@@ -456,6 +456,13 @@ fn %background cmd {
 	}
 }
 
+fn %bghook {
+	let (x = <={%background $*}){
+		%orphan
+		result $x
+	}
+}
+
 #	These redirections are rewritten:
 #
 #		cmd < file		%open 0 file {cmd}
