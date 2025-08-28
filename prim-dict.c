@@ -135,7 +135,16 @@ PRIM(dictforall) {
 		.binding = binding,
 	};
 
-	dictforall(d, &dicteval, &args);
+	ExceptionHandler
+
+		dictforall(d, &dicteval, &args);
+
+	CatchException (e)
+
+		if(!termeq(e->term, "break"))
+			throw(e);
+
+	EndExceptionHandler
 
 	varpop(&dfafn);
 	gcrderef(&r_dict);
