@@ -2,25 +2,19 @@
 
 # quick and dirty OO
 
-library objects (init macros libraries)
+library objects (init macros libraries types)
+
+fn %classname name {
+	result (__es_classname @{ result $name })
+}
 
 fn method method class {
-	local(
-		fn-object_findin = @ thing list {
-			local(i=1){
-				while {! ~ $#list 0} {
-					if {~ $thing $list(1)} {
-						return $i
-					}
-					i = <={add $i 1}
-					list = $list(2 ...)
-				}
-				throw error method $thing^' not found'
-			}
-		}
-	){
-		result <={%elem <={object_findin $method $class |> add 1} $class}
-	}
+	echo 'class =' $class
+	echo 'method =' $method
+	result <={dictget $class $method onerror {
+		echo 'oh no!'
+		throw error method $method^' not found'
+	}}
 }
 
 fn __es_filter_unique_pairs list {
@@ -36,35 +30,45 @@ fn __es_filter_unique_pairs list {
 }
 
 fn new class rest {
-	let(methods=<={gensym '__es_object_'}){
-		$methods = (
-			<={$class $rest |> __es_filter_unique_pairs}
-			__es_delete @{ $methods= }
-			__es_get_methods @{ result $$methods }
-			__es_add_method @ m fun {
-				assert2 addmethod {~ $#m 1}
-				assert2 addmethod {~ $#fun 1}
-				$methods = $$methods $m $fun
+	local(tmpmethods=){
+		let(methods=<={gensym '__es_object_'}){
+			tmpmethods = (
+				<={$class}
+				__es_delete @{ $methods= }
+				__es_get_methods @{ result $$methods }
+				__es_add_method @ m fun {
+					assert2 addmethod {~ $#m 1}
+					assert2 addmethod {~ $#fun 1}
+					$methods = <={dictput $$methods $m $fun}
+				}
+				__es_get_class @{ result $class }
+				__es_get_object @{ result $methods } # for debugging
+				__es_is_object @{ result <=true }
+			)
+			echo $tmpmethods
+			assert {~ <={mod <={%count $tmpmethods} 2} 0}
+			$methods = <=dictnew
+			for ((mn mf) = $tmpmethods) {
+				echo $mn
+				$methods = <={dictput $$methods $mn $mf}
 			}
-			__es_get_class @{ result $class }
-			__es_get_object @{ result $methods } # for debugging
-		)
-		assert2 $0 {mod <={%count $$methods} 2}
-		catch @ e type msg {
-			$methods=
-			if {! ~ $e error} {
-				throw $e $type $msg
-			} {! ~ $type method} {
-				throw $e $type $msg
-			}
-		} {
-			<={method create $$methods} $rest
-		}
-		result @{
-			if {~ $#* 0} {
-				result <={<={method default $$methods}}
+			dictnames $$methods |> echo
+			catch @ e type msg {
+				$methods=
+				if {! ~ $e error} {
+					throw $e $type $msg
+				} {! ~ $type method} {
+					throw $e $type $msg
+				}
 			} {
-				result <={<={method $1 $$methods} $*(2 ...)}
+				<={method create $$methods} $rest
+			}
+			result @{
+				if {~ $#* 0} {
+					result <={<={method default $$methods}}
+				} {
+					result <={<={method $1 $$methods} $*(2 ...)}
+				}
 			}
 		}
 	}
@@ -96,9 +100,35 @@ fn get-class object {
 	result <={$object __es_get_class}
 }
 
+fn _object_testfn op v {
+	match $op (
+		'test' {
+			if {~ <={prim_typeof $v} function} {
+				if {$v __es_is_object} {
+					let (classname = <={$v __es_classname}) {
+						return composite 'object:'^$^classname
+					}
+				}
+			}
+			return false '__es_not_type'
+		}
+		'primordial' { return <=false }
+		'search' {
+			if {~ $v 'object'} { return <=true }
+		}
+		'name' {
+			return 'object'
+		}
+		* { return <=false }
+	)
+}
+
+install_dynamic_type 'object' @{ _object_testfn $* }
+
 class_iterator = @{
 	let(v=){
 		result (
+			<={%classname 'iterator'}
 			default @{ local(t=$v(1)){ v = $v(2 ...); result $t }}
 			create @{ v = $* }
 			next @{ local(t=$v(1)){ v = $v(2 ...); result $t }}
@@ -111,6 +141,7 @@ class_iterator = @{
 class_container = @{
 	let(d=){
 		result (
+			<={%classname 'container'}
 			default @{ result $d }
 			create @{ d = $* }
 			get @{ result $d }

@@ -31,6 +31,8 @@ fn install_any_type primordial name test {
 							result <=true
 						} { ~ $op 'name'} {
 							result $name
+						} { ~ $op 'primordial' } {
+							result <=$primordial
 						} {
 							result <=false
 						}
@@ -38,6 +40,10 @@ fn install_any_type primordial name test {
 		__es_type_tests = <={dictput $__es_type_tests $name $typetest}
 		return <=true
 	}
+}
+
+fn install_dynamic_type name testfn {
+	__es_type_tests = <={dictput $__es_type_tests $name $testfn}
 }
 
 fn install_type name test {
@@ -80,11 +86,10 @@ fn prim_typeof v {
 	}
 	let (res=;prim=) {
 		dictforall $__es_type_tests @ name testfn {
-			(prim res) = <={$testfn test $v}
-			if {$prim} { break }
-		}
-		if {$prim} {
-			return $res
+			if {$testfn primordial} {
+				(prim res) = <={$testfn test $v}
+				if {$prim} { return $res }
+			}
 		}
 		result 'unknown'
 	}
