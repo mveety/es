@@ -9,6 +9,16 @@ fn defconf pkg name value {
 	}
 }
 
+# alias var as pkg confvar
+fn defconfalias var pkg name {
+	local (varname = $pkg^_conf_^$name) {
+		$varname = ''
+		get-$varname = @ { result $$var }
+		set-$varname = @ { $var = $*; result $* }
+		result $varname
+	}
+}
+
 let (
 	fn es_get_confvars {
 		let (allvars = <=$&vars <=$&internals) {
