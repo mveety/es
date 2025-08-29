@@ -811,17 +811,25 @@ fn %interactive-hook-exception-handler hook errobj {
 		continue { result <=true }
 		{ throw $err $type $msg }
 	)
-	match $hook (
+	matchall $hook (
 		preexec { fn-%preexec= }
 		postexec { fn-%postexec= }
+		(preexec postexec) { throw hook_error }
+
+		prompt { fn-%prompt= }
 	)
-	throw hook_error
 }
 
 
 fn %interactive-prompt-hook {
 	if {! ~ $#fn-%prompt 0} {
-		local (bqstatus=) { %prompt }
+		catch @ e {
+			%interactive-hook-exception-handler prompt <={makeerror $e}
+		} {
+			local (bqstatus=;apid=) {
+				%prompt
+			}
+		}
 	}
 }
 

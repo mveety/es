@@ -97,7 +97,16 @@ dicteval(void *vdfaargs, char *name, void *vdata)
 	data = vdata;
 	args = mklist(mkstr(name), data);
 
-	res = prim("noreturn", mklist(dfaargs->function, args), dfaargs->binding, dfaargs->evalflags);
+	ExceptionHandler
+
+		res = prim("noreturn", mklist(dfaargs->function, args), dfaargs->binding, dfaargs->evalflags);
+
+	CatchException (e)
+
+		if (!termeq(e->term, "continue"))
+			throw(e);
+
+	EndExceptionHandler
 
 	gcrderef(&r_res);
 	gcrderef(&r_args);
@@ -114,14 +123,16 @@ dictsize(void *vsz, char *name, void *vdata)
 }
 
 PRIM(dictforall) {
-	DictForAllArgs args;
+	DictForAllArgs args = {NULL, NULL, 0};
 	List *lp = NULL; Root r_lp;
 	Dict *d = NULL; Root r_dict;
-	Term *fun = NULL; Root r_fun;
+	Root r_function;
+	Root r_binding;
 
 	if(!list || !list->next)
 		fail("$&dictforall", "missing arguments");
 
+	gcdisable();
 	lp = list;
 	gcref(&r_lp, (void**)&lp);
 	d = getdict(lp->term);
@@ -129,14 +140,15 @@ PRIM(dictforall) {
 		fail("$&dictforall", "term not valid dict");
 	gcref(&r_dict, (void**)&d);
 	lp = lp->next;
-	gcref(&r_fun, (void**)&fun);
-	fun = lp->term;
 
+	gcref(&r_binding, (void**)&args.binding);
+	gcref(&r_function, (void**)&args.function);
 	args = (DictForAllArgs){
-		.function = fun,
+		.function = lp->term,
 		.evalflags = evalflags,
 		.binding = binding,
 	};
+	gcenable();
 
 	ExceptionHandler
 
@@ -150,7 +162,8 @@ PRIM(dictforall) {
 	EndExceptionHandler
 
 	/* varpop(&dfafn); */
-	gcrderef(&r_fun);
+	gcrderef(&r_function);
+	gcrderef(&r_binding);
 	gcrderef(&r_dict);
 	gcrderef(&r_lp);
 
