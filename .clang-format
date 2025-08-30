@@ -1,0 +1,30 @@
+BasedOnStyle: LLVM
+# UseTab: ForIndentation
+UseTab: Always
+IndentWidth: 4
+TabWidth: 4
+AlignAfterOpenBracket: Align
+AlignArrayOfStructures: Left
+AlignConsecutiveAssignments: false
+AlignConsecutiveDeclarations: false
+AlignEscapedNewlines: Left
+AlignTrailingComments: true
+AllowShortCaseLabelsOnASingleLine: true
+AllowShortFunctionsOnASingleLine: false
+AllowShortIfStatementsOnASingleLine: false
+AlwaysBreakAfterReturnType: TopLevelDefinitions
+BinPackArguments: true
+BinPackParameters: true
+BreakBeforeBraces: Linux
+IndentCaseBlocks: true
+IndentCaseLabels: false
+IndentGotoLabels: false
+SpaceAfterCStyleCast: false
+SpaceAfterLogicalNot: false
+SpaceBeforeAssignmentOperators: true
+SpaceBeforeCaseColon: false
+SpaceBeforeParens: Never
+PointerAlignment: Left
+ColumnLimit: 110
+WhitespaceSensitiveMacros: ['PRIM']
+
