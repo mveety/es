@@ -24,7 +24,7 @@ fn install_format name fmt {
 }
 
 fn format v {
-	local(
+	let (
 		vartype = <={typeof $v}
 		fmtfn =
 	){
@@ -38,6 +38,20 @@ fn format v {
 
 fn formatters {
 	dictnames $__es_formatters
+}
+
+fn echof args {
+	local (i = 1; argslen = $#args) {
+		for (a = $args) {
+			match <={typeof $a} (
+				string { echo -n $a }
+				* { format $a |> echo -n }
+			)
+			if {lt $i $argslen} { echo -n ' ' }
+			i = <={add $i 1}
+		}
+	}
+	echo ''
 }
 
 fn fmt-number v {
@@ -73,8 +87,8 @@ fn fmt-list v {
 fn fmt-prim-dict v {
 	dictiter $v |>
 		do @ n v { result <={format $n}^' => '^<={format $v} } |>
-		%flatten ', ' |>
-		@{ result '['^$1^']' } |>
+		%flatten '; ' |>
+		@{ result '%dict('^$1^')' } |>
 		result
 }
 

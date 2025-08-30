@@ -212,6 +212,13 @@ top:
 		}
 		return FALSE;
 
+	case nDict:
+		fmtprint(f, "%%dict(%T)", n->u[0].p);
+		return FALSE;
+	case nAssoc:
+		fmtprint(f, "%T => %T;", n->u[0].p, n->u[1].p);
+		return FALSE;
+
 	default:
 		panic("bad node kind: %d", n->kind);
 
@@ -512,6 +519,14 @@ static Boolean Bconv(Format *f) {
 		fmtprint(f, ")");
 		break;
 	}
+
+	case nDict:
+		fmtprint(f, "(dict %B)", n->u[0].p);
+		break;
+
+	case nAssoc:
+		fmtprint(f, "(assoc %B %B)", n->u[0].p, n->u[1].p);
+		break;
 
 	}
 	return FALSE;

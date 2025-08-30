@@ -155,12 +155,33 @@ static List *glom1(Tree *tree, Binding *binding) {
 	Ref(Tree *, tp, tree);
 	Ref(Binding *, bp, binding);
 
+	/* for nVar */
+	List *var = NULL; Root r_var;
+
+	/* for nVarsub */
+	char *namestr = NULL; Root r_namestr;
+	List *sub = NULL; Root r_sub;
+
+	/* for nConcat */
+	List *l = NULL; Root r_l;
+	List *r = NULL; Root r_r;
+
+	/* for nDict */
+	Tree *inner = NULL; Root r_inner;
+	Dict *dict = NULL; Root r_dict;
+	Tree *assoc = NULL; Root r_assoc;
+	List *name = NULL; Root r_name;
+	List *value = NULL; Root r_value;
+	/* char *namestr = NULL; Root r_namestr; */
+
 	assert(!gcisblocked());
 
 	while (tp != NULL) {
 		Ref(List *, list, NULL);
 
 		switch (tp->kind) {
+		default:
+			fail("es:glom", "glom1: bad node kind %s: %T", treekind(tree), tree);
 		case nQword:
 			list = mklist(mkterm(tp->u[0].s, NULL), NULL);
 			tp = NULL;
@@ -179,7 +200,9 @@ static List *glom1(Tree *tree, Binding *binding) {
 			tp = NULL;
 			break;
 		case nVar:
-			Ref(List *, var, glom1(tp->u[0].p, bp));
+			gcref(&r_var, (void**)&var);
+
+			var = glom1(tp->u[0].p, bp);
 			tp = NULL;
 			for (; var != NULL; var = var->next) {
 				list = listcopy(varlookup(getstr(var->term), bp));
@@ -193,20 +216,26 @@ static List *glom1(Tree *tree, Binding *binding) {
 				}
 				list = NULL;
 			}
-			RefEnd(var);
+
+			gcrderef(&r_var);
 			break;
 		case nVarsub:
+			gcref(&r_namestr, (void**)&r_namestr);
+			gcref(&r_sub, (void**)&sub);
+
 			list = glom1(tp->u[0].p, bp);
 			if (list == NULL)
 				fail("es:glom", "null variable name in subscript");
 			if (list->next != NULL)
 				fail("es:glom", "multi-word variable name in subscript");
-			Ref(char *, name, getstr(list->term));
-			list = varlookup(name, bp);
-			Ref(List *, sub, glom1(tp->u[1].p, bp));
+			namestr = getstr(list->term);
+			list = varlookup(namestr, bp);
+			sub = glom1(tp->u[1].p, bp);
 			tp = NULL;
 			list = subscript(list, sub);
-			RefEnd2(sub, name);
+
+			gcrderef(&r_sub);
+			gcrderef(&r_namestr);
 			break;
 		case nCall:
 			list = listcopy(walk(tp->u[0].p, bp, 0));
@@ -217,14 +246,47 @@ static List *glom1(Tree *tree, Binding *binding) {
 			tp = tp->u[1].p;
 			break;
 		case nConcat:
-			Ref(List *, l, glom1(tp->u[0].p, bp));
-			Ref(List *, r, glom1(tp->u[1].p, bp));
+			gcref(&r_l, (void**)&l);
+			gcref(&r_r, (void**)&r);
+
+			l = glom1(tp->u[0].p, bp);
+			r = glom1(tp->u[1].p, bp);
 			tp = NULL;
 			list = concat(l, r);
-			RefEnd2(r, l);
+
+			gcrderef(&r_r);
+			gcrderef(&r_l);
 			break;
-		default:
-			fail("es:glom", "glom1: bad node kind %s: %T", treekind(tree), tree);
+		case nDict:
+
+			gcref(&r_inner, (void**)&inner);
+			gcref(&r_dict, (void**)&dict);
+			gcref(&r_assoc, (void**)&assoc);
+			gcref(&r_name, (void**)&r_name);
+			gcref(&r_value, (void**)&r_value);
+			gcref(&r_namestr, (void**)&r_namestr);
+
+			dict = mkdict();
+			for(inner = tp->u[0].p; inner != NULL; inner = inner->u[1].p){
+				assoc = inner->u[0].p;
+				assert(assoc->kind = nAssoc);
+				name = glom1(assoc->u[0].p, bp);
+				value = glom1(assoc->u[1].p, bp);
+				assert(name != NULL);
+				namestr = getstr(name->term);
+				dict = dictput(dict, namestr, value);
+			}
+
+			list = mklist(mkdictterm(dict), NULL);
+			tp = NULL;
+
+			gcrderef(&r_namestr);
+			gcrderef(&r_value);
+			gcrderef(&r_name);
+			gcrderef(&r_assoc);
+			gcrderef(&r_dict);
+			gcrderef(&r_inner);
+			break;
 		}
 
 		if (list != NULL) {

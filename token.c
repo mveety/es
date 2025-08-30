@@ -204,6 +204,8 @@ top:	while ((c = input_getc()) == ' ' || c == '\t')
 			return PROCESS;
 		else if (streq(buf, "onerror"))
 			return ONERR;
+		else if (streq(buf, "%dict"))
+			return DICT;
 		w = RW;
 		y->str = gcdup(buf);
 		return WORD;
@@ -331,6 +333,16 @@ top:	while ((c = input_getc()) == ' ' || c == '\t')
 	case '^':
 	case ')':
 	case '=':
+		if(c != SUB){
+			char lchar;
+
+			lchar = input_getc();
+			if(lchar == '>'){
+				w = NW;
+				return DICTASSOC;
+			}
+			input_ungetc(lchar);
+		}
 	case '{': case '}':
 		w = NW;
 		return c;

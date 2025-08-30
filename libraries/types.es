@@ -12,38 +12,18 @@ if {~ $#__es_type_tests 0 || ! ~ <={$&termtypeof $__es_type_tests} dict} {
 fn is_type_installed t {
 	let (res = false) {
 		dictforall $__es_type_tests @ n _ {
-			if {~ $n $t} { res = true; continue }
+			if {~ $n $t} { return <=true}
 		}
-		return <=$res
+		result <=false
 	}
 }
 
 fn install_any_type primordial name test {
 	local(typetest=){
-		typetest = @ op v {
-						if { ~ $op 'test'} {
-							if {$test $v} {
-								result $primordial $name
-							} {
-								result false '__es_not_type'
-							}
-						} { ~ $op 'search' && ~ $v $name} {
-							result <=true
-						} { ~ $op 'name'} {
-							result $name
-						} { ~ $op 'primordial' } {
-							result <=$primordial
-						} {
-							result <=false
-						}
-					}
+		typetest = @ v { if {$test $v} { result $primordial $name } { result false '__es_not_type' }}
 		__es_type_tests = <={dictput $__es_type_tests $name $typetest}
 		return <=true
 	}
-}
-
-fn install_dynamic_type name testfn {
-	__es_type_tests = <={dictput $__es_type_tests $name $testfn}
 }
 
 fn install_type name test {
@@ -58,11 +38,11 @@ fn typeof v {
 	if {~ $#v 0 } {
 		return 'nil'
 	}
-	let (p=;r=;primtype=;primfound=false;type=;found=false) {
+	local (p=;r=;primtype=;primfound=false;type=;found=false) {
 		dictforall $__es_type_tests @ name testfn {
-			(p r) = <={$testfn 'test' $v}
+			(p r) = <={$testfn $v}
 			if {! ~ $r '__es_not_type'} {
-				if {$p && ! $primfound} {
+				if {$p} {
 					primfound = true
 					primtype = $r
 				} {
@@ -72,8 +52,9 @@ fn typeof v {
 		}
 		if {$primfound} {
 			return $primtype
+		} {
+			result 'unknown'
 		}
-		result 'unknown'
 	}
 }
 
@@ -84,14 +65,12 @@ fn prim_typeof v {
 	if {~ $#v 0} {
 		return 'nil'
 	}
-	let (res=;prim=) {
+	local (rval = 'unknown';res=;prim=) {
 		dictforall $__es_type_tests @ name testfn {
-			if {$testfn primordial} {
-				(prim res) = <={$testfn test $v}
-				if {$prim} { return $res }
-			}
+			(prim res) = <={$testfn $v}
+			if {$prim} { rval = $res }
 		}
-		result 'unknown'
+		result $rval
 	}
 }
 
@@ -143,13 +122,8 @@ fn _is_a_dict v {
 	if {! ~ $#v 1} {
 		return <=false
 	}
-	if {! ~ $v 'dict('^*^')'} {
+	if {! ~ $v '%dict('^*^')'} {
 		return <=false
-	}
-	let (n = <={~~ $v 'dict('^*^')'}) {
-		if {! _is_a_hex_number $n} {
-			return <=false
-		}
 	}
 	result <=true
 }

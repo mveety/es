@@ -24,7 +24,7 @@ SpaceAfterLogicalNot: false
 SpaceBeforeAssignmentOperators: true
 SpaceBeforeCaseColon: false
 SpaceBeforeParens: Never
-PointerAlignment: Left
+PointerAlignment: Right
 ColumnLimit: 110
 WhitespaceSensitiveMacros: ['PRIM']
 

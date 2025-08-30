@@ -22,6 +22,7 @@
 %token	ANDAND BACKBACK STBACK STRLIST FUNPIPE
 %token	EXTRACT CALL COUNT FLAT OROR TOSTR PRIM SUB
 %token	NL ENDFILE ERROR MATCH MATCHALL PROCESS TRY
+%token	DICTASSOC DICT
 
 %left	LOCAL LET LETS FOR CLOSURE ')'
 %left	ANDAND OROR NL MATCH MATCHALL PROCESS
@@ -33,7 +34,7 @@
 %type <str> 	keyword
 %type <tree>	body cmd cmdsa cmdsan comword first fn line word param assign
 				binding bindings params nlwords words simple redir sword
-				cases case
+				cases case assocs assoc
 %type <kind>	binder
 
 %start es
@@ -101,6 +102,12 @@ binding	:				{ $$ = NULL; }
 
 assign	: caret '=' caret words		{ $$ = $4; }
 
+assocs : { $$ = NULL; } 
+	   | assoc { $$ = treecons2($1, NULL); }
+	   | assocs ';' assoc { $$ = treeconsend2($1, $3); };
+
+assoc : word DICTASSOC words { $$ = mk(nAssoc, $1, $3); }
+
 fn	: FN word params '{' body '}'	{ $$ = fnassign($2, $3, $5); }
 	| FN word			{ $$ = fnassign($2, NULL, NULL); }
 
@@ -114,6 +121,7 @@ word	: sword				{ $$ = $1; }
 	| word '^' sword		{ $$ = mk(nConcat, $1, $3); }
 
 comword	: param				{ $$ = $1; }
+	| DICT '(' assocs ')'		{ $$ = mk(nDict, $3); }
 	| '(' nlwords ')'		{ $$ = $2; }
 	| '{' body '}'			{ $$ = thunkify($2); }
 	| '@' params '{' body '}'	{ $$ = mklambda($2, $4); }

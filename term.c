@@ -95,10 +95,37 @@ getclosure(Term *term)
 	return term->closure;
 }
 
+typedef struct {
+	char *result;
+} AssocArgs;
+
+void
+assocfmt(void *vargs, char *name, void *vdata)
+{
+	AssocArgs *args = NULL; Root r_args_result;
+	List *data = NULL; Root r_data;
+
+	args = vargs;
+	gcref(&r_args_result, (void**)&args->result);
+	gcref(&r_data, (void**)&data);
+	data = vdata;
+
+	if(args->result == NULL)
+		args->result = str("%s => %L", name, data, " ");
+	else
+		args->result = str("%s; %s => %L", args->result, name, data, " ");
+
+	gcrderef(&r_data);
+	gcrderef(&r_args_result);
+}
+
 char*
 getstr(Term *term)
 {
 	Term *tp = NULL; Root r_tp;
+	AssocArgs args; Root r_args_result;
+	Dict *d = NULL; Root r_d;
+	char *res; Root r_res;
 
 	switch(term->kind) {
 	case tkString:
@@ -118,7 +145,24 @@ getstr(Term *term)
 		return str("%C", term->closure);
 	case tkDict:
 		assert(term->dict != NULL);
-		return str("dict(%ulx)", term->dict);
+		args.result = NULL;
+		gcref(&r_args_result, (void**)&args.result);
+		gcref(&r_tp, (void**)&tp);
+		gcref(&r_d, (void**)&r_d);
+		gcref(&r_res, (void**)&r_res);
+
+		d = term->dict;
+		dictforall(d, assocfmt, &args);
+		if(args.result == NULL)
+			res = str("%%dict()");
+		else
+			res = str("%%dict(%s)", args.result);
+
+		gcrderef(&r_res);
+		gcrderef(&r_d);
+		gcrderef(&r_tp);
+		gcrderef(&r_args_result);
+		return res;
 	}
 	return NULL;
 }

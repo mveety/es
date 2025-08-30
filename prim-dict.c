@@ -106,7 +106,7 @@ dicteval(void *vdfaargs, char *name, void *vdata)
 		if (!termeq(e->term, "continue"))
 			throw(e);
 
-	EndExceptionHandler
+	EndExceptionHandler;
 
 	gcrderef(&r_res);
 	gcrderef(&r_args);
