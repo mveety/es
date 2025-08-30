@@ -328,10 +328,15 @@ top:	while ((c = input_getc()) == ' ' || c == '\t')
 	case '(':
 		if (w == RW)	/* not keywords, so let & friends work */
 			c = SUB;
-		/* FALLTHROUGH */
 	case ';':
+		w = NW;
+		return c;
 	case '^':
+		w = NW;
+		return c;
 	case ')':
+		w = NW;
+		return c;
 	case '=':
 		if(c != SUB){
 			char lchar;
@@ -343,6 +348,8 @@ top:	while ((c = input_getc()) == ' ' || c == '\t')
 			}
 			input_ungetc(lchar);
 		}
+		w = NW;
+		return c;
 	case '{': case '}':
 		w = NW;
 		return c;

@@ -185,6 +185,7 @@ static List *glom1(Tree *tree, Binding *binding) {
 		switch (tp->kind) {
 		default:
 			fail("es:glom", "glom1: bad node kind %s: %T", treekind(tree), tree);
+			break;
 		case nQword:
 			list = mklist(mkterm(tp->u[0].s, NULL), NULL);
 			tp = NULL;
