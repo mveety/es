@@ -213,10 +213,26 @@ top:
 		return FALSE;
 
 	case nDict:
-		fmtprint(f, "%%dict(%T)", n->u[0].p);
+		fmtprint(f, "%%dict");
+		n = n->u[0].p;
+		switch(treecount(n)){
+		case 0:
+			fmtcat(f,"()");
+			break;
+		case 1:
+			fmtprint(f,"(%T)", n->u[0].p);
+			break;
+		default:
+			fmtprint(f, "(%T", n->u[0].p);
+			while ((n = n->u[1].p) != NULL){
+				assert(n->u[0].p->kind == nAssoc);
+				fmtprint(f, "; %T", n->u[0].p);
+			}
+			fmtputc(f, ')');
+		}
 		return FALSE;
 	case nAssoc:
-		fmtprint(f, "%T => %T;", n->u[0].p, n->u[1].p);
+		fmtprint(f, "%T => %T", n->u[0].p, n->u[1].p);
 		return FALSE;
 
 	default:

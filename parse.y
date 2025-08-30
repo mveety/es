@@ -104,7 +104,8 @@ assign	: caret '=' caret words		{ $$ = $4; }
 
 assocs : { $$ = NULL; } 
 	   | assoc { $$ = treecons2($1, NULL); }
-	   | assocs ';' assoc { $$ = treeconsend2($1, $3); };
+	   | assocs ';' assoc { $$ = treeconsend2($1, $3); }
+	   | assocs NL assoc { $$ = treeconsend2($1, $3); }
 
 assoc : word DICTASSOC words { $$ = mk(nAssoc, $1, $3); }
 
