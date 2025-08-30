@@ -53,6 +53,10 @@ fn run_test_dict {
 		assert {~ $y(c) d}
 		assert {~ $y(e) f}
 		assert {<={result $y(g) onerror result true}}
+		y := 1 => 2
+		y := 3 => 4
+		assert {~ $y(1) 2}
+		assert {~ $y(3) 4}
 	}
 }
 

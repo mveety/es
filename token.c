@@ -145,7 +145,7 @@ static Boolean getfds(int fd[2], int c, int default0, int default1) {
 
 extern int yylex(void) {
 	static Boolean dollar = FALSE;
-	int c;
+	int c, mc;
 	size_t i;			/* The purpose of all these local assignments is to	*/
 	const char *meta;		/* allow optimizing compilers like gcc to load these	*/
 	char *buf = tokenbuf;		/* values into registers. On a sparc this is a		*/
@@ -170,6 +170,14 @@ top:	while ((c = input_getc()) == ' ' || c == '\t')
 	if (c == EOF)
 		return ENDFILE;
 	if (!meta[(unsigned char) c]) {	/* it's a word or keyword. */
+		if (c == ':') {
+			mc = input_getc();
+			if(mc == '='){
+				w = NW;
+				return DICTASSIGN;
+			}
+			input_ungetc(mc);
+		}
 		InsertFreeCaret();
 		w = RW;
 		i = 0;
@@ -319,7 +327,6 @@ top:	while ((c = input_getc()) == ' ' || c == '\t')
 		while ((c = input_getc()) != '\n') /* skip comment until newline */
 			if (c == EOF)
 				return ENDFILE;
-		/* FALLTHROUGH */
 	case '\n':
 		input->lineno++;
 		newline = TRUE;
@@ -352,6 +359,14 @@ top:	while ((c = input_getc()) == ' ' || c == '\t')
 		}
 		w = NW;
 		return c;
+/*	case ':':
+		c = input_getc();
+		if(c == '='){
+			w = NW;
+			return DICTASSIGN;
+		}
+		input_ungetc(c);
+		return c;*/
 	case '{': case '}':
 		w = NW;
 		return c;

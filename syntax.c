@@ -417,3 +417,14 @@ mkprocess(Tree *subj, Tree *cases)
 	return mk(nLocal, localbindings, mkseq("%seq", thunkify(forterm), resultterm));
 }
 
+Tree*
+mkdictassign(Tree *sub, Tree *assoc)
+{
+	Tree *result;
+
+	result = treeappend(treecons(assoc->u[0].p, NULL), assoc->u[1].p);
+	result = mk(nAssign, sub, mk(nCall, thunkify(prefix("dictput", treecons(mk(nVar, sub), result)))));
+
+	return result;
+}
+

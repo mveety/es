@@ -35,6 +35,7 @@ extern Tree *redirappend(Tree *t, Tree *r);
 extern Tree *mkmatch(Tree *subj, Tree *cases);
 extern Tree *mkmatchall(Tree *subj, Tree *cases);
 extern Tree *mkprocess(Tree *subj, Tree *cases);
+extern Tree *mkdictassign(Tree *sub, Tree *assoc);
 
 /* heredoc.c */
 
