@@ -328,6 +328,8 @@ top:	while ((c = input_getc()) == ' ' || c == '\t')
 	case '(':
 		if (w == RW)	/* not keywords, so let & friends work */
 			c = SUB;
+		w = NW;
+		return c;
 	case ';':
 		w = NW;
 		return c;
