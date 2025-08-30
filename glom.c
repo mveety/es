@@ -235,7 +235,7 @@ static List *glom1(Tree *tree, Binding *binding) {
 			namestr = getstr(templist->term);
 			templist = varlookup(namestr, bp);
 			sub = glom1(tp->u[1].p, bp);
-			if(templist->term->kind == tkDict && templist->next == NULL){
+			if(templist != NULL && templist->term->kind == tkDict && templist->next == NULL){
 				gcref(&r_dict, (void**)&dict);
 				gcref(&r_subnamestr, (void**)&subnamestr);
 				gcref(&r_l, (void**)&l);

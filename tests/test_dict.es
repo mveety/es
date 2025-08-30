@@ -3,13 +3,19 @@
 fn run_test_dict {
 	let (
 		x = <=dictnew
+		y =
 		dnames = <={%range 1 100}
 		dvals = <={%range 1 100 |> dolist @ x {mul $x 10}}
 	) {
-		assert {~ $x 'dict('^*^')'}
+		assert {~ $x '%dict('^*^')'}
+
 		for (i = $dnames; j = $dvals) {
 			x = <={dictput $x $i $j}
 		}
+		for (assoc = <={%fsplit ';' <={~~ $x '%dict('^*^')'}}){
+			assert {~ $assoc *^'=>'^*}
+		}
+
 		assert {eq <={dictsize $x} <={%count $dnames}}
 		for (i = <={dictnames $x}) {
 			assert {~ $i $dnames}
@@ -41,6 +47,12 @@ fn run_test_dict {
 			assert {test1 10}
 			assert {! test1 dicks}
 		}
+		y = %dict(a=>b;c=>d;e=>f)
+		assert {~ $y '%dict(a => b; c => d; e => f)'}
+		assert {~ $y(a) b}
+		assert {~ $y(c) d}
+		assert {~ $y(e) f}
+		assert {<={result $y(g) onerror result true}}
 	}
 }
 
