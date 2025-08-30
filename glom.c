@@ -160,7 +160,10 @@ static List *glom1(Tree *tree, Binding *binding) {
 
 	/* for nVarsub */
 	char *namestr = NULL; Root r_namestr;
+	char *subnamestr = NULL; Root r_subnamestr;
 	List *sub = NULL; Root r_sub;
+	List *templist = NULL; Root r_templist;
+	List *li = NULL; Root r_li;
 
 	/* for nConcat */
 	List *l = NULL; Root r_l;
@@ -222,18 +225,42 @@ static List *glom1(Tree *tree, Binding *binding) {
 		case nVarsub:
 			gcref(&r_namestr, (void**)&r_namestr);
 			gcref(&r_sub, (void**)&sub);
+			gcref(&r_templist, (void**)&templist);
 
-			list = glom1(tp->u[0].p, bp);
-			if (list == NULL)
+			templist = glom1(tp->u[0].p, bp);
+			if (templist == NULL)
 				fail("es:glom", "null variable name in subscript");
-			if (list->next != NULL)
+			if (templist->next != NULL)
 				fail("es:glom", "multi-word variable name in subscript");
-			namestr = getstr(list->term);
-			list = varlookup(namestr, bp);
+			namestr = getstr(templist->term);
+			templist = varlookup(namestr, bp);
 			sub = glom1(tp->u[1].p, bp);
-			tp = NULL;
-			list = subscript(list, sub);
+			if(templist->term->kind == tkDict && templist->next == NULL){
+				gcref(&r_dict, (void**)&dict);
+				gcref(&r_subnamestr, (void**)&subnamestr);
+				gcref(&r_l, (void**)&l);
+				gcref(&r_li, (void**)&li);
 
+				dict = getdict(templist->term);
+				for(li = sub; li != NULL; li = li->next){
+					subnamestr = getstr(li->term);
+					l = dictget(dict, subnamestr);
+					if(!l)
+						fail("es:glom", "element '%s' is empty", subnamestr);
+					list = append(list, l);
+				}
+
+				gcrderef(&r_li);
+				gcrderef(&r_l);
+				gcrderef(&r_subnamestr);
+				gcrderef(&r_dict);
+			} else {
+				list = subscript(templist, sub);
+			}
+
+			tp = NULL;
+
+			gcrderef(&r_templist);
 			gcrderef(&r_sub);
 			gcrderef(&r_namestr);
 			break;
