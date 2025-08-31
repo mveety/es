@@ -327,6 +327,7 @@ top:	while ((c = input_getc()) == ' ' || c == '\t')
 		while ((c = input_getc()) != '\n') /* skip comment until newline */
 			if (c == EOF)
 				return ENDFILE;
+		fallthrough;
 	case '\n':
 		input->lineno++;
 		newline = TRUE;
@@ -335,17 +336,10 @@ top:	while ((c = input_getc()) == ' ' || c == '\t')
 	case '(':
 		if (w == RW)	/* not keywords, so let & friends work */
 			c = SUB;
-		w = NW;
-		return c;
+		fallthrough;
 	case ';':
-		w = NW;
-		return c;
 	case '^':
-		w = NW;
-		return c;
 	case ')':
-		w = NW;
-		return c;
 	case '=':
 		if(c != SUB){
 			char lchar;
@@ -357,17 +351,9 @@ top:	while ((c = input_getc()) == ' ' || c == '\t')
 			}
 			input_ungetc(lchar);
 		}
-		w = NW;
-		return c;
-/*	case ':':
-		c = input_getc();
-		if(c == '='){
-			w = NW;
-			return DICTASSIGN;
-		}
-		input_ungetc(c);
-		return c;*/
-	case '{': case '}':
+		fallthrough;
+	case '{':
+	case '}':
 		w = NW;
 		return c;
 	case '&':
