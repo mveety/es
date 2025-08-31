@@ -19,6 +19,7 @@ BreakBeforeBraces: Linux
 IndentCaseBlocks: true
 IndentCaseLabels: false
 IndentGotoLabels: false
+SortIncludes: false
 SpaceAfterCStyleCast: false
 SpaceAfterLogicalNot: false
 SpaceBeforeAssignmentOperators: true

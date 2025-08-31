@@ -9,39 +9,51 @@ Tree errornode;
 Tree *parsetree;
 
 /* initparse -- called at the dawn of time */
-extern void initparse(void) {
+extern void
+initparse(void)
+{
 	globalroot(&parsetree);
 }
 
 /* treecons -- create new tree list cell */
-extern Tree *treecons(Tree *car, Tree *cdr) {
+extern Tree *
+treecons(Tree *car, Tree *cdr)
+{
 	assert(cdr == NULL || cdr->kind == nList);
 	return mk(nList, car, cdr);
 }
 
 /* treecons2 -- create new tree list cell or do nothing if car is NULL */
-extern Tree *treecons2(Tree *car, Tree *cdr) {
+extern Tree *
+treecons2(Tree *car, Tree *cdr)
+{
 	assert(cdr == NULL || cdr->kind == nList);
 	return car == NULL ? cdr : mk(nList, car, cdr);
 }
 
 /* treeappend -- destructive append for tree lists */
-extern Tree *treeappend(Tree *head, Tree *tail) {
+extern Tree *
+treeappend(Tree *head, Tree *tail)
+{
 	Tree *p, **prevp;
-	for (p = head, prevp = &head; p != NULL; p = *(prevp = &p->CDR))
+	for(p = head, prevp = &head; p != NULL; p = *(prevp = &p->CDR))
 		assert(p->kind == nList || p->kind == nRedir);
 	*prevp = tail;
 	return head;
 }
 
 /* treeconsend -- destructive add node at end for tree lists */
-extern Tree *treeconsend(Tree *head, Tree *tail) {
+extern Tree *
+treeconsend(Tree *head, Tree *tail)
+{
 	return treeappend(head, treecons(tail, NULL));
 }
 
 /* treeconsend2 -- destructive add node at end for tree lists or nothing if tail is NULL */
-extern Tree *treeconsend2(Tree *head, Tree *tail) {
-	if (tail == NULL) {
+extern Tree *
+treeconsend2(Tree *head, Tree *tail)
+{
+	if(tail == NULL) {
 		assert(head == NULL || head->kind == nList || head->kind == nRedir);
 		return head;
 	}
@@ -49,112 +61,124 @@ extern Tree *treeconsend2(Tree *head, Tree *tail) {
 }
 
 /* thunkify -- wrap a tree in thunk braces if it isn't already a thunk */
-extern Tree *thunkify(Tree *tree) {
-	if (tree != NULL && (
-		   (tree->kind == nThunk)
-		|| (tree->kind == nList && tree->CAR->kind == nThunk && tree->CDR == NULL)
-	))
+extern Tree *
+thunkify(Tree *tree)
+{
+	if(tree != NULL &&
+	   ((tree->kind == nThunk) || (tree->kind == nList && tree->CAR->kind == nThunk && tree->CDR == NULL)))
 		return tree;
 	return mk(nThunk, tree);
 }
 
 /* firstis -- check if the first word of a literal command matches a known string */
-static Boolean firstis(Tree *t, const char *s) {
-	if (t == NULL || t->kind != nList)
+static Boolean
+firstis(Tree *t, const char *s)
+{
+	if(t == NULL || t->kind != nList)
 		return FALSE;
 	t = t->CAR;
-	if (t == NULL || t->kind != nWord)
+	if(t == NULL || t->kind != nWord)
 		return FALSE;
 	assert(t->u[0].s != NULL);
 	return streq(t->u[0].s, s);
 }
 
 /* prefix -- prefix a tree with a given word */
-extern Tree *prefix(char *s, Tree *t) {
+extern Tree *
+prefix(char *s, Tree *t)
+{
 	return treecons(mk(nWord, s), t);
 }
 
 /* flatten -- flatten the output of the glommer so we can pass the result as a single element */
-extern Tree *flatten(Tree *t, char *sep) {
+extern Tree *
+flatten(Tree *t, char *sep)
+{
 	return mk(nCall, prefix("%flatten", treecons(mk(nQword, sep), treecons(t, NULL))));
 }
 
 /* backquote -- create a backquote command */
-extern Tree *backquote(Tree *ifs, Tree *body) {
-	return mk(nCall,
-		  prefix("%backquote",
-		  	 treecons(flatten(ifs, ""),
-				  treecons(body, NULL))));
+extern Tree *
+backquote(Tree *ifs, Tree *body)
+{
+	return mk(nCall, prefix("%backquote", treecons(flatten(ifs, ""), treecons(body, NULL))));
 }
 
 /* stbackquote -- a mix of `{} and <={} */
-extern Tree *stbackquote(Tree *ifs, Tree *body){
-	return mk(nCall,
-			prefix("%stbackquote",
-				treecons(flatten(ifs, ""), treecons(body, NULL))));
+extern Tree *
+stbackquote(Tree *ifs, Tree *body)
+{
+	return mk(nCall, prefix("%stbackquote", treecons(flatten(ifs, ""), treecons(body, NULL))));
 }
 
 /* fnassign -- translate a function definition into an assignment */
-extern Tree *fnassign(Tree *name, Tree *params, Tree *body) {
+extern Tree *
+fnassign(Tree *name, Tree *params, Tree *body)
+{
 	Tree *defn;
 
 	if(body == NULL)
 		return mk(nAssign, mk(nConcat, mk(nWord, "fn-"), name), NULL);
 
-/*	defn = mk(nLambda, params, prefix("%block", treecons(thunkify(body), NULL))); */
+	/*	defn = mk(nLambda, params, prefix("%block", treecons(thunkify(body), NULL))); */
 	defn = mk(nLambda, params, body);
 	return mk(nAssign, mk(nConcat, mk(nWord, "fn-"), name), defn);
 }
 
 /* mklambda -- create a lambda */
-extern Tree *mklambda(Tree *params, Tree *body) {
+extern Tree *
+mklambda(Tree *params, Tree *body)
+{
 	return mk(nLambda, params, body);
 }
 
 /* mkseq -- destructively add to a sequence of nList/nThink operations */
-extern Tree *mkseq(char *op, Tree *t1, Tree *t2) {
+extern Tree *
+mkseq(char *op, Tree *t1, Tree *t2)
+{
 	Tree *tail;
 	Boolean sametail;
 
-	if (streq(op, "%seq")) {
-		if (t1 == NULL)
+	if(streq(op, "%seq")) {
+		if(t1 == NULL)
 			return t2;
-		if (t2 == NULL)
+		if(t2 == NULL)
 			return t1;
 	}
-	
+
 	sametail = firstis(t2, op);
 	tail = sametail ? t2->CDR : treecons(thunkify(t2), NULL);
-	if (firstis(t1, op))
+	if(firstis(t1, op))
 		return treeappend(t1, tail);
 	t1 = thunkify(t1);
-	if (sametail) {
-		  t2->CDR = treecons(t1, tail);
-		  return t2;
+	if(sametail) {
+		t2->CDR = treecons(t1, tail);
+		return t2;
 	}
 	return prefix(op, treecons(t1, tail));
 }
 
 /* mkpipe -- assemble a pipe from the commands that make it up (destructive) */
-extern Tree *mkpipe(Tree *t1, int outfd, int infd, Tree *t2) {
+extern Tree *
+mkpipe(Tree *t1, int outfd, int infd, Tree *t2)
+{
 	Tree *tail;
 	Boolean pipetail;
 
 	pipetail = firstis(t2, "%pipe");
-	tail = prefix(str("%d", outfd),
-		      prefix(str("%d", infd),
-			     pipetail ? t2->CDR : treecons(thunkify(t2), NULL)));
-	if (firstis(t1, "%pipe"))
+	tail =
+		prefix(str("%d", outfd), prefix(str("%d", infd), pipetail ? t2->CDR : treecons(thunkify(t2), NULL)));
+	if(firstis(t1, "%pipe"))
 		return treeappend(t1, tail);
 	t1 = thunkify(t1);
-	if (pipetail) {
-		  t2->CDR = treecons(t1, tail);
-		  return t2;
+	if(pipetail) {
+		t2->CDR = treecons(t1, tail);
+		return t2;
 	}
 	return prefix("%pipe", treecons(t1, tail));
 }
 
-extern Tree*
+extern Tree *
 mkfunpipe(Tree *t1, Tree *t2)
 {
 	Tree *firstcall, *res;
@@ -170,7 +194,7 @@ mkfunpipe(Tree *t1, Tree *t2)
 	return res;
 }
 
-extern Tree*
+extern Tree *
 mkonerror(Tree *captured, Tree *handler)
 {
 	captured = thunkify(captured);
@@ -184,87 +208,87 @@ mkonerror(Tree *captured, Tree *handler)
  *	tree and then rewriting the tree to include the appropriate commands
  */
 
-static Tree placeholder = { nRedir };
+static Tree placeholder = {nRedir};
 
-extern Tree *redirect(Tree *t) {
+extern Tree *
+redirect(Tree *t)
+{
 	Tree *r, *p;
-	if (t == NULL)
+	if(t == NULL)
 		return NULL;
-	if (t->kind != nRedir)
+	if(t->kind != nRedir)
 		return t;
 	r = t->CAR;
 	t = t->CDR;
-	for (; r->kind == nRedir; r = r->CDR)
+	for(; r->kind == nRedir; r = r->CDR)
 		t = treeappend(t, r->CAR);
-	for (p = r; p->CAR != &placeholder; p = p->CDR) {
+	for(p = r; p->CAR != &placeholder; p = p->CDR) {
 		assert(p != NULL);
 		assert(p->kind == nList);
 	}
-	if (firstis(r, "%heredoc"))
-		if (!queueheredoc(r))
+	if(firstis(r, "%heredoc"))
+		if(!queueheredoc(r))
 			return &errornode;
 	p->CAR = thunkify(redirect(t));
 	return r;
 }
 
-extern Tree *mkredircmd(char *cmd, int fd) {
+extern Tree *
+mkredircmd(char *cmd, int fd)
+{
 	return prefix(cmd, prefix(str("%d", fd), NULL));
 }
 
-extern Tree *mkredir(Tree *cmd, Tree *file) {
+extern Tree *
+mkredir(Tree *cmd, Tree *file)
+{
 	Tree *word = NULL;
-	if (file != NULL && file->kind == nThunk) {	/* /dev/fd operations */
+	if(file != NULL && file->kind == nThunk) { /* /dev/fd operations */
 		char *op;
 		Tree *var;
 		static int id = 0;
-		if (firstis(cmd, "%open"))
+		if(firstis(cmd, "%open"))
 			op = "%readfrom";
-		else if (firstis(cmd, "%create"))
+		else if(firstis(cmd, "%create"))
 			op = "%writeto";
 		else {
 			yyerror("bad /dev/fd redirection");
 			op = "";
 		}
 		var = mk(nWord, str("_devfd%d", id++));
-		cmd = treecons(
-			mk(nWord, op),
-			treecons(var, NULL)
-		);
+		cmd = treecons(mk(nWord, op), treecons(var, NULL));
 		word = treecons(mk(nVar, var), NULL);
-	} else if (!firstis(cmd, "%heredoc") && !firstis(cmd, "%here"))
+	} else if(!firstis(cmd, "%heredoc") && !firstis(cmd, "%here"))
 		file = mk(nCall, prefix("%one", treecons(file, NULL)));
-	cmd = treeappend(
-		cmd,
-		treecons(
-			file,
-			treecons(&placeholder, NULL)
-		)
-	);
-	if (word != NULL)
+	cmd = treeappend(cmd, treecons(file, treecons(&placeholder, NULL)));
+	if(word != NULL)
 		cmd = mk(nRedir, word, cmd);
 	return cmd;
 }
 
 /* mkclose -- make a %close node with a placeholder */
-extern Tree *mkclose(int fd) {
+extern Tree *
+mkclose(int fd)
+{
 	return prefix("%close", prefix(str("%d", fd), treecons(&placeholder, NULL)));
 }
 
 /* mkdup -- make a %dup node with a placeholder */
-extern Tree *mkdup(int fd0, int fd1) {
-	return prefix("%dup",
-		      prefix(str("%d", fd0),
-			     prefix(str("%d", fd1),
-				    treecons(&placeholder, NULL))));
+extern Tree *
+mkdup(int fd0, int fd1)
+{
+	return prefix("%dup", prefix(str("%d", fd0), prefix(str("%d", fd1), treecons(&placeholder, NULL))));
 }
 
 /* redirappend -- destructively add to the list of redirections, before any other nodes */
-extern Tree *redirappend(Tree *tree, Tree *r) {
+extern Tree *
+redirappend(Tree *tree, Tree *r)
+{
 	Tree *t, **tp;
-	for (; r->kind == nRedir; r = r->CDR)
+	for(; r->kind == nRedir; r = r->CDR)
 		tree = treeappend(tree, r->CAR);
 	assert(r->kind == nList);
-	for (t = tree, tp = &tree; t != NULL && t->kind == nRedir; t = *(tp = &t->CDR))
+	for(t = tree, tp = &tree; t != NULL && t->kind == nRedir; t = *(tp = &t->CDR))
 		;
 	assert(t == NULL || t->kind == nList);
 	*tp = mk(nRedir, r, t);
@@ -272,7 +296,7 @@ extern Tree *redirappend(Tree *tree, Tree *r) {
 }
 
 /* mkmatch -- rewrite for match */
-extern Tree*
+extern Tree *
 mkmatch(Tree *subj, Tree *cases)
 {
 	const char *varname = "matchexpr";
@@ -282,14 +306,14 @@ mkmatch(Tree *subj, Tree *cases)
 	sass = treecons2(mk(nAssign, mk(nWord, varname), subj), NULL);
 	svar = mk(nVar, mk(nWord, varname));
 
-	for(; cases != NULL; cases = cases->CDR){
+	for(; cases != NULL; cases = cases->CDR) {
 		pattlist = cases->CAR->CAR;
 		cmd = cases->CAR->CDR;
 
-		if(pattlist != NULL && pattlist->kind == nLambda){
+		if(pattlist != NULL && pattlist->kind == nLambda) {
 			pattlist = treecons(pattlist, NULL);
 			pattlist = treeconsend(pattlist, svar);
-		} else if(pattlist != NULL && pattlist->kind != nList){
+		} else if(pattlist != NULL && pattlist->kind != nList) {
 			pattlist = treecons(pattlist, NULL);
 			pattlist = mk(nMatch, svar, pattlist);
 		} else
@@ -312,7 +336,7 @@ is_all_patterns(Tree *pattern)
 
 	if(pattern == NULL)
 		return 0;
-	if(pattern->kind == nWord){
+	if(pattern->kind == nWord) {
 		str = pattern->u[0].s;
 		if(str[0] == '*' && str[1] == 0)
 			return 1;
@@ -327,8 +351,9 @@ is_all_patterns(Tree *pattern)
 	return 0;
 }
 
-extern Tree*
-mkmatchall(Tree *subj, Tree *cases) {
+extern Tree *
+mkmatchall(Tree *subj, Tree *cases)
+{
 	const char *varname = "matchexpr";
 	const char *resname = "resexpr";
 	const char *result = "result";
@@ -354,35 +379,31 @@ mkmatchall(Tree *subj, Tree *cases) {
 
 		is_wild = is_all_patterns(pattlist);
 
-		if(pattlist != NULL && pattlist->kind == nLambda){
+		if(pattlist != NULL && pattlist->kind == nLambda) {
 			pattlist = treecons(pattlist, NULL);
 			pattlist = treeconsend(pattlist, svar);
-		} else if(pattlist != NULL && pattlist->kind != nList){
+		} else if(pattlist != NULL && pattlist->kind != nList) {
 			pattlist = treecons(pattlist, NULL);
 			pattlist = mk(nMatch, svar, pattlist);
 		} else
 			pattlist = mk(nMatch, svar, pattlist);
 
-
 		resultnil = treecons(thunkify(treecons(mk(nWord, result), NULL)), NULL);
-		if(!is_wild){
-			ifbody = mkseq("%seq", thunkify(mk(nAssign, mk(nWord, hasmatched),
-												mk(nWord, falsestr))),
-									cmd);
+		if(!is_wild) {
+			ifbody = mkseq("%seq", thunkify(mk(nAssign, mk(nWord, hasmatched), mk(nWord, falsestr))), cmd);
 			ifbody = thunkify(ifbody);
-			match = treecons(mk(nCall, thunkify(prefix("if",
-								treecons(thunkify(pattlist),
-										treecons(ifbody, resultnil))))), NULL);
+			match = treecons(
+				mk(nCall, thunkify(prefix("if", treecons(thunkify(pattlist), treecons(ifbody, resultnil))))),
+				NULL);
 			match = mk(nList, resvar, match);
 			match = thunkify(mk(nAssign, mk(nWord, resname), match));
 			ifs = mkseq("%seq", ifs, match);
-		} else if (is_wild && has_wild) {
+		} else if(is_wild && has_wild) {
 			fail("$&parse", "more than one always match case in matchall");
 		} else {
 			wildmatch = treecons(mk(nCall, cmd), NULL);
 			wildmatch = thunkify(mk(nAssign, mk(nWord, resname), wildmatch));
-			wildmatch = prefix("if", treecons(thunkify(matchvar),
-									treecons(wildmatch, NULL)));
+			wildmatch = prefix("if", treecons(thunkify(matchvar), treecons(wildmatch, NULL)));
 			has_wild = 1;
 		}
 	}
@@ -392,7 +413,7 @@ mkmatchall(Tree *subj, Tree *cases) {
 	return mk(nLocal, varbinding, thunkify(ifs));
 }
 
-extern Tree*
+extern Tree *
 mkprocess(Tree *subj, Tree *cases)
 {
 	const char *varstr = "matchelement";
@@ -417,14 +438,15 @@ mkprocess(Tree *subj, Tree *cases)
 	return mk(nLocal, localbindings, mkseq("%seq", thunkify(forterm), resultterm));
 }
 
-Tree*
+Tree *
 mkdictassign(Tree *sub, Tree *assoc)
 {
-	Tree *result;
+	Tree *args;
 
-	result = treeappend(treecons(assoc->u[0].p, NULL), assoc->u[1].p);
-	result = mk(nAssign, sub, mk(nCall, thunkify(prefix("dictput", treecons(mk(nVar, sub), result)))));
-
-	return result;
+	if(assoc->CDR == NULL || assoc->CDR->CAR == NULL)
+		return mk(
+			nAssign, sub,
+			mk(nCall, thunkify(prefix("dictremove", treecons(mk(nVar, sub), treecons(assoc->CAR, NULL))))));
+	args = treeappend(treecons(assoc->CAR, NULL), assoc->CDR);
+	return mk(nAssign, sub, mk(nCall, thunkify(prefix("dictput", treecons(mk(nVar, sub), args)))));
 }
-
