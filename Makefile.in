@@ -93,14 +93,22 @@ distclean:	clean
 MANIFEST:
 	find . -type f | sed s/..// > MANIFEST
 
-install : es
+preinstall: es
 	$(MKDIR_P) $(bindir)
-	./es -N preinstall.es $(bindir)
+	./es -Np preinstall.es
+
+es-install: es
 	$(INSTALL) -s $(srcdir)/es $(bindir)
-	$(INSTALL) $(srcdir)/esdebug $(bindir)
-	chmod +x $(bindir)/esdebug
+
+docs-install: es
 	$(MKDIR_P) $(mandir)/man1
 	$(INSTALL) $(srcdir)/doc/es.1 $(mandir)/man1
+
+esdebug-install:
+	$(INSTALL) $(srcdir)/esdebug $(bindir)
+	chmod +x $(bindir)/esdebug
+
+install : es preinstall es-install docs-install esdebug-install
 
 userlib-install : es
 	./es -N libinstall.es $(srcdir)/libraries
