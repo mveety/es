@@ -1246,12 +1246,17 @@ fn try body {
 }
 
 fn-%onerror = $&noreturn @ protected handler {
-	let (e=; r=;) {
-		(e r) = <={try $protected}
-		if {$e} {
-			local (fn-error = @ {result $e}) {
-				result <=$handler
-			}
+	let (err=false; r=) {
+		(err r) = <={try $protected}
+		if {$err} {
+			match <={$err error} (
+				(return continue) { $err throw }
+				* {
+					local (fn-error = @ {result $err}) {
+						result <=$handler
+					}
+				}
+			)
 		} {
 			result $r
 		}
