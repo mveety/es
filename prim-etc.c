@@ -24,6 +24,8 @@ PRIM(echo) {
 }
 
 PRIM(count) {
+	if(list != NULL && list->next == NULL && list->term->kind == tkDict)
+		return prim("dictsize", list, binding, evalflags);
 	return mklist(mkstr(str("%d", length(list))), NULL);
 }
 
