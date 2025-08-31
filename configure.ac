@@ -65,6 +65,10 @@ AC_CACHE_CHECK(for extra CFLAGS for $CC on $host_os, es_cv_ccextras,
 								es_cv_ccextras="-I/usr/local/include"
 								CFLAGS="$CFLAGS -I/usr/local/include"
 								;;
+							gcc1*)
+								es_cv_ccextras="-Wl,-rpath=/usr/local/lib/${CC}"
+								CFLAGS="-Wl,-rpath=/usr/local/lib/${CC}"
+								;;
 							*)
 								es_cv_ccextras="none needed"
 								;;
@@ -84,6 +88,10 @@ AC_CACHE_CHECK(for extra LDFLAGS for $CC on $host_os, es_cv_ldextras,
 							clang* | cc)
 								es_cv_ldextras="-L/usr/local/lib"
 								LDFLAGS="$LDFLAGS $es_cv_ldextras"
+								;;
+							gcc1*)
+								es_cv_ldextras="-Wl,-rpath=/usr/local/lib/${CC}"
+								LDFLAGS="-Wl,-rpath=/usr/local/lib/${CC}"
 								;;
 							*)
 								es_cv_ldextras="none needed"
