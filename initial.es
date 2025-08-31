@@ -784,7 +784,6 @@ fn %interactive-exception-handler errobj result {
 			}
 		}
 		continue { result <=true }
-		hook_error { result <=true }
 		{ echo >[1=2] uncaught exception: $err $type $msg }
 	)
 	throw retry
