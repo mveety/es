@@ -119,10 +119,8 @@ fn _is_a_hex_number v {
 }
 
 fn _is_a_dict v {
-	if {! ~ $#v 1} {
-		return <=false
-	}
-	if {! ~ $v '%dict('^*^')'} {
+	
+	if {! $&isalist $v && ! ~ <={$&termtypeof $v} dict} {
 		return <=false
 	}
 	result <=true
@@ -194,7 +192,7 @@ fn prim_type_test_primordial v {
 }
 
 fn prim_type_test_list v {
-	if {gt $#v 1} {
+	if {$&isalist $v} {
 		result <=true
 	} {
 		result <=false

@@ -496,6 +496,12 @@ PRIM(getditto) {
 	return mklist(mkstr(str("%s", s, " ")), NULL);
 }
 
+PRIM(isalist) {
+	if(list != NULL && list->next != NULL)
+		return list_true;
+	return list_false;
+}
+
 Dict*
 initprims_mv(Dict *primdict)
 {
@@ -528,6 +534,7 @@ initprims_mv(Dict *primdict)
 	X(fmtvar);
 	X(setditto);
 	X(getditto);
+	X(isalist);
 
 	return primdict;
 }
