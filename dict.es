@@ -69,3 +69,21 @@ fn dicthaskey dict key {
 	return <=true
 }
 
+fn dictcopy dict {
+	local(newdict = <=dictnew){
+		dictforall $dict @ n v {
+			newdict := $n => $v
+		}
+		result $newdict
+	}
+}
+
+fn dictmerge dicta dictb {
+	# dicta is merged with dictb. dicta elements will overwrite
+	# dictb elements
+	dictforall $dicta @ n v {
+		dictb := $n => $v
+	}
+	result $dictb
+}
+

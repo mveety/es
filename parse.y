@@ -109,6 +109,8 @@ assocs : { $$ = NULL; }
 	   | assoc { $$ = treecons2($1, NULL); }
 	   | assocs ';' assoc { $$ = treeconsend2($1, $3); }
 	   | assocs NL assoc { $$ = treeconsend2($1, $3); }
+	   | assocs ';' { $$ = $1; }
+	   | assocs NL { $$ = $1; }
 
 assoc : word DICTASSOC words { $$ = mk(nAssoc, $1, $3); }
 
