@@ -2,8 +2,14 @@
 
 library advanced_range (init)
 
-if {~ $#es_%range_use_primitive 0} {
-	es_%range_use_primitive = <={if {~ range <=$&primitives}{ result true }{ result false }}
+if {~ $#es_conf_%range-use-primitive 0} {
+	es_conf_%range-use-primitive = <={
+		if {~ range <=$&primitives} {
+			result true
+		} {
+			result false
+		}
+	}
 }
 
 fn range_toglob list {

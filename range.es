@@ -1,7 +1,13 @@
 #!/usr/bin/env es
 
-if {~ $#es_%range_use_primitive 0} {
-	es_%range_use_primitive = <={if {~ range <=$&primitives}{ result true }{ result false }}
+if {~ $#es_conf_%range-use-primitive 0} {
+	es_conf_%range-use-primitive = <={
+		if {~ range <=$&primitives} {
+			result true
+		} {
+			result false
+		}
+	}
 }
 
 fn %range start0 end0 {
@@ -12,7 +18,7 @@ fn %range start0 end0 {
 		res = ()
 		i=
 	){
-		if {$es_%range_use_primitive} {
+		if {$es_conf_%range-use-primitive} {
 			res = <={$&range $start $end}
 		} {
 			i = $start
