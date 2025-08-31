@@ -10,12 +10,6 @@ library complete_git (init completion)
 #	}
 #}
 
-if {~ $#complete_git_use_list 0} {
-	complete_git_use_list = true
-} {
-	complete_git_use_list = false
-}
-
 complete_git_commands = (
 	'init' 'clone' 'add' 'status' 'diff' 'commit'
 	'notes' 'restore' 'reset' 'rm' 'mv'
@@ -58,11 +52,7 @@ fn complete_git_hook curline partial {
 			%fsplit ' ' |> %last |> es_complete_trim
 	}) {
 		if {~ $prevtok 'git'} {
-			if {$complete_git_use_list} {
-				complete_git_filter_list $partial
-			} {
-				complete_git_filter_dir $partial
-			}
+			complete_git_filter_list $partial
 		} {
 			complete_files $partial
 		}
