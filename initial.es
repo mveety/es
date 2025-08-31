@@ -332,7 +332,7 @@ fn cd dir {
 #		`{cmd args}            <={%backquote <={%flatten '' $ifs} {cmd args}}
 #		``ifs {cmd args}       <={%backquote <={%flatten '' ifs} {cmd args}}
 
-fn-%count	= $&count
+fn-%count = $&count
 fn-%flatten	= $&flatten
 
 fn  %string v { %flatten '' $v }

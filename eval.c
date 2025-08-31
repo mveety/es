@@ -114,8 +114,7 @@ assign(Tree *varform, Tree *valueform0, Binding *binding0)
 
 /* letbindings -- create a new Binding containing let-bound variables */
 Binding*
-letbindings1(Tree *defn0, Binding *outer0,
-		Binding *context0, int evalflags, int letstar)
+letbindings1(Tree *defn0, Binding *outer0, Binding *context0, int evalflags, int letstar)
 {
 	Binding *binding = NULL; Root r_binding;
 	Binding *context = NULL; Root r_context;

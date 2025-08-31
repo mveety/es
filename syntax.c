@@ -9,14 +9,14 @@ Tree errornode;
 Tree *parsetree;
 
 /* initparse -- called at the dawn of time */
-extern void
+void
 initparse(void)
 {
 	globalroot(&parsetree);
 }
 
 /* treecons -- create new tree list cell */
-extern Tree *
+Tree *
 treecons(Tree *car, Tree *cdr)
 {
 	assert(cdr == NULL || cdr->kind == nList);
@@ -24,7 +24,7 @@ treecons(Tree *car, Tree *cdr)
 }
 
 /* treecons2 -- create new tree list cell or do nothing if car is NULL */
-extern Tree *
+Tree *
 treecons2(Tree *car, Tree *cdr)
 {
 	assert(cdr == NULL || cdr->kind == nList);
@@ -32,7 +32,7 @@ treecons2(Tree *car, Tree *cdr)
 }
 
 /* treeappend -- destructive append for tree lists */
-extern Tree *
+Tree *
 treeappend(Tree *head, Tree *tail)
 {
 	Tree *p, **prevp;
@@ -43,14 +43,14 @@ treeappend(Tree *head, Tree *tail)
 }
 
 /* treeconsend -- destructive add node at end for tree lists */
-extern Tree *
+Tree *
 treeconsend(Tree *head, Tree *tail)
 {
 	return treeappend(head, treecons(tail, NULL));
 }
 
 /* treeconsend2 -- destructive add node at end for tree lists or nothing if tail is NULL */
-extern Tree *
+Tree *
 treeconsend2(Tree *head, Tree *tail)
 {
 	if(tail == NULL) {
@@ -61,7 +61,7 @@ treeconsend2(Tree *head, Tree *tail)
 }
 
 /* thunkify -- wrap a tree in thunk braces if it isn't already a thunk */
-extern Tree *
+Tree *
 thunkify(Tree *tree)
 {
 	if(tree != NULL &&
@@ -84,35 +84,35 @@ firstis(Tree *t, const char *s)
 }
 
 /* prefix -- prefix a tree with a given word */
-extern Tree *
+Tree *
 prefix(char *s, Tree *t)
 {
 	return treecons(mk(nWord, s), t);
 }
 
 /* flatten -- flatten the output of the glommer so we can pass the result as a single element */
-extern Tree *
+Tree *
 flatten(Tree *t, char *sep)
 {
 	return mk(nCall, prefix("%flatten", treecons(mk(nQword, sep), treecons(t, NULL))));
 }
 
 /* backquote -- create a backquote command */
-extern Tree *
+Tree *
 backquote(Tree *ifs, Tree *body)
 {
 	return mk(nCall, prefix("%backquote", treecons(flatten(ifs, ""), treecons(body, NULL))));
 }
 
 /* stbackquote -- a mix of `{} and <={} */
-extern Tree *
+Tree *
 stbackquote(Tree *ifs, Tree *body)
 {
 	return mk(nCall, prefix("%stbackquote", treecons(flatten(ifs, ""), treecons(body, NULL))));
 }
 
 /* fnassign -- translate a function definition into an assignment */
-extern Tree *
+Tree *
 fnassign(Tree *name, Tree *params, Tree *body)
 {
 	Tree *defn;
@@ -126,14 +126,14 @@ fnassign(Tree *name, Tree *params, Tree *body)
 }
 
 /* mklambda -- create a lambda */
-extern Tree *
+Tree *
 mklambda(Tree *params, Tree *body)
 {
 	return mk(nLambda, params, body);
 }
 
 /* mkseq -- destructively add to a sequence of nList/nThink operations */
-extern Tree *
+Tree *
 mkseq(char *op, Tree *t1, Tree *t2)
 {
 	Tree *tail;
@@ -159,7 +159,7 @@ mkseq(char *op, Tree *t1, Tree *t2)
 }
 
 /* mkpipe -- assemble a pipe from the commands that make it up (destructive) */
-extern Tree *
+Tree *
 mkpipe(Tree *t1, int outfd, int infd, Tree *t2)
 {
 	Tree *tail;
@@ -178,7 +178,7 @@ mkpipe(Tree *t1, int outfd, int infd, Tree *t2)
 	return prefix("%pipe", treecons(t1, tail));
 }
 
-extern Tree *
+Tree *
 mkfunpipe(Tree *t1, Tree *t2)
 {
 	Tree *firstcall, *res;
@@ -194,7 +194,7 @@ mkfunpipe(Tree *t1, Tree *t2)
 	return res;
 }
 
-extern Tree *
+Tree *
 mkonerror(Tree *captured, Tree *handler)
 {
 	captured = thunkify(captured);
@@ -210,7 +210,7 @@ mkonerror(Tree *captured, Tree *handler)
 
 static Tree placeholder = {nRedir};
 
-extern Tree *
+Tree *
 redirect(Tree *t)
 {
 	Tree *r, *p;
@@ -233,13 +233,13 @@ redirect(Tree *t)
 	return r;
 }
 
-extern Tree *
+Tree *
 mkredircmd(char *cmd, int fd)
 {
 	return prefix(cmd, prefix(str("%d", fd), NULL));
 }
 
-extern Tree *
+Tree *
 mkredir(Tree *cmd, Tree *file)
 {
 	Tree *word = NULL;
@@ -267,21 +267,21 @@ mkredir(Tree *cmd, Tree *file)
 }
 
 /* mkclose -- make a %close node with a placeholder */
-extern Tree *
+Tree *
 mkclose(int fd)
 {
 	return prefix("%close", prefix(str("%d", fd), treecons(&placeholder, NULL)));
 }
 
 /* mkdup -- make a %dup node with a placeholder */
-extern Tree *
+Tree *
 mkdup(int fd0, int fd1)
 {
 	return prefix("%dup", prefix(str("%d", fd0), prefix(str("%d", fd1), treecons(&placeholder, NULL))));
 }
 
 /* redirappend -- destructively add to the list of redirections, before any other nodes */
-extern Tree *
+Tree *
 redirappend(Tree *tree, Tree *r)
 {
 	Tree *t, **tp;
@@ -296,7 +296,7 @@ redirappend(Tree *tree, Tree *r)
 }
 
 /* mkmatch -- rewrite for match */
-extern Tree *
+Tree *
 mkmatch(Tree *subj, Tree *cases)
 {
 	const char *varname = "matchexpr";
@@ -351,7 +351,7 @@ is_all_patterns(Tree *pattern)
 	return 0;
 }
 
-extern Tree *
+Tree *
 mkmatchall(Tree *subj, Tree *cases)
 {
 	const char *varname = "matchexpr";
@@ -413,7 +413,7 @@ mkmatchall(Tree *subj, Tree *cases)
 	return mk(nLocal, varbinding, thunkify(ifs));
 }
 
-extern Tree *
+Tree *
 mkprocess(Tree *subj, Tree *cases)
 {
 	const char *varstr = "matchelement";

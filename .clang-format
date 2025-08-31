@@ -1,3 +1,4 @@
+Language: C
 BasedOnStyle: LLVM
 # UseTab: ForIndentation
 UseTab: Always
@@ -9,7 +10,7 @@ AlignConsecutiveAssignments: false
 AlignConsecutiveDeclarations: false
 AlignEscapedNewlines: Left
 AlignTrailingComments: true
-AllowShortCaseLabelsOnASingleLine: true
+AllowShortCaseLabelsOnASingleLine: false
 AllowShortFunctionsOnASingleLine: false
 AllowShortIfStatementsOnASingleLine: false
 AlwaysBreakAfterReturnType: TopLevelDefinitions
@@ -25,6 +26,11 @@ SpaceAfterLogicalNot: false
 SpaceBeforeAssignmentOperators: true
 SpaceBeforeCaseColon: false
 SpaceBeforeParens: Never
+SpacesInParens: Custom
+SpacesInParensOptions:
+  InCStyleCasts: false
+  InEmptyParentheses: false
+  InConditionalStatements: false
 PointerAlignment: Right
 ColumnLimit: 110
 WhitespaceSensitiveMacros: ['PRIM']
