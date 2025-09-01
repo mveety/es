@@ -710,7 +710,29 @@ if {~ <=$&primitives execfailure} {fn-%exec-failure = $&execfailure}
 #	The parsed code is executed only if it is non-empty, because otherwise
 #	result gets set to zero when it should not be.
 
-fn-%parse	= $&parse
+if {~ $#es_conf_parse-echo 0} {
+	es_conf_parse-echo = false
+}
+
+set-es_conf_parse-echo = @ value _ {
+	local(curval = $es_conf_parse-echo) {
+		if {! ~ $value true false} {
+			result $curval
+		} {
+			result $value
+		}
+	}
+}
+
+fn-%parse = @{
+	local(res = <={$&parse $*}){
+		if {$es_conf_parse-echo}{
+			echo $res
+		}
+		result $res
+	}
+}
+
 fn-%parsestring = $&parsestring
 fn-%is-interactive = $&isinteractive
 
