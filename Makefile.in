@@ -95,7 +95,7 @@ MANIFEST:
 
 preinstall: es
 	$(MKDIR_P) $(bindir)
-	./es -Np preinstall.es
+	./es -Np preinstall.es $(bindir)
 
 es-install: es
 	$(INSTALL) -s $(srcdir)/es $(bindir)
