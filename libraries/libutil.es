@@ -119,7 +119,7 @@ fn libutil_enumerate_deps library {
 }
 
 fn libutil_check_definition library {
-	if {! ~ $library <={libutil_get_libfile $library |> libutil_enumerate_file_info |> %elem 1}} {
+	if {! ~ $library <={libutil_getlibfile $library |> libutil_enumerate_file_info |> %elem 1}} {
 		throw error $0 'library''s defined name does not match file name'
 	}
 	true
