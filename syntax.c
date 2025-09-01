@@ -441,8 +441,14 @@ mkprocess(Tree *subj, Tree *cases)
 Tree *
 mkdictassign(Tree *sub, Tree *assoc)
 {
-	Tree *args;
+	Tree *args = NULL;
+	Tree *assoc_elem = NULL;
+	Tree *assoc_value = NULL;
 
+
+	assoc_elem = assoc->CAR;
+	assoc_value = assoc->CDR;
+	assoc = mk(nAssoc, mk(nQword, gcdup(assoc_elem->u[0].s)), assoc_value);
 	if(assoc->CDR == NULL || assoc->CDR->CAR == NULL)
 		return mk(
 			nAssign, sub,
