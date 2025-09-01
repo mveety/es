@@ -211,6 +211,29 @@ PRIM(termtypeof) {
 	return list_false;
 }
 
+PRIM(dictcopy) {
+	List *res = NULL; Root r_res;
+	Dict *d = NULL; Root r_d;
+
+	if(!list)
+		fail("$&dictcopy", "missing arguments");
+
+	res = NULL;
+	gcref(&r_res, (void**)&res);
+
+	d = getdict(list->term);
+	if(!d)
+		fail("$&dictcopy", "term not valid dict");
+	gcref(&r_d, (void**)&d);
+
+	d = dictcopy(d);
+	res = mklist(mkdictterm(d), NULL);
+
+	gcrderef(&r_d);
+	gcrderef(&r_res);
+	return res;
+}
+
 Dict*
 initprims_dict(Dict *primdict)
 {
@@ -221,7 +244,7 @@ initprims_dict(Dict *primdict)
 	X(dictforall);
 	X(dictsize);
 	X(termtypeof);
+	X(dictcopy);
 	return primdict;
 }
-
 

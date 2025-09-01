@@ -105,7 +105,7 @@ DictMark(void *p)
  * private operations
  */
 
-static char DEAD[] = "%%DEAD%%";
+char *DEAD = "%%DEAD%%";
 
 static Assoc *get(Dict *dict, const char *name) {
 	Assoc *ap;
@@ -240,3 +240,57 @@ extern void *dictget2(Dict *dict, const char *name1, const char *name2) {
 			return ap->value;
 	return NULL;
 }
+
+Dict*
+dictcopy(Dict *oda)
+{
+	int i;
+	Dict *odict = NULL; Root r_odict;
+	Dict *dict = NULL; Root r_dict;
+
+	gcref(&r_odict, (void**)&odict);
+	gcref(&r_dict, (void**)&dict);
+
+	odict = oda;
+	dict = mkdict();
+
+	for(i = 0; i < odict->size; i++){
+		if(odict->table[i].name == NULL || odict->table[i].name == DEAD)
+			continue;
+		dict = dictput(dict, odict->table[i].name, (void*)odict->table[i].value);
+	}
+
+	gcrderef(&r_dict);
+	gcrderef(&r_odict);
+
+	return dict;
+}
+
+Dict*
+dictappend(Dict *desta, Dict *srca, Boolean overwrite)
+{
+	int i;
+	Dict *dest = NULL; Root r_dest;
+	Dict *src = NULL; Root r_src;
+
+	gcref(&r_dest, (void**)&dest);
+	gcref(&r_src, (void**)&src);
+
+	dest = desta;
+	src = srca;
+
+	for(i = 0; i < src->size; i++){
+		if(src->table[i].name == NULL || src->table[i].name == DEAD)
+			continue;
+		if(dictget(dest, src->table[i].name))
+			if(!overwrite)
+				continue;
+		dest = dictput(dest, src->table[i].name, src->table[i].value);
+	}
+
+	gcrderef(&r_src);
+	gcrderef(&r_dest);
+
+	return dest;
+}
+

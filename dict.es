@@ -5,6 +5,7 @@ fn-dictput = $&dictput
 fn-dictremove = $&dictremove
 fn-dictsize = $&dictsize
 fn-dictforall = $&dictforall
+fn-dictcopy = $&dictcopy
 
 fn dictnames dict {
 	let (names=) {
@@ -67,23 +68,5 @@ fn dictiter dict {
 fn dicthaskey dict key {
 	_ = $dict($key) onerror return <=false
 	return <=true
-}
-
-fn dictcopy dict {
-	local(newdict = <=dictnew){
-		dictforall $dict @ n v {
-			newdict := $n => $v
-		}
-		result $newdict
-	}
-}
-
-fn dictmerge dicta dictb {
-	# dicta is merged with dictb. dicta elements will overwrite
-	# dictb elements
-	dictforall $dicta @ n v {
-		dictb := $n => $v
-	}
-	result $dictb
 }
 

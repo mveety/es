@@ -3,10 +3,70 @@
 #include "es.h"
 #include "gc.h"
 
+
+extern char DEAD[]; // from dict.c
+Dict *dictlistconcat(Dict*, List*, Boolean);
+Dict *dictdictconcat(Dict*, Dict*);
+
+int
+isvaliddict(List *list)
+{
+	if(list == NULL)
+		return 0;
+	if(list->next == NULL && list->term->kind == tkDict)
+		return 1;
+	return 0;
+}
+
 /* concat -- cartesion cross product concatenation */
 extern List *concat(List *list1, List *list2) {
-	List **p, *result = NULL;
+	List **p, *result = NULL; Root r_result;
+	Dict *dict = NULL; Root r_dict;
+	Dict *dictsrc = NULL; Root r_dictsrc;
+	List *list = NULL; Root r_list;
+	Boolean before = FALSE;
 
+	if(isvaliddict(list1) && isvaliddict(list2)){
+		gcref(&r_result, (void**)&result);
+		gcref(&r_dict, (void**)&dict);
+		gcref(&r_dictsrc, (void**)&dictsrc);
+
+		dict = getdict(list1->term);
+		dictsrc = getdict(list2->term);
+
+		dict = dictdictconcat(dict, dictsrc);
+		result = mklist(mkdictterm(dict), NULL);
+
+		gcrderef(&r_dictsrc);
+		gcrderef(&r_dict);
+		gcrderef(&r_result);
+
+		return result;
+
+	}
+	if(isvaliddict(list1) || isvaliddict(list2)){
+		gcref(&r_result, (void**)&result);
+		gcref(&r_dict, (void**)&dict);
+		gcref(&r_list, (void**)&list);
+
+		if(isvaliddict(list1)){
+			dict = getdict(list1->term);
+			list = list2;
+			before = FALSE;
+		} else {
+			dict = getdict(list2->term);
+			list = list1;
+			before = TRUE;
+		}
+		dict = dictlistconcat(dict, list, before);
+		result = mklist(mkdictterm(dict), NULL);
+
+		gcrderef(&r_list);
+		gcrderef(&r_dict);
+		gcrderef(&r_result);
+
+		return result;
+	}
 	gcdisable();
 	for (p = &result; list1 != NULL; list1 = list1->next) {
 		List *lp;
@@ -20,6 +80,70 @@ extern List *concat(List *list1, List *list2) {
 	Ref(List *, list, result);
 	gcenable();
 	RefReturn(list);
+}
+
+Dict*
+dictlistconcat(Dict *darg, List *larg, Boolean before)
+{
+	int i;
+	Dict *dict = NULL; Root r_dict;
+	Dict *odict = NULL; Root r_odict;
+	List *list = NULL; Root r_list;
+	List *dictelem = NULL; Root r_dictelem;
+	List *odictelem = NULL; Root r_odictelem;
+
+	gcref(&r_dict, (void**)&dict);
+	gcref(&r_odict, (void**)&odict);
+	gcref(&r_list, (void**)&list);
+	gcref(&r_dictelem, (void**)&dictelem);
+	gcref(&r_odictelem, (void**)&odictelem);
+
+
+	dict = mkdict();
+	odict = darg;
+	list = larg;
+
+	for(i = 0; i < odict->size; i++){
+		if(odict->table[i].name == NULL || odict->table[i].name == DEAD)
+			continue;
+		odictelem = (List*)odict->table[i].value;
+		if(before)
+			dictelem = concat(list, odictelem);
+		else
+			dictelem = concat(odictelem, list);
+		dict = dictput(dict, odict->table[i].name, (void*)dictelem);
+	}
+
+	gcrderef(&r_odictelem);
+	gcrderef(&r_dictelem);
+	gcrderef(&r_list);
+	gcrderef(&r_odict);
+	gcrderef(&r_dict);
+
+	return dict;
+}
+
+Dict*
+dictdictconcat(Dict *desta, Dict *srca)
+{
+	Dict *odest = NULL; Root r_odest;
+	Dict *dest = NULL; Root r_dest;
+	Dict *src = NULL; Root r_src;
+
+	gcref(&r_odest, (void**)&dest);
+	gcref(&r_dest, (void**)&dest);
+	gcref(&r_src, (void**)&src);
+
+	odest = desta;
+	src = srca;
+	dest = dictcopy(odest);
+	dest = dictappend(dest, src, TRUE);
+
+	gcrderef(&r_src);
+	gcrderef(&r_dest);
+	gcrderef(&r_odest);
+
+	return dest;
 }
 
 /* qcat -- concatenate two quote flag terms */
@@ -98,7 +222,7 @@ static List *subscript(List *list, List *subs) {
 
 	if (subs != NULL && streq(getstr(subs->term), "...")) {
 		lo = 1;
-		goto mid_range;
+goto mid_range;
 	}
 
 	while (subs != NULL) {
@@ -299,7 +423,7 @@ static List *glom1(Tree *tree, Binding *binding) {
 				assoc = inner->u[0].p;
 				assert(assoc->kind = nAssoc);
 				name = glom1(assoc->u[0].p, bp);
-				value = glom1(assoc->u[1].p, bp);
+				value = glom(assoc->u[1].p, bp, TRUE);
 				assert(name != NULL);
 				namestr = getstr(name->term);
 				dict = dictput(dict, namestr, value);
@@ -370,7 +494,12 @@ extern List *glom2(Tree *tree, Binding *binding, StrList **quotep) {
 			Ref(StrList *, qr, NULL);
 			l = glom2(tp->u[0].p, bp, &ql);
 			r = glom2(tp->u[1].p, bp, &qr);
-			list = qconcat(l, r, ql, qr, &qlist);
+			if(isvaliddict(l) || isvaliddict(r)) {
+				list = concat(l, r);
+				qlist = mkstrlist(UNQUOTED, NULL);
+			} else {
+				list = qconcat(l, r, ql, qr, &qlist);
+			}
 			RefEnd4(qr, ql, r, l);
 			tp = NULL;
 			break;

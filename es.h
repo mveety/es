@@ -284,7 +284,8 @@ extern void dictforall(Dict *dict, void (*proc)(void *, char *, void *), void *a
 extern void *dictget(Dict *dict, const char *name);
 extern Dict *dictput(Dict *dict, char *name, void *value);
 extern void *dictget2(Dict *dict, const char *name1, const char *name2);
-
+extern Dict *dictcopy(Dict *oda);
+extern Dict *dictappend(Dict *dest, Dict *src, Boolean overwrite);
 
 /* conv.c */
 
