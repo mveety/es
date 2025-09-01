@@ -448,7 +448,7 @@ mkdictassign(Tree *sub, Tree *assoc)
 
 	assoc_elem = assoc->CAR;
 	assoc_value = assoc->CDR;
-	if(assoc_value->kind == nWord)
+	if(assoc_elem->kind == nWord)
 		assoc = mk(nAssoc, mk(nQword, gcdup(assoc_elem->u[0].s)), assoc_value);
 	if(assoc->CDR == NULL || assoc->CDR->CAR == NULL)
 		return mk(
