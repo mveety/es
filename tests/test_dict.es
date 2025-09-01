@@ -1,11 +1,12 @@
 #!/usr/bin/env es
 
 fn run_test_dict {
-	let (
+	local (
 		x = <=dictnew
 		y =
 		dnames = <={%range 1 100}
 		dvals = <={%range 1 100 |> dolist @ x {mul $x 10}}
+		sdict = '%dict(1=>2;3=>4;a=>b;c=>''hello world'';d=>1 2 3 4 5)'
 	) {
 		assert {~ $x '%dict('^*^')'}
 
@@ -61,6 +62,14 @@ fn run_test_dict {
 		y := 3 =>
 		assert {<={result $y(1) onerror result true}}
 		assert {<={result $y(3) onerror result true}}
+		assert {~ <={$&termtypeof $sdict} string}
+		sdict := e => 'we should be a dict now'
+		assert {~ <={$&termtypeof $sdict} dict}
+		assert {~ $sdict(e) 'we should be a dict now'}
+		assert {~ $sdict(c) 'hello world'}
+		assert {~ <={%count $sdict(d)} 5}
+		sdict := * => true
+		assert {$sdict(*)}
 	}
 }
 
