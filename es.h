@@ -163,6 +163,7 @@ extern Dict *getdict(Term *term);
 extern Term *termcat(Term *t1, Term *t2);
 extern Boolean termeq(Term *term, const char *s);
 extern Boolean isclosure(Term *term);
+extern Boolean isdict(Term *term);
 
 /* list.c */
 

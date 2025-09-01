@@ -65,6 +65,14 @@ isfunction(char *s)
 	return 0;
 }
 
+int
+isadict(char *s)
+{
+	if(hasprefix(s, "%dict"))
+		return 1;
+	return 0;
+}
+
 Closure*
 getclosure(Term *term)
 {
@@ -111,9 +119,9 @@ assocfmt(void *vargs, char *name, void *vdata)
 	data = vdata;
 
 	if(args->result == NULL)
-		args->result = str("%s => %L", name, data, " ");
+		args->result = str("%s => %#L", name, data, " ");
 	else
-		args->result = str("%s; %s => %L", args->result, name, data, " ");
+		args->result = str("%s; %s => %#L", args->result, name, data, " ");
 
 	gcrderef(&r_data);
 	gcrderef(&r_args_result);
@@ -127,19 +135,25 @@ getstr(Term *term)
 	Dict *d = NULL; Root r_d;
 	char *res; Root r_res;
 
-	switch(term->kind) {
-	case tkString:
+	if(term->kind == tkString && term->str == NULL){
 		/* TODO: This is wrong, but I still need to hunt down places where
 		 * strings are defined improperly
 		 */
-		if(term->str == NULL){
-			tp = term;
-			gcref(&r_tp, (void**)&tp);
+		gcref(&r_tp, (void**)&tp);
+		tp = term;
+		if(term->closure != NULL){
 			tp->str = str("%C", term->closure);
 			tp->kind = tkClosure;
-			gcderef(&r_tp, (void**)&tp);
+		} else if(term->dict != NULL){
+			tp->str = str("%V", term->dict);
+			tp->kind = tkDict;
 		}
-		return term->str;
+		gcrderef(&r_tp);
+		term = tp;
+	}
+	switch(term->kind) {
+	case tkString:
+			return term->str;
 	case tkClosure:
 		assert(term->closure != NULL);
 		return str("%C", term->closure);
@@ -170,8 +184,42 @@ getstr(Term *term)
 Dict*
 getdict(Term *term)
 {
-	if(term->kind == tkDict)
+	Term *t = NULL; Root r_t;
+	Tree *parsed = NULL; Root r_parsed;
+	List *glommed = NULL; Root r_glommed;
+	Dict *dict = NULL; Root r_dict;
+
+	switch(term->kind){
+	case tkDict:
 		return term->dict;
+	case tkString:
+		assert(term->str != NULL);
+		if(!isadict(term->str))
+			return NULL;
+		gcref(&r_t, (void**)&t);
+		gcref(&r_parsed, (void**)&parsed);
+		gcref(&r_glommed, (void**)&glommed);
+		gcref(&r_dict, (void**)&dict);
+
+		t = term;
+		parsed = parsestring(t->str);
+		if(!parsed)
+			goto done;
+		glommed = glom(parsed, NULL, FALSE);
+		if(glommed == NULL || glommed->next != NULL)
+			goto done;
+		dict = getdict(glommed->term);
+		term->kind = tkDict;
+		t->dict = dict;
+done:
+		gcrderef(&r_dict);
+		gcrderef(&r_glommed);
+		gcrderef(&r_parsed);
+		gcrderef(&r_t);
+		return dict;
+	default:
+		return NULL;
+	}
 	return NULL;
 }
 
@@ -247,3 +295,13 @@ extern Boolean isclosure(Term *term) {
 	assert(term != NULL);
 	return term->closure != NULL;
 }
+
+Boolean
+isdict(Term *term)
+{
+	assert(term != NULL);
+	if(term->dict == NULL && !isadict(getstr(term)))
+		return FALSE;
+	return TRUE;
+}
+

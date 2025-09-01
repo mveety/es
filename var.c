@@ -457,6 +457,7 @@ importvar(char *name0, char *value)
 	List *list;
 	char *name = NULL; Root r_name;
 	List *defn = NULL; Root r_defn;
+	List *lp = NULL; Root r_lp;
 
 	name = name0;
 	defn = NULL;
@@ -500,8 +501,14 @@ importvar(char *name0, char *value)
 		}
 		gcenable();
 	}
+	gcref(&r_lp, (void**)&lp);
+	for(lp = defn; lp != NULL; lp = lp->next)
+		if(hasprefix(getstr(lp->term), "%dict"))
+			getdict(lp->term);
+
 	vardef(name, NULL, defn);
 
+	gcderef(&r_lp, (void**)&lp);
 	gcderef(&r_defn, (void**)&defn);
 	gcderef(&r_name, (void**)&name);
 }
