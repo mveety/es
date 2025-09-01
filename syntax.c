@@ -448,11 +448,12 @@ mkdictassign(Tree *sub, Tree *assoc)
 
 	assoc_elem = assoc->CAR;
 	assoc_value = assoc->CDR;
-	assoc = mk(nAssoc, mk(nQword, gcdup(assoc_elem->u[0].s)), assoc_value);
+	if(assoc_value->kind == nWord)
+		assoc = mk(nAssoc, mk(nQword, gcdup(assoc_elem->u[0].s)), assoc_value);
 	if(assoc->CDR == NULL || assoc->CDR->CAR == NULL)
 		return mk(
 			nAssign, sub,
-			mk(nCall, thunkify(prefix("dictremove", treecons(mk(nVar, sub), treecons(assoc->CAR, NULL))))));
+			mk(nCall, thunkify(prefix("%dictremove", treecons(mk(nVar, sub), treecons(assoc->CAR, NULL))))));
 	args = treeappend(treecons(assoc->CAR, NULL), assoc->CDR);
-	return mk(nAssign, sub, mk(nCall, thunkify(prefix("dictput", treecons(mk(nVar, sub), args)))));
+	return mk(nAssign, sub, mk(nCall, thunkify(prefix("%dictput", treecons(mk(nVar, sub), args)))));
 }
