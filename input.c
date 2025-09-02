@@ -14,7 +14,7 @@
  */
 
 #define	BUFSIZE		((size_t) 4096)		/* buffer size to fill reads into */
-
+#define MATCHTABLE ((size_t) 10) /* initial match table size */
 
 /*
  * macros
@@ -423,12 +423,76 @@ run_es_completer(const char *text, int state)
 }
 
 char**
+run_new_completer(const char *text, int start, int end)
+{
+	List *completer = NULL; Root r_completer;
+	List *args = NULL; Root r_args;
+	List *result = NULL; Root r_result;
+	List *lp = NULL; Root r_lp;
+	char **matches;
+	size_t matchsz;
+	size_t matchi;
+
+	gcref(&r_completer, (void**)&completer);
+	gcref(&r_args, (void**)&args);
+	gcref(&r_result, (void**)&result);
+	gcref(&r_lp, (void**)&lp);
+
+	matches = malloc(MATCHTABLE*sizeof(char*));
+	if(!matches)
+		panic("unable to malloc matchtable!\n");
+	memzero(matches, MATCHTABLE*sizeof(char*));
+	matchsz = MATCHTABLE;
+
+	gcenable();
+	assert(!gcisblocked());
+
+	completer = varlookup("fn-%new_completer", NULL);
+	if(completer == NULL){
+		matches[0] = strdup(text);
+		goto done;
+	}
+
+	args = mklist(mkstr(str("%s", rl_line_buffer)),
+			mklist(mkstr(str("%s", text)),
+				mklist(mkstr(str("%d", start)),
+					mklist(mkstr(str("%d", end)), NULL))));
+	completer = append(completer, args);
+	result = eval(completer, NULL, 0);
+
+	if(result == NULL) {
+		matches[0] = strdup(text);
+		goto done;
+	}
+
+	for(lp = result, matchi = 0; lp != NULL; lp = lp->next){
+		matches[matchi++] = strdup(getstr(lp->term));
+		if(matchi >= matchsz-2){
+			matchsz += 10;
+			matches = realloc(matches, (matchsz*sizeof(char*)));
+		}
+	}
+	while(matchi < matchsz)
+		matches[matchi++] = NULL;
+
+done:
+	gcrderef(&r_lp);
+	gcrderef(&r_result);
+	gcrderef(&r_args);
+	gcrderef(&r_completer);
+	gcdisable();
+	return matches;
+}
+
+char**
 es_complete_hook(const char *text, int start, int end)
 {
-	List *completer;
+	List *old_completer;
+	List *new_completer;
 
-	completer = varlookup("fn-%core_completer", NULL);
-	if(completer == NULL)
+	old_completer = varlookup("fn-%core_completer", NULL);
+	new_completer = varlookup("fn-%new_completer", NULL);
+	if(old_completer == NULL && new_completer == NULL)
 		return NULL;
 	rl_attempted_completion_over = 1;
 	rl_sort_completion_matches = 0;
@@ -436,7 +500,11 @@ es_complete_hook(const char *text, int start, int end)
 	rl_filename_completion_desired = 1;
 	es_rl_start = start;
 	es_rl_end = end;
-	return rl_completion_matches(text, run_es_completer);
+	if(new_completer)
+		return run_new_completer(text, start, end);
+	if(old_completer)
+		return rl_completion_matches(text, run_es_completer);
+	return NULL; /* not reached (hopefully) */
 }
 
 int

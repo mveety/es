@@ -395,11 +395,15 @@ fn es_complete_format_list list {
 }
 
 fn es_complete_dump_state {
-	echo 'es_complete_current_curline = '''^$es_complete_current_curline^''''
-	echo 'es_complete_current_partial = '''^$es_complete_current_partial^''''
-	echo 'es_complete_current_start = '^$es_complete_current_start
-	echo 'es_complete_current_end = '^$es_complete_current_end
-	echo 'es_complete_current_completion = '^<={es_complete_format_list $es_complete_current_completion}
+	if {~ $#fn-%new_completer 0} {
+		echo 'using new completer'
+	} {
+		echo 'es_complete_current_curline = '''^$es_complete_current_curline^''''
+		echo 'es_complete_current_partial = '''^$es_complete_current_partial^''''
+		echo 'es_complete_current_start = '^$es_complete_current_start
+		echo 'es_complete_current_end = '^$es_complete_current_end
+		echo 'es_complete_current_completion = '^<={es_complete_format_list $es_complete_current_completion}
+	}
 }
 
 # %core_completer is the hook es uses to call into the completion machinery.
@@ -442,6 +446,30 @@ fn %core_completer linebuf text start end state {
 			escomp_echo ''''^$es_complete_current_completion(<={add $state 1})^''''
 			result $es_complete_current_completion(<={add $state 1})
 		}
+	}
+}
+
+# %new_completer is the hook that the new completion machinery hooks into. basically
+# this is a thin layer between %complete and readline that strips whitespace and
+# translates start and end to index by one, then just returns the list producted by
+# %complete.
+
+fn %new_completer linebuf text start end {
+	local(lbl=$:linebuf;lbllen=;tmp=;slb=;nstart=;nend=){
+		slb = <={if {~ $linebuf '' || ~ $start 0} {
+					nstart = <={add $start 1}
+					nend = <={add $end 1}
+					result ''
+				} {
+					tmp = <={es_complete_strip_leading_whitespace $"lbl(1 ... $start)}
+					lbllen = <={%count $lbl(1 ... $start)}
+					nstart = <={%count $:tmp |> sub $lbllen |> sub $start |> add 1 }
+					nend = <={%count $:tmp |> sub $lbllen |> sub $end |> add 1}
+					assert2 $0 {gt $nstart 0 && gt $nend 0}
+					result $tmp
+				}
+			}
+		%complete $slb $text $nstart $nend
 	}
 }
 
