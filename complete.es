@@ -395,7 +395,7 @@ fn es_complete_format_list list {
 }
 
 fn es_complete_dump_state {
-	if {~ $#fn-%new_completer 0} {
+	if {! ~ $#fn-%new_completer 0} {
 		echo 'using new completer'
 	} {
 		echo 'es_complete_current_curline = '''^$es_complete_current_curline^''''
