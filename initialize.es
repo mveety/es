@@ -1,8 +1,11 @@
 #!/usr/bin/env es
 
-noexport = $noexport __es_initialize_esrc __es_loginshell __es_readesrc
-noexport = $noexport __es_different_esrc __es_esrcfile __es_extra_esrc
-noexport = $noexport __es_extra_esrcfile
+#noexport = $noexport __es_initialize_esrc __es_loginshell __es_readesrc
+#noexport = $noexport __es_different_esrc __es_esrcfile __es_extra_esrc
+#noexport = $noexport __es_extra_esrcfile
+
+noexport += __es_initialize_esrc __es_loginshell __es_readesrc __es_different_esrc
+noexport += __es_esrcfile __es_extra_esrc __es_extra_esrcfile
 
 fn __es_esrc_check {
 	if {$es_enable_loginshell} {

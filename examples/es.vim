@@ -25,6 +25,7 @@ syn keyword esCmd makeerror errmatch iserror continue
 syn keyword esCmd dictnew dictget dictput dictremove dictsize
 syn keyword esCmd dictforall dictnames dictvalues dictdump
 syn keyword esCmd dictiter conf onerror box defconf defconfalias
+syn keyword esCmd dictcopy dicthaskey
 syn match eskeyList /[a-zA-Z0-9]*\s*(/
 syn match esHook /[%][a-zA-Z0-9_]*/
 syn match esComment  /#.*$/
@@ -32,6 +33,8 @@ syn match esCont /\\/
 syn region esString start=/'/ skip=/\'\'/ end=/'/
 syn match esVar /$[a-zA-Z0-9#^*][a-zA-Z0-9_-]*/
 syn match esVarSet /[a-zA-Z][a-zA-Z0-9_-]*\s*=/
+syn match esVarAppend /[a-zA-Z][a-zA-Z0-9_-]*\s*+=/
+syn match esVarDictAdd /[a-zA-Z][a-zA-Z0-9_-]*\s*\:=/
 syn region esList start=/(/ end=/)/
 
 hi def link esCmd Statement
@@ -42,5 +45,7 @@ hi def link esCont Statement
 hi def link esString String
 hi def link esVar Identifier
 hi def link esVarSet Identifier
+hi def link esVarAppend Identifier
+hi def link esVarDictAdd Identifier
 hi def link esList Constant
 

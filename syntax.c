@@ -457,3 +457,13 @@ mkdictassign(Tree *sub, Tree *assoc)
 	args = treeappend(treecons(assoc->CAR, NULL), assoc->CDR);
 	return mk(nAssign, sub, mk(nCall, thunkify(prefix("%dictput", treecons(mk(nVar, sub), args)))));
 }
+
+Tree *
+mkappendassign(Tree *var, Tree *list)
+{
+	Tree *assignlist = NULL;
+
+	assignlist = treecons(mk(nVar, var), list);
+	return mk(nAssign, var, assignlist);
+}
+

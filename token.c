@@ -178,6 +178,14 @@ top:	while ((c = input_getc()) == ' ' || c == '\t')
 			}
 			input_ungetc(mc);
 		}
+		if (c == '+') {
+			mc = input_getc();
+			if(mc == '='){
+				w = NW;
+				return APPENDASSIGN;
+			}
+			input_ungetc(mc);
+		}
 		InsertFreeCaret();
 		w = RW;
 		i = 0;
