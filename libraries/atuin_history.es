@@ -89,9 +89,7 @@ fn __atuin_enable {
 		}
 		%clear-history
 		local (hist = ``(\n){atuin history list --cmd-only | tail -n $nelem}) {
-			for (h = $hist) {
-				%add-history $h
-			}
+			%add-history $hist
 		}
 	}
 

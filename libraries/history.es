@@ -294,11 +294,7 @@ fn reload-history nelem {
 	if {~ $#nelem 0} {
 		nelem = $history_conf_reload
 	}
-	local(hist = ``(\n) {history -c -n $nelem}) {
-		for (h = $hist) {
-			%add-history $h
-		}
-	}
+	%add-history ``(\n) {history -c -n $nelem}
 }
 
 set-history = @ file {

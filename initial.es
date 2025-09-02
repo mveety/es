@@ -1192,8 +1192,8 @@ fn waitfor pids {
 }
 
 if {~ <=$&primitives addhistory} {
-	fn %add-history {
-		$&addhistory $1
+	fn %add-history args {
+		$&addhistorylist $args
 	}
 } {
 	fn %add-history { true }

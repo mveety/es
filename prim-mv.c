@@ -26,6 +26,25 @@ PRIM(addhistory) {
 	return NULL;
 }
 
+PRIM(addhistorylist) {
+	Root r_list;
+	List *lp; Root r_lp;
+
+	if(list == NULL)
+		fail("$&addhistorylist", "usage: $&addhistorylist [list of strings]");
+
+	gcref(&r_list, (void**)&list);
+	gcref(&r_lp, (void**)&lp);
+
+	for(lp = list; lp != NULL; lp = lp->next)
+		add_history(getstr(lp->term));
+
+	gcrderef(&r_lp);
+	gcrderef(&r_list);
+
+	return list_true;
+}
+
 PRIM(clearhistory) {
 	clear_history();
 	return NULL;
@@ -509,6 +528,7 @@ initprims_mv(Dict *primdict)
 	X(buildstring);
 #if READLINE
 	X(addhistory);
+	X(addhistorylist);
 	X(clearhistory);
 	X(rlconf);
 #endif
