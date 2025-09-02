@@ -112,6 +112,6 @@ fn show cmd rest {
 }
 
 for(i = $showfns) {
-	noexport = $noexport 'fn-show-'^$i
+	noexport += 'fn-show-'^$i
 }
-noexport = $noexport fn-addshowfn fn-show showfns
+noexport += fn-addshowfn fn-show showfns

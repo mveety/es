@@ -13,7 +13,7 @@
 #	is does.  fn-%dispatch is really only important to the current
 #	interpreter loop.
 
-noexport = $noexport pid signals apid bqstatus fn-%dispatch path home
-noexport = $noexport version mveetyrev buildstring corelib
-noexport = $noexport apids last eval-depth runflags unixtime options
+noexport += pid signals apid bqstatus fn-%dispatch path home
+noexport += version mveetyrev buildstring corelib
+noexport += apids last eval-depth runflags unixtime options
 
