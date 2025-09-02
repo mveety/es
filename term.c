@@ -133,7 +133,7 @@ getstr(Term *term)
 	Term *tp = NULL; Root r_tp;
 	AssocArgs args; Root r_args_result;
 	Dict *d = NULL; Root r_d;
-	char *res; Root r_res;
+	char *res = NULL; Root r_res;
 
 	if(term->kind == tkString && term->str == NULL){
 		/* TODO: This is wrong, but I still need to hunt down places where
