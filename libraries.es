@@ -9,10 +9,40 @@ set-libraries = @{ local (set-es_conf_libraries =) { es_conf_libraries = $* }; r
 set-es_conf_libraries = @{ local (set-libraries =) { libraries = $* }; result $* }
 
 if {~ $#libraries 0} { libraries = () }
+if {~ $#default_libraries 0} { default_libraries = () }
 if {~ $#es_conf_library-import 0} { es_conf_library-import = true }
 if {~ $#es_conf_import-panic 0} { es_conf_import-panic = false }
 if {~ $#es_conf_automatic-import 0} { es_conf_automatic-import = true }
 if {~ $#es_conf_library-import-once 0} { es_conf_library-import-once = false }
+
+fn __es_libraries_initialize {
+	local (
+		datadir = <={
+			local (tmp=) {
+				if {~ $#XDG_CONFIG_HOME 0} {
+					tmp = $home/.config/es-mveety
+				} {
+					tmp = $XDG_CONFIG_HOME/es-mveety
+				}
+				if {access -rw $tmp} {
+					result $tmp
+				} {
+					result ()
+				}
+			}
+		}
+	) {
+		if {~ $#datadir 0} {
+			if {access -rw $home/eslib} {
+				libraries = $home/eslib
+			}
+		} {
+			libraries = $datadir
+		}
+		default_libraries = $libraries
+	}
+}
+
 
 fn import-core-lib lib {
 	let (libname = <={access -n $lib -1 -r $corelib}) {

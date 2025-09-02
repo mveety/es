@@ -17,6 +17,7 @@ fn %initialize {
 	# .esrc is run.
 	__es_initgc
 	__es_complete_initialize
+	__es_libraries_initialize
 
 	# run $home/.esrc if applicable
 	if {__es_esrc_check} {

@@ -42,7 +42,7 @@ libdir = <={if {! ~ $#2 0} {
 					}
 				}
 			} {
-				result $HOME/eslib
+				result $default_libraries
 			}
 		}
 
