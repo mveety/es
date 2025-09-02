@@ -958,22 +958,22 @@ setrunflags(char *s, size_t sz)
 /* various readline hooks */
 
 int
-es_readline_hook1(int count, int key)
+es_readline_hook(char *hookname, int count, int key)
 {
 	used(&count);
 	used(&key);
 
 	int gcblocked = 0;
-	List *hook1 = NULL; Root r_hook1;
+	List *hook = NULL; Root r_hook;
 	List *res = NULL; Root r_res;
 	char *resstr;
 	struct readline_state state;
 
-	hook1 = varlookup("fn-%rl-hook1", NULL);
-	if(hook1 == NULL)
+	hook = varlookup2("fn-%rl-", hookname, NULL);
+	if(hook == NULL)
 		return 0;
 
-	gcref(&r_hook1, (void**)&hook1);
+	gcref(&r_hook, (void**)&hook);
 	gcref(&r_res, (void**)&res);
 
 	if(gcisblocked()){
@@ -983,8 +983,8 @@ es_readline_hook1(int count, int key)
 
 	rl_save_prompt();
 	rl_save_state(&state);
-	hook1 = append(hook1, list_true);
-	res = eval(hook1, NULL, 0);
+	hook = append(hook, list_true);
+	res = eval(hook, NULL, 0);
 
 	assert(res != NULL);
 
@@ -1001,11 +1001,77 @@ done:
 	rl_restore_prompt();
 	rl_reset_line_state();
 	gcrderef(&r_res);
-	gcrderef(&r_hook1);
+	gcrderef(&r_hook);
 	if(gcblocked) {
 		gcdisable();
 	}
 	return 0;
+}
+
+int
+es_rl_hook0(int count, int key)
+{
+	return es_readline_hook("hook0", count, key);
+}
+
+int
+es_rl_hook1(int count, int key)
+{
+	return es_readline_hook("hook1", count, key);
+}
+
+int
+es_rl_hook2(int count, int key)
+{
+	return es_readline_hook("hook2", count, key);
+}
+
+int
+es_rl_hook3(int count, int key)
+{
+	return es_readline_hook("hook3", count, key);
+}
+
+int
+es_rl_hook4(int count, int key)
+{
+	return es_readline_hook("hook4", count, key);
+}
+
+int
+es_rl_hook5(int count, int key)
+{
+	return es_readline_hook("hook5", count, key);
+}
+
+int
+es_rl_hook6(int count, int key)
+{
+	return es_readline_hook("hook6", count, key);
+}
+
+int
+es_rl_hook7(int count, int key)
+{
+	return es_readline_hook("hook7", count, key);
+}
+
+int
+es_rl_hook8(int count, int key)
+{
+	return es_readline_hook("hook8", count, key);
+}
+
+int
+es_rl_hook9(int count, int key)
+{
+	return es_readline_hook("hook9", count, key);
+}
+
+int
+es_rl_hook10(int count, int key)
+{
+	return es_readline_hook("hook10", count, key);
 }
 
 int
@@ -1041,7 +1107,17 @@ extern void initinput(void) {
 	rl_special_prefixes = "$";
 	rl_completer_quote_characters = "'";
 	rl_readline_name = "es-mveety";
-	rl_add_defun("es-hook1", es_readline_hook1, -1);
+	rl_add_defun("es-hook0", es_rl_hook0, -1);
+	rl_add_defun("es-hook1", es_rl_hook1, -1);
+	rl_add_defun("es-hook2", es_rl_hook2, -1);
+	rl_add_defun("es-hook3", es_rl_hook3, -1);
+	rl_add_defun("es-hook4", es_rl_hook4, -1);
+	rl_add_defun("es-hook5", es_rl_hook5, -1);
+	rl_add_defun("es-hook6", es_rl_hook6, -1);
+	rl_add_defun("es-hook7", es_rl_hook7, -1);
+	rl_add_defun("es-hook8", es_rl_hook8, -1);
+	rl_add_defun("es-hook9", es_rl_hook9, -1);
+	rl_add_defun("es-hook10", es_rl_hook10, -1);
 
 	rl_attempted_completion_function = es_complete_hook;
 #endif
