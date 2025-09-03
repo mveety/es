@@ -1,6 +1,6 @@
 library gencomp_pkg (init completion general_completion)
 
-gencomp_pkg_cmds = (
+_gencomp_pkg_cmds = (
 	'add' 'alias' 'annotate' 'audit' 'autoremove'
 	'check' 'clean' 'config' 'create' 'delete'
 	'fetch' 'help' 'info' 'install' 'key' 'lock'
@@ -25,7 +25,7 @@ fn gencomp_pkg_hook curline partial {
 			cmdline = $cmdline(2 ...)
 		}
 		if {~ <={%last $cmdline} 'pkg'} {
-			gencomp_filter_list $partial $gencomp_pkg_cmds
+			gencomp_filter_list $partial $_gencomp_pkg_cmds
 		} {
 			cmdline = $cmdline(2 ...)
 			while {~ $cmdline(1) -*} {

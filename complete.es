@@ -1,11 +1,11 @@
 library completion (init)
 
-if {~ $#es_complete_debug 0} {
-	es_complete_debug = false
+if {~ $#_es_complete_debug 0} {
+	_es_complete_debug = false
 }
 
 fn escomp_echo {
-	if {$es_complete_debug} {
+	if {$_es_complete_debug} {
 		echo $*
 	}
 }
@@ -97,7 +97,7 @@ fn complete_files partial_name {
 		result
 }
 
-fn complete_all_variables prefix partial_name {
+fn complete_all_variables type prefix partial_name {
 	if {~ $partial_name */*} {
 		return ()
 	}
@@ -116,7 +116,19 @@ fn complete_all_variables prefix partial_name {
 						}}
 		for(v = $allvars) {
 			if {eval '~ '^$v^' '^$prefix^$partial_name} {
-				res = $res <={~~ $v $prefix^*}
+				match $type (
+					all { res = $res <={~~ $v $prefix^*} }
+					visible {
+						if {! %isvarhidden $v} {
+							res = $res <={~~ $v $prefix^*}
+						}
+					}
+					hidden {
+						if {%isvarhidden $v} {
+							res = $res <={~~ $v $prefix^*}
+						}
+					}
+				)
 			}
 		}
 		result $res
@@ -124,11 +136,27 @@ fn complete_all_variables prefix partial_name {
 }
 
 fn complete_functions partial_name {
-	result <={complete_all_variables 'fn-' $partial_name}
+	result <={complete_all_variables all 'fn-' $partial_name}
+}
+
+fn complete_visible_functions partial {
+	result <={complete_all_variables visible 'fn-' $partial}
+}
+
+fn complete_hidden_functions partial {
+	result <={complete_all_variables hidden 'fn-' $partial}
 }
 
 fn complete_variables prefix partial_name {
-	result $prefix^<={complete_all_variables '' <={~~ $partial_name $prefix^*}}
+	result $prefix^<={complete_all_variables all '' <={~~ $partial_name $prefix^*}}
+}
+
+fn complete_visible_variables prefix partial {
+	result $prefix^<={complete_all_variables visible '' <={~~ $partial_name $prefix^*}}
+}
+
+fn complete_hidden_variables prefix partial {
+	result $prefix^<={complete_all_variables hidden '' <={~~ $partial_name $prefix^*}}
 }
 
 fn complete_primitives prefix partial {
@@ -276,7 +304,7 @@ fn es_complete_is_command curline {
 
 fn es_complete_run_command_hook curline partial {
 	let (pcmd = <={es_complete_get_last_command $curline}; err=; function=) {
-		(err function) = <={try dictget $es_complete_command_hooks $pcmd}
+		(err function) = <={try dictget $_es_complete_command_hooks $pcmd}
 		if {$err} {
 			if {$es_complete_default_to_files} {
 				return <={complete_files $partial}
@@ -309,16 +337,16 @@ fn es_complete_remove2 elem list {
 }
 
 fn %complete_cmd_unhook cmdname {
-	es_complete_command_hooks = <={dictremove $es_complete_command_hooks $cmdname}
+	_es_complete_command_hooks = <={dictremove $_es_complete_command_hooks $cmdname}
 	true
 }
 
 fn %complete_cmd_hook cmdname completefn {
-	es_complete_command_hooks = <={dictput $es_complete_command_hooks $cmdname $completefn}
+	_es_complete_command_hooks = <={dictput $_es_complete_command_hooks $cmdname $completefn}
 }
 
 fn __es_complete_initialize {
-	es_complete_command_hooks = <=dictnew
+	_es_complete_command_hooks = <=dictnew
 }
 
 if {~ $#es_conf_complete_order 0} {
@@ -329,7 +357,11 @@ fn complete_base_complete partial {
 	process $es_conf_complete_order (
 		executables { result <={complete_executables $partial} }
 		functions { result <={complete_functions $partial} }
+		visible_functions { result <={complete_visible_functions $partial} }
+		hidden_functions { result <={complete_hidden_functions $partial} }
 		variables { result <={complete_variables '' $partial} }
+		visible_variables { result <={complete_visible_variables '' $partial} }
+		hidden_variables { result <={complete_hidden_variables '' $partial} }
 	)
 }
 
@@ -358,7 +390,7 @@ fn %complete curline partial start end {
 	} {~ $start 1 || es_complete_is_command $curline} {
 		result <={complete_base_complete $partial}
 	} {
-		if {~ <={es_complete_get_last_command $curline} <={dictnames $es_complete_command_hooks}} {
+		if {~ <={es_complete_get_last_command $curline} <={dictnames $_es_complete_command_hooks}} {
 			result <={es_complete_run_command_hook $curline $partial}
 		} {
 			result <={complete_files $partial}
@@ -368,17 +400,17 @@ fn %complete curline partial start end {
 
 # this is the intermediate state for core_completer to improve performance
 # perf tanks if there's a lot of completions
-es_complete_current_curline = ''
-es_complete_current_partial = ''
-es_complete_current_start = ''
-es_complete_current_end = ''
-es_complete_current_completion = ()
+_es_complete_current_curline = ''
+_es_complete_current_partial = ''
+_es_complete_current_start = ''
+_es_complete_current_end = ''
+_es_complete_current_completion = ()
 
 fn es_complete_cc_checkstate linebuf text start end {
-	if {~ $linebuf $es_complete_current_curline &&
-		~ $text $es_complete_current_partial &&
-		~ $start $es_complete_current_start &&
-		~ $end $es_complete_current_end} {
+	if {~ $linebuf $_es_complete_current_curline &&
+		~ $text $_es_complete_current_partial &&
+		~ $start $_es_complete_current_start &&
+		~ $end $_es_complete_current_end} {
 		result <=true
 	} {
 		result <=false
@@ -398,11 +430,11 @@ fn es_complete_dump_state {
 	if {! ~ $#fn-%new_completer 0} {
 		echo 'using new completer'
 	} {
-		echo 'es_complete_current_curline = '''^$es_complete_current_curline^''''
-		echo 'es_complete_current_partial = '''^$es_complete_current_partial^''''
-		echo 'es_complete_current_start = '^$es_complete_current_start
-		echo 'es_complete_current_end = '^$es_complete_current_end
-		echo 'es_complete_current_completion = '^<={es_complete_format_list $es_complete_current_completion}
+		echo 'es_complete_current_curline = '''^$_es_complete_current_curline^''''
+		echo 'es_complete_current_partial = '''^$_es_complete_current_partial^''''
+		echo 'es_complete_current_start = '^$_es_complete_current_start
+		echo 'es_complete_current_end = '^$_es_complete_current_end
+		echo 'es_complete_current_completion = '^<={es_complete_format_list $_es_complete_current_completion}
 	}
 }
 
@@ -431,11 +463,11 @@ fn %core_completer linebuf text start end state {
 						result $tmp
 					}
 				}
-			es_complete_current_completion = <={%complete $slb $text $nstart $nend}
-			es_complete_current_curline = $linebuf
-			es_complete_current_partial = $text
-			es_complete_current_start = $start
-			es_complete_current_end = $end
+			_es_complete_current_completion = <={%complete $slb $text $nstart $nend}
+			_es_complete_current_curline = $linebuf
+			_es_complete_current_partial = $text
+			_es_complete_current_start = $start
+			_es_complete_current_end = $end
 		}
 	}
 	local(cclen=$#es_complete_current_completion){
@@ -443,8 +475,8 @@ fn %core_completer linebuf text start end state {
 			escomp_echo '''%end_complete'''
 			result '%%end_complete'
 		} {
-			escomp_echo ''''^$es_complete_current_completion(<={add $state 1})^''''
-			result $es_complete_current_completion(<={add $state 1})
+			escomp_echo ''''^$_es_complete_current_completion(<={add $state 1})^''''
+			result $_es_complete_current_completion(<={add $state 1})
 		}
 	}
 }

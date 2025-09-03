@@ -4,7 +4,7 @@ if {! ~ `{uname} 'FreeBSD'} {
 	throw error gencomp_ifconfig_freebsd 'only supports FreeBSD'
 }
 
-gencomp_ifconfig_freebsd_parameters = (
+_gencomp_ifconfig_freebsd_parameters = (
 	ether inet inet6 link lladdr
 	add alias anycast arp staticarp stickyarp broadcast debug
 	allmulti promic delete description down group eui64 fib
@@ -29,12 +29,12 @@ gencomp_ifconfig_freebsd_parameters = (
 	tsn txpower ucastrate wepmode weptxkey wepkey wme wps
 )
 
-gencomp_ifconfig_freebsd_list_param = (
+_gencomp_ifconfig_freebsd_list_param = (
 	active caps chan countries mac mesh regdomain roam txparam txpower scan
 	sta wme
 )
 
-gencomp_ifconfig_freebsd_wme_param = (
+_gencomp_ifconfig_freebsd_wme_param = (
 	ack acm aifs cwmin cwmax txoplimit 'bss:aifs' 'bss:cwmin'
 	'bss:cwmax' 'bss:txoplimit'
 )
@@ -69,16 +69,16 @@ fn gencomp_ifconfig_freebsd_hook curline partial {
 		} {
 			match <={%last $cmdline} (
 				'list' {
-					gencomp_filter_list $partial $gencomp_ifconfig_freebsd_list_param
+					gencomp_filter_list $partial $_gencomp_ifconfig_freebsd_list_param
 				}
 				'wme' {
-					gencomp_filter_list $partial $gencomp_ifconfig_freebsd_wme_param
+					gencomp_filter_list $partial $_gencomp_ifconfig_freebsd_wme_param
 				}
 				* {
 					if {~ $partial -*} {
-						result '-'^<={gencomp_filter_list $cleanpartial $gencomp_ifconfig_freebsd_parameters}
+						result '-'^<={gencomp_filter_list $cleanpartial $_gencomp_ifconfig_freebsd_parameters}
 					} {
-						gencomp_filter_list $cleanpartial $gencomp_ifconfig_freebsd_parameters
+						gencomp_filter_list $cleanpartial $_gencomp_ifconfig_freebsd_parameters
 					}
 				}
 			)
