@@ -112,13 +112,16 @@ dictdestructassign(Tree *vardict0, Tree *valueform0, Binding *binding0)
 		if(dictdata == NULL)
 			fail("es:dictassign", "element %s is empty", namestr);
 		for(; varlist != NULL; varlist = varlist->next){
-			if(varlist->next == NULL)
-				vardef(getstr(varlist->term), binding, dictdata);
-			else {
-				if(dictdata == NULL)
-					vardef(getstr(varlist->term), binding, NULL);
-				else {
-					vardef(getstr(varlist->term), binding, mklist(dictdata->term, NULL));
+			if(varlist->next == NULL) {
+				if(!termeq(varlist->term, "_"))
+					vardef(getstr(varlist->term), binding, dictdata);
+			} else {
+				if(dictdata == NULL) {
+					if(!termeq(varlist->term, "_"))
+						vardef(getstr(varlist->term), binding, NULL);
+				} else {
+					if(!termeq(varlist->term, "_"))
+						vardef(getstr(varlist->term), binding, mklist(dictdata->term, NULL));
 					dictdata = dictdata->next;
 				}
 			}

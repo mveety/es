@@ -70,6 +70,23 @@ fn run_test_dict {
 		assert {~ <={%count $sdict(d)} 5}
 		sdict := * => true
 		assert {$sdict(*)}
+		local (
+			td = %dict(1=>foo;2=>bar;3=>baz;4=>1 2 3 4 5 6)
+			f=;b=;ba=;a1=;a2=;a3=;n1=;n2=;n3=
+		) {
+			%dict(1=>f;3=>ba) = $td
+			assert {~ $f foo}
+			assert {~ $ba baz}
+			%dict(2=>b;4=>(a1 _ a2 _ a3 _)) = $td
+			assert {~ $b bar}
+			assert {~ $a1 1}
+			assert {~ $a2 3}
+			assert {~ $a3 5}
+			%dict(4=>(_ n1 _ n2 _ n3)) = $td
+			assert {~ $n1 2}
+			assert {~ $n2 4}
+			assert {~ $n3 6}
+		}
 	}
 }
 
