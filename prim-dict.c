@@ -8,7 +8,7 @@ PRIM(dictnew) {
 PRIM(dictget) {
 	List *res = NULL; Root r_res;
 	Dict *d = NULL; Root r_d;
-	char *name;
+	char *name = NULL; Root r_name;
 
 	if(!list || !list->next)
 		fail("$&dictget", "missing arguments");
@@ -20,12 +20,14 @@ PRIM(dictget) {
 	if(!d)
 		fail("$&dictget", "term not valid dict");
 	gcref(&r_d, (void**)&d);
+	gcref(&r_name, (void**)&name);
 	name = getstr(list->next->term);
 
 	res = dictget(d, name);
 	if(!res)
 		fail("$&dictget", "element '%s' is empty", name);
 
+	gcrderef(&r_name);
 	gcrderef(&r_d);
 	gcrderef(&r_res);
 	return res;
@@ -33,7 +35,7 @@ PRIM(dictget) {
 
 PRIM(dictput) {
 	Dict *d = NULL; Root r_d;
-	char *name;
+	char *name = NULL; Root r_name;
 	List *v = NULL; Root r_v;
 
 	if(!list || !list->next || !list->next->next)
@@ -43,14 +45,16 @@ PRIM(dictput) {
 	if(!d)
 		fail("$&dictput", "term not valid dict");
 	gcref(&r_d, (void**)&d);
+	gcref(&r_name, (void**)&name);
 
 	name = getstr(list->next->term);
 	v = list->next->next;
 	gcref(&r_v, (void**)&v);
 
-d = dictput(d, name, v);
+	d = dictput(d, name, v);
 
 	gcrderef(&r_v);
+	gcrderef(&r_name);
 	gcrderef(&r_d);
 	return mklist(mkdictterm(d), NULL);
 }

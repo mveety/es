@@ -314,10 +314,9 @@ forward(void *p)
 	}
 
 	/* this is probably not needed now */
-	assert(tag->magic == TAGMAGIC);
+	assert(gettag(header(np)->tag)->magic == TAGMAGIC);
 	return np;
 }
-
 
 /* scanroots -- scan a rootlist */
 static void scanroots(Root *rootlist) {

@@ -209,7 +209,7 @@ getdict(Term *term)
 		if(glommed == NULL || glommed->next != NULL)
 			goto done;
 		dict = getdict(glommed->term);
-		term->kind = tkDict;
+		t->kind = tkDict;
 		t->dict = dict;
 done:
 		gcrderef(&r_dict);

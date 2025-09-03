@@ -414,9 +414,9 @@ static List *glom1(Tree *tree, Binding *binding) {
 			gcref(&r_inner, (void**)&inner);
 			gcref(&r_dict, (void**)&dict);
 			gcref(&r_assoc, (void**)&assoc);
-			gcref(&r_name, (void**)&r_name);
-			gcref(&r_value, (void**)&r_value);
-			gcref(&r_namestr, (void**)&r_namestr);
+			gcref(&r_name, (void**)&name);
+			gcref(&r_value, (void**)&value);
+			gcref(&r_namestr, (void**)&namestr);
 
 			dict = mkdict();
 			for(inner = tp->u[0].p; inner != NULL; inner = inner->u[1].p){
