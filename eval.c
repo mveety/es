@@ -56,6 +56,91 @@ forkexec(char *file, List *list, Boolean inchild)
 	return mklist(mkterm(mkstatus(status), NULL), NULL);
 }
 
+List*
+dictdestructassign(Tree *vardict0, Tree *valueform0, Binding *binding0)
+{
+	Tree *vardict = vardict0; Root r_vardict;
+	Tree *valueform = valueform0; Root r_valueform;
+	Binding *binding = binding0; Root r_binding;
+
+	Tree *dictform = NULL; Root r_dictform;
+	Tree *assoc = NULL; Root r_assoc;
+	List *valuelist = NULL; Root r_valuelist;
+	Dict *valuedict = NULL; Root r_valuedict;
+	List *namelist = NULL; Root r_namelist;
+	char *namestr = NULL; Root r_namestr;
+	List *varlist = NULL; Root r_varlist;
+	char *varname = NULL; Root r_varname;
+	List *dictdata = NULL; Root r_dictdata;
+
+	gcref(&r_vardict, (void**)&vardict);
+	gcref(&r_valueform, (void**)&valueform);
+	gcref(&r_binding, (void**)&binding);
+
+	gcref(&r_dictform, (void**)&dictform);
+	gcref(&r_assoc, (void**)&assoc);
+	gcref(&r_valuelist, (void**)&valuelist);
+	gcref(&r_valuedict, (void**)&valuedict);
+	gcref(&r_namelist, (void**)&namelist);
+	gcref(&r_namestr, (void**)&namestr);
+	gcref(&r_varlist, (void**)&varlist);
+	gcref(&r_varname, (void**)&varname);
+	gcref(&r_dictdata, (void**)&dictdata);
+
+	dictform = vardict->u[0].p;
+
+	valuelist = glom(valueform, binding, TRUE);
+	if(valuelist == NULL)
+		fail("es:dictassign", "null values");
+	if(valuelist->term->kind != tkDict)
+		fail("es:dictassign", "rhs value not a dict");
+	if(valuelist->next != NULL)
+		fail("es:dictassign", "too many rhs elements");
+	valuedict = getdict(valuelist->term);
+
+	for(; dictform != NULL; dictform = dictform->u[1].p){
+		assoc = dictform->u[0].p;
+		assert(assoc != NULL && assoc->kind == nAssoc);
+		if(assoc->u[1].p == NULL)
+			continue;
+		namelist = glom(assoc->u[0].p, binding, FALSE);
+		varlist = glom(assoc->u[1].p, binding, TRUE);
+		if(namelist == NULL || varlist == NULL)
+			continue;
+		namestr = getstr(namelist->term);
+		dictdata = (List*)dictget(valuedict, namestr);
+		if(dictdata == NULL)
+			fail("es:dictassign", "element %s is empty", namestr);
+		for(; varlist != NULL; varlist = varlist->next){
+			if(varlist->next == NULL)
+				vardef(getstr(varlist->term), binding, dictdata);
+			else {
+				if(dictdata == NULL)
+					vardef(getstr(varlist->term), binding, NULL);
+				else {
+					vardef(getstr(varlist->term), binding, mklist(dictdata->term, NULL));
+					dictdata = dictdata->next;
+				}
+			}
+		}
+	}
+
+	gcrderef(&r_dictdata);
+	gcrderef(&r_varname);
+	gcrderef(&r_varlist);
+	gcrderef(&r_namestr);
+	gcrderef(&r_namelist);
+	gcrderef(&r_valuedict);
+	gcrderef(&r_valuelist);
+	gcrderef(&r_assoc);
+	gcrderef(&r_dictform);
+	gcrderef(&r_binding);
+	gcrderef(&r_valueform);
+	gcrderef(&r_vardict);
+
+	return valuelist;
+}
+
 /* assign -- bind a list of values to a list of variables */
 List*
 assign(Tree *varform, Tree *valueform0, Binding *binding0)
@@ -67,6 +152,9 @@ assign(Tree *varform, Tree *valueform0, Binding *binding0)
 	List *vars = NULL; Root r_vars;
 	List *values = NULL; Root r_values;
 	char *name = NULL; Root r_name;
+
+	if(varform->kind == nDict)
+		return dictdestructassign(varform, valueform0, binding0);
 
 	result = NULL;
 	gcref(&r_result, (void**)&result);

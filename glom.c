@@ -424,7 +424,8 @@ static List *glom1(Tree *tree, Binding *binding) {
 				assert(assoc->kind = nAssoc);
 				name = glom1(assoc->u[0].p, bp);
 				value = glom(assoc->u[1].p, bp, TRUE);
-				assert(name != NULL);
+				if(name == NULL)
+					continue;
 				namestr = getstr(name->term);
 				dict = dictput(dict, namestr, value);
 			}
