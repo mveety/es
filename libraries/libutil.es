@@ -16,6 +16,7 @@ fn libutil_getlibfiles library {
 		result $libfiles
 	}
 }
+%hidefunction libutil_getlibfiles
 
 fn libutil_getlibfile library {
 	lets (
@@ -27,6 +28,7 @@ fn libutil_getlibfile library {
 		result $libfile
 	}
 }
+%hidefunction libutil_getlibfile
 
 fn libutil_remove_nil_elements list {
 	let (res = ()) {
@@ -38,6 +40,7 @@ fn libutil_remove_nil_elements list {
 		result $res
 	}
 }
+%hidefunction libutil_remove_nil_elements
 
 fn libutil_enumerate_file_info file {
 	if {! access -r $file} {
@@ -75,7 +78,7 @@ fn libutil_enumerate_file_info file {
 		result $libname $deps
 	}
 }
-
+%hidefunction libutil_enumerate_file_info
 
 fn libutil_enumerate_file_functions file {
 	if {! access -r $file } {
@@ -113,10 +116,12 @@ fn libutil_enumerate_file_functions file {
 		result $functions
 	}
 }
+%hidefunction libutil_enumerate_file_functions
 
 fn libutil_enumerate_deps library {
 	libutil_getlibfile $library |> libutil_enumerate_file_info |> %rest
 }
+%hidefunction libutil_enumerate_deps
 
 fn libutil_check_definition library {
 	if {! ~ $library <={libutil_getlibfile $library |> libutil_enumerate_file_info |> %elem 1}} {
@@ -124,10 +129,12 @@ fn libutil_check_definition library {
 	}
 	true
 }
+%hidefunction libutil_check_definition
 
 fn libutil_enumerate_functions library {
 	libutil_enumerate_file_functions <={libutil_getlibfile $library}
 }
+%hidefunction libutil_enumerate_functions
 
 fn libutil_all_libraries {
 	lets (
@@ -147,6 +154,7 @@ fn libutil_all_libraries {
 		result $all_libs
 	}
 }
+%hidefunction libutil_all_libraries
 
 fn libutil_enumerate_all_funs {
 	let (funs = ()) {
@@ -156,6 +164,7 @@ fn libutil_enumerate_all_funs {
 		result $funs
 	}
 }
+%hidefunction libutil_enumerate_all_funs
 
 fn libutil_enumerate_all_libs {
 	lets (funlibs = ()) {
@@ -170,6 +179,7 @@ fn libutil_enumerate_all_libs {
 		result $funlibs
 	}
 }
+%hidefunction libutil_enumerate_all_libs
 
 fn libutil_function_search fun libhash {
 	for ((mfun libname) = $libhash) {
@@ -179,6 +189,7 @@ fn libutil_function_search fun libhash {
 	}
 	throw error $0 'function '''^$fun^''' not found'
 }
+%hidefunction libutil_function_search
 
 defconf libutil enable-build false
 if {$libutil_conf_enable-build} {
@@ -246,7 +257,7 @@ if {$libutil_conf_enable-build} {
 				completion_fmt_funs = $completion_fmt_funs $i completion
 			}
 			assert {eq <={mod $#completion_fmt_funs 2} 0}
-			echo 'libutil_es_system = ('
+			echo '_libutil_es_system = ('
 			lets (
 				col = 0
 				ts =
@@ -298,7 +309,7 @@ if {$libutil_conf_enable-build} {
 	}
 }
 
-libutil_es_system = (
+_libutil_es_system = (
 	# init
 	'.' 'init' 'access' 'init' 'break' 'init' 'catch' 'init' 'echo'
 	'init' 'exec' 'init' 'forever' 'init' 'fork' 'init' 'if' 'init'
@@ -378,16 +389,15 @@ libutil_es_system = (
 	'completion' 'es_complete_dump_state' 'completion' '%core_completer'
 	'completion'
 )
-$&varhide libutil_es_system
 
 if {~ $#__libutil_function_data 0} {
-	__libutil_function_data = $libutil_es_system <=libutil_enumerate_all_libs
+	__libutil_function_data = $_libutil_es_system <=libutil_enumerate_all_libs
 	$&varhide __libutil_function_data
 }
 
 fn libutil_rehash {
-	assert2 libutil {eq <={mod $#libutil_es_system 2} 0}
-	__libutil_function_data = $libutil_es_system <=libutil_enumerate_all_libs
+	assert2 libutil {eq <={mod $#_libutil_es_system 2} 0}
+	__libutil_function_data = $_libutil_es_system <=libutil_enumerate_all_libs
 	if {! ~ $#fn-%libutil_rehash 0} {
 		%libutil_rehash
 	}

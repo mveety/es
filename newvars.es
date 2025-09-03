@@ -4,8 +4,16 @@ fn %hidevar v {
 	$&varhide $v
 }
 
+fn %hidefunction f {
+	%hidevar fn-^$f
+}
+
 fn %unhidevar v {
 	$&varunhide $v
+}
+
+fn %unhidefunction f {
+	%unhidevar fn-^$f
 }
 
 fn %isvarhidden v {
