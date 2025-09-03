@@ -88,9 +88,7 @@ fn __atuin_enable {
 			nelem = $history_conf_reload
 		}
 		%clear-history
-		local (hist = ``(\n){atuin history list --cmd-only | tail -n $nelem}) {
-			%add-history $hist
-		}
+		%add-history ``(\n){atuin history list --cmd-only | tail -n $nelem}
 	}
 
 	fn %rl-hook1 {

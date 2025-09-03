@@ -1,5 +1,24 @@
 #!/usr/bin/env es
 
+fn %hidevar v {
+	$&varhide $v
+}
+
+fn %unhidevar v {
+	$&varunhide $v
+}
+
+fn %isvarhidden v {
+	$&varishidden v
+}
+
+
+fn defhiddenvar name value {
+	$name = $value
+	%hidevar $name
+	result $value
+}
+
 #	The vars function is provided for cultural compatibility with
 #	rc's whatis when used without arguments.  The option parsing
 #	is very primitive;  perhaps es should provide a getopt-like
