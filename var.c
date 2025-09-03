@@ -266,11 +266,14 @@ vardef(char *name, Binding *binding, List *defn)
 		if (defn != NULL) {
 			var->defn = defn;
 			var->env = NULL;
-			var->flags = hasbindings(defn) ? var_hasbindings : 0;
+			if(hasbindings(defn))
+				var->flags |= var_hasbindings;
 		} else
 			vars = dictput(vars, name, NULL);
 	else if (defn != NULL) {
 		var = mkvar(defn);
+		if(name[0] == '_')
+			var->flags |= var_isinternal;
 		vars = dictput(vars, name, var);
 	}
 

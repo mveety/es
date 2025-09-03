@@ -9,7 +9,7 @@ fn %unhidevar v {
 }
 
 fn %isvarhidden v {
-	$&varishidden v
+	$&varishidden $v
 }
 
 
