@@ -68,9 +68,7 @@ dictdestructassign(Tree *vardict0, Tree *valueform0, Binding *binding0)
 	List *valuelist = NULL; Root r_valuelist;
 	Dict *valuedict = NULL; Root r_valuedict;
 	List *namelist = NULL; Root r_namelist;
-	char *namestr = NULL; Root r_namestr;
 	List *varlist = NULL; Root r_varlist;
-	char *varname = NULL; Root r_varname;
 	List *dictdata = NULL; Root r_dictdata;
 
 	gcref(&r_vardict, (void**)&vardict);
@@ -82,9 +80,7 @@ dictdestructassign(Tree *vardict0, Tree *valueform0, Binding *binding0)
 	gcref(&r_valuelist, (void**)&valuelist);
 	gcref(&r_valuedict, (void**)&valuedict);
 	gcref(&r_namelist, (void**)&namelist);
-	gcref(&r_namestr, (void**)&namestr);
 	gcref(&r_varlist, (void**)&varlist);
-	gcref(&r_varname, (void**)&varname);
 	gcref(&r_dictdata, (void**)&dictdata);
 
 	dictform = vardict->u[0].p;
@@ -98,7 +94,7 @@ dictdestructassign(Tree *vardict0, Tree *valueform0, Binding *binding0)
 		fail("es:dictassign", "too many rhs elements");
 	valuedict = getdict(valuelist->term);
 
-	for(; dictform != NULL; dictform = dictform->u[1].p){
+	for(dictform = vardict->u[0].p; dictform != NULL; dictform = dictform->u[1].p){
 		assoc = dictform->u[0].p;
 		assert(assoc != NULL && assoc->kind == nAssoc);
 		if(assoc->u[1].p == NULL)
@@ -107,10 +103,11 @@ dictdestructassign(Tree *vardict0, Tree *valueform0, Binding *binding0)
 		varlist = glom(assoc->u[1].p, binding, TRUE);
 		if(namelist == NULL || varlist == NULL)
 			continue;
-		namestr = getstr(namelist->term);
-		dictdata = (List*)dictget(valuedict, namestr);
+		if(namelist->next != NULL)
+			fail("es:dictassign", "element name should not be a list");
+		dictdata = (List*)dictget(valuedict, getstr(namelist->term));
 		if(dictdata == NULL)
-			fail("es:dictassign", "element %s is empty", namestr);
+			fail("es:dictassign", "element %s is empty", getstr(namelist->term));
 		for(; varlist != NULL; varlist = varlist->next){
 			if(varlist->next == NULL) {
 				if(!termeq(varlist->term, "_"))
@@ -129,14 +126,13 @@ dictdestructassign(Tree *vardict0, Tree *valueform0, Binding *binding0)
 	}
 
 	gcrderef(&r_dictdata);
-	gcrderef(&r_varname);
 	gcrderef(&r_varlist);
-	gcrderef(&r_namestr);
 	gcrderef(&r_namelist);
 	gcrderef(&r_valuedict);
 	gcrderef(&r_valuelist);
 	gcrderef(&r_assoc);
 	gcrderef(&r_dictform);
+
 	gcrderef(&r_binding);
 	gcrderef(&r_valueform);
 	gcrderef(&r_vardict);
