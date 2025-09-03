@@ -7,7 +7,7 @@
 es
 esdump
 es_static
-es.core
+*.core
 esdump.core
 y.output
 y.tab.c
