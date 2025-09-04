@@ -353,6 +353,23 @@ if {~ $#es_conf_complete_order 0} {
 	es_conf_complete_order = executables functions variables
 }
 
+if {~ $#es_conf_sort-completions 0} {
+	es_conf_sort-completions = true
+} {
+	if {! ~ $es_conf_sort-completions true false} {
+		es_conf_sort-completions = true
+	}
+}
+
+# try to protect this mess
+set-es_conf_sort-completions = @{
+	if{~ $1 true || ~ $1 false} {
+		result $1
+	} {
+		result $es_conf_sort-completions
+	}
+}
+
 fn complete_base_complete partial {
 	process $es_conf_complete_order (
 		executables { result <={complete_executables $partial} }

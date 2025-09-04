@@ -489,13 +489,25 @@ es_complete_hook(const char *text, int start, int end)
 {
 	List *old_completer;
 	List *new_completer;
+	List *complete_sort_list = NULL; Root r_complete_sort_list;
+	int sort_completions = 0;
 
 	old_completer = varlookup("fn-%core_completer", NULL);
 	new_completer = varlookup("fn-%new_completer", NULL);
 	if(old_completer == NULL && new_completer == NULL)
 		return NULL;
+	gcref(&r_complete_sort_list, (void**)&complete_sort_list);
+	complete_sort_list = varlookup("es_conf_sort-completions", NULL);
+	if(complete_sort_list == NULL)
+		sort_completions = 0;
+	else
+		if(termeq(complete_sort_list->term, "true"))
+			sort_completions = 1;
+		else if(termeq(complete_sort_list->term, "false"))
+			sort_completions = 0;
+	gcrderef(&r_complete_sort_list);
 	rl_attempted_completion_over = 1;
-	rl_sort_completion_matches = 0;
+	rl_sort_completion_matches = sort_completions;
 	rl_ignore_completion_duplicates = 1;
 	rl_filename_completion_desired = 1;
 	es_rl_start = start;
