@@ -1,4 +1,4 @@
-library library_autoload (init libraries libutil)
+library library_autoload (init libraries libutils)
 
 let (old_pathsearch = $fn-%pathsearch) {
 	fn %pathsearch name {

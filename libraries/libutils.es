@@ -1,4 +1,4 @@
-library libutil (init libraries)
+library libutils (init libraries)
 
 fn libutil_getlibfiles library {
 	let (

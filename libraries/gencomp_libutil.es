@@ -1,4 +1,4 @@
-library gencomp_libutil (init completion libutil general_completion)
+library gencomp_libutil (init completion libutils general_completion)
 
 fn gclibutil_clean_system {
 	process $libutil_es_system (
