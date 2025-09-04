@@ -128,6 +128,7 @@ fn complete_all_variables type prefix partial_name {
 							res = $res <={~~ $v $prefix^*}
 						}
 					}
+					* { unreachable }
 				)
 			}
 		}
@@ -379,6 +380,7 @@ fn complete_base_complete partial {
 		variables { result <={complete_variables '' $partial} }
 		visible_variables { result <={complete_visible_variables '' $partial} }
 		hidden_variables { result <={complete_hidden_variables '' $partial} }
+		* { unreachable }
 	)
 }
 

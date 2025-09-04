@@ -186,7 +186,7 @@ fn-%whatis	= $&whatis
 
 # assert and assert2 are used for debugging and error checking
 
-es_assert_def = @ body {
+fn assert body {
 	if {$body} {
 		result 0
 	} {
@@ -194,7 +194,7 @@ es_assert_def = @ body {
 	}
 }
 
-es_assert2_def = @ loc body {
+fn assert2 loc body {
 	if {$body} {
 		result 0
 	} {
@@ -202,17 +202,8 @@ es_assert2_def = @ loc body {
 	}
 }
 
-fn-assert = $es_assert_def
-fn-assert2 = $es_assert2_def
-
-fn %enable-assert {
-	fn-assert = $es_assert_def
-	fn-assert2 = $es_assert2_def
-}
-
-fn %disable-assert {
-	fn-assert = @ { true }
-	fn-assert2 = @ { true }
+fn unreachable {
+	throw assert unreachable
 }
 
 #	These builtins are only around as a matter of convenience, so
@@ -836,8 +827,8 @@ fn %interactive-hook-exception-handler hook errobj {
 		preexec { fn-%preexec= }
 		postexec { fn-%postexec= }
 		(preexec postexec) { throw hook_error }
-
 		prompt { fn-%prompt= }
+		* { unreachable }
 	)
 }
 

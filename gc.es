@@ -20,6 +20,7 @@ fn %gcstats args {
 				nobjects= $matchexpr(9)
 				ngcs = $matchexpr(11)
 			}
+			* { unreachable }
 		)
 		if {~ $args -v} {
 			echo 'type = '^$type
@@ -86,6 +87,7 @@ fn %gcinfo {
 				}
 			}
 		}
+		* { unreachable }
 	)
 }
 

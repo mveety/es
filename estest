@@ -169,7 +169,7 @@ fn run_subproc_test testname testfn test_log tfp libdir {
 		}
 		exit 1
 	} {
-		local (
+		local(es_assert_def = $fn-assert; es_assert2_def = $fn-assert2) local (
 			fn-assert = @{ echo 'try assert:' $* ; $es_assert_def $*}
 			fn-assert2 = @{ echo 'try assert2:' $*(1) ':' $*(2 ...) ; $es_assert2_def $*}
 		) {
@@ -232,7 +232,7 @@ fn run_test_file file {
 					throw error run_subproc 'returned false'
 				}
 			} {
-				local(
+				local(es_assert_def = $fn-assert; es_assert2_def = $fn-assert2) local(
 					fn-assert = @{echo 'try assert:' $* ; $es_assert_def $*}
 					fn-assert2 = @{ echo 'try assert2:' $*(1) ':' $*(2 ...) ; $es_assert2_def $*}
 				) {

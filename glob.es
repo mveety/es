@@ -307,6 +307,7 @@ fn esmglob_expand_qmacro xglob {
 				(rest) {
 					tail = $tail $i
 				}
+				* { unreachable }
 			)
 		}
 		if {~ $#mid 0} { return $"head }
@@ -536,9 +537,7 @@ fn esmglob_double_wild_removal xglob {
 						state = 0
 					}
 				}
-				* {
-					assert2 $0 {~ $state 0 || ~ $state 1}
-				}
+				* { assert2 $0 {~ $state 0 || ~ $state 1} }
 			)
 		}
 		if {~ $state 1} {
