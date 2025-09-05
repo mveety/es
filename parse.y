@@ -23,6 +23,7 @@
 %token	EXTRACT CALL COUNT FLAT OROR TOSTR PRIM SUB
 %token	NL ENDFILE ERROR MATCH MATCHALL PROCESS TRY
 %token	DICTASSOC DICT DICTASSIGN APPENDASSIGN
+%token	REGEX
 
 %left	LOCAL LET LETS FOR CLOSURE ')'
 %left	ANDAND OROR NL MATCH MATCHALL PROCESS
@@ -131,6 +132,7 @@ word	: sword				{ $$ = $1; }
 
 comword	: param				{ $$ = $1; }
 	| DICT '(' assocs ')'		{ $$ = mk(nDict, $3); }
+	| REGEX '(' word ')'	{ $$ = mk(nRegex, $3); }
 	| '(' nlwords ')'		{ $$ = $2; }
 	| '{' body '}'			{ $$ = thunkify($2); }
 	| '@' params '{' body '}'	{ $$ = mklambda($2, $4); }

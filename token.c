@@ -222,6 +222,8 @@ top:	while ((c = input_getc()) == ' ' || c == '\t')
 			return ONERR;
 		else if (streq(buf, "%dict"))
 			return DICT;
+		else if(streq(buf, "%re"))
+			return REGEX;
 		w = RW;
 		y->str = gcdup(buf);
 		return WORD;

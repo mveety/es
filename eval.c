@@ -1,6 +1,7 @@
 /* eval.c -- evaluation of lists and trees ($Revision: 1.2 $) */
 
 #include "es.h"
+#include <regex.h>
 /* #include "eval.h" */
 
 unsigned long evaldepth = 0, maxevaldepth = MAXmaxevaldepth;
@@ -417,15 +418,47 @@ forloop(Tree *defn0, Tree *body0, Binding *binding, int evalflags)
 List*
 matchpattern(Tree *subjectform0, Tree *patternform0, Binding *binding)
 {
+	Binding *bp = binding; Root r_bp;
+	Tree *patternform = patternform0; Root r_patternform;
+	List *subject = NULL; Root r_subject;
+	List *pattern = NULL; Root r_pattern;
 	Boolean result;
-	List *pattern;
 	StrList *quote = NULL;
-	Ref(Binding *, bp, binding);
-	Ref(Tree *, patternform, patternform0);
-	Ref(List *, subject, glom(subjectform0, bp, TRUE));
+	Boolean doregexmatch = FALSE;
+	RegexStatus status;
+	char errstr[128];
+
+	gcref(&r_bp, (void**)&bp);
+	gcref(&r_patternform, (void**)&patternform);
+	gcref(&r_subject, (void**)&subject);
+	gcref(&r_pattern, (void**)&pattern);
+
+	subject = glom(subjectform0, bp, TRUE);
+	if(patternform->u[0].p->kind == nRegex)
+		doregexmatch = TRUE;
 	pattern = glom2(patternform, bp, &quote);
-	result = listmatch(subject, pattern, quote);
-	RefEnd3(subject, patternform, bp);
+
+	if(doregexmatch == TRUE){
+		memset(errstr, 0, sizeof(errstr));
+		status = (RegexStatus){ReNil, FALSE, 0, 0, nil, 0, &errstr[0], sizeof(errstr)};
+		regexmatch(&status, subject->term, pattern->term);
+		assert(status.type == ReMatch);
+
+		if(status.compcode)
+			fail("es:rematch", "compilation error: %s", errstr);
+		if(status.matchcode != 0 && status.matchcode != REG_NOMATCH)
+			fail("es:rematch", "match error: %s", errstr);
+
+		result = status.matched;
+	} else {
+		result = listmatch(subject, pattern, quote);
+	}
+
+	gcrderef(&r_pattern);
+	gcrderef(&r_subject);
+	gcrderef(&r_patternform);
+	gcrderef(&r_bp);
+
 	return result ? list_true : list_false;
 }
 

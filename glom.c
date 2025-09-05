@@ -318,6 +318,10 @@ static List *glom1(Tree *tree, Binding *binding) {
 			list = mklist(mkterm(tp->u[0].s, NULL), NULL);
 			tp = NULL;
 			break;
+		case nRegex:
+			list = glom1(tp->u[0].p, binding);
+			tp = NULL;
+			break;
 		case nThunk:
 		case nLambda:
 			list = mklist(mkterm(NULL, mkclosure(tp, bp)), NULL);

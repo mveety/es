@@ -70,7 +70,7 @@ struct Closure {
 typedef enum {
 	nAssign, nCall, nClosure, nConcat, nFor, nLambda, nLet, nList, nLocal, nLets,
 	nMatch, nExtract, nPrim, nQword, nThunk, nVar, nVarsub, nWord,
-	nRedir, nPipe, nAssoc, nDict	/* only appear during construction */
+	nRedir, nPipe, nAssoc, nDict, nRegex	/* only appear during construction */
 } NodeKind;
 
 struct Tree {

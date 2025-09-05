@@ -26,6 +26,7 @@ mk(NodeKind t, ...) {
 	    case nThunk:
 	    case nVar:
 	    case nDict:
+	    case nRegex:
 			n = gcalloc(offsetof(Tree, u[1]), tTree1);
 			n->u[0].p = va_arg(ap, Tree *);
 			break;
@@ -115,6 +116,8 @@ treekind(Tree *t)
 		return "nAssoc";
 	case nDict:
 		return "nDict";
+	case nRegex:
+		return "nRegex";
 	default:
 		dprintf(2, "error: invalid NodeKind %d\n", t->kind);
 		abort();
@@ -174,6 +177,7 @@ Tree1Mark(void *p)
 	case nThunk:
 	case nVar:
 	case nDict:
+	case nRegex:
 		gcmark(t->u[0].p);
 		break;
 	}

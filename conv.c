@@ -234,6 +234,9 @@ top:
 	case nAssoc:
 		fmtprint(f, "%T => %T", n->u[0].p, n->u[1].p);
 		return FALSE;
+	case nRegex:
+		fmtprint(f, "%%re(%T)", n->u[0].p);
+		return FALSE;
 
 	default:
 		panic("bad node kind: %d", n->kind);
@@ -544,6 +547,9 @@ static Boolean Bconv(Format *f) {
 		fmtprint(f, "(assoc %B %B)", n->u[0].p, n->u[1].p);
 		break;
 
+	case nRegex:
+		fmtprint(f, "(regex %B)", n->u[0].p);
+		break;
 	}
 	return FALSE;
 }

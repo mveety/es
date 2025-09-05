@@ -542,13 +542,13 @@ PRIM(rematch) {
 	pattern = lp->next->term;
 
 	regexmatch(&status, subject, pattern);
-	assert(status.type = ReMatch);
+	assert(status.type == ReMatch);
 
 	if(status.compcode)
-		fail("$&rematch", "compilation error: %d: %s", status.compcode, errstr);
+		fail("$&rematch", "compilation error: %s", errstr);
 
 	if(status.matchcode != 0 && status.matchcode != REG_NOMATCH)
-		fail("$&rematch", "match error: %d: %s", status.matchcode, errstr);
+		fail("$&rematch", "match error: %s", errstr);
 
 	gcrderef(&r_pattern);
 	gcrderef(&r_subject);
@@ -584,10 +584,10 @@ PRIM(reextract) {
 	assert(status.type == ReExtract);
 
 	if(status.compcode)
-		fail("$&reextract", "compilation error: %d: %s", status.compcode, errstr);
+		fail("$&reextract", "compilation error: %s", errstr);
 
 	if(status.matchcode != 0 && status.matchcode != REG_NOMATCH)
-		fail("$&reextract", "match error: %d: %s", status.matchcode, errstr);
+		fail("$&reextract", "match error: %s", errstr);
 
 	gcrderef(&r_st_substrs);
 	gcrderef(&r_pattern);
