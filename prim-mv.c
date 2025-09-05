@@ -1,6 +1,7 @@
 #include "es.h"
 #include "gc.h"
 #include "prim.h"
+#include <regex.h>
 
 extern Region *regions;
 extern int gc_after;
@@ -521,6 +522,82 @@ PRIM(isalist) {
 	return list_false;
 }
 
+PRIM(rematch) {
+	RegexStatus status;
+	char errstr[128];
+	List *lp = list; Root r_lp;
+	Term *subject = nil; Root r_subject;
+	Term *pattern = nil; Root r_pattern;
+
+	if(list == NULL || list->next == NULL)
+		fail("$&rematch", "missing arguments");
+
+	gcref(&r_lp, (void**)&lp);
+	gcref(&r_subject, (void**)&subject);
+	gcref(&r_pattern, (void**)&pattern);
+
+	memset(errstr, 0, sizeof(errstr));
+	status = (RegexStatus){ReNil, FALSE, 0, 0, nil, 0, &errstr[0], sizeof(errstr)};
+	subject = lp->term;
+	pattern = lp->next->term;
+
+	regexmatch(&status, subject, pattern);
+
+	if(status.compcode)
+		fail("$&rematch", "compilation error: %d: %s", status.compcode, errstr);
+
+	if(status.matchcode != 0 && status.matchcode != REG_NOMATCH)
+		fail("$&rematch", "match error: %d: %s", status.matchcode, errstr);
+
+	gcrderef(&r_pattern);
+	gcrderef(&r_subject);
+	gcrderef(&r_lp);
+
+	if(status.matched == TRUE)
+		return list_true;
+	return list_false;
+}
+
+PRIM(reextract) {
+	RegexStatus status;
+	char errstr[128];
+	List *lp = list; Root r_lp;
+	Term *subject = nil; Root r_subject;
+	Term *pattern = nil; Root r_pattern;
+	Root r_st_substrs;
+
+	if(list == NULL || list->next == NULL)
+		fail("$&rematch", "missing arguments");
+
+	status = (RegexStatus){ReNil, FALSE, 0, 0, nil, 0, &errstr[0], sizeof(errstr)};
+	gcref(&r_lp, (void**)&lp);
+	gcref(&r_subject, (void**)&subject);
+	gcref(&r_pattern, (void**)&pattern);
+	gcref(&r_st_substrs, (void**)&status.substrs);
+
+	memset(errstr, 0, sizeof(errstr));
+	subject = lp->term;
+	pattern = lp->next->term;
+
+	regexextract(&status, subject, pattern);
+
+	if(status.compcode)
+		fail("$&reextract", "compilation error: %d: %s", status.compcode, errstr);
+
+	if(status.matchcode != 0 && status.matchcode != REG_NOMATCH)
+		fail("$&reextract", "match error: %d: %s", status.matchcode, errstr);
+
+	gcrderef(&r_st_substrs);
+	gcrderef(&r_pattern);
+	gcrderef(&r_subject);
+	gcrderef(&r_lp);
+
+	if(status.matched == TRUE)
+		return status.substrs;
+	return nil;
+}
+
+
 Dict*
 initprims_mv(Dict *primdict)
 {
@@ -555,6 +632,8 @@ initprims_mv(Dict *primdict)
 	X(setditto);
 	X(getditto);
 	X(isalist);
+	X(rematch);
+	X(reextract);
 
 	return primdict;
 }

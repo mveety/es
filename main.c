@@ -25,6 +25,7 @@ extern size_t blocksize;
 extern char **environ;
 extern uint32_t gc_oldage;
 extern int gc_oldsweep_after;
+extern Boolean regex_debug;
 
 void*
 used(void *v)
@@ -156,13 +157,14 @@ do_usage(void)
 void
 debug_flag_usage(void)
 {
-	dprintf(2, "debug flags: es -D [GIaEP]\n%s%s%s%s%s%s",
+	dprintf(2, "debug flags: es -D [GIaEPR]\n%s%s%s%s%s%s%s",
 		"	? -- show this message\n",
 		"	G -- gcverbose\n",
 		"	I -- gcinfo\n",
 		"	a -- assertions\n",
 		"	E -- debug_exceptions\n",
-		"	P -- verbose_parser\n"
+		"	P -- verbose_parser\n",
+		"	R -- regex_debug\n"
 	);
 	exit(1);
 }
@@ -222,7 +224,7 @@ main(int argc, char *argv[]) {
 				case 'a': assertions = TRUE; break;
 				case 'E': debug_exceptions = TRUE; break;
 				case 'P': verbose_parser = TRUE; break;
-				/*case 'r': use_initialize_esrc = FALSE; break;*/
+				case 'R': regex_debug = TRUE; break;
 				case '?':
 					debug_flag_usage();
 					break;

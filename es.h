@@ -3,6 +3,8 @@
 #include "config.h"
 #include "stdenv.h"
 
+#define nil ((void*)0)
+
 /*
  * meta-information for exported environment strings
  */
@@ -23,6 +25,7 @@ typedef struct Closure Closure;
 typedef struct Assoc Assoc;
 typedef struct Dict Dict;
 typedef struct Var Var;
+typedef struct RegexStatus RegexStatus;
 
 typedef enum {
 	tkString,
@@ -116,6 +119,24 @@ struct Var {
 	int flags;
 };
 
+/* regexes */
+
+typedef enum {
+	ReNil,
+	ReMatch,
+	ReExtract,
+} RegexType;
+
+struct RegexStatus {
+	RegexType type;
+	Boolean matched;
+	int matchcode;
+	int compcode;
+	List *substrs;
+	size_t nsubstr;
+	char *errstr;
+	size_t errstrsz;
+};
 
 /*
  * our programming environment
@@ -225,7 +246,8 @@ extern Boolean haswild(const char *pattern, const char *quoting);
 extern Boolean match(const char *subject, const char *pattern, const char *quote);
 extern Boolean listmatch(List *subject, List *pattern, StrList *quote);
 extern List *extractmatches(List *subjects, List *patterns, StrList *quotes);
-
+extern RegexStatus *regexmatch(RegexStatus *status, Term *subject0, Term *pattern0);
+extern RegexStatus *regexextract(RegexStatus *status, Term *subject0, Term *pattern0);
 
 /* var.c */
 

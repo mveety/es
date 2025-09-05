@@ -91,6 +91,9 @@ typedef void noreturn;
 #include <readline/history.h>
 #endif
 
+/* for regexes */
+#include <regex.h>
+
 /*
  * things that should be defined by header files but might not have been
  */

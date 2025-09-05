@@ -1,6 +1,8 @@
 /* match.c -- pattern matching routines ($Revision: 1.1.1.1 $) */
 
 #include "es.h"
+#include <regex.h>
+#include <stdlib.h>
 
 enum { RANGE_FAIL = -1, RANGE_ERROR = -2 };
 
@@ -262,3 +264,131 @@ extern List *extractmatches(List *subjects, List *patterns, StrList *quotes) {
 	gcenable();
 	RefReturn(result);
 }
+
+Boolean regex_debug = FALSE;
+
+RegexStatus*
+regexmatch(RegexStatus *status, Term *subject0, Term *pattern0)
+{
+	Term *subject = subject0; Root r_subject;
+	Term *pattern = pattern0; Root r_pattern;
+	char *subjectstr = nil;
+	char *patternstr = nil;
+	regex_t regex;
+	regmatch_t pmatch[1];
+
+	gcref(&r_subject, (void**)&subject);
+	gcref(&r_pattern, (void**)&pattern);
+
+	status->type = ReMatch;
+	subjectstr = strdup(getstr(subject));
+	patternstr = strdup(getstr(pattern));
+	if(!subjectstr || !patternstr)
+		panic("regex strdup failed!");
+	status->compcode = regcomp(&regex, patternstr, REG_EXTENDED|REG_NOSUB);
+	if(status->compcode != 0){
+		if(status->errstrsz > 0)
+			regerror(status->compcode, &regex, status->errstr, status->errstrsz-1);
+		goto done;
+	}
+
+	status->matchcode = regexec(&regex, subjectstr, 0, pmatch, 0);
+	if(status->matchcode == 0)
+		status->matched = TRUE;
+	else {
+		if(status->errstrsz > 0)
+			regerror(status->compcode, &regex, status->errstr, status->errstrsz-1);
+	}
+
+done:
+	regfree(&regex);
+	free(subjectstr);
+	free(patternstr);
+	gcrderef(&r_pattern);
+	gcrderef(&r_subject);
+	return status;
+}
+
+RegexStatus*
+regexextract(RegexStatus *status, Term *subject0, Term *pattern0)
+{
+	Term *subject = subject0; Root r_subject;
+	Term *pattern = pattern0; Root r_pattern;
+	List *substrs = nil; Root r_substrs;
+	char *subjectstr = nil;
+	char *patternstr = nil;
+	char *copybuf = nil;
+	size_t copybufsz = 0;
+	Root r_status_substrs;
+	regex_t regex;
+	regmatch_t *pmatch;
+	size_t nmatch;
+	int i;
+
+	gcref(&r_subject, (void**)&subject);
+	gcref(&r_pattern, (void**)&pattern);
+	gcref(&r_substrs, (void**)&substrs);
+	gcref(&r_status_substrs, (void**)&status->substrs);
+
+	status->type = ReExtract;
+	subjectstr = strdup(getstr(subject));
+	patternstr = strdup(getstr(pattern));
+	if(!subjectstr || !patternstr)
+		panic("regex strdup failed!");
+	copybufsz = strlen(subjectstr);
+	copybuf = malloc(copybufsz);
+	if(!copybuf)
+		panic("regex strdup failed!");
+	memset(copybuf, 0, copybufsz);
+
+	status->compcode = regcomp(&regex, patternstr, REG_EXTENDED);
+	if(status->compcode > 0){
+		if(status->errstrsz > 0)
+			regerror(status->compcode, &regex, status->errstr, status->errstrsz-1);
+		goto done;
+	}
+	nmatch = regex.re_nsub+1;
+	pmatch = malloc(nmatch*sizeof(regmatch_t));
+	if(!pmatch)
+		panic("regex malloc failed");
+	memset(pmatch, 0, nmatch*sizeof(regmatch_t));
+
+	status->matchcode = regexec(&regex, subjectstr, regex.re_nsub, pmatch, 0);
+	if(status->matchcode){
+		if(status->errstrsz > 0)
+			regerror(status->compcode, &regex, status->errstr, status->errstrsz-1);
+		goto done;
+	}
+	status->matched = TRUE;
+	for(i = (nmatch-1); i >= 0; i--){
+		if(pmatch[i].rm_so < 0 && pmatch[i].rm_eo < 0)
+			continue;
+		memset(copybuf, 0, copybufsz);
+		memcpy(copybuf, (subjectstr+pmatch[i].rm_so), pmatch[i].rm_eo - pmatch[i].rm_so);
+		if(strlen(copybuf) == 0)
+			continue;
+		if(regex_debug == TRUE){
+			dprintf(2, "pmatch[%d].rm_so = %lu, pmatch[%d].rm_eo = %lu, ",
+					i, pmatch[i].rm_so, i, pmatch[i].rm_eo);
+			dprintf(2, "pmatch[%d].rm_eo - pmatch[%d].rm_so = %lu, ",
+					i, i, pmatch[i].rm_eo - pmatch[i].rm_so);
+			dprintf(2, "i = %d, nmatch = %lu, copybuf = %s\n", i, nmatch, copybuf);
+		}
+		substrs = mklist(mkstr(str("%s", copybuf)), substrs);
+	}
+
+	status->substrs = substrs;
+	status->nsubstr = nmatch;
+
+done:
+	regfree(&regex);
+	free(copybuf);
+	free(subjectstr);
+	free(patternstr);
+	gcrderef(&r_status_substrs);
+	gcrderef(&r_substrs);
+	gcrderef(&r_pattern);
+	gcrderef(&r_subject);
+	return status;
+}
+
