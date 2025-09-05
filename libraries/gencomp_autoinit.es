@@ -1,6 +1,6 @@
 library gencomp_autoinit (init completion autoinit general_completion complete_git)
 
-gencomp_autoinit_cmds = (
+_gencomp_autoinit_cmds = (
 	'load' 'load-all' 'enable' 'disable' 'list-all' 'list-enabled'
 	'list-loaded' 'file' 'new' 'delete' 'dir' 'help' 'git'
 )
@@ -25,7 +25,7 @@ fn gencomp_autoinit_hook curline partial {
 		cmdline = $t
 
 		if {~ <={%last $cmdline} 'autoinit'} {
-			gencomp_filter_list $partial $gencomp_autoinit_cmds
+			gencomp_filter_list $partial $_gencomp_autoinit_cmds
 		} {
 			match $cmdline(2) (
 				('load') {
