@@ -32,6 +32,7 @@ Vconv(Format *f)
 
 	if(lp != NULL && lp->next == NULL) {
 		switch(lp->term->kind){
+		case tkRegex:
 		case tkString:
 			fmtprint(f, "%S", getstr(lp->term));
 			break;
@@ -47,6 +48,7 @@ Vconv(Format *f)
 	for (; lp != NULL; lp = next) {
 		next = lp->next;
 		switch(lp->term->kind){
+		case tkRegex:
 		case tkString:
 			fmtprint(f, "%S%s", getstr(lp->term), next == NULL ? "" : sep);
 			break;

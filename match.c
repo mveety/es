@@ -281,8 +281,8 @@ regexmatch(RegexStatus *status, Term *subject0, Term *pattern0)
 	gcref(&r_pattern, (void**)&pattern);
 
 	status->type = ReMatch;
-	subjectstr = strdup(getstr(subject));
-	patternstr = strdup(getstr(pattern));
+	subjectstr = strdup(getregex(subject));
+	patternstr = strdup(getregex(pattern));
 	if(!subjectstr || !patternstr)
 		panic("regex strdup failed!");
 	status->compcode = regcomp(&regex, patternstr, REG_EXTENDED|REG_NOSUB);
@@ -331,8 +331,8 @@ regexextract(RegexStatus *status, Term *subject0, Term *pattern0)
 	gcref(&r_status_substrs, (void**)&status->substrs);
 
 	status->type = ReExtract;
-	subjectstr = strdup(getstr(subject));
-	patternstr = strdup(getstr(pattern));
+	subjectstr = strdup(getregex(subject));
+	patternstr = strdup(getregex(pattern));
 	if(!subjectstr || !patternstr)
 		panic("regex strdup failed!");
 	copybufsz = strlen(subjectstr);

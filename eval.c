@@ -420,11 +420,12 @@ matchpattern(Tree *subjectform0, Tree *patternform0, Binding *binding)
 {
 	Binding *bp = binding; Root r_bp;
 	Tree *patternform = patternform0; Root r_patternform;
-	List *subject = NULL; Root r_subject;
-	List *pattern = NULL; Root r_pattern;
-	Boolean result;
-	StrList *quote = NULL;
-	Boolean doregexmatch = FALSE;
+	List *subject = nil; Root r_subject;
+	List *pattern = nil; Root r_pattern;
+	List *lp = nil; Root r_lp;
+	List *pattern1 = nil; Root r_pattern1;
+	Boolean result = FALSE;
+	StrList *quote = nil;
 	RegexStatus status;
 	char errstr[128];
 
@@ -432,28 +433,38 @@ matchpattern(Tree *subjectform0, Tree *patternform0, Binding *binding)
 	gcref(&r_patternform, (void**)&patternform);
 	gcref(&r_subject, (void**)&subject);
 	gcref(&r_pattern, (void**)&pattern);
+	gcref(&r_lp, (void**)&lp);
+	gcref(&r_pattern1, (void**)&pattern1);
 
 	subject = glom(subjectform0, bp, TRUE);
-	if(patternform->u[0].p->kind == nRegex)
-		doregexmatch = TRUE;
 	pattern = glom2(patternform, bp, &quote);
 
-	if(doregexmatch == TRUE){
-		memset(errstr, 0, sizeof(errstr));
-		status = (RegexStatus){ReNil, FALSE, 0, 0, nil, 0, &errstr[0], sizeof(errstr)};
-		regexmatch(&status, subject->term, pattern->term);
-		assert(status.type == ReMatch);
+	for(lp = pattern; lp != nil; lp = lp->next){
+		if(lp->term->kind == tkRegex){
+			memset(errstr, 0, sizeof(errstr));
+			status = (RegexStatus){ReNil, FALSE, 0, 0, nil, 0, &errstr[0], sizeof(errstr)};
+			regexmatch(&status, subject->term, lp->term);
+			assert(status.type == ReMatch);
 
-		if(status.compcode)
-			fail("es:rematch", "compilation error: %s", errstr);
-		if(status.matchcode != 0 && status.matchcode != REG_NOMATCH)
-			fail("es:rematch", "match error: %s", errstr);
+			if(status.compcode)
+				fail("es:rematch", "compilation error: %s", errstr);
+			if(status.matchcode != 0 && status.matchcode != REG_NOMATCH)
+				fail("es:rematch", "match error: %s", errstr);
 
-		result = status.matched;
-	} else {
-		result = listmatch(subject, pattern, quote);
+			result = status.matched;
+			if(result == TRUE)
+				goto done;
+		} else {
+			pattern1 = mklist(lp->term, pattern1);
+		}
 	}
 
+	pattern1 = reverse(pattern1);
+	result = listmatch(subject, pattern1, quote);
+
+done:
+	gcrderef(&r_pattern1);
+	gcrderef(&r_lp);
 	gcrderef(&r_pattern);
 	gcrderef(&r_subject);
 	gcrderef(&r_patternform);

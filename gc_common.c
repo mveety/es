@@ -18,6 +18,7 @@ extern Tag Tree2Tag;
 extern Tag VarTag;
 extern Tag VectorTag;
 extern Tag AnonymousTag;
+extern Boolean ref_assertions;
 
 Root *globalrootlist;
 Root *exceptionrootlist;
@@ -121,7 +122,7 @@ decref(void *p)
 	if(p && istracked(p)){
 		h = header(p);
 		h->refs--;
-		if(assertions == TRUE)
+		if(ref_assertions == TRUE)
 			assert(h->refs >= 0);
 		return h->refs;
 	}

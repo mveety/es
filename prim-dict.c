@@ -202,6 +202,8 @@ PRIM(termtypeof) {
 		fail("$&termtypeof", "missing argument");
 
 	switch(list->term->kind){
+	case tkRegex:
+		return mklist(mkstr(str("regex")), NULL);
 	case tkString:
 		return mklist(mkstr(str("string")), NULL);
 	case tkClosure:

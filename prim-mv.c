@@ -212,6 +212,8 @@ PRIM(settermtag) {
 		term->tag = ttBox;
 	else if(strcmp(tagname, "none") == 0)
 		term->tag = ttNone;
+	else if(strcmp(tagname, "regex") == 0)
+		term->tag = ttRegex;
 	else {
 		gcenable();
 		gcrderef(&r_term);
@@ -231,15 +233,17 @@ PRIM(gettermtag) {
 		fail("$&gettermtag", "missing argument");
 
 	switch(list->term->tag){
+	default:
+		fail("$&gettermtag", "invalid tag %d", list->term->tag);
+		return list_false;
 	case ttNone:
 		return mklist(mkstr(str("none")), NULL);
 	case ttError:
 		return mklist(mkstr(str("error")), NULL);
 	case ttBox:
 		return mklist(mkstr(str("box")), NULL);
-	default:
-		fail("$&gettermtag", "invalid tag %d", list->term->tag);
-		return list_false;
+	case ttRegex:
+		return mklist(mkstr(str("regex")), NULL);
 	}
 }
 

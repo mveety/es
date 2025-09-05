@@ -65,6 +65,7 @@ deepequal(Tree *t1, Tree *t2)
 	case nCall:
 	case nThunk:
 	case nVar:
+	case nRegex:
 		return deepequal(t1->u[0].p, t2->u[0].p);
 	case nAssign:
 	case nConcat:
@@ -161,6 +162,7 @@ static const char *nodename(NodeKind k) {
 	case nExtract:	return "Extract";
 	case nPrim:	return "Prim";
 	case nQword:	return "Qword";
+	case nRegex:	return "Regex";
 	case nThunk:	return "Thunk";
 	case nVar:	return "Var";
 	case nVarsub:	return "Varsub";
@@ -187,7 +189,7 @@ dumptree(Tree *tree)
 			print("static const Tree_s %s = { n%s, { { (char *) %s } } };\n",
 			      name + 1, nodename(tree->kind), dumpstring(tree->u[0].s));
 			break;
-		    case nCall: case nThunk: case nVar:
+		    case nCall: case nThunk: case nVar: case nRegex:
 			print("static const Tree_p %s = { n%s, { { (Tree *) %s } } };\n",
 			      name + 1, nodename(tree->kind), dumptree(tree->u[0].p));
 			break;
@@ -241,6 +243,8 @@ char*
 termtype(Term *term)
 {
 	switch(term->kind){
+	case tkRegex:
+		return "tkRegex";
 	case tkString:
 		return "tkString";
 	case tkClosure:

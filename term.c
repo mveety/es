@@ -128,6 +128,15 @@ assocfmt(void *vargs, char *name, void *vdata)
 }
 
 char*
+getregex(Term *term)
+{
+	if(term->kind == tkRegex)
+		return term->str;
+	else
+		return getstr(term);
+}
+
+char*
 getstr(Term *term)
 {
 	Term *tp = NULL; Root r_tp;
@@ -154,6 +163,8 @@ getstr(Term *term)
 	switch(term->kind) {
 	case tkString:
 			return term->str;
+	case tkRegex:
+			return str("%%re(%S)", term->str);
 	case tkClosure:
 		assert(term->closure != NULL);
 		return str("%C", term->closure);

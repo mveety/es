@@ -130,27 +130,37 @@ treekind(Tree *t)
  *	the type to figure out size.
  */
 
-static void *Tree1Copy(void *op) {
+static void*
+Tree1Copy(void *op) {
 	void *np = gcalloc(offsetof(Tree, u[1]), tTree1);
 	memcpy(np, op, offsetof(Tree, u[1]));
 	return np;
 }
 
-static void *Tree2Copy(void *op) {
+static void*
+Tree2Copy(void *op) {
 	void *np = gcalloc(offsetof(Tree, u[2]), tTree2);
 	memcpy(np, op, offsetof(Tree, u[2]));
 	return np;
 }
 
-static size_t Tree1Scan(void *p) {
+static size_t
+Tree1Scan(void *p) {
 	Tree *n = p;
+
 	switch (n->kind) {
-	    default:
+	default:
 		panic("Tree1Scan: bad node kind %d", n->kind);
-	    case nPrim: case nWord: case nQword:
+	case nPrim:
+	case nWord:
+	case nQword:
 		n->u[0].s = forward(n->u[0].s);
 		break;
-	    case nCall: case nThunk: case nVar: case nDict:
+	case nCall:
+	case nThunk:
+	case nVar:
+	case nDict:
+	case nRegex:
 		n->u[0].p = forward(n->u[0].p);
 		break;
 	} 

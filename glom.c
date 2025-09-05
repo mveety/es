@@ -320,6 +320,7 @@ static List *glom1(Tree *tree, Binding *binding) {
 			break;
 		case nRegex:
 			list = glom1(tp->u[0].p, binding);
+			list->term->kind = tkRegex;
 			tp = NULL;
 			break;
 		case nThunk:

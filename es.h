@@ -31,12 +31,14 @@ typedef enum {
 	tkString,
 	tkClosure,
 	tkDict,
+	tkRegex,
 } TermKind;
 
 typedef enum {
 	ttNone,
 	ttError,
 	ttBox,
+	ttRegex,
 } Termtag;
 
 struct Term {
@@ -178,6 +180,7 @@ extern void undefer(int ticket);
 extern Term *mkterm(char *str, Closure *closure);
 extern Term *mkstr(char *str);
 extern Term *mkdictterm(Dict *d);
+extern char *getregex(Term *term);
 extern char *getstr(Term *term);
 extern Closure *getclosure(Term *term);
 extern Dict *getdict(Term *term);
