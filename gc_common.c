@@ -100,12 +100,41 @@ istracked(void *p)
 	}
 }
 
+int64_t
+incref(void *p)
+{
+	Header *h;
+
+	if(p && istracked(p)){
+		h = header(p);
+		h->refs++;
+		return h->refs;
+	}
+	return 0;
+}
+
+int64_t
+decref(void *p)
+{
+	Header *h;
+
+	if(p && istracked(p)){
+		h = header(p);
+		h->refs--;
+		if(assertions == TRUE)
+			assert(h->refs >= 0);
+		return h->refs;
+	}
+	return 0;
+}
+
 void
 gcref(Root *r, void **p)
 {
 	assert(p);
 	r->p = p;
 
+	incref(*p);
 	if(rootlist)
 		rootlist->prev = r;
 	r->next = rootlist;
@@ -118,6 +147,7 @@ gcderef(Root *r, void **p)
 	assert(r == rootlist);
 	assert(r->p == p);
 
+	decref(*p);
 	rootlist = rootlist->next;
 	if(rootlist)
 		rootlist->prev = NULL;

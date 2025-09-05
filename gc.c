@@ -505,6 +505,7 @@ old_gcallocate(size_t nbytes, int t)
 			hp->tag = t;
 			hp->forward = NULL;
 			hp->size = nbytes;
+			hp->refs = 1;
 			old_nallocs++;
 			old_allocations++;
 			return (void*)p;

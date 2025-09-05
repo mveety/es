@@ -42,6 +42,7 @@ struct Header {
 	unsigned short flags;
 	unsigned short tag;
 	size_t size;
+	int64_t refs;
 	void *forward;
 };
 

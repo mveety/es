@@ -542,6 +542,7 @@ PRIM(rematch) {
 	pattern = lp->next->term;
 
 	regexmatch(&status, subject, pattern);
+	assert(status.type = ReMatch);
 
 	if(status.compcode)
 		fail("$&rematch", "compilation error: %d: %s", status.compcode, errstr);
@@ -580,6 +581,7 @@ PRIM(reextract) {
 	pattern = lp->next->term;
 
 	regexextract(&status, subject, pattern);
+	assert(status.type == ReExtract);
 
 	if(status.compcode)
 		fail("$&reextract", "compilation error: %d: %s", status.compcode, errstr);

@@ -762,6 +762,7 @@ done:
 	nb->tag = tag;
 	nb->forward = nil;
 	nb->size = sz;
+	nb->refs = 1;
 	allocations++;
 	return (void *)(((char *)nb) + sizeof(Header));
 }

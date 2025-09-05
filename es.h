@@ -523,6 +523,8 @@ extern Root *rootlist;
 extern void gcref(Root*, void**);
 extern void gcderef(Root*, void**);
 extern void gcrderef(Root*);
+extern int64_t incref(void*);
+extern int64_t decref(void*);
 /* extern void derefmany(Root*); */
 extern void globalroot(void *addr);
 extern void exceptionroot(Root*, List**);
