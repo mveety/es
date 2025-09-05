@@ -369,9 +369,9 @@ regexextract(RegexStatus *status, Term *subject0, Term *pattern0)
 			continue;
 		if(regex_debug == TRUE){
 			dprintf(2, "pmatch[%d].rm_so = %lu, pmatch[%d].rm_eo = %lu, ",
-					i, pmatch[i].rm_so, i, pmatch[i].rm_eo);
+					i, (uint64_t)pmatch[i].rm_so, i, (uint64_t)pmatch[i].rm_eo);
 			dprintf(2, "pmatch[%d].rm_eo - pmatch[%d].rm_so = %lu, ",
-					i, i, pmatch[i].rm_eo - pmatch[i].rm_so);
+					i, i, (uint64_t)(pmatch[i].rm_eo - pmatch[i].rm_so));
 			dprintf(2, "i = %d, nmatch = %lu, copybuf = %s\n", i, nmatch, copybuf);
 		}
 		substrs = mklist(mkstr(str("%s", copybuf)), substrs);
