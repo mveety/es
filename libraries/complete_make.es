@@ -19,7 +19,7 @@ fn complete_make_get_md5sum {
 
 fn complete_make_filter_targets partial {
 	let(res=) {
-		for(i = $complete_make_last_targets){ 
+		for(i = $_complete_make_last_targets){ 
 			if {~ $i $partial^*} {
 				res = $res $i
 			}
