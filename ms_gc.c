@@ -1,8 +1,6 @@
 #include "es.h"
 #include "gc.h"
 
-#define nil ((void *)0)
-
 /* simple allocator */
 
 Region *regions;
