@@ -400,9 +400,18 @@ Vector
 
 /* addtolist -- dictforall procedure to create a list */
 extern void addtolist(void *arg, char *key, void *value) {
-	List **listp = arg;
-	Term *term = mkstr(key);
+	List **listp;
+	Term *term = nil; Root r_term;
+
+	gcref(&r_term, (void**)&term);
+
+	listp = arg;
+	/* dprintf(2, "addtolist: key = %p, ", key);
+	dprintf(2, "*key = \"%s\"\n", key); */
+	term = mkstr(key);
 	*listp = mklist(term, *listp);
+
+	gcrderef(&r_term);
 }
 
 static void listexternal(void *arg, char *key, void *value) {

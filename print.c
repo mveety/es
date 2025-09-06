@@ -239,6 +239,7 @@ extern void fmtcat(Format *format, const char *s) {
 extern int printfmt(Format *format, const char *fmt) {
 	unsigned char *s = (unsigned char *) fmt;
 
+	assert(gcisblocked());
 	if (fmttab[0] == NULL)
 		inittab();
 

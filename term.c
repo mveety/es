@@ -151,10 +151,10 @@ getstr(Term *term)
 		gcref(&r_tp, (void**)&tp);
 		tp = term;
 		if(term->closure != NULL){
-			tp->str = str("%C", term->closure);
+			tp->str = str("%C", tp->closure);
 			tp->kind = tkClosure;
 		} else if(term->dict != NULL){
-			tp->str = str("%V", term->dict);
+			tp->str = str("%V", tp->dict);
 			tp->kind = tkDict;
 		}
 		gcrderef(&r_tp);
@@ -164,7 +164,7 @@ getstr(Term *term)
 	case tkString:
 			return term->str;
 	case tkRegex:
-			return str("%%re(%S)", term->str);
+			return str("%%re(%#S)", term->str);
 	case tkClosure:
 		assert(term->closure != NULL);
 		return str("%C", term->closure);

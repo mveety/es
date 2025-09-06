@@ -43,20 +43,34 @@ VectorMark(void *p)
 }
 
 extern Vector *vectorize(List *list) {
-	int i, n = length(list);
+	Vector *v = nil; Root r_v;
+	List *lp = nil; Root r_lp;
+	char *s = nil; Root r_s;
+	int i, n;
 
-	Ref(Vector *, v, NULL);
-	Ref(List *, lp, list);
+	gcref(&r_v, (void**)&v);
+	gcref(&r_lp, (void**)&lp);
+	gcref(&r_s, (void**)&s);
+	lp = list;
+	n = length(lp);
 	v = mkvector(n);
 	v->count = n;
 
+	/* dprintf(2, "vectorize start\n"); */
 	for (i = 0; lp != NULL; lp = lp->next, i++) {
-		char *s = getstr(lp->term); /* must evaluate before v->vector[i] */
+		assert(lp->term->kind != tkRegex);
+		s = getstr(lp->term); /* must evaluate before v->vector[i] */
+		/* dprintf(2, "s = %p, ", s);
+		dprintf(2, "*s = \"%s\"\n", s); */
+		assert(s != nil);
 		v->vector[i] = s;
 	}
+	/* dprintf(2, "vectorize end\n"); */
+	gcrderef(&r_s);
+	gcrderef(&r_lp);
+	gcrderef(&r_v);
 
-	RefEnd(lp);
-	RefReturn(v);
+	return v;
 }
 
 /* qstrcmp -- a strcmp wrapper for qsort */

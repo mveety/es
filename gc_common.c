@@ -135,7 +135,7 @@ gcref(Root *r, void **p)
 	assert(p);
 	r->p = p;
 
-	incref(*p);
+	/* incref(*p); */
 	if(rootlist)
 		rootlist->prev = r;
 	r->next = rootlist;
@@ -148,7 +148,7 @@ gcderef(Root *r, void **p)
 	assert(r == rootlist);
 	assert(r->p == p);
 
-	decref(*p);
+	/* decref(*p); */
 	rootlist = rootlist->next;
 	if(rootlist)
 		rootlist->prev = NULL;

@@ -120,15 +120,27 @@ extern Term *nth(List *list, int n) {
 }
 
 /* sortlist */
-extern List *sortlist(List *list) {
+List*
+sortlist(List *list) {
+	Vector *v = nil; Root r_v;
+	List *l = nil; Root r_l;
+	List *lp = nil; Root r_lp;
+
+	gcref(&r_v, (void**)&v);
+	gcref(&r_l, (void**)&l);
+	gcref(&r_lp, (void**)&lp);
+	l = list;
+
 	if (length(list) > 1) {
-		Vector *v = vectorize(list);
+		v = vectorize(l);
 		sortvector(v);
-		gcdisable();
-		Ref(List *, lp, listify(v->count, v->vector));
-		gcenable();
-		list = lp;
-		RefEnd(lp);
+		// gcdisable();
+		lp = listify(v->count, v->vector);
+		// gcenable();
 	}
-	return list;
+
+	gcrderef(&r_lp);
+	gcrderef(&r_l);
+	gcrderef(&r_v);
+	return lp;
 }

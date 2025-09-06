@@ -14,12 +14,14 @@ extern List *prim(char *s, List *list, Binding *binding, int evalflags) {
 }
 
 PRIM(primitives) {
-	static List *primlist = NULL;
-	if (primlist == NULL) {
+	static List *primlist = nil;
+
+	if (primlist == nil) {
 		globalroot(&primlist);
 		dictforall(prims, addtolist, &primlist);
 		primlist = sortlist(primlist);
 	}
+
 	return primlist;
 }
 
@@ -40,3 +42,4 @@ extern void initprims(void) {
 #define	primdict prims
 	X(primitives);
 }
+

@@ -10,6 +10,7 @@ Boolean gcinfo		= FALSE;	/* -I */
 Boolean assertions = FALSE;		/* -Da */
 Boolean ref_assertions = FALSE; /* -DA */
 Boolean verbose_parser = FALSE; /* -P */
+Boolean verbose_match = FALSE; /* -DM */
 Boolean use_initialize_esrc = TRUE; /* -Dr */
 extern Boolean generational;
 volatile Boolean loginshell = FALSE; /* -l or $0[0] == '-' */
@@ -158,7 +159,7 @@ do_usage(void)
 void
 debug_flag_usage(void)
 {
-	dprintf(2, "debug flags: es -D [GIaEPR]\n%s%s%s%s%s%s%s%s",
+	dprintf(2, "debug flags: es -D [GIaEPRAM]\n%s%s%s%s%s%s%s%s%s",
 		"	? -- show this message\n",
 		"	G -- gcverbose\n",
 		"	I -- gcinfo\n",
@@ -166,7 +167,8 @@ debug_flag_usage(void)
 		"	E -- debug_exceptions\n",
 		"	P -- verbose_parser\n",
 		"	R -- regex_debug\n",
-		"	A -- ref_assertions (likely to crash)\n"
+		"	A -- ref_assertions (likely to crash)\n",
+		"	M -- verbose_match\n"
 	);
 	exit(1);
 }
@@ -228,6 +230,7 @@ main(int argc, char *argv[]) {
 				case 'E': debug_exceptions = TRUE; break;
 				case 'P': verbose_parser = TRUE; break;
 				case 'R': regex_debug = TRUE; break;
+				case 'M': verbose_match = TRUE; break;
 				case '?':
 					debug_flag_usage();
 					break;

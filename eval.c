@@ -5,6 +5,7 @@
 /* #include "eval.h" */
 
 unsigned long evaldepth = 0, maxevaldepth = MAXmaxevaldepth;
+extern Boolean verbose_match;
 
 void
 failexec(char *file, List *args)
@@ -425,7 +426,11 @@ matchpattern(Tree *subjectform0, Tree *patternform0, Binding *binding)
 	List *lp = nil; Root r_lp;
 	List *pattern1 = nil; Root r_pattern1;
 	Boolean result = FALSE;
-	StrList *quote = nil;
+	Boolean hasregex = FALSE;
+	StrList *quote = nil; Root r_quote;
+	StrList *quote1 = nil; Root r_quote1;
+	StrList *ql = nil; Root r_ql;
+	StrList *ql1 = nil; Root r_ql1;
 	RegexStatus status;
 	char errstr[128];
 
@@ -435,12 +440,17 @@ matchpattern(Tree *subjectform0, Tree *patternform0, Binding *binding)
 	gcref(&r_pattern, (void**)&pattern);
 	gcref(&r_lp, (void**)&lp);
 	gcref(&r_pattern1, (void**)&pattern1);
+	gcref(&r_quote, (void**)&quote);
+	gcref(&r_quote1, (void**)&quote1);
+	gcref(&r_ql, (void**)&ql);
+	gcref(&r_ql1, (void**)&ql1);
 
 	subject = glom(subjectform0, bp, TRUE);
 	pattern = glom2(patternform, bp, &quote);
 
-	for(lp = pattern; lp != nil; lp = lp->next){
+	for(lp = pattern, ql = quote; lp != nil; lp = lp->next, ql = ql->next){
 		if(lp->term->kind == tkRegex){
+			hasregex = TRUE;
 			memset(errstr, 0, sizeof(errstr));
 			status = (RegexStatus){ReNil, FALSE, 0, 0, nil, 0, &errstr[0], sizeof(errstr)};
 			regexmatch(&status, subject->term, lp->term);
@@ -451,18 +461,32 @@ matchpattern(Tree *subjectform0, Tree *patternform0, Binding *binding)
 			if(status.matchcode != 0 && status.matchcode != REG_NOMATCH)
 				fail("es:rematch", "match error: %s", errstr);
 
-			result = status.matched;
-			if(result == TRUE)
+			if(status.matched == TRUE){
+				result = status.matched;
 				goto done;
+			}
 		} else {
 			pattern1 = mklist(lp->term, pattern1);
+			if(quote1 == nil)
+				quote1 = ql1 = mkstrlist(ql->str, nil);
+			else {
+				ql1->next = mkstrlist(ql->str, nil);
+				ql1 = ql1->next;
+			}
 		}
 	}
 
 	pattern1 = reverse(pattern1);
-	result = listmatch(subject, pattern1, quote);
+	if(hasregex && verbose_match)
+		eprint("quote = [%Z], subject = (%L), pattern1 = (%L)\n",
+			quote1, ", ", subject, " ", pattern1, " ");
+	result = listmatch(subject, pattern1, quote1);
 
 done:
+	gcrderef(&r_ql1);
+	gcrderef(&r_ql);
+	gcrderef(&r_quote1);
+	gcrderef(&r_quote);
 	gcrderef(&r_pattern1);
 	gcrderef(&r_lp);
 	gcrderef(&r_pattern);
