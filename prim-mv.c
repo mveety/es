@@ -143,7 +143,7 @@ PRIM(reverse) {
 	gcref(&r_res, (void**)&res);
 
 	for(l = list; l != NULL; l = l->next)
-res = mklist(l->term, res);
+		res = mklist(l->term, res);
 
 	gcderef(&r_res, (void**)&res);
 	return res;
