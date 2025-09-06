@@ -466,39 +466,39 @@ fn es_complete_dump_state {
 # the list of possible completions and iterates over it in sucessive calls. if it
 # detects some change in state it will make a call to %complete to update it's list
 
-fn %core_completer linebuf text start end state {
-	if {~ $state 0 || ! es_complete_cc_checkstate $linebuf $text $start $end} {
-		local(lbl=$:linebuf;lbllen=;tmp=;slb=;nstart=;nend=){
-			slb = <={if {~ $linebuf '' || ~ $start 0} {
-						nstart = <={add $start 1}
-						nend = <={add $end 1}
-						result ''
-					} {
-						tmp = <={es_complete_strip_leading_whitespace $"lbl(1 ... $start)}
-						lbllen = <={%count $lbl(1 ... $start)}
-						nstart = <={%count $:tmp |> sub $lbllen |> sub $start |> add 1 }
-						nend = <={%count $:tmp |> sub $lbllen |> sub $end |> add 1}
-						assert2 $0 {gt $nstart 0 && gt $nend 0}
-						result $tmp
-					}
-				}
-			_es_complete_current_completion = <={%complete $slb $text $nstart $nend}
-			_es_complete_current_curline = $linebuf
-			_es_complete_current_partial = $text
-			_es_complete_current_start = $start
-			_es_complete_current_end = $end
-		}
-	}
-	local(cclen=$#es_complete_current_completion){
-		if {~ $cclen 0 || gt <={add $state 1} $cclen} {
-			escomp_echo '''%end_complete'''
-			result '%%end_complete'
-		} {
-			escomp_echo ''''^$_es_complete_current_completion(<={add $state 1})^''''
-			result $_es_complete_current_completion(<={add $state 1})
-		}
-	}
-}
+# fn %core_completer linebuf text start end state {
+# 	if {~ $state 0 || ! es_complete_cc_checkstate $linebuf $text $start $end} {
+# 		local(lbl=$:linebuf;lbllen=;tmp=;slb=;nstart=;nend=){
+# 			slb = <={if {~ $linebuf '' || ~ $start 0} {
+# 						nstart = <={add $start 1}
+# 						nend = <={add $end 1}
+# 						result ''
+# 					} {
+# 						tmp = <={es_complete_strip_leading_whitespace $"lbl(1 ... $start)}
+# 						lbllen = <={%count $lbl(1 ... $start)}
+# 						nstart = <={%count $:tmp |> sub $lbllen |> sub $start |> add 1 }
+# 						nend = <={%count $:tmp |> sub $lbllen |> sub $end |> add 1}
+# 						assert2 $0 {gt $nstart 0 && gt $nend 0}
+# 						result $tmp
+# 					}
+# 				}
+# 			_es_complete_current_completion = <={%complete $slb $text $nstart $nend}
+# 			_es_complete_current_curline = $linebuf
+# 			_es_complete_current_partial = $text
+# 			_es_complete_current_start = $start
+# 			_es_complete_current_end = $end
+# 		}
+# 	}
+# 	local(cclen=$#es_complete_current_completion){
+# 		if {~ $cclen 0 || gt <={add $state 1} $cclen} {
+# 			escomp_echo '''%end_complete'''
+# 			result '%%end_complete'
+# 		} {
+# 			escomp_echo ''''^$_es_complete_current_completion(<={add $state 1})^''''
+# 			result $_es_complete_current_completion(<={add $state 1})
+# 		}
+# 	}
+# }
 
 # %new_completer is the hook that the new completion machinery hooks into. basically
 # this is a thin layer between %complete and readline that strips whitespace and
@@ -520,7 +520,11 @@ fn %new_completer linebuf text start end {
 					result $tmp
 				}
 			}
-		%complete $slb $text $nstart $nend
+		if {! ~ $#fn-%complete 0} {
+			%complete $slb $text $nstart $nend
+		} {
+			result ()
+		}
 	}
 }
 
