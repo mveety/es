@@ -9,18 +9,18 @@ DefineTag(Term, static);
 Term*
 mkterm1(char *str, Closure *closure, Dict *dict)
 {
-	Term *term = NULL; Root r_term;
+	Term *term = nil; Root r_term;
 
-	assert(str != NULL || closure != NULL || dict != NULL);
+	assert(str != nil || closure != nil || dict != nil);
 	gcdisable();
 	term = gcnew(Term);
 	gcref(&r_term, (void**)&term);
-	if(str != NULL)
-		*term = (Term){tkString, ttNone, str, NULL, NULL};
-	else if(closure != NULL)
-		*term = (Term){tkClosure, ttNone, NULL, closure, NULL};
-	else if(dict != NULL)
-		*term = (Term){tkDict, ttNone, NULL, NULL, dict};
+	if(str != nil)
+		*term = (Term){tkString, ttNone, str, nil, nil};
+	else if(closure != nil)
+		*term = (Term){tkClosure, ttNone, nil, closure, nil};
+	else if(dict != nil)
+		*term = (Term){tkDict, ttNone, nil, nil, dict};
 	gcenable();
 	gcderef(&r_term, (void**)&term);
 	return term;
@@ -29,18 +29,18 @@ mkterm1(char *str, Closure *closure, Dict *dict)
 Term*
 mkterm(char *str, Closure *closure)
 {
-	return mkterm1(str, closure, NULL);
+	return mkterm1(str, closure, nil);
 }
 
 Term*
 mkstr(char *str)
 {
 	Term *term;
-	char *string = NULL; Root r_string;
+	char *string = nil; Root r_string;
 
 	string = str;
 	gcref(&r_string, (void**)&string);
-	term = mkterm(string, NULL);
+	term = mkterm(string, nil);
 	gcderef(&r_string, (void**)&string);
 	return term;
 }
@@ -49,8 +49,8 @@ Term*
 mkdictterm(Dict *d)
 {
 	if(!d)
-		return mkterm1(NULL, NULL, mkdict());
-	return mkterm1(NULL, NULL, d);
+		return mkterm1(nil, nil, mkdict());
+	return mkterm1(nil, nil, d);
 }
 
 int
@@ -76,25 +76,25 @@ isadict(char *s)
 Closure*
 getclosure(Term *term)
 {
-	Term *tp = NULL; Root r_tp;
-	Tree *np = NULL; Root r_np;
+	Term *tp = nil; Root r_tp;
+	Tree *np = nil; Root r_np;
 
 	if(term->kind == tkDict)
-		return NULL;
-	if (term->closure == NULL) {
-		assert(term->str != NULL);
+		return nil;
+	if (term->closure == nil) {
+		assert(term->str != nil);
 		if(isfunction(term->str)){
 			gcref(&r_tp, (void**)&tp);
 			gcref(&r_np, (void**)&np);
 			tp = term;
 			np = parsestring(term->str);
-			if (np == NULL) {
+			if (np == nil) {
 				gcrderef(&r_np);
 				gcrderef(&r_tp);
-				return NULL;
+				return nil;
 			}
 			tp->closure = extractbindings(np);
-			tp->str = NULL;
+			tp->str = nil;
 			term = tp;
 			gcrderef(&r_np);
 			gcrderef(&r_tp);
@@ -110,15 +110,15 @@ typedef struct {
 void
 assocfmt(void *vargs, char *name, void *vdata)
 {
-	AssocArgs *args = NULL; Root r_args_result;
-	List *data = NULL; Root r_data;
+	AssocArgs *args = nil; Root r_args_result;
+	List *data = nil; Root r_data;
 
 	args = vargs;
 	gcref(&r_args_result, (void**)&args->result);
 	gcref(&r_data, (void**)&data);
 	data = vdata;
 
-	if(args->result == NULL)
+	if(args->result == nil)
 		args->result = str("%s => %#L", name, data, " ");
 	else
 		args->result = str("%s; %s => %#L", args->result, name, data, " ");
@@ -139,21 +139,21 @@ getregex(Term *term)
 char*
 getstr(Term *term)
 {
-	Term *tp = NULL; Root r_tp;
+	Term *tp = nil; Root r_tp;
 	AssocArgs args; Root r_args_result;
-	Dict *d = NULL; Root r_d;
-	char *res = NULL; Root r_res;
+	Dict *d = nil; Root r_d;
+	char *res = nil; Root r_res;
 
-	if(term->kind == tkString && term->str == NULL){
+	if(term->kind == tkString && term->str == nil){
 		/* TODO: This is wrong, but I still need to hunt down places where
 		 * strings are defined improperly
 		 */
 		gcref(&r_tp, (void**)&tp);
 		tp = term;
-		if(term->closure != NULL){
+		if(term->closure != nil){
 			tp->str = str("%C", tp->closure);
 			tp->kind = tkClosure;
-		} else if(term->dict != NULL){
+		} else if(term->dict != nil){
 			tp->str = str("%V", tp->dict);
 			tp->kind = tkDict;
 		}
@@ -166,11 +166,11 @@ getstr(Term *term)
 	case tkRegex:
 			return str("%%re(%#S)", term->str);
 	case tkClosure:
-		assert(term->closure != NULL);
+		assert(term->closure != nil);
 		return str("%C", term->closure);
 	case tkDict:
-		assert(term->dict != NULL);
-		args.result = NULL;
+		assert(term->dict != nil);
+		args.result = nil;
 		gcref(&r_args_result, (void**)&args.result);
 		gcref(&r_tp, (void**)&tp);
 		gcref(&r_d, (void**)&r_d);
@@ -178,7 +178,7 @@ getstr(Term *term)
 
 		d = term->dict;
 		dictforall(d, assocfmt, &args);
-		if(args.result == NULL)
+		if(args.result == nil)
 			res = str("%%dict()");
 		else
 			res = str("%%dict(%s)", args.result);
@@ -189,24 +189,24 @@ getstr(Term *term)
 		gcrderef(&r_args_result);
 		return res;
 	}
-	return NULL;
+	return nil;
 }
 
 Dict*
 getdict(Term *term)
 {
-	Term *t = NULL; Root r_t;
-	Tree *parsed = NULL; Root r_parsed;
-	List *glommed = NULL; Root r_glommed;
-	Dict *dict = NULL; Root r_dict;
+	Term *t = nil; Root r_t;
+	Tree *parsed = nil; Root r_parsed;
+	List *glommed = nil; Root r_glommed;
+	Dict *dict = nil; Root r_dict;
 
 	switch(term->kind){
 	case tkDict:
 		return term->dict;
 	case tkString:
-		assert(term->str != NULL);
+		assert(term->str != nil);
 		if(!isadict(term->str))
-			return NULL;
+			return nil;
 		gcref(&r_t, (void**)&t);
 		gcref(&r_parsed, (void**)&parsed);
 		gcref(&r_glommed, (void**)&glommed);
@@ -216,8 +216,8 @@ getdict(Term *term)
 		parsed = parsestring(t->str);
 		if(!parsed)
 			goto done;
-		glommed = glom(parsed, NULL, FALSE);
-		if(glommed == NULL || glommed->next != NULL)
+		glommed = glom(parsed, nil, FALSE);
+		if(glommed == nil || glommed->next != nil)
 			goto done;
 		dict = getdict(glommed->term);
 		t->kind = tkDict;
@@ -229,21 +229,21 @@ done:
 		gcrderef(&r_t);
 		return dict;
 	default:
-		return NULL;
+		return nil;
 	}
-	return NULL;
+	return nil;
 }
 
 Term*
 termcat(Term *t1, Term *t2)
 {
-	Term *term = NULL; Root r_term;
-	char *str1 = NULL; Root r_str1;
-	char *str2 = NULL; Root r_str2;
+	Term *term = nil; Root r_term;
+	char *str1 = nil; Root r_str1;
+	char *str2 = nil; Root r_str2;
 
-	if (t1 == NULL)
+	if (t1 == nil)
 		return t2;
-	if (t2 == NULL)
+	if (t2 == nil)
 		return t1;
 
 	gcref(&r_term, (void**)&term);
@@ -296,22 +296,22 @@ TermMark(void *p)
 }
 
 extern Boolean termeq(Term *term, const char *s) {
-	assert(term != NULL);
-	if (term->str == NULL)
+	assert(term != nil);
+	if (term->str == nil)
 		return FALSE;
 	return streq(term->str, s);
 }
 
 extern Boolean isclosure(Term *term) {
-	assert(term != NULL);
-	return term->closure != NULL;
+	assert(term != nil);
+	return term->closure != nil;
 }
 
 Boolean
 isdict(Term *term)
 {
-	assert(term != NULL);
-	if(term->dict == NULL && !isadict(getstr(term)))
+	assert(term != nil);
+	if(term->dict == nil && !isadict(getstr(term)))
 		return FALSE;
 	return TRUE;
 }

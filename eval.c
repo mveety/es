@@ -12,19 +12,19 @@ failexec(char *file, List *args)
 {
 	List *fn;
 	int olderror;
-	List *list = NULL; Root r_list;
+	List *list = nil; Root r_list;
 	Root r_file;
 
 	assert(gcisblocked());
-	fn = varlookup("fn-%exec-failure", NULL);
-	if (fn != NULL) {
+	fn = varlookup("fn-%exec-failure", nil);
+	if (fn != nil) {
 		olderror = errno;
 		list = append(fn, mklist(mkstr(file), args));
 		gcref(&r_list, (void**)&list);
 		gcref(&r_file, (void**)&file);
 		gcenable();
 		gcderef(&r_file, (void**)&file);
-		eval(list, NULL, 0);
+		eval(list, nil, 0);
 		gcderef(&r_list, (void**)&list);
 		errno = olderror;
 	}
@@ -55,7 +55,7 @@ forkexec(char *file, List *list, Boolean inchild)
 	} else
 		SIGCHK();
 	printstatus(0, status);
-	return mklist(mkterm(mkstatus(status), NULL), NULL);
+	return mklist(mkterm(mkstatus(status), nil), nil);
 }
 
 List*
@@ -65,13 +65,13 @@ dictdestructassign(Tree *vardict0, Tree *valueform0, Binding *binding0)
 	Tree *valueform = valueform0; Root r_valueform;
 	Binding *binding = binding0; Root r_binding;
 
-	Tree *dictform = NULL; Root r_dictform;
-	Tree *assoc = NULL; Root r_assoc;
-	List *valuelist = NULL; Root r_valuelist;
-	Dict *valuedict = NULL; Root r_valuedict;
-	List *namelist = NULL; Root r_namelist;
-	List *varlist = NULL; Root r_varlist;
-	List *dictdata = NULL; Root r_dictdata;
+	Tree *dictform = nil; Root r_dictform;
+	Tree *assoc = nil; Root r_assoc;
+	List *valuelist = nil; Root r_valuelist;
+	Dict *valuedict = nil; Root r_valuedict;
+	List *namelist = nil; Root r_namelist;
+	List *varlist = nil; Root r_varlist;
+	List *dictdata = nil; Root r_dictdata;
 
 	gcref(&r_vardict, (void**)&vardict);
 	gcref(&r_valueform, (void**)&valueform);
@@ -88,39 +88,39 @@ dictdestructassign(Tree *vardict0, Tree *valueform0, Binding *binding0)
 	dictform = vardict->u[0].p;
 
 	valuelist = glom(valueform, binding, TRUE);
-	if(valuelist == NULL)
+	if(valuelist == nil)
 		fail("es:dictassign", "null values");
 	if(valuelist->term->kind != tkDict)
 		fail("es:dictassign", "rhs value not a dict");
-	if(valuelist->next != NULL)
+	if(valuelist->next != nil)
 		fail("es:dictassign", "too many rhs elements");
 	valuedict = getdict(valuelist->term);
 
-	for(dictform = vardict->u[0].p; dictform != NULL; dictform = dictform->u[1].p){
+	for(dictform = vardict->u[0].p; dictform != nil; dictform = dictform->u[1].p){
 		assoc = dictform->u[0].p;
-		assert(assoc != NULL && assoc->kind == nAssoc);
-		if(assoc->u[1].p == NULL)
+		assert(assoc != nil && assoc->kind == nAssoc);
+		if(assoc->u[1].p == nil)
 			continue;
 		namelist = glom(assoc->u[0].p, binding, FALSE);
 		varlist = glom(assoc->u[1].p, binding, TRUE);
-		if(namelist == NULL || varlist == NULL)
+		if(namelist == nil || varlist == nil)
 			continue;
-		if(namelist->next != NULL)
+		if(namelist->next != nil)
 			fail("es:dictassign", "element name should not be a list");
 		dictdata = (List*)dictget(valuedict, getstr(namelist->term));
-		if(dictdata == NULL)
+		if(dictdata == nil)
 			fail("es:dictassign", "element %s is empty", getstr(namelist->term));
-		for(; varlist != NULL; varlist = varlist->next){
-			if(varlist->next == NULL) {
+		for(; varlist != nil; varlist = varlist->next){
+			if(varlist->next == nil) {
 				if(!termeq(varlist->term, "_"))
 					vardef(getstr(varlist->term), binding, dictdata);
 			} else {
-				if(dictdata == NULL) {
+				if(dictdata == nil) {
 					if(!termeq(varlist->term, "_"))
-						vardef(getstr(varlist->term), binding, NULL);
+						vardef(getstr(varlist->term), binding, nil);
 				} else {
 					if(!termeq(varlist->term, "_"))
-						vardef(getstr(varlist->term), binding, mklist(dictdata->term, NULL));
+						vardef(getstr(varlist->term), binding, mklist(dictdata->term, nil));
 					dictdata = dictdata->next;
 				}
 			}
@@ -147,17 +147,17 @@ List*
 assign(Tree *varform, Tree *valueform0, Binding *binding0)
 {
 	List *value;
-	List *result = NULL; Root r_result;
-	Tree *valueform = NULL; Root r_valueform;
-	Binding *binding = NULL; Root r_binding;
-	List *vars = NULL; Root r_vars;
-	List *values = NULL; Root r_values;
-	char *name = NULL; Root r_name;
+	List *result = nil; Root r_result;
+	Tree *valueform = nil; Root r_valueform;
+	Binding *binding = nil; Root r_binding;
+	List *vars = nil; Root r_vars;
+	List *values = nil; Root r_values;
+	char *name = nil; Root r_name;
 
 	if(varform->kind == nDict)
 		return dictdestructassign(varform, valueform0, binding0);
 
-	result = NULL;
+	result = nil;
 	gcref(&r_result, (void**)&result);
 
 	valueform = valueform0;
@@ -169,23 +169,23 @@ assign(Tree *varform, Tree *valueform0, Binding *binding0)
 	vars = glom(varform, binding, FALSE);
 	gcref(&r_vars, (void**)&vars);
 
-	if (vars == NULL)
+	if (vars == nil)
 		fail("es:assign", "null variable name");
 
 	values = glom(valueform, binding, TRUE);
 	gcref(&r_values, (void**)&values);
 	result = values;
 
-	for (; vars != NULL; vars = vars->next) {
+	for (; vars != nil; vars = vars->next) {
 		name = getstr(vars->term);
 		gcref(&r_name, (void**)&name);
-		if (values == NULL)
-			value = NULL;
-		else if (vars->next == NULL || values->next == NULL) {
+		if (values == nil)
+			value = nil;
+		else if (vars->next == nil || values->next == nil) {
 			value = values;
-			values = NULL;
+			values = nil;
 		} else {
-			value = mklist(values->term, NULL);
+			value = mklist(values->term, nil);
 			values = values->next;
 		}
 		if(!termeq(vars->term, "_"))
@@ -205,13 +205,13 @@ assign(Tree *varform, Tree *valueform0, Binding *binding0)
 Binding*
 letbindings1(Tree *defn0, Binding *outer0, Binding *context0, int evalflags, int letstar)
 {
-	Binding *binding = NULL; Root r_binding;
-	Binding *context = NULL; Root r_context;
-	Tree *defn = NULL; Root r_defn;
-	Tree *assign = NULL; Root r_assign;
-	List *vars = NULL; Root r_vars;
-	List *values = NULL; Root r_values;
-	char *name = NULL; Root r_name;
+	Binding *binding = nil; Root r_binding;
+	Binding *context = nil; Root r_context;
+	Tree *defn = nil; Root r_defn;
+	Tree *assign = nil; Root r_assign;
+	List *vars = nil; Root r_vars;
+	List *values = nil; Root r_values;
+	char *name = nil; Root r_name;
 	List *value;
 
 	binding = outer0;
@@ -221,9 +221,9 @@ letbindings1(Tree *defn0, Binding *outer0, Binding *context0, int evalflags, int
 	defn = defn0;
 	gcref(&r_defn, (void**)&defn);
 
-	for (; defn != NULL; defn = defn->u[1].p) {
+	for (; defn != nil; defn = defn->u[1].p) {
 		assert(defn->kind == nList);
-		if (defn->u[0].p == NULL)
+		if (defn->u[0].p == nil)
 			continue;
 
 		assign = defn->u[0].p;
@@ -234,19 +234,19 @@ letbindings1(Tree *defn0, Binding *outer0, Binding *context0, int evalflags, int
 		values = glom(assign->u[1].p, context, TRUE);
 		gcref(&r_values, (void**)&values);
 
-		if (vars == NULL)
+		if (vars == nil)
 			fail("es:let", "null variable name");
 
-		for (; vars != NULL; vars = vars->next) {
+		for (; vars != nil; vars = vars->next) {
 			name = getstr(vars->term);
 			gcref(&r_name, (void**)&name);
-			if (values == NULL)
-				value = NULL;
-			else if (vars->next == NULL || values->next == NULL) {
+			if (values == nil)
+				value = nil;
+			else if (vars->next == nil || values->next == nil) {
 				value = values;
-				values = NULL;
+				values = nil;
 			} else {
-				value = mklist(values->term, NULL);
+				value = mklist(values->term, nil);
 				values = values->next;
 			}
 			if(!termeq(vars->term, "_"))
@@ -282,15 +282,15 @@ List*
 localbind(Binding *dynamic0, Binding *lexical0, Tree *body0, int evalflags)
 {
 	Push p;
-	List *result = NULL; Root r_result;
-	Tree *body = NULL; Root r_body;
-	Binding *dynamic = NULL; Root r_dynamic;
-	Binding *lexical = NULL; Root r_lexical;
+	List *result = nil; Root r_result;
+	Tree *body = nil; Root r_body;
+	Binding *dynamic = nil; Root r_dynamic;
+	Binding *lexical = nil; Root r_lexical;
 
-	if (dynamic0 == NULL)
+	if (dynamic0 == nil)
 		return walk(body0, lexical0, evalflags);
 	else {
-		result = NULL;
+		result = nil;
 		gcref(&r_result, (void**)&result);
 		body = body0;
 		gcref(&r_body, (void**)&body);
@@ -622,7 +622,7 @@ pathsearch(Term *term)
 
 /* eval -- evaluate a list, producing a list */
 List*
-old_eval(List *list0, Binding *binding0, int flags)
+eval(List *list0, Binding *binding0, int flags)
 {
 	Closure *volatile cp;
 	List *fn;
@@ -738,13 +738,6 @@ done:
 	RefEnd2(funcname, binding);
 	RefReturn(list);
 }
-
-List*
-eval(List *list, Binding *binding, int flags)
-{
-	return old_eval(list, binding, flags);
-}
-
 
 /* eval1 -- evaluate a term, producing a list */
 List*
