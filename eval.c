@@ -431,6 +431,7 @@ matchpattern(Tree *subjectform0, Tree *patternform0, Binding *binding)
 	StrList *quote1 = nil; Root r_quote1;
 	StrList *ql = nil; Root r_ql;
 	StrList *ql1 = nil; Root r_ql1;
+	StrList *tmp = nil; Root r_tmp;
 	RegexStatus status;
 	char errstr[128];
 
@@ -444,6 +445,7 @@ matchpattern(Tree *subjectform0, Tree *patternform0, Binding *binding)
 	gcref(&r_quote1, (void**)&quote1);
 	gcref(&r_ql, (void**)&ql);
 	gcref(&r_ql1, (void**)&ql1);
+	gcref(&r_tmp, (void**)&tmp);
 
 	subject = glom(subjectform0, bp, TRUE);
 	pattern = glom2(patternform, bp, &quote);
@@ -471,9 +473,11 @@ matchpattern(Tree *subjectform0, Tree *patternform0, Binding *binding)
 				quote1 = mkstrlist(ql->str, nil);
 				ql1 = quote1;
 			} else {
-				assert(ql1 != nil);
-				ql1->next = mkstrlist(ql->str, nil);
+				tmp = mkstrlist(ql->str, nil);
+				assert(tmp != nil); /* problems with gcc's optimizer? */
+				ql1->next = tmp;
 				ql1 = ql1->next;
+				assert(ql1 != nil);
 			}
 		}
 	}
@@ -488,6 +492,7 @@ matchpattern(Tree *subjectform0, Tree *patternform0, Binding *binding)
 	result = listmatch(subject, pattern1, quote1);
 
 done:
+	gcrderef(&r_tmp);
 	gcrderef(&r_ql1);
 	gcrderef(&r_ql);
 	gcrderef(&r_quote1);
