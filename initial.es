@@ -1262,7 +1262,7 @@ fn-%onerror = $&noreturn @ protected handler {
 		(err r) = <={try $protected}
 		if {$err} {
 			match <={$err error} (
-				(return continue) { $err throw }
+				(return continue break) { $err throw }
 				* {
 					local (fn-error = @ {result $err}) {
 						result <=$handler
