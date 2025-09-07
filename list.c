@@ -100,12 +100,19 @@ extern int length(List *list) {
 
 /* listify -- turn an argc/argv vector into a list */
 extern List *listify(int argc, char **argv) {
-	Ref(List *, list, NULL);
-	while (argc > 0) {
-		Term *term = mkstr(argv[--argc]);
-		list = mklist(term, list);
+	List *list = nil; Root r_list;
+	int i;
+	char *s;
+
+	gcref(&r_list, (void**)&list);
+
+	for(i = 1; i <= argc; i++){
+		s = argv[argc-i];
+		list = mklist(mkstr(s), list);
 	}
-	RefReturn(list);
+
+	gcrderef(&r_list);
+	return list;
 }
 
 /* nth -- return nth element of a list, indexed from 1 */
@@ -134,10 +141,11 @@ sortlist(List *list) {
 	if (length(list) > 1) {
 		v = vectorize(l);
 		sortvector(v);
-		// gcdisable();
+		gcdisable();
 		lp = listify(v->count, v->vector);
-		// gcenable();
-	}
+		gcenable();
+	} else
+		lp = list;
 
 	gcrderef(&r_lp);
 	gcrderef(&r_l);

@@ -175,14 +175,12 @@ static List *glob1(const char *pattern, const char *quote) {
 /* glob0 -- glob a list, (destructively) passing through entries we don't care about */
 static List *glob0(List *list, StrList *quote) {
 	List *result, **prevp, *expand1;
-	
+
 	for (result = NULL, prevp = &result; list != NULL; list = list->next, quote = quote->next) {
 		char *str;
-		if (
-			quote->str == QUOTED
-			|| !haswild(str = getstr(list->term), quote->str)
-			|| (expand1 = glob1(str, quote->str)) == NULL
-		) {
+		if (quote->str == QUOTED ||
+				!haswild(str = getstr(list->term), quote->str) ||
+				(expand1 = glob1(str, quote->str)) == NULL) {
 			*prevp = list;
 			prevp = &list->next;
 		} else {
