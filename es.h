@@ -26,6 +26,8 @@ typedef struct Assoc Assoc;
 typedef struct Dict Dict;
 typedef struct Var Var;
 typedef struct RegexStatus RegexStatus;
+typedef struct AppendContext AppendContext;
+typedef struct Root Root;
 
 typedef enum {
 	tkString,
@@ -121,6 +123,18 @@ struct Var {
 	int flags;
 };
 
+struct Root {
+	void **p;
+	Root *next;
+	Root *prev;
+};
+
+struct AppendContext {
+	int started;
+	List *result; Root r_result;
+	List *rlp; Root r_rlp;
+};
+
 /* regexes */
 
 typedef enum {
@@ -193,6 +207,9 @@ extern Boolean isdict(Term *term);
 
 extern List *mklist(Term *term, List *next);
 extern List *reverse(List *list);
+extern void append_start(AppendContext *ctx);
+extern List *append_end(AppendContext *ctx);
+extern int partial_append(AppendContext *ctx, List *list0);
 extern List *append(List *head, List *tail);
 extern List *listcopy(List *list);
 extern int length(List *list);
@@ -476,13 +493,6 @@ extern Boolean gcisblocked();			/* is collection disabled? */
 /*
  * garbage collector tags
  */
-
-typedef struct Root Root;
-struct Root {
-	void **p;
-	Root *next;
-	Root *prev;
-};
 
 extern Root *rootlist;
 

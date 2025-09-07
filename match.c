@@ -24,11 +24,17 @@ enum { RANGE_FAIL = -1, RANGE_ERROR = -2 };
 #define	ISQUOTED(q, n)	((q) == QUOTED || ((q) != UNQUOTED && (q)[n] == 'q'))
 #define TAILQUOTE(q, n) ((q) == UNQUOTED ? UNQUOTED : ((q) + (n)))
 
+Boolean verbose_rangematch = FALSE;
+
 /* rangematch -- match a character against a character class */
 static int rangematch(const char *p, const char *q, char c) {
 	const char *orig = p;
 	Boolean neg;
 	Boolean matched = FALSE;
+
+	/* it doesn't work without the dprintf's (at least on freebsd with clang -O2) */
+	if(verbose_rangematch)
+		dprintf(2, "rangematch: p = \"%s\", q = \"%s\", c = %c\n", p, q, c);
 	if (*p == '~' && !ISQUOTED(q, 0)) {
 		p++, q++;
 	    	neg = TRUE;
@@ -39,6 +45,11 @@ static int rangematch(const char *p, const char *q, char c) {
 		matched = (c == ']');
 	}
 	for (; *p != ']' || ISQUOTED(q, 0); p++, q++) {
+		if(verbose_rangematch){
+			dprintf(2, "rangematch: p = \"%s\", q = \"%s\", c = %c", p, q, c);
+			dprintf(2, ", matched = %s", matched == TRUE ? "true": "false");
+			dprintf(2, ", ISQUOTED(q,0) = %d\n", ISQUOTED(q, 0));
+		}
 		if (*p == '\0')
 			return RANGE_ERROR;	/* bad syntax */
 		if (p[1] == '-' && !ISQUOTED(q, 1) && ((p[2] != ']' && p[2] != '\0') || ISQUOTED(q, 2))) {
@@ -246,6 +257,7 @@ extractmatches(List *subjects0, List *patterns0, StrList *quotes0) {
 	List *match = nil; Root r_match;
 	RegexStatus status;
 	char errstr[128];
+	AppendContext ctx;
 
 	gcref(&r_subjects, (void**)&subjects);
 	gcref(&r_subject, (void**)&subject);
@@ -256,6 +268,7 @@ extractmatches(List *subjects0, List *patterns0, StrList *quotes0) {
 	gcref(&r_result, (void**)&result);
 	gcref(&r_rlp, (void**)&rlp);
 	gcref(&r_match, (void**)&match);
+	append_start(&ctx);
 
 	subjects = subjects0;
 	patterns = patterns0;
@@ -277,7 +290,8 @@ extractmatches(List *subjects0, List *patterns0, StrList *quotes0) {
 					fail("es:reextract", "match error: %s", errstr);
 
 				if(status.matched == TRUE && status.substrs->next != nil){
-					result = append(result, status.substrs->next);
+					partial_append(&ctx, status.substrs->next);
+					/* result = append(result, status.substrs->next); */
 					break;
 				}
 			} else {
@@ -286,13 +300,15 @@ extractmatches(List *subjects0, List *patterns0, StrList *quotes0) {
 							getstr(pattern->term), quote->str, nil);
 				if(match != nil){
 					match = reverse(match);
-					result = append(result, match);
+					partial_append(&ctx, match);
+					/* result = append(result, match); */
 					break;
 				}
 			}
 		}
 	}
 
+	result = append_end(&ctx);
 	gcrderef(&r_match);
 	gcrderef(&r_rlp);
 	gcrderef(&r_result);
@@ -305,36 +321,6 @@ extractmatches(List *subjects0, List *patterns0, StrList *quotes0) {
 
 	return result;
 }
-/*	List **prevp;
-	List *subject;
-	Ref(List *, result, NULL);
-	prevp = &result;
-
-	gcdisable();
-
-	for (subject = subjects; subject != NULL; subject = subject->next) {
-		List *pattern;
-		StrList *quote;
-		for (pattern = patterns, quote = quotes;
-		     pattern != NULL;
-		     pattern = pattern->next, quote = quote->next) {
-			List *match;
-			char *pat = getstr(pattern->term);
-			match = extractsinglematch(getstr(subject->term),
-						   pat, quote->str, NULL);
-			if (match != NULL) {
-				* match is returned backwards, so reverse it *
-				match = reverse(match);
-				for (*prevp = match; match != NULL; match = *prevp)
-					prevp = &match->next;
-				break;
-			}
-		}
-	}
-
-	gcenable();
-	RefReturn(result);
-}*/
 
 Boolean regex_debug = FALSE;
 

@@ -63,7 +63,7 @@ extern List *reverse(List *list) {
 }
 
 /* append -- merge two lists, non-destructively */
-extern List *old_append(List *head, List *tail) {
+extern List *really_old_append(List *head, List *tail) {
 	List *lp, **prevp;
 	Ref(List *, hp, head);
 	Ref(List *, tp, tail);
@@ -83,6 +83,78 @@ extern List *old_append(List *head, List *tail) {
 	Ref(List *, result, lp);
 	gcenable();
 	RefReturn(result);
+}
+
+void
+append_start(AppendContext *ctx)
+{
+	ctx->result = nil;
+	ctx->rlp = nil;
+	ctx->started = 1;
+	gcref(&ctx->r_result, (void**)&ctx->result);
+	gcref(&ctx->r_rlp, (void**)&ctx->rlp);
+}
+
+List*
+append_end(AppendContext *ctx)
+{
+	gcrderef(&ctx->r_rlp);
+	gcrderef(&ctx->r_result);
+	return ctx->result;
+}
+
+int
+partial_append(AppendContext *ctx, List *list0)
+{
+	List *list = nil; Root r_list;
+	List *lp = nil; Root r_lp;
+
+	if(!ctx->started)
+		return -1;
+
+	gcref(&r_list, (void**)&list);
+	gcref(&r_lp, (void**)&lp);
+
+	list = list0;
+	for(lp = list; lp != nil; lp = lp->next){
+		if(ctx->result == nil){
+			ctx->result = mklist(lp->term, nil);
+			ctx->rlp = ctx->result;
+		} else {
+			ctx->rlp->next = mklist(lp->term, nil);
+			ctx->rlp = ctx->rlp->next;
+		}
+	}
+
+	gcrderef(&r_lp);
+	gcrderef(&r_list);
+	return 0;
+}
+
+List*
+using_partial_append(List *head0, List *tail0)
+{
+	List *head = nil; Root r_head;
+	List *tail = nil; Root r_tail;
+	List *result = nil; Root r_result;
+	AppendContext ctx;
+
+	gcref(&r_head, (void**)&head);
+	gcref(&r_tail, (void**)&tail);
+	gcref(&r_result, (void**)&result);
+
+	head = head0;
+	tail = tail0;
+	append_start(&ctx);
+	partial_append(&ctx, head);
+	partial_append(&ctx, tail);
+	result = append_end(&ctx);
+
+	gcrderef(&r_result);
+	gcrderef(&r_tail);
+	gcrderef(&r_head);
+
+	return result;
 }
 
 List*

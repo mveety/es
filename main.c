@@ -29,6 +29,7 @@ extern uint32_t gc_oldage;
 extern int gc_oldsweep_after;
 extern Boolean regex_debug;
 extern Boolean dump_tok_status;
+extern Boolean verbose_rangematch;
 
 void*
 used(void *v)
@@ -160,7 +161,7 @@ do_usage(void)
 void
 debug_flag_usage(void)
 {
-	dprintf(2, "debug flags: es -D [GIaEPRAM]\n%s",
+	dprintf(2, "debug flags: es -D [GIaEPRAMr]\n%s",
 		"	? -- show this message\n"
 		"	G -- gcverbose\n"
 		"	I -- gcinfo\n"
@@ -171,6 +172,7 @@ debug_flag_usage(void)
 		"	A -- ref_assertions (likely to crash)\n"
 		"	M -- verbose_match\n"
 		"	T -- dump_tok_status\n"
+		"	r -- verbose_rangematch\n"
 	);
 	exit(1);
 }
@@ -234,6 +236,7 @@ main(int argc, char *argv[]) {
 				case 'R': regex_debug = TRUE; break;
 				case 'M': verbose_match = TRUE; break;
 				case 'T': dump_tok_status = TRUE; break;
+				case 'r': verbose_rangematch = TRUE; break;
 				case '?':
 					debug_flag_usage();
 					break;
