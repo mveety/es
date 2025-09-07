@@ -436,7 +436,7 @@ fn %reap-dead-procs {
 
 fn %background cmd {
 	%reap-orphans
-	let (pid = <={$&background $cmd}) {
+	let (pid = <={$&background $cmd}; cmds=) {
 		if {%is-interactive} {
 			cmds = `` (' ' '{' '}') (echo $cmd)
 			if {! ~ $cmds(1) %*} {
