@@ -63,7 +63,7 @@ extern List *reverse(List *list) {
 }
 
 /* append -- merge two lists, non-destructively */
-extern List *append(List *head, List *tail) {
+extern List *old_append(List *head, List *tail) {
 	List *lp, **prevp;
 	Ref(List *, hp, head);
 	Ref(List *, tp, tail);
@@ -83,6 +83,47 @@ extern List *append(List *head, List *tail) {
 	Ref(List *, result, lp);
 	gcenable();
 	RefReturn(result);
+}
+
+List*
+append(List *head0, List *tail0)
+{
+	List *head = nil; Root r_head;
+	List *tail = nil; Root r_tail;
+	List *result = nil; Root r_result;
+	List *lp = nil; Root r_lp;
+	List *rp = nil; Root r_rp;
+
+	gcref(&r_head, (void**)&head);
+	gcref(&r_tail, (void**)&tail);
+	gcref(&r_result, (void**)&result);
+	gcref(&r_lp, (void**)&lp);
+	gcref(&r_rp, (void**)&rp);
+
+	head = head0;
+	tail = tail0;
+
+	for(lp = head; lp != nil; lp = lp->next){
+		if(!result){
+			result = mklist(lp->term, nil);
+			rp = result;
+		} else {
+			rp->next = mklist(lp->term, nil);
+			rp = rp->next;
+		}
+	}
+
+	if(!rp)
+		result = tail;
+	else
+		rp->next = tail;
+
+	gcrderef(&r_rp);
+	gcrderef(&r_lp);
+	gcrderef(&r_result);
+	gcrderef(&r_tail);
+	gcrderef(&r_head);
+	return result;
 }
 
 /* listcopy -- make a copy of a list */

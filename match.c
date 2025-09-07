@@ -233,8 +233,79 @@ static List *extractsinglematch(const char *subject, const char *pattern,
  *	subjects as the result.
  */
 
-extern List *extractmatches(List *subjects, List *patterns, StrList *quotes) {
-	List **prevp;
+List* /* new implementation that adds regex and lets the gc run */
+extractmatches(List *subjects0, List *patterns0, StrList *quotes0) {
+	List *subjects = nil; Root r_subjects;
+	List *subject = nil;	Root r_subject;
+	List *patterns = nil; Root r_patterns;
+	List *pattern = nil; Root r_pattern;
+	StrList *quotes = nil; Root r_quotes;
+	StrList *quote = nil; Root r_quote;
+	List *result = nil; Root r_result;
+	List *rlp = nil; Root r_rlp;
+	List *match = nil; Root r_match;
+	RegexStatus status;
+	char errstr[128];
+
+	gcref(&r_subjects, (void**)&subjects);
+	gcref(&r_subject, (void**)&subject);
+	gcref(&r_patterns, (void**)&patterns);
+	gcref(&r_pattern, (void**)&pattern);
+	gcref(&r_quotes, (void**)&quotes);
+	gcref(&r_quote, (void**)&quote);
+	gcref(&r_result, (void**)&result);
+	gcref(&r_rlp, (void**)&rlp);
+	gcref(&r_match, (void**)&match);
+
+	subjects = subjects0;
+	patterns = patterns0;
+	quotes = quotes0;
+
+	for(subject = subjects; subject != nil; subject = subject->next){
+		for(pattern = patterns, quote = quotes;
+				pattern != nil;
+				pattern = pattern->next, quote = quote->next) {
+			if(pattern->term->kind == tkRegex) {
+				memset(errstr, 0, sizeof(errstr));
+				status = (RegexStatus){ReNil, FALSE, 0, 0, nil, 0, &errstr[0], sizeof(errstr)};
+				regexextract(&status, subject->term, pattern->term);
+				assert(status.type == ReExtract);
+
+				if(status.compcode)
+					fail("es:reextract", "compilation error: %s", errstr);
+				if(status.matchcode != 0 && status.matchcode != REG_NOMATCH)
+					fail("es:reextract", "match error: %s", errstr);
+
+				if(status.matched == TRUE && status.substrs->next != nil){
+					result = append(result, status.substrs->next);
+					break;
+				}
+			} else {
+				match = nil;
+				match = extractsinglematch(getstr(subject->term),
+							getstr(pattern->term), quote->str, nil);
+				if(match != nil){
+					match = reverse(match);
+					result = append(result, match);
+					break;
+				}
+			}
+		}
+	}
+
+	gcrderef(&r_match);
+	gcrderef(&r_rlp);
+	gcrderef(&r_result);
+	gcrderef(&r_quote);
+	gcrderef(&r_quotes);
+	gcrderef(&r_pattern);
+	gcrderef(&r_patterns);
+	gcrderef(&r_subject);
+	gcrderef(&r_subjects);
+
+	return result;
+}
+/*	List **prevp;
 	List *subject;
 	Ref(List *, result, NULL);
 	prevp = &result;
@@ -252,7 +323,7 @@ extern List *extractmatches(List *subjects, List *patterns, StrList *quotes) {
 			match = extractsinglematch(getstr(subject->term),
 						   pat, quote->str, NULL);
 			if (match != NULL) {
-				/* match is returned backwards, so reverse it */
+				* match is returned backwards, so reverse it *
 				match = reverse(match);
 				for (*prevp = match; match != NULL; match = *prevp)
 					prevp = &match->next;
@@ -263,7 +334,7 @@ extern List *extractmatches(List *subjects, List *patterns, StrList *quotes) {
 
 	gcenable();
 	RefReturn(result);
-}
+}*/
 
 Boolean regex_debug = FALSE;
 
