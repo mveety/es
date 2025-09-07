@@ -26,33 +26,67 @@ enum { RANGE_FAIL = -1, RANGE_ERROR = -2 };
 
 Boolean verbose_rangematch = FALSE;
 
+int
+isquoted(int quoted, const char *q, size_t qi, size_t quotelen)
+{
+	switch(quoted){
+	default:
+		panic("quoted != 0, 1, or 2");
+		return 0;
+	case 0:
+		if(qi < quotelen && q[qi] == 'q')
+			return 1;
+		return 0;
+	case 1:
+		return 1;
+	case 2:
+		return 0;
+	}
+	panic("isquoted: reached unreachable");
+	return 0;
+}
+
 /* rangematch -- match a character against a character class */
 static int rangematch(const char *p, const char *q, char c) {
 	const char *orig = p;
 	Boolean neg;
 	Boolean matched = FALSE;
+	size_t quotelen;
+	int quoted = 0;
+	size_t qi = 0;
+
+	quotelen = strlen(q);
+	if(q == QUOTED)
+		quoted = 1;
+	else if (q == UNQUOTED)
+		quoted = 2;
+	else
+		quoted = 0;
 
 	/* it doesn't work without the dprintf's (at least on freebsd with clang -O2) */
+	/* i think it's fixed now? */
 	if(verbose_rangematch)
 		dprintf(2, "rangematch: p = \"%s\", q = \"%s\", c = %c\n", p, q, c);
-	if (*p == '~' && !ISQUOTED(q, 0)) {
+	if (*p == '~' && !isquoted(quoted, q, qi, quotelen)) {
 		p++, q++;
 	    	neg = TRUE;
 	} else
 		neg = FALSE;
-	if (*p == ']' && !ISQUOTED(q, 0)) {
+	if (*p == ']' && !isquoted(quoted, q, qi, quotelen)) {
 		p++, q++;
 		matched = (c == ']');
 	}
-	for (; *p != ']' || ISQUOTED(q, 0); p++, q++) {
+	for (; *p != ']' || isquoted(quoted, q, qi, quotelen); p++, qi++) {
 		if(verbose_rangematch){
-			dprintf(2, "rangematch: p = \"%s\", q = \"%s\", c = %c", p, q, c);
+			dprintf(2, "rangematch: p = \"%s\", q = \"%s\", qi = %lu, c = %c", p, q, qi, c);
 			dprintf(2, ", matched = %s", matched == TRUE ? "true": "false");
-			dprintf(2, ", ISQUOTED(q,0) = %d\n", ISQUOTED(q, 0));
+			dprintf(2, ", isquoted = %d\n", isquoted(quoted, q, qi, quotelen));
 		}
 		if (*p == '\0')
 			return RANGE_ERROR;	/* bad syntax */
-		if (p[1] == '-' && !ISQUOTED(q, 1) && ((p[2] != ']' && p[2] != '\0') || ISQUOTED(q, 2))) {
+		if (p[1] == '-' &&
+				!isquoted(quoted, q, qi+1, quotelen) &&
+				((p[2] != ']' && p[2] != '\0') || isquoted(quoted, q, qi+2, quotelen))) {
 			/* check for [..-..] but ignore [..-] */
 			if (c >= *p && c <= p[2])
 				matched = TRUE;
