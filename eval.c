@@ -467,9 +467,11 @@ matchpattern(Tree *subjectform0, Tree *patternform0, Binding *binding)
 			}
 		} else {
 			pattern1 = mklist(lp->term, pattern1);
-			if(quote1 == nil)
-				quote1 = ql1 = mkstrlist(ql->str, nil);
-			else {
+			if(quote1 == nil){
+				quote1 = mkstrlist(ql->str, nil);
+				ql1 = quote1;
+			} else {
+				assert(ql1 != nil);
 				ql1->next = mkstrlist(ql->str, nil);
 				ql1 = ql1->next;
 			}
