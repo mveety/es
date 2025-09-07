@@ -165,22 +165,28 @@ append(List *head0, List *tail0)
 	List *result = nil; Root r_result;
 	List *lp = nil; Root r_lp;
 	List *rp = nil; Root r_rp;
+	List *tmp = nil; Root r_tmp;
+	Term *term = nil; Root r_term;
 
 	gcref(&r_head, (void**)&head);
 	gcref(&r_tail, (void**)&tail);
 	gcref(&r_result, (void**)&result);
 	gcref(&r_lp, (void**)&lp);
 	gcref(&r_rp, (void**)&rp);
+	gcref(&r_tmp, (void**)&tmp);
+	gcref(&r_term, (void**)&term);
 
 	head = head0;
 	tail = tail0;
 
 	for(lp = head; lp != nil; lp = lp->next){
+		term = lp->term;
+		tmp = mklist(term, nil);
 		if(!result){
-			result = mklist(lp->term, nil);
-			rp = result;
+			result = tmp;
+			rp = tmp;
 		} else {
-			rp->next = mklist(lp->term, nil);
+			rp->next = tmp;
 			rp = rp->next;
 		}
 	}
@@ -190,6 +196,8 @@ append(List *head0, List *tail0)
 	else
 		rp->next = tail;
 
+	gcrderef(&r_term);
+	gcrderef(&r_tmp);
 	gcrderef(&r_rp);
 	gcrderef(&r_lp);
 	gcrderef(&r_result);
