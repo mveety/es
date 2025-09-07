@@ -32,8 +32,21 @@ fn %initialize {
 				{ echo >[1=2] 'esrc: uncaught exception:' $err $type $msg }
 			)
 		} {
-			if {! $__es_different_esrc} {
-				__es_esrcfile = $home/.esrc
+			local(esrc_found = false){
+				if {! $__es_different_esrc} {
+					if {! ~ $#libraries 0} {
+						for (l = $libraries) {
+							if {access -r $l/init.es} {
+								__es_esrcfile = $l/init.es
+								esrc_found = true
+								break
+							}
+						}
+					}
+					if {! $esrc_found} {
+						__es_esrcfile = $home/.esrc
+					}
+				}
 			}
 			. $__es_esrcfile
 			if {$__es_extra_esrc} {
