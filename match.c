@@ -236,7 +236,7 @@ static List *extractsinglematch(const char *subject, const char *pattern,
 List* /* new implementation that adds regex and lets the gc run */
 extractmatches(List *subjects0, List *patterns0, StrList *quotes0) {
 	List *subjects = nil; Root r_subjects;
-	List *subject = nil;	Root r_subject;
+	List *subject = nil; Root r_subject;
 	List *patterns = nil; Root r_patterns;
 	List *pattern = nil; Root r_pattern;
 	StrList *quotes = nil; Root r_quotes;

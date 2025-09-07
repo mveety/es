@@ -7,7 +7,7 @@ _complete_make_last_targets = ''
 fn complete_make_get_targets {
 	if {! access -r Makefile } { throw error complete_make no_makefile }
 	let(targs=) {
-		targs = ``(\n) {cat Makefile | awk 'BEGIN{ FS=":" } /^[-a-zA-Z0-9.]+[[:space:]]*:.*$/ { print $1 }'}
+		targs = ``(\n) {cat Makefile | awk 'BEGIN{ FS=":" } /^[-_a-zA-Z0-9.]+[[:space:]]*:.*$/ { print $1 }'}
 		result <={process $targs ( * { es_complete_trim $matchexpr } )}
 	}
 }
