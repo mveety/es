@@ -422,6 +422,7 @@ matchpattern(Tree *subjectform0, Tree *patternform0, Binding *binding)
 	Binding *bp = binding; Root r_bp;
 	Tree *patternform = patternform0; Root r_patternform;
 	List *subject = nil; Root r_subject;
+	List *sp = nil; Root r_sp;
 	List *pattern = nil; Root r_pattern;
 	List *lp = nil; Root r_lp;
 	List *pattern1 = nil; Root r_pattern1;
@@ -438,6 +439,7 @@ matchpattern(Tree *subjectform0, Tree *patternform0, Binding *binding)
 	gcref(&r_bp, (void**)&bp);
 	gcref(&r_patternform, (void**)&patternform);
 	gcref(&r_subject, (void**)&subject);
+	gcref(&r_sp, (void**)&sp);
 	gcref(&r_pattern, (void**)&pattern);
 	gcref(&r_lp, (void**)&lp);
 	gcref(&r_pattern1, (void**)&pattern1);
@@ -453,19 +455,21 @@ matchpattern(Tree *subjectform0, Tree *patternform0, Binding *binding)
 	for(lp = pattern, ql = quote; lp != nil; lp = lp->next, ql = ql->next){
 		if(lp->term->kind == tkRegex){
 			hasregex = TRUE;
-			memset(errstr, 0, sizeof(errstr));
-			status = (RegexStatus){ReNil, FALSE, 0, 0, nil, 0, &errstr[0], sizeof(errstr)};
-			regexmatch(&status, subject->term, lp->term);
-			assert(status.type == ReMatch);
+			for(sp = subject; sp != nil; sp = sp->next){
+				memset(errstr, 0, sizeof(errstr)); /* I should probably not set errstr on a match fail */
+				status = (RegexStatus){ReNil, FALSE, 0, 0, nil, 0, &errstr[0], sizeof(errstr)};
+				regexmatch(&status, sp->term, lp->term);
+				assert(status.type == ReMatch);
 
-			if(status.compcode)
-				fail("es:rematch", "compilation error: %s", errstr);
-			if(status.matchcode != 0 && status.matchcode != REG_NOMATCH)
-				fail("es:rematch", "match error: %s", errstr);
+				if(status.compcode)
+					fail("es:rematch", "compilation error: %s", errstr);
+				if(status.matchcode != 0 && status.matchcode != REG_NOMATCH)
+					fail("es:rematch", "match error: %s", errstr);
 
-			if(status.matched == TRUE){
-				result = status.matched;
-				goto done;
+				if(status.matched == TRUE){
+					result = status.matched;
+					goto done;
+				}
 			}
 		} else {
 			pattern1 = mklist(lp->term, pattern1);
@@ -500,6 +504,7 @@ done:
 	gcrderef(&r_pattern1);
 	gcrderef(&r_lp);
 	gcrderef(&r_pattern);
+	gcrderef(&r_sp);
 	gcrderef(&r_subject);
 	gcrderef(&r_patternform);
 	gcrderef(&r_bp);
