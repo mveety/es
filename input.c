@@ -14,7 +14,7 @@
  */
 
 #define	BUFSIZE		((size_t) 4096)		/* buffer size to fill reads into */
-#define MATCHTABLE ((size_t) 10) /* initial match table size */
+#define MATCHTABLE	((size_t) 10) /* initial match table size */
 
 /*
  * macros
@@ -32,6 +32,7 @@ char *prompt, *prompt2;
 
 Boolean disablehistory = FALSE;
 Boolean resetterminal = FALSE;
+Boolean dump_tok_status = FALSE;
 static char *history;
 char *lastcmd, *nextlastcmd;
 static int historyfd = -1;
@@ -377,58 +378,13 @@ initgetenv(void)
 
 #if READLINE
 
-volatile int es_rl_start;
-volatile int es_rl_end;
-
-char*
-run_es_completer(const char *text, int state)
-{
-	List *args;
-	List *completer;
-	char *res;
-	List *result = NULL; Root r_result;
-
-	result = NULL;
-	gcref(&r_result, (void**)&result);
-
-	gcenable();
-	assert(!gcisblocked());
-
-	completer = varlookup("fn-%core_completer", NULL);
-	if(completer == NULL){
-		gcrderef(&r_result);
-		return strdup(text);
-	}
-	args = mklist(mkstr(str("%s", rl_line_buffer)),
-			mklist(mkstr(str("%s", text)),
-				mklist(mkstr(str("%d", es_rl_start)),
-					mklist(mkstr(str("%d", es_rl_end)),
-						mklist(mkstr(str("%d", state)), NULL)))));
-	completer = append(completer, args);
-	result = eval(completer, NULL, 0);
-
-	assert(result != NULL);
-
-	res = strdup(getstr(result->term));
-
-	gcdisable();
-	if(strcmp("%%end_complete", res) == 0){
-		free(res);
-		res = NULL;
-	}
-
-	gcrderef(&r_result);
-
-	return res;
-}
-
 char**
-run_new_completer(const char *text, int start, int end)
+run_new_completer(List *completer0, const char *text, int start, int end)
 {
-	List *completer = NULL; Root r_completer;
-	List *args = NULL; Root r_args;
-	List *result = NULL; Root r_result;
-	List *lp = NULL; Root r_lp;
+	List *completer = nil; Root r_completer;
+	List *args = nil; Root r_args;
+	List *result = nil; Root r_result;
+	List *lp = nil; Root r_lp;
 	char **matches;
 	size_t matchsz;
 	size_t matchi;
@@ -438,6 +394,7 @@ run_new_completer(const char *text, int start, int end)
 	gcref(&r_result, (void**)&result);
 	gcref(&r_lp, (void**)&lp);
 
+	completer = completer0;
 	matches = malloc(MATCHTABLE*sizeof(char*));
 	if(!matches)
 		panic("unable to malloc matchtable!\n");
@@ -447,25 +404,19 @@ run_new_completer(const char *text, int start, int end)
 	gcenable();
 	assert(!gcisblocked());
 
-	completer = varlookup("fn-%new_completer", NULL);
-	if(completer == NULL){
-		matches[0] = strdup(text);
-		goto done;
-	}
-
 	args = mklist(mkstr(str("%s", rl_line_buffer)),
 			mklist(mkstr(str("%s", text)),
 				mklist(mkstr(str("%d", start)),
-					mklist(mkstr(str("%d", end)), NULL))));
+					mklist(mkstr(str("%d", end)), nil))));
 	completer = append(completer, args);
-	result = eval(completer, NULL, 0);
+	result = eval(completer, nil, 0);
 
-	if(result == NULL) {
+	if(result == nil) {
 		matches[0] = strdup(text);
 		goto done;
 	}
 
-	for(lp = result, matchi = 0; lp != NULL; lp = lp->next){
+	for(lp = result, matchi = 0; lp != nil; lp = lp->next){
 		matches[matchi++] = strdup(getstr(lp->term));
 		if(matchi >= matchsz-2){
 			matchsz += 10;
@@ -473,7 +424,7 @@ run_new_completer(const char *text, int start, int end)
 		}
 	}
 	while(matchi < matchsz)
-		matches[matchi++] = NULL;
+		matches[matchi++] = nil;
 
 done:
 	gcrderef(&r_lp);
@@ -487,36 +438,35 @@ done:
 char**
 es_complete_hook(const char *text, int start, int end)
 {
-	List *old_completer;
-	List *new_completer;
-	List *complete_sort_list = NULL; Root r_complete_sort_list;
-	int sort_completions = 0;
+	List *new_completer = nil; Root r_new_completer;
+	List *complete_sort_list = nil; Root r_complete_sort_list;
 
-	old_completer = varlookup("fn-%core_completer", NULL);
-	new_completer = varlookup("fn-%new_completer", NULL);
-	if(old_completer == NULL && new_completer == NULL)
-		return NULL;
+	new_completer = varlookup("fn-%new_completer", nil);
+	if(!new_completer)
+		return nil;
+
+	gcref(&r_new_completer, (void**)&new_completer);
 	gcref(&r_complete_sort_list, (void**)&complete_sort_list);
-	complete_sort_list = varlookup("es_conf_sort-completions", NULL);
-	if(complete_sort_list == NULL)
-		sort_completions = 0;
+
+	complete_sort_list = varlookup("es_conf_sort-completions", nil);
+
+	if(complete_sort_list == nil)
+		rl_sort_completion_matches = 0;
 	else
 		if(termeq(complete_sort_list->term, "true"))
-			sort_completions = 1;
+			rl_sort_completion_matches = 1;
 		else if(termeq(complete_sort_list->term, "false"))
-			sort_completions = 0;
-	gcrderef(&r_complete_sort_list);
+			rl_sort_completion_matches = 0;
+
+
 	rl_attempted_completion_over = 1;
-	rl_sort_completion_matches = sort_completions;
 	rl_ignore_completion_duplicates = 1;
 	rl_filename_completion_desired = 1;
-	es_rl_start = start;
-	es_rl_end = end;
-	if(new_completer)
-		return run_new_completer(text, start, end);
-	if(old_completer)
-		return rl_completion_matches(text, run_es_completer);
-	return NULL; /* not reached (hopefully) */
+
+	gcrderef(&r_complete_sort_list);
+	gcrderef(&r_new_completer);
+
+	return run_new_completer(new_completer, text, start, end);
 }
 
 int
@@ -748,7 +698,9 @@ extern Tree *parse(char *pr1, char *pr2) {
 		assert(error != NULL);
 		e = error;
 		error = NULL;
-		fail("$&parse", "yyparse: %s: \"%s\"", e, input_dumptokstatus());
+		if(dump_tok_status)
+			fail("$&parse", "yyparse: %s: \"%s\"", e, input_dumptokstatus());
+		fail("$&parse", "yyparse: %s", e);
 	}
 	if (input->runflags & run_lisptrees)
 		eprint("%B\n", parsetree);

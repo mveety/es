@@ -28,6 +28,7 @@ extern char **environ;
 extern uint32_t gc_oldage;
 extern int gc_oldsweep_after;
 extern Boolean regex_debug;
+extern Boolean dump_tok_status;
 
 void*
 used(void *v)
@@ -50,26 +51,26 @@ init_internal_vars(void)
 {
 	int i;
 	static const char* const path[] = { INITIAL_PATH };
-	List *list = NULL; Root r_list;
+	List *list = nil; Root r_list;
 
 	gcref(&r_list, (void**)&list);
 
 	for(i = arraysize(path); i-- > 0;)
 		list = mklist(mkstr((char*)path[i]), list);
 
-	vardef("path", NULL, list);
-	vardef("ppid", NULL, mklist(mkstr(str("%d", getpid())), NULL));
-	vardef("__es_loginshell", NULL, mklist(mkstr(str("%s", loginshell ? "true" : "false")), NULL));
-	vardef("__es_initialize_esrc", NULL,
-			mklist(mkstr(str("%s", use_initialize_esrc ? "true" : "false")), NULL));
-	vardef("__es_readesrc", NULL, mklist(mkstr(str("%s", readesrc ? "true" : "false")), NULL));
-	vardef("__es_different_esrc", NULL,
-			mklist(mkstr(str("%s", different_esrc ? "true" : "false")), NULL));
-	vardef("__es_esrcfile", NULL, mklist(mkstr(different_esrc ? str("%s", altesrc) : ""), NULL));
-	vardef("__es_extra_esrc", NULL,
-			mklist(mkstr(str("%s", additional_esrc ? "true" : "false")), NULL));
-	vardef("__es_extra_esrcfile", NULL,
-			mklist(mkstr(additional_esrc ? str("%s", extraesrc) : ""), NULL));
+	vardef("path", nil, list);
+	vardef("ppid", nil, mklist(mkstr(str("%d", getpid())), nil));
+	vardef("__es_loginshell", nil, mklist(mkstr(str("%s", loginshell ? "true" : "false")), nil));
+	vardef("__es_initialize_esrc", nil,
+			mklist(mkstr(str("%s", use_initialize_esrc ? "true" : "false")), nil));
+	vardef("__es_readesrc", nil, mklist(mkstr(str("%s", readesrc ? "true" : "false")), nil));
+	vardef("__es_different_esrc", nil,
+			mklist(mkstr(str("%s", different_esrc ? "true" : "false")), nil));
+	vardef("__es_esrcfile", nil, mklist(mkstr(different_esrc ? str("%s", altesrc) : ""), nil));
+	vardef("__es_extra_esrc", nil,
+			mklist(mkstr(str("%s", additional_esrc ? "true" : "false")), nil));
+	vardef("__es_extra_esrcfile", nil,
+			mklist(mkstr(additional_esrc ? str("%s", extraesrc) : ""), nil));
 
 	gcderef(&r_list, (void**)&list);
 }
@@ -159,16 +160,17 @@ do_usage(void)
 void
 debug_flag_usage(void)
 {
-	dprintf(2, "debug flags: es -D [GIaEPRAM]\n%s%s%s%s%s%s%s%s%s",
-		"	? -- show this message\n",
-		"	G -- gcverbose\n",
-		"	I -- gcinfo\n",
-		"	a -- assertions\n",
-		"	E -- debug_exceptions\n",
-		"	P -- verbose_parser\n",
-		"	R -- regex_debug\n",
-		"	A -- ref_assertions (likely to crash)\n",
+	dprintf(2, "debug flags: es -D [GIaEPRAM]\n%s",
+		"	? -- show this message\n"
+		"	G -- gcverbose\n"
+		"	I -- gcinfo\n"
+		"	a -- assertions\n"
+		"	E -- debug_exceptions\n"
+		"	P -- verbose_parser\n"
+		"	R -- regex_debug\n"
+		"	A -- ref_assertions (likely to crash)\n"
 		"	M -- verbose_match\n"
+		"	T -- dump_tok_status\n"
 	);
 	exit(1);
 }
@@ -176,14 +178,14 @@ debug_flag_usage(void)
 void
 run_flag_usage(void)
 {
-	dprintf(2, "run flags: es -r [einVxL]\n%s%s%s%s%s%s%s%s",
-		"	? -- show this message\n",
-		"	e -- exitonfalse\n",
-		"	i -- interactive\n",
-		"	n -- noexec\n",
-		"	v -- echoinput\n",
-		"	x -- printcmds\n",
-		"	L -- lisptrees\n",
+	dprintf(2, "run flags: es -r [einVxL]\n%s",
+		"	? -- show this message\n"
+		"	e -- exitonfalse\n"
+		"	i -- interactive\n"
+		"	n -- noexec\n"
+		"	v -- echoinput\n"
+		"	x -- printcmds\n"
+		"	L -- lisptrees\n"
 		"	a -- assertions\n"
 	);
 	exit(1);
@@ -231,6 +233,7 @@ main(int argc, char *argv[]) {
 				case 'P': verbose_parser = TRUE; break;
 				case 'R': regex_debug = TRUE; break;
 				case 'M': verbose_match = TRUE; break;
+				case 'T': dump_tok_status = TRUE; break;
 				case '?':
 					debug_flag_usage();
 					break;
