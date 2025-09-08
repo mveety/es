@@ -417,46 +417,6 @@ fn %complete curline partial start end {
 	}
 }
 
-# this is the intermediate state for core_completer to improve performance
-# perf tanks if there's a lot of completions
-_es_complete_current_curline = ''
-_es_complete_current_partial = ''
-_es_complete_current_start = ''
-_es_complete_current_end = ''
-_es_complete_current_completion = ()
-
-fn es_complete_cc_checkstate linebuf text start end {
-	if {~ $linebuf $_es_complete_current_curline &&
-		~ $text $_es_complete_current_partial &&
-		~ $start $_es_complete_current_start &&
-		~ $end $_es_complete_current_end} {
-		result <=true
-	} {
-		result <=false
-	}
-}
-
-fn es_complete_format_list list {
-	local(res=){
-		for (i = $list) {
-			res = $res ''''^$i^''''
-		}
-		result '('^$^res^')'
-	}
-}
-
-fn es_complete_dump_state {
-	if {! ~ $#fn-%new_completer 0} {
-		echo 'using new completer'
-	} {
-		echo 'es_complete_current_curline = '''^$_es_complete_current_curline^''''
-		echo 'es_complete_current_partial = '''^$_es_complete_current_partial^''''
-		echo 'es_complete_current_start = '^$_es_complete_current_start
-		echo 'es_complete_current_end = '^$_es_complete_current_end
-		echo 'es_complete_current_completion = '^<={es_complete_format_list $_es_complete_current_completion}
-	}
-}
-
 # %core_completer is the hook es uses to call into the completion machinery.
 # core_completer produces a string which is passed to rl_completion_matches in
 # readline. rl_completion_matches makes successive calls to this function
