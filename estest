@@ -172,6 +172,7 @@ fn run_subproc_test testname testfn test_log tfp libdir {
 		local(es_assert_def = $fn-assert; es_assert2_def = $fn-assert2) local (
 			fn-assert = @{ echo 'try assert:' $* ; $es_assert_def $*}
 			fn-assert2 = @{ echo 'try assert2:' $*(1) ':' $*(2 ...) ; $es_assert2_def $*}
+			es = $esbin
 		) {
 			$testfn >> $test_log
 		}
@@ -235,6 +236,7 @@ fn run_test_file file {
 				local(es_assert_def = $fn-assert; es_assert2_def = $fn-assert2) local(
 					fn-assert = @{echo 'try assert:' $* ; $es_assert_def $*}
 					fn-assert2 = @{ echo 'try assert2:' $*(1) ':' $*(2 ...) ; $es_assert2_def $*}
+					es = $esbin
 				) {
 					run_test_$testname > $test_log
 				}
