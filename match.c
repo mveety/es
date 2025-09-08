@@ -325,7 +325,6 @@ extractmatches(List *subjects0, List *patterns0, StrList *quotes0) {
 
 				if(status.matched == TRUE && status.substrs->next != nil){
 					partial_append(&ctx, status.substrs->next);
-					/* result = append(result, status.substrs->next); */
 					break;
 				}
 			} else {
@@ -335,7 +334,6 @@ extractmatches(List *subjects0, List *patterns0, StrList *quotes0) {
 				if(match != nil){
 					match = reverse(match);
 					partial_append(&ctx, match);
-					/* result = append(result, match); */
 					break;
 				}
 			}
