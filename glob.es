@@ -277,6 +277,10 @@ fn esmglob_expand_qmacro xglob {
 						([1234567890]) {
 							mid = $mid $matchexpr
 						}
+						('>') {
+							mid = $mid $matchexpr
+							state = rest
+						}
 						('-') {
 							state = inquestion2
 							mid = $mid $matchexpr
@@ -325,12 +329,22 @@ fn esmglob_expand_qmacro xglob {
 			}
 			('%'^*^'\<'^*) {
 				(elemhead elemtail) = <={~~ $matchexpr '%'^*^'\<'^*}
-				(elemtail start end) = <={~~ $elemtail *^'<'^*^'-'^*^'>'}
+				if {~ $elemtail *^'<'^*^'>'} {
+					(elemtail start) = <={~~ $elemtail *^'<'^*^'>'}
+					end = $start
+				} {
+					(elemtail start end) = <={~~ $elemtail *^'<'^*^'-'^*^'>'}
+				}
 				elem = $elemhead^'\<'^$elemtail
 				mid = <={matchlist_elem $elem <={%range $start $end}}
 			}
 			('%'^*) {
-				(elem start end) = <={~~ $matchexpr '%'^*^'<'^*^'-'^*^'>'}
+				if {~ $matchexpr '%'^*^'<'^*^'-'^*^'>'} {
+					(elem start end) = <={~~ $matchexpr '%'^*^'<'^*^'-'^*^'>'}
+				} {
+					(elem start) = <={~~ $matchexpr '%'^*^'<'^*^'>'}
+					end = $start
+				}
 				mid = <={matchlist_elem $elem <={%range $start $end}}
 			}
 		)
