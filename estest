@@ -37,7 +37,7 @@ subprocess_default = false
 libdir = 'libraries'
 testlibs = false
 testcore = true
-commit = <={%fsplit ' ' $buildstring |> %elem 3 |> %fsplit '-' |> %elem 3}
+commit = <={%fsplit ' ' $buildstring |> %elem 3 |> %fsplit '-' |> %elem 2}
 run_one = false
 test_to_run = ()
 

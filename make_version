@@ -6,14 +6,14 @@ tag=`git describe --tags --abbrev=0`
 branch=`git rev-parse --abbrev-ref HEAD`
 patchset="mveety"
 commit=`git log -n1 --format="%h"`
-versionstring="$patchset-$branch-$commit"
+versionstring="$branch-$commit"
 builddate=`date`
 buildhost=`uname -n`
 builduser=`whoami`
 buildpath=`pwd`
 buildsys=`uname`
 buildarch=`uname -m`
-buildstring="es $compiler $versionstring $builduser@$buildhost:$buildpath $buildsys $buildarch"
+buildstring="es-mveety $compiler $versionstring $builduser@$buildhost:$buildpath $buildsys $buildarch"
 
 echo "#include \"es.h\""
 echo "// static const char commit[] = \"$commit\";"
