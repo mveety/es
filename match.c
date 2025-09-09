@@ -38,6 +38,16 @@ isquoted(const char *q, size_t qi, size_t quotelen)
 	return 0;
 }
 
+char*
+tailquote(char *q, size_t qi, size_t quotelen)
+{
+	if(q == UNQUOTED)
+		return UNQUOTED;
+	if(qi < quotelen)
+		return &q[qi];
+	return UNQUOTED;
+}
+
 /* rangematch -- match a character against a character class */
 static int rangematch(const char *p, const char *q, char c) {
 	const char *orig = p;
@@ -251,7 +261,8 @@ extractsinglematch(char *subject0, char *pattern0, char *quoting0, List *result0
 					goto done;
 				}
 				for (begin = si;; si++) {
-					q = TAILQUOTE(quoting, i);
+					/* q = TAILQUOTE(quoting, i);*/
+					q = tailquote(quoting, i, quotelen);
 					assert(subject[si] != '\0');
 					if (match(&subject[si], &pattern[i], q)) {
 						result = mklist(mkstr(gcndup(&subject[begin], si - begin)), result);
