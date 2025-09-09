@@ -47,4 +47,5 @@ other/*
 libraries/complete_git/*
 mveety.esrc
 work/*
+test_*.log
 
