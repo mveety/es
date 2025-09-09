@@ -102,6 +102,10 @@ fn eval { '{' ^ $^* ^ '}' }
 fn-true		= result 0
 fn-false	= result 1
 
+# the public demands it
+
+fn-else = result 0
+
 #	These functions just generate exceptions for control-flow
 #	constructions.  The for command and the while builtin both
 #	catch the break exception, and lambda-invocation catches
@@ -1264,7 +1268,25 @@ fn-%onerror = $&noreturn @ protected handler {
 			match <={$err error} (
 				(return continue break) { $err throw }
 				* {
-					local (fn-error = @ {result $err}) {
+					local (
+						fn error args {
+							if {~ $#args 0} {
+								result $err
+							} {~ $#args 1 && ~ <={$err error} $args(1)} {
+								result <=true
+							} {~ $#args 2 && ~ <={$err error} $args(1) && ~ <={$err type} $args(2)} {
+								result <=true
+							} { gte $#args 3 &&
+								~ <={$err error} $args(1) &&
+								~ <={$err type} $args(2) &&
+								~ <={$err msg} $args(3 ...)
+							} {
+								result <=true
+							} {
+								result <=false
+							}
+						}
+					) {
 						result <=$handler
 					}
 				}

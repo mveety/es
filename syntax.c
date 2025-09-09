@@ -363,7 +363,7 @@ mkmatchall(Tree *subj, Tree *cases)
 	int is_wild = 0, has_wild = 0;
 	Tree *ifs = NULL;
 	Tree *svar, *resvar, *matchvar, *varbinding;
-	Tree *pattlist, *cmd, *match, *ifbody, *wildmatch;
+	Tree *pattlist, *cmd, *match, *ifbody, *wildmatch = nil;
 	Tree *resultnil;
 
 	svar = mk(nVar, mk(nWord, varname));
