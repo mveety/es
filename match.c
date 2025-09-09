@@ -282,7 +282,7 @@ extractsinglematch(char *subject0, char *pattern0, char *quoting0, List *result0
 					break;
 				}
 				i += j;
-			    /* FALLTHROUGH */
+				fallthrough;
 			case '?':
 				result = mklist(mkstr(str("%c", subject[si])), result);
 				break;

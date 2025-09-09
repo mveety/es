@@ -123,13 +123,7 @@ extern Sigeffect esignal(int sig, Sigeffect effect) {
 				eprint("$&setsignals: special handler not defined for %s\n", signame(sig));
 				return old;
 			}
-			// NOTE: clang gave a warning that things fellthrough here.
-			// I replicated the original behaviour to make clang happy
-			if(setsignal(sig, catcher) == SIG_ERR){
-				eprint("$%setsignals: cannot catch %s\n", signame(sig));
-				return old;
-			}
-			break;
+			fallthrough;
 		case sig_catch:
 		case sig_noop:
 			if (setsignal(sig, catcher) == SIG_ERR) {
