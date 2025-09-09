@@ -21,9 +21,6 @@ enum { RANGE_FAIL = -1, RANGE_ERROR = -2 };
    failure.
 */
 
-#define	ISQUOTED(q, n)	((q) == QUOTED || ((q) != UNQUOTED && (q)[n] == 'q'))
-#define TAILQUOTE(q, n) ((q) == UNQUOTED ? UNQUOTED : ((q) + (n)))
-
 Boolean verbose_rangematch = FALSE;
 
 int
@@ -39,12 +36,12 @@ isquoted(const char *q, size_t qi, size_t quotelen)
 }
 
 char*
-tailquote(char *q, size_t qi, size_t quotelen)
+tailquote(const char *q, size_t qi, size_t quotelen)
 {
 	if(q == UNQUOTED)
 		return UNQUOTED;
 	if(qi < quotelen)
-		return &q[qi];
+		return (char*)&q[qi];
 	return UNQUOTED;
 }
 
@@ -99,6 +96,9 @@ static int rangematch(const char *p, const char *q, char c) {
 /* match -- match a single pattern against a single string. */
 extern Boolean match(const char *s, const char *p, const char *q) {
 	int i;
+	size_t qlen;
+
+	qlen = strlen(q);
 	if (q == QUOTED)
 		return streq(s, p);
 	for (i = 0;;) {
@@ -117,14 +117,14 @@ extern Boolean match(const char *s, const char *p, const char *q) {
 				if (p[i] == '\0') 	/* star at end of pattern? */
 					return TRUE;
 				while (*s != '\0')
-					if (match(s++, p + i, TAILQUOTE(q, i)))
+					if (match(s++, p + i, tailquote(q, i, qlen)))
 						return TRUE;
 				return FALSE;
 			case '[': {
 				int j;
 				if (*s == '\0')
 					return FALSE;
-				switch (j = rangematch(p + i, TAILQUOTE(q, i), *s)) {
+				switch (j = rangematch(p + i, tailquote(q, i, qlen), *s)) {
 				default:
 					i += j;
 					break;
@@ -275,7 +275,7 @@ extractsinglematch(char *subject0, char *pattern0, char *quoting0, List *result0
 				}
 				break;
 			case '[':
-				j = rangematch(&pattern[i], TAILQUOTE(quoting, i), subject[si]);
+				j = rangematch(&pattern[i], tailquote(quoting, i, quotelen), subject[si]);
 				assert(j != RANGE_FAIL);
 				if (j == RANGE_ERROR) {
 					assert(subject[si] == '[');

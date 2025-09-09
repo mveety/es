@@ -67,7 +67,7 @@ AC_CACHE_CHECK(for extra CFLAGS for $CC on $host_os, es_cv_ccextras,
 								;;
 							gcc1*)
 								es_cv_ccextras="-Wl,-rpath=/usr/local/lib/${CC}"
-								CFLAGS="-Wl,-rpath=/usr/local/lib/${CC}"
+								CFLAGS="$CFLAGS -Wl,-rpath=/usr/local/lib/${CC}"
 								;;
 							*)
 								es_cv_ccextras="none needed"
