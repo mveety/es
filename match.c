@@ -27,22 +27,14 @@ enum { RANGE_FAIL = -1, RANGE_ERROR = -2 };
 Boolean verbose_rangematch = FALSE;
 
 int
-isquoted(int quoted, const char *q, size_t qi, size_t quotelen)
+isquoted(const char *q, size_t qi, size_t quotelen)
 {
-	switch(quoted){
-	default:
-		panic("quoted != 0, 1, or 2");
-		return 0;
-	case 0:
-		if(qi < quotelen && q[qi] == 'q')
-			return 1;
-		return 0;
-	case 1:
+	if(q == QUOTED)
 		return 1;
-	case 2:
+	if(q == UNQUOTED)
 		return 0;
-	}
-	panic("isquoted: reached unreachable");
+	if(qi < quotelen && q[qi] == 'q')
+		return 1;
 	return 0;
 }
 
@@ -52,41 +44,34 @@ static int rangematch(const char *p, const char *q, char c) {
 	Boolean neg;
 	Boolean matched = FALSE;
 	size_t quotelen;
-	int quoted = 0;
 	size_t qi = 0;
 
 	quotelen = strlen(q);
-	if(q == QUOTED)
-		quoted = 1;
-	else if (q == UNQUOTED)
-		quoted = 2;
-	else
-		quoted = 0;
 
 	/* it doesn't work without the dprintf's (at least on freebsd with clang -O2) */
 	/* i think it's fixed now? */
 	if(verbose_rangematch)
 		dprintf(2, "rangematch: p = \"%s\", q = \"%s\", c = %c\n", p, q, c);
-	if (*p == '~' && !isquoted(quoted, q, qi, quotelen)) {
+	if (*p == '~' && !isquoted(q, qi, quotelen)) {
 		p++, q++;
 	    	neg = TRUE;
 	} else
 		neg = FALSE;
-	if (*p == ']' && !isquoted(quoted, q, qi, quotelen)) {
+	if (*p == ']' && !isquoted(q, qi, quotelen)) {
 		p++, q++;
 		matched = (c == ']');
 	}
-	for (; *p != ']' || isquoted(quoted, q, qi, quotelen); p++, qi++) {
+	for (; *p != ']' || isquoted(q, qi, quotelen); p++, qi++) {
 		if(verbose_rangematch){
 			dprintf(2, "rangematch: p = \"%s\", q = \"%s\", qi = %lu, c = %c", p, q, qi, c);
 			dprintf(2, ", matched = %s", matched == TRUE ? "true": "false");
-			dprintf(2, ", isquoted = %d\n", isquoted(quoted, q, qi, quotelen));
+			dprintf(2, ", isquoted = %d\n", isquoted(q, qi, quotelen));
 		}
 		if (*p == '\0')
 			return RANGE_ERROR;	/* bad syntax */
 		if (p[1] == '-' &&
-				!isquoted(quoted, q, qi+1, quotelen) &&
-				((p[2] != ']' && p[2] != '\0') || isquoted(quoted, q, qi+2, quotelen))) {
+				!isquoted(q, qi+1, quotelen) &&
+				((p[2] != ']' && p[2] != '\0') || isquoted(q, qi+2, quotelen))) {
 			/* check for [..-..] but ignore [..-] */
 			if (c >= *p && c <= p[2])
 				matched = TRUE;
@@ -218,55 +203,89 @@ extern Boolean listmatch(List *subject, List *pattern, StrList *quote) {
  *			 single pattern, returning it backwards
  */
 
-static List *extractsinglematch(const char *subject, const char *pattern,
-				const char *quoting, List *result) {
-	int i;
-	const char *s;
+List*
+extractsinglematch(char *subject0, char *pattern0, char *quoting0, List *result0)
+{
 
-	if (!haswild(pattern, quoting) /* no wildcards, so no matches */
-	    || !match(subject, pattern, quoting))
-		return NULL;
+	char *subject = nil; Root r_subject;
+	char *pattern = nil; Root r_pattern;
+	char *quoting = nil; Root r_quoting;
+	List *result = nil; Root r_result;
+	size_t i;
+	size_t subjectlen;
+	size_t si = 0;
+	size_t patternlen;
+	size_t quotelen;
+	size_t begin;
+	char *q = nil;
+	int c, j;
 
-	for (s = subject, i = 0; pattern[i] != '\0'; s++) {
-		if (ISQUOTED(quoting, i))
+	gcref(&r_subject, (void**)&subject);
+	gcref(&r_pattern, (void**)&pattern);
+	gcref(&r_quoting, (void**)&quoting);
+	gcref(&r_result, (void**)&result);
+
+	subject = subject0;
+	pattern = pattern0;
+	quoting = quoting0;
+	result = result0;
+
+	subjectlen = strlen(subject);
+	patternlen = strlen(pattern);
+	quotelen = strlen(quoting);
+
+	if (!haswild(pattern, quoting) || !match(subject, pattern, quoting)){
+		result = nil;
+		goto done;
+	}
+
+	for (si = 0, i = 0; pattern[i] != '\0' && i < patternlen && si < subjectlen; si++) {
+		if (isquoted(quoting, i, quotelen))
 			i++;
 		else {
-			int c = pattern[i++];
+			c = pattern[i++];
 			switch (c) {
-			    case '*': {
-				const char *begin;
-				if (pattern[i] == '\0')
-					return mklist(mkstr(gcdup(s)), result);
-				for (begin = s;; s++) {
-					const char *q = TAILQUOTE(quoting, i);
-					assert(*s != '\0');
-					if (match(s, pattern + i, q)) {
-						result = mklist(mkstr(gcndup(begin, s - begin)), result);
-						return haswild(pattern + i, q)
-							? extractsinglematch(s, pattern + i, q, result)
-							: result;
+			case '*':
+				if (pattern[i] == '\0'){
+					result = mklist(mkstr(gcdup(&subject[si])), result);
+					goto done;
+				}
+				for (begin = si;; si++) {
+					q = TAILQUOTE(quoting, i);
+					assert(subject[si] != '\0');
+					if (match(&subject[si], &pattern[i], q)) {
+						result = mklist(mkstr(gcndup(&subject[begin], si - begin)), result);
+						if(haswild(&pattern[i], q)){
+							result = extractsinglematch(&subject[si], &pattern[i], q, result);
+							goto done;
+						} else
+							goto done;
 					}
 				}
-			    }
-			    case '[': {
-				int j = rangematch(pattern + i, TAILQUOTE(quoting, i), *s);
+				break;
+			case '[':
+				j = rangematch(&pattern[i], TAILQUOTE(quoting, i), subject[si]);
 				assert(j != RANGE_FAIL);
 				if (j == RANGE_ERROR) {
-					assert(*s == '[');
+					assert(subject[si] == '[');
 					break;
 				}
 				i += j;
-			    }
 			    /* FALLTHROUGH */
-			    case '?':
-				result = mklist(mkstr(str("%c", *s)), result);
+			case '?':
+				result = mklist(mkstr(str("%c", subject[si])), result);
 				break;
-			    default:
+			default:
 				break;
 			}
 		}
 	}
 
+done:
+	gcrderef(&r_result);
+	gcrderef(&r_quoting);
+	gcrderef(&r_pattern);
+	gcrderef(&r_subject);
 	return result;
 }
 
