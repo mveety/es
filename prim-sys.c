@@ -411,8 +411,22 @@ PRIM(time) {
 	struct rusage r;
 	struct timespec before, after;
 	WaitStatus s;
+	Boolean quiet = FALSE;
+	List *lp = nil; Root r_lp;
+	List *result = nil; Root r_result;
+	char *fmt = "%ld.%03ld";
 
-	Ref(List *, lp, list);
+	gcref(&r_lp, (void**)&lp);
+	lp = list;
+
+	if(lp == NULL)
+		fail("$&time", "usage: $&time [-r] body");
+	if(termeq(lp->term, "-r")){
+		quiet = TRUE;
+		lp = lp->next;
+		if(lp == NULL)
+			fail("$&time", "usage: $&time [-r] body");
+	}
 
 	gc();	/* do a garbage collection first to ensure reproducible results */
 	clock_gettime(CLOCK_MONOTONIC, &before);
@@ -429,15 +443,25 @@ PRIM(time) {
 	if(after.tv_nsec < 0)
 		after.tv_sec--, after.tv_nsec += 1000000000;
 
-	eprint(
-		"    %5ld.%03ld real %5ld.%03ld user %5ld.%03ld sys\t%L\n",
-		after.tv_sec, after.tv_nsec/1000000,
-		r.ru_utime.tv_sec, (long) (r.ru_utime.tv_usec / 1000),
-		r.ru_stime.tv_sec, (long) (r.ru_stime.tv_usec / 1000),
-		lp, " "
-	);
+	if(!quiet)
+		eprint(
+			"    %5ld.%03ld real %5ld.%03ld user %5ld.%03ld sys\t%L\n",
+			after.tv_sec, after.tv_nsec/1000000,
+			r.ru_utime.tv_sec, (long) (r.ru_utime.tv_usec / 1000),
+			r.ru_stime.tv_sec, (long) (r.ru_stime.tv_usec / 1000),
+			lp, " "
+		);
 
-	RefEnd(lp);
+	gcrderef(&r_lp);
+	if(quiet){
+		gcref(&r_result, (void**)&result);
+		result = mklist(mkstr(str(fmt, r.ru_stime.tv_sec, (long) (r.ru_stime.tv_usec / 1000))), result);
+		result = mklist(mkstr(str(fmt, r.ru_utime.tv_sec, (long) (r.ru_utime.tv_usec / 1000))), result);
+		result = mklist(mkstr(str(fmt, after.tv_sec, after.tv_nsec/1000000)), result);
+		result = mklist(mkstr(mkstatus(status)), result);
+		gcrderef(&r_result);
+		return result;
+	}
 	return mklist(mkstr(mkstatus(status)), NULL);
 }
 #endif	/* BUILTIN_TIME */

@@ -18,6 +18,10 @@ extern Boolean istrue(List *status) {
 		Term *term = status->term;
 		if (term->closure != NULL)
 			return FALSE;
+		else if(termeq(term, "true"))
+			return TRUE;
+		else if(termeq(term, "false"))
+			return FALSE;
 		else {
 			const char *str = term->str;
 			assert(str != NULL);
