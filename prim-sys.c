@@ -430,10 +430,10 @@ PRIM(time) {
 		after.tv_sec--, after.tv_nsec += 1000000000;
 
 	eprint(
-		"    %5ld.%02ld real %5ld.%02ld user %5ld.%02ld sys\t%L\n",
+		"    %5ld.%03ld real %5ld.%03ld user %5ld.%03ld sys\t%L\n",
 		after.tv_sec, after.tv_nsec/1000000,
-		r.ru_utime.tv_sec, (long) (r.ru_utime.tv_usec / 10000),
-		r.ru_stime.tv_sec, (long) (r.ru_stime.tv_usec / 10000),
+		r.ru_utime.tv_sec, (long) (r.ru_utime.tv_usec / 1000),
+		r.ru_stime.tv_sec, (long) (r.ru_stime.tv_usec / 1000),
 		lp, " "
 	);
 
