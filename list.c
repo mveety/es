@@ -179,6 +179,7 @@ append(List *head0, List *tail0)
 	head = head0;
 	tail = tail0;
 
+	gcdisable();
 	for(lp = head; lp != nil; lp = lp->next){
 		term = lp->term;
 		tmp = mklist(term, nil);
@@ -190,6 +191,7 @@ append(List *head0, List *tail0)
 			rp = rp->next;
 		}
 	}
+	gcenable();
 
 	if(!rp)
 		result = tail;

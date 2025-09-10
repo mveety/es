@@ -126,8 +126,10 @@ PRIM(range) {
 
 	gcref(&r_res, (void**)&res);
 
+	gcdisable();
 	for(i = end; i >= start; i--)
 		res = mklist(mkstr(str("%d", i)), res);
+	gcenable();
 
 	gcderef(&r_res, (void**)&res);
 	return res;
