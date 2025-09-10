@@ -94,12 +94,8 @@ static void warn(char *s) {
 void
 setnextlastcmd(char *str)
 {
-	char *nlcmd = NULL;
-
-	nlcmd = nextlastcmd;
+	free(nextlastcmd);
 	nextlastcmd = strdup(str);
-	if(!nlcmd)
-		free(nlcmd);
 }
 
 char*

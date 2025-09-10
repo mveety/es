@@ -115,10 +115,10 @@ static List *listglob(List *list, char *pattern, char *quote, size_t slashcount)
 
 /* glob1 -- glob pattern path against the file system */
 static List *glob1(const char *pattern, const char *quote) {
-	const char *s, *q;
-	char *d, *p, *qd, *qp;
-	size_t psize;
-	List *matched;
+	const char *s = nil, *q = nil;
+	char *d = nil, *p = nil, *qd = nil, *qp = nil;
+	size_t psize = 0;
+	List *matched = nil;
 
 	static char *dir = NULL, *pat = NULL, *qdir = NULL, *qpat = NULL, *raw = NULL;
 	static size_t dsize = 0;
