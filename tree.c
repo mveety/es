@@ -1,7 +1,7 @@
 /* tree.c -- functions for manipulating parse-trees. (create, copy, scan) ($Revision: 1.1.1.1 $) */
 
-#include "es.h"
-#include "gc.h"
+#include <es.h>
+#include <gc.h>
 
 DefineTag(Tree1, static);
 DefineTag(Tree2, static);

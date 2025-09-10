@@ -3,8 +3,8 @@
 #include <stdlib.h>
 #define	REQUIRE_PWD	1
 
-#include "es.h"
-#include "prim.h"
+#include <es.h>
+#include <prim.h>
 
 PRIM(result) {
 	return list;

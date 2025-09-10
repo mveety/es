@@ -15,7 +15,7 @@ buildsys=`uname`
 buildarch=`uname -m`
 buildstring="es-mveety $compiler $versionstring $builduser@$buildhost:$buildpath $buildsys $buildarch"
 
-echo "#include \"es.h\""
+echo "#include <es.h>"
 echo "// static const char commit[] = \"$commit\";"
 echo "static const char version1[] = \"$versionstring\";"
 echo "static const char buildstring1[] = \"$buildstring\";"

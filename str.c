@@ -1,8 +1,8 @@
 /* str.c -- es string operations ($Revision: 1.1.1.1 $) */
 
-#include "es.h"
-#include "gc.h"
-#include "print.h"
+#include <es.h>
+#include <gc.h>
+#include <print.h>
 
 /* grow -- buffer grow function for str() */
 static void str_grow(Format *f, size_t more) {

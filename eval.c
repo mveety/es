@@ -1,8 +1,8 @@
 /* eval.c -- evaluation of lists and trees ($Revision: 1.2 $) */
 
-#include "es.h"
+#include <es.h>
 #include <regex.h>
-/* #include "eval.h" */
+/* #include <eval.h> */
 
 unsigned long evaldepth = 0, maxevaldepth = MAXmaxevaldepth;
 extern Boolean verbose_match;

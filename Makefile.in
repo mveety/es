@@ -43,7 +43,7 @@ MKDIR_P = @MKDIR_P@
 
 YACC = @YACC@
 
-CFLAGS	= $(ADDCFLAGS) -I. -I$(srcdir) -W -Wall -Wno-missing-field-initializers -Wno-unused-parameter @CFLAGS@
+CFLAGS	= $(ADDCFLAGS) -I$(srcdir) -W -Wall -Wno-missing-field-initializers -Wno-unused-parameter @CFLAGS@
 LDFLAGS	= $(ADDLDFLAGS) @LDFLAGS@
 LIBS	= $(ADDLIBS) @LIBS@
 

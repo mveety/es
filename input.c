@@ -1,13 +1,13 @@
 /* input.c -- read input from files or strings ($Revision: 1.2 $) */
 /* stdgetenv is based on the FreeBSD getenv */
 
-#include "es.h"
-#include "readline/readline.h"
-#include "stdenv.h"
+#include <es.h>
+#include <readline/readline.h>
+#include <stdenv.h>
 #include <stdio.h>
 #include <string.h>
 #include <threads.h>
-#include "input.h"
+#include <input.h>
 
 /*
  * constants

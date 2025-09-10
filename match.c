@@ -1,6 +1,6 @@
 /* match.c -- pattern matching routines ($Revision: 1.1.1.1 $) */
 
-#include "es.h"
+#include <es.h>
 #include <regex.h>
 #include <stdlib.h>
 

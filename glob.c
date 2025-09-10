@@ -3,8 +3,8 @@
 #define	REQUIRE_STAT	1
 #define	REQUIRE_DIRENT	1
 
-#include "es.h"
-#include "gc.h"
+#include <es.h>
+#include <gc.h>
 
 char QUOTED[] = "QUOTED", UNQUOTED[] = "RAW";
 

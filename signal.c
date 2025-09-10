@@ -1,7 +1,7 @@
 /* signal.c -- signal handling ($Revision: 1.1.1.1 $) */
 
-#include "es.h"
-#include "sigmsgs.h"
+#include <es.h>
+#include <sigmsgs.h>
 
 typedef Sigresult (*Sighandler)(int);
 

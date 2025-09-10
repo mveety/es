@@ -1304,6 +1304,20 @@ fn box list {
 	}
 }
 
+# based on benchmarks this is the most performant implementation
+# this is used a lot in the test suite and it might be useful to
+# reimplement this as a primitive.
+fn remove-duplicates list {
+	# dump doesn't support dicts so you need to use dictnew here
+	# instead of %dict().
+	local (res = <=dictnew){
+		for (l = $list) {
+			res := $l => 1
+		}
+		dictnames $res
+	}
+}
+
 fn __es_getargs argsbody {
 	if {~ $#argsbody 1 } {
 		result ()

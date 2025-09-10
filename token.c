@@ -1,9 +1,9 @@
 /* token.c -- lexical analyzer for es ($Revision: 1.1.1.1 $) */
 
-#include "es.h"
-#include "input.h"
-#include "syntax.h"
-#include "token.h"
+#include <es.h>
+#include <input.h>
+#include <syntax.h>
+#include <token.h>
 
 #define	isodigit(c)	('0' <= (c) && (c) < '8')
 

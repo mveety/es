@@ -1,6 +1,6 @@
 #include <stdlib.h>
-#include "es.h"
-#include "prim.h"
+#include <es.h>
+#include <prim.h>
 
 PRIM(add) {
 	int64_t a = 0;

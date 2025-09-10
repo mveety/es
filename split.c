@@ -1,7 +1,7 @@
 /* split.c -- split strings based on separators ($Revision: 1.1.1.1 $) */
 
-#include "es.h"
-#include "gc.h"
+#include <es.h>
+#include <gc.h>
 
 static Boolean coalesce;
 static Boolean splitchars;

@@ -1,7 +1,7 @@
 /* prim-ctl.c -- control flow primitives ($Revision: 1.1.1.1 $) */
 
-#include "es.h"
-#include "prim.h"
+#include <es.h>
+#include <prim.h>
 
 PRIM(seq) {
 	Ref(List *, result, list_true);

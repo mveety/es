@@ -1,8 +1,8 @@
 /* main.c -- initialization for es ($Revision: 1.3 $) */
 
-#include "es.h"
-#include "gc.h"
-#include "stdenv.h"
+#include <es.h>
+#include <gc.h>
+#include <stdenv.h>
 #include <stdio.h>
 
 Boolean gcverbose	= FALSE;	/* -G */
