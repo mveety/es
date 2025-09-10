@@ -391,10 +391,7 @@ run_new_completer(List *completer0, const char *text, int start, int end)
 	gcref(&r_lp, (void**)&lp);
 
 	completer = completer0;
-	matches = malloc(MATCHTABLE*sizeof(char*));
-	if(!matches)
-		panic("unable to malloc matchtable!\n");
-	memzero(matches, MATCHTABLE*sizeof(char*));
+	matches = ealloc(MATCHTABLE*sizeof(char*));
 	matchsz = MATCHTABLE;
 
 	gcenable();
@@ -416,7 +413,7 @@ run_new_completer(List *completer0, const char *text, int start, int end)
 		matches[matchi++] = strdup(getstr(lp->term));
 		if(matchi >= matchsz-2){
 			matchsz += 10;
-			matches = realloc(matches, (matchsz*sizeof(char*)));
+			matches = erealloc(matches, (matchsz*sizeof(char*)));
 		}
 	}
 	while(matchi < matchsz)

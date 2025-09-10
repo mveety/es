@@ -455,10 +455,7 @@ regexextract(RegexStatus *status, Term *subject0, Term *pattern0)
 	if(!subjectstr || !patternstr)
 		panic("regex strdup failed!");
 	copybufsz = strlen(subjectstr);
-	copybuf = malloc(copybufsz);
-	if(!copybuf)
-		panic("regex strdup failed!");
-	memset(copybuf, 0, copybufsz);
+	copybuf = ealloc(copybufsz);
 
 	status->compcode = regcomp(&regex, patternstr, REG_EXTENDED);
 	if(status->compcode > 0){
@@ -467,10 +464,7 @@ regexextract(RegexStatus *status, Term *subject0, Term *pattern0)
 		goto done;
 	}
 	nmatch = regex.re_nsub+1;
-	pmatch = malloc(nmatch*sizeof(regmatch_t));
-	if(!pmatch)
-		panic("regex malloc failed");
-	memset(pmatch, 0, nmatch*sizeof(regmatch_t));
+	pmatch = ealloc(nmatch*sizeof(regmatch_t));
 
 	status->matchcode = regexec(&regex, subjectstr, regex.re_nsub, pmatch, 0);
 	if(status->matchcode){
