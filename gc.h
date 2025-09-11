@@ -5,7 +5,7 @@
 
 /* see also es.h for more generally applicable definitions */
 
-#define	ALIGN(n)	(((n) + sizeof (void *) - 1) &~ (sizeof (void *) - 1))
+#define ALIGN(n) (((n) + sizeof(void *) - 1) & ~(sizeof(void *) - 1))
 #define	MIN_minspace	2*1024*1024
 #define	DefineTag(t, storage) \
 	static void *CONCAT(t,Copy)(void *); \

@@ -15,19 +15,20 @@ struct Proc {
 	struct rusage rusage;
 };
 
-
 static Proc *proclist = NULL;
 
 /* mkproc -- create a Proc structure */
-extern Proc *mkproc(int pid, Boolean background) {
+extern Proc *
+mkproc(int pid, Boolean background)
+{
 	Proc *proc;
-	for (proc = proclist; proc != NULL; proc = proc->next)
-		if (proc->pid == pid) {		/* are we recycling pids? */
-			assert(!proc->alive);	/* if false, violates unix semantics */
+	for(proc = proclist; proc != NULL; proc = proc->next)
+		if(proc->pid == pid) {	  /* are we recycling pids? */
+			assert(!proc->alive); /* if false, violates unix semantics */
 			break;
 		}
-	if (proc == NULL) {
-		proc = ealloc(sizeof (Proc));
+	if(proc == NULL) {
+		proc = ealloc(sizeof(Proc));
 		proc->next = proclist;
 	}
 	proc->pid = pid;
@@ -38,18 +39,21 @@ extern Proc *mkproc(int pid, Boolean background) {
 }
 
 /* efork -- fork (if necessary) and clean up as appropriate */
-extern int efork(Boolean parent, Boolean background) {
-	if (parent) {
+extern int
+efork(Boolean parent, Boolean background)
+{
+	if(parent) {
 		int pid = fork();
-		switch (pid) {
-		default: {	/* parent */
-			Proc *proc = mkproc(pid, background);
-			if (proclist != NULL)
-				proclist->prev = proc;
-			proclist = proc;
-			return pid;
-		}
-		case 0:		/* child */
+		switch(pid) {
+		default:
+			{ /* parent */
+				Proc *proc = mkproc(pid, background);
+				if(proclist != NULL)
+					proclist->prev = proc;
+				proclist = proc;
+				return pid;
+			}
+		case 0: /* child */
 			proclist = NULL;
 			hasforked = TRUE;
 			break;
@@ -75,21 +79,23 @@ timevaldiff(struct timeval *after, struct timeval *before)
 }
 
 /* dowait -- a wait wrapper that interfaces with signals */
-static int dowait(int *statusp) {
+static int
+dowait(int *statusp)
+{
 	int n;
 	interrupted = FALSE;
 	struct rusage r_before;
 
-	if (!setjmp(slowlabel)) {
+	if(!setjmp(slowlabel)) {
 		slow = TRUE;
 		if(interrupted)
 			n = -2;
 		else {
 			/* on freebsd this maybe should be WEXITED|WTRAPPED */
 			/* get the current rusage to help simulate how things would
- 			 * be if there was only one child */
+			 * be if there was only one child */
 			getrusage(RUSAGE_CHILDREN, &r_before);
-			n = waitpid(-1, (void*) statusp, 0);
+			n = waitpid(-1, (void *)statusp, 0);
 			getrusage(RUSAGE_CHILDREN, &wait_rusage);
 			timevaldiff(&wait_rusage.ru_utime, &r_before.ru_utime);
 			timevaldiff(&wait_rusage.ru_stime, &r_before.ru_stime);
@@ -97,7 +103,7 @@ static int dowait(int *statusp) {
 	} else
 		n = -2;
 	slow = FALSE;
-	if (n == -2) {
+	if(n == -2) {
 		errno = EINTR;
 		n = -1;
 	}
@@ -105,10 +111,12 @@ static int dowait(int *statusp) {
 }
 
 /* reap -- mark a process as dead and attach its exit status */
-static void reap(int pid, int status, struct rusage r) {
+static void
+reap(int pid, int status, struct rusage r)
+{
 	Proc *proc;
-	for (proc = proclist; proc != NULL; proc = proc->next)
-		if (proc->pid == pid) {
+	for(proc = proclist; proc != NULL; proc = proc->next)
+		if(proc->pid == pid) {
 			assert(proc->alive);
 			proc->alive = FALSE;
 			proc->status = status;
@@ -131,8 +139,8 @@ nbwaitpid(int pid)
 		return -1;
 
 	getrusage(RUSAGE_CHILDREN, &r_before);
-	n = waitpid(pid, (void*) &status, WNOHANG);
-	if(n == pid){
+	n = waitpid(pid, (void *)&status, WNOHANG);
+	if(n == pid) {
 		getrusage(RUSAGE_CHILDREN, &wait_rusage);
 		timevaldiff(&wait_rusage.ru_utime, &r_before.ru_utime);
 		timevaldiff(&wait_rusage.ru_stime, &r_before.ru_stime);
@@ -143,24 +151,26 @@ nbwaitpid(int pid)
 }
 
 /* ewait -- wait for a specific process to die, or any process if pid == 0 */
-WaitStatus ewait1(int pid, Boolean interruptible, void *rusage, Boolean print) {
+WaitStatus
+ewait1(int pid, Boolean interruptible, void *rusage, Boolean print)
+{
 	Proc *proc;
 	WaitStatus s;
 top:
-	for (proc = proclist; proc != NULL; proc = proc->next)
-		if (proc->pid == pid || (pid == 0 && !proc->alive)) {
+	for(proc = proclist; proc != NULL; proc = proc->next)
+		if(proc->pid == pid || (pid == 0 && !proc->alive)) {
 			int status;
-			if (proc->alive) {
+			if(proc->alive) {
 				int deadpid;
 				int seen_eintr = FALSE;
-				while ((deadpid = dowait(&proc->status)) != pid)
-					if (deadpid != -1)
+				while((deadpid = dowait(&proc->status)) != pid)
+					if(deadpid != -1)
 						reap(deadpid, proc->status, wait_rusage);
-					else if (errno == EINTR) {
-						if (interruptible)
+					else if(errno == EINTR) {
+						if(interruptible)
 							SIGCHK();
 						seen_eintr = TRUE;
-					} else if (errno == ECHILD && seen_eintr)
+					} else if(errno == ECHILD && seen_eintr)
 						/* TODO: not clear on why this is necessary
 						 * (child procs _sometimes_ disappear after SIGINT) */
 						break;
@@ -169,28 +179,28 @@ top:
 				proc->alive = FALSE;
 				proc->rusage = wait_rusage;
 			}
-			if (proc->next != NULL)
+			if(proc->next != NULL)
 				proc->next->prev = proc->prev;
-			if (proc->prev != NULL)
+			if(proc->prev != NULL)
 				proc->prev->next = proc->next;
 			else
 				proclist = proc->next;
 			status = proc->status;
-			if (proc->background && print)
+			if(proc->background && print)
 				printstatus(proc->pid, status);
 			s.pid = proc->pid;
 			s.status = status;
-			if (rusage != NULL)
-				memcpy(rusage, &proc->rusage, sizeof (struct rusage));
+			if(rusage != NULL)
+				memcpy(rusage, &proc->rusage, sizeof(struct rusage));
 			efree(proc);
 			return s;
 		}
-	if (pid == 0) {
+	if(pid == 0) {
 		int status;
-		while ((pid = dowait(&status)) == -1) {
-			if (errno != EINTR)
+		while((pid = dowait(&status)) == -1) {
+			if(errno != EINTR)
 				fail("es:ewait", "wait: %s", esstrerror(errno));
-			if (interruptible)
+			if(interruptible)
 				SIGCHK();
 		}
 		reap(pid, status, wait_rusage);
@@ -223,7 +233,7 @@ PRIM(apids) {
 	int alive = 1, dead = 1;
 	List *lp = NULL; Root r_lp;
 
-	gcref(&r_lp, (void**)&lp);
+	gcref(&r_lp, (void **)&lp);
 
 	if(list != NULL && termeq(list->term, "-a")) {
 		dead = 0;
@@ -233,8 +243,8 @@ PRIM(apids) {
 		list = list->next;
 	}
 
-	for (p = proclist; p != NULL; p = p->next)
-		if (p->background) {
+	for(p = proclist; p != NULL; p = p->next)
+		if(p->background) {
 			if(p->alive)
 				nbwaitpid(p->pid);
 			if(p->alive && !alive)
@@ -246,7 +256,7 @@ PRIM(apids) {
 		}
 	/* TODO: sort the return value, but by number? */
 
-	gcderef(&r_lp, (void**)&lp);
+	gcderef(&r_lp, (void **)&lp);
 	return lp;
 }
 
@@ -255,16 +265,16 @@ PRIM(wait) {
 	Boolean print = TRUE;
 	Boolean onlystatus = FALSE;
 	WaitStatus s;
-	if (list == NULL)
+	if(list == NULL)
 		pid = 0;
-	else if (list->next == NULL) {
+	else if(list->next == NULL) {
 		pid = atoi(getstr(list->term));
 		print = FALSE;
-		if (pid < 0) {
+		if(pid < 0) {
 			fail("$&wait", "wait: %d: bad pid", pid);
 			NOTREACHED;
 		}
-		if (pid != 0)
+		if(pid != 0)
 			onlystatus = TRUE;
 	} else {
 		fail("$&wait", "usage: wait [pid]");
@@ -276,9 +286,10 @@ PRIM(wait) {
 	return mklist(mkstr(str("%d", s.pid)), mklist(mkstr(mkstatus(s.status)), NULL));
 }
 
-extern Dict *initprims_proc(Dict *primdict) {
+extern Dict *
+initprims_proc(Dict *primdict)
+{
 	X(apids);
 	X(wait);
 	return primdict;
 }
-

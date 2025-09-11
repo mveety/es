@@ -3,29 +3,32 @@
 #include <es.h>
 #include <print.h>
 
-#define	MAXCONV 256
+#define MAXCONV 256
 
 /*
  * conversion functions
  *	true return -> flag changes only, not a conversion
  */
 
-#define	Flag(name, flag) \
-static Boolean name(Format *format) { \
-	format->flags |= flag; \
-	return TRUE; \
-}
+#define Flag(name, flag)                \
+	static Boolean name(Format *format) \
+	{                                   \
+		format->flags |= flag;          \
+		return TRUE;                    \
+	}
 
-Flag(uconv,	FMT_unsigned)
-Flag(hconv,	FMT_short)
-Flag(longconv,	FMT_long)
-Flag(altconv,	FMT_altform)
-Flag(leftconv,	FMT_leftside)
-Flag(dotconv,	FMT_f2set)
+Flag(uconv, FMT_unsigned);
+Flag(hconv, FMT_short);
+Flag(longconv, FMT_long);
+Flag(altconv, FMT_altform);
+Flag(leftconv, FMT_leftside);
+Flag(dotconv, FMT_f2set);
 
-static Boolean digitconv(Format *format) {
+static Boolean
+digitconv(Format *format)
+{
 	int c = format->invoker;
-	if (format->flags & FMT_f2set)
+	if(format->flags & FMT_f2set)
 		format->f2 = 10 * format->f2 + c - '0';
 	else {
 		format->flags |= FMT_f1set;
@@ -34,27 +37,33 @@ static Boolean digitconv(Format *format) {
 	return TRUE;
 }
 
-static Boolean zeroconv(Format *format) {
-	if (format->flags & (FMT_f1set | FMT_f2set))
+static Boolean
+zeroconv(Format *format)
+{
+	if(format->flags & (FMT_f1set | FMT_f2set))
 		return digitconv(format);
 	format->flags |= FMT_zeropad;
 	return TRUE;
 }
 
-static void pad(Format *format, long len, int c) {
-	while (len-- > 0)
+static void
+pad(Format *format, long len, int c)
+{
+	while(len-- > 0)
 		fmtputc(format, c);
 }
 
-static Boolean sconv(Format *format) {
+static Boolean
+sconv(Format *format)
+{
 	char *s = va_arg(format->args, char *);
 	if(s == NULL)
 		s = "NULL";
-	if ((format->flags & FMT_f1set) == 0)
+	if((format->flags & FMT_f1set) == 0)
 		fmtcat(format, s);
 	else {
 		size_t len = strlen(s), width = format->f1 - len;
-		if (format->flags & FMT_leftside) {
+		if(format->flags & FMT_leftside) {
 			fmtappend(format, s, len);
 			pad(format, width, ' ');
 		} else {
@@ -65,8 +74,10 @@ static Boolean sconv(Format *format) {
 	return FALSE;
 }
 
-static char *utoa(unsigned long u, char *t, unsigned int radix, char *digit) {
-	if (u >= radix) {
+static char *
+utoa(unsigned long u, char *t, unsigned int radix, char *digit)
+{
+	if(u >= radix) {
 		t = utoa(u / radix, t, radix, digit);
 		u %= radix;
 	}
@@ -74,8 +85,10 @@ static char *utoa(unsigned long u, char *t, unsigned int radix, char *digit) {
 	return t;
 }
 
-static void intconv(Format *format, unsigned int radix, int upper, char *altform) {
-	static char * table[] = {
+static void
+intconv(Format *format, unsigned int radix, int upper, char *altform)
+{
+	static char *table[] = {
 		"0123456789abcdefghijklmnopqrstuvwxyz",
 		"0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ",
 	};
@@ -85,87 +98,98 @@ static void intconv(Format *format, unsigned int radix, int upper, char *altform
 	unsigned long u;
 	char number[64], prefix[20];
 
-	if (radix > 36)
+	if(radix > 36)
 		return;
 
 	flags = format->flags;
-	if (flags & FMT_long)
+	if(flags & FMT_long)
 		n = va_arg(format->args, long);
 	else
 		n = va_arg(format->args, int);
 
 	pre = 0;
-	if ((flags & FMT_unsigned) || n >= 0)
+	if((flags & FMT_unsigned) || n >= 0)
 		u = n;
 	else {
 		prefix[pre++] = '-';
 		u = -n;
 	}
 
-	if (flags & FMT_altform)
-		while (*altform != '\0')
+	if(flags & FMT_altform)
+		while(*altform != '\0')
 			prefix[pre++] = *altform++;
 
 	len = utoa(u, number, radix, table[upper]) - number;
-	if ((flags & FMT_f2set) && (size_t) format->f2 > len)
+	if((flags & FMT_f2set) && (size_t)format->f2 > len)
 		zeroes = format->f2 - len;
 	else
 		zeroes = 0;
 
 	width = pre + zeroes + len;
-	if ((flags & FMT_f1set) && (size_t) format->f1 > width) {
+	if((flags & FMT_f1set) && (size_t)format->f1 > width) {
 		padding = format->f1 - width;
 	} else
 		padding = 0;
 
 	padchar = ' ';
-	if (padding > 0 && flags & FMT_zeropad) {
+	if(padding > 0 && flags & FMT_zeropad) {
 		padchar = '0';
-		if ((flags & FMT_leftside) == 0) {
+		if((flags & FMT_leftside) == 0) {
 			zeroes += padding;
 			padding = 0;
 		}
 	}
 
-	if ((flags & FMT_leftside) == 0)
+	if((flags & FMT_leftside) == 0)
 		pad(format, padding, padchar);
 	fmtappend(format, prefix, pre);
 	pad(format, zeroes, '0');
 	fmtappend(format, number, len);
-	if (flags & FMT_leftside)
+	if(flags & FMT_leftside)
 		pad(format, padding, padchar);
 }
 
-static Boolean cconv(Format *format) {
+static Boolean
+cconv(Format *format)
+{
 	fmtputc(format, va_arg(format->args, int));
 	return FALSE;
 }
 
-static Boolean dconv(Format *format) {
+static Boolean
+dconv(Format *format)
+{
 	intconv(format, 10, 0, "");
 	return FALSE;
 }
 
-static Boolean oconv(Format *format) {
+static Boolean
+oconv(Format *format)
+{
 	intconv(format, 8, 0, "0");
 	return FALSE;
 }
 
-static Boolean xconv(Format *format) {
+static Boolean
+xconv(Format *format)
+{
 	intconv(format, 16, 0, "0x");
 	return FALSE;
 }
 
-static Boolean pctconv(Format *format) {
+static Boolean
+pctconv(Format *format)
+{
 	fmtputc(format, '%');
 	return FALSE;
 }
 
-static Boolean badconv(Format *format) {
+static Boolean
+badconv(Format *format)
+{
 	panic("bad conversion character in printfmt: %%%c", format->invoker);
 	return FALSE; /* hush up gcc -Wall */
 }
-
 
 /*
  * conversion table management
@@ -173,11 +197,13 @@ static Boolean badconv(Format *format) {
 
 static Conv *fmttab;
 
-static void inittab(void) {
+static void
+inittab(void)
+{
 	int i;
 
-	fmttab = ealloc(MAXCONV * sizeof (Conv));
-	for (i = 0; i < MAXCONV; i++)
+	fmttab = ealloc(MAXCONV * sizeof(Conv));
+	for(i = 0; i < MAXCONV; i++)
 		fmttab[i] = badconv;
 
 	fmttab['s'] = sconv;
@@ -195,28 +221,31 @@ static void inittab(void) {
 	fmttab['.'] = dotconv;
 
 	fmttab['0'] = zeroconv;
-	for (i = '1'; i <= '9'; i++)
+	for(i = '1'; i <= '9'; i++)
 		fmttab[i] = digitconv;
 }
 
-Conv fmtinstall(int c, Conv f) {
+Conv
+fmtinstall(int c, Conv f)
+{
 	Conv oldf;
-	if (fmttab == NULL)
+	if(fmttab == NULL)
 		inittab();
 	c &= MAXCONV - 1;
 	oldf = fmttab[c];
-	if (f != NULL)
+	if(f != NULL)
 		fmttab[c] = f;
 	return oldf;
 }
-
 
 /*
  * functions for inserting strings in the format buffer
  */
 
-extern void fmtappend(Format *format, const char *s, size_t len) {
-	while (format->buf + len > format->bufend) {
+extern void
+fmtappend(Format *format, const char *s, size_t len)
+{
+	while(format->buf + len > format->bufend) {
 		size_t split = format->bufend - format->buf;
 		memcpy(format->buf, s, split);
 		format->buf += split;
@@ -228,7 +257,9 @@ extern void fmtappend(Format *format, const char *s, size_t len) {
 	format->buf += len;
 }
 
-extern void fmtcat(Format *format, const char *s) {
+extern void
+fmtcat(Format *format, const char *s)
+{
 	fmtappend(format, s, strlen(s));
 }
 
@@ -236,21 +267,23 @@ extern void fmtcat(Format *format, const char *s) {
  * printfmt -- the driver routine
  */
 
-extern int printfmt(Format *format, const char *fmt) {
-	unsigned char *s = (unsigned char *) fmt;
+extern int
+printfmt(Format *format, const char *fmt)
+{
+	unsigned char *s = (unsigned char *)fmt;
 
 	assert(gcisblocked());
-	if (fmttab[0] == NULL)
+	if(fmttab[0] == NULL)
 		inittab();
 
-	for (;;) {
+	for(;;) {
 		int c = *s++;
-		switch (c) {
+		switch(c) {
 		case '%':
 			format->flags = format->f1 = format->f2 = 0;
 			do
 				format->invoker = c = *s++;
-			while ((*fmttab[c])(format));
+			while((*fmttab[c])(format));
 			break;
 		case '\0':
 			return format->buf - format->bufbegin + format->flushed;
@@ -261,12 +294,13 @@ extern int printfmt(Format *format, const char *fmt) {
 	}
 }
 
-
 /*
  * the public entry points
  */
 
-extern int fmtprint(Format *format, const char *fmt, ...) {
+extern int
+fmtprint(Format *format, const char *fmt, ...)
+{
 	int n = -format->flushed;
 #if NO_VA_LIST_ASSIGN
 	va_list saveargs;
@@ -275,7 +309,6 @@ extern int fmtprint(Format *format, const char *fmt, ...) {
 #else
 	va_list saveargs = format->args;
 #endif
-
 
 	va_start(format->args, fmt);
 	n += printfmt(format, fmt);
@@ -289,16 +322,18 @@ extern int fmtprint(Format *format, const char *fmt, ...) {
 	return n + format->flushed;
 }
 
-static void fprint_flush(Format *format, size_t more) {
+static void
+fprint_flush(Format *format, size_t more)
+{
 	size_t n = format->buf - format->bufbegin;
 	char *buf = format->bufbegin;
 
 	format->flushed += n;
 	format->buf = format->bufbegin;
-	while (n != 0) {
+	while(n != 0) {
 		int written = write(format->u.n, buf, n);
-		if (written == -1) {
-			if (format->u.n != 2)
+		if(written == -1) {
+			if(format->u.n != 2)
 				uerror("write");
 			exit(1);
 		}
@@ -306,15 +341,17 @@ static void fprint_flush(Format *format, size_t more) {
 	}
 }
 
-static void fdprint(Format *format, int fd, const char *fmt) {
+static void
+fdprint(Format *format, int fd, const char *fmt)
+{
 	char buf[FPRINT_BUFSIZ];
 
-	format->buf	= buf;
+	format->buf = buf;
 	format->bufbegin = buf;
-	format->bufend	= buf + sizeof buf;
-	format->grow	= fprint_flush;
-	format->flushed	= 0;
-	format->u.n	= fdmap(fd);
+	format->bufend = buf + sizeof buf;
+	format->grow = fprint_flush;
+	format->flushed = 0;
+	format->u.n = fdmap(fd);
 
 	gcdisable();
 	printfmt(format, fmt);
@@ -322,7 +359,9 @@ static void fdprint(Format *format, int fd, const char *fmt) {
 	gcenable();
 }
 
-extern int fprint(int fd, const char *fmt, ...) {
+extern int
+fprint(int fd, const char *fmt, ...)
+{
 	Format format;
 
 	va_start(format.args, fmt);
@@ -331,7 +370,9 @@ extern int fprint(int fd, const char *fmt, ...) {
 	return format.flushed;
 }
 
-extern int print(const char *fmt, ...) {
+extern int
+print(const char *fmt, ...)
+{
 	Format format;
 
 	va_start(format.args, fmt);
@@ -340,7 +381,9 @@ extern int print(const char *fmt, ...) {
 	return format.flushed;
 }
 
-extern int eprint(const char *fmt, ...) {
+extern int
+eprint(const char *fmt, ...)
+{
 	Format format;
 
 	va_start(format.args, fmt);
@@ -349,7 +392,9 @@ extern int eprint(const char *fmt, ...) {
 	return format.flushed;
 }
 
-extern noreturn panic(const char *fmt, ...) {
+extern noreturn
+panic(const char *fmt, ...)
+{
 	Format format;
 
 	gcdisable();

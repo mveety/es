@@ -14,73 +14,76 @@ struct Here {
 static Here *hereq;
 
 /* getherevar -- read a variable from a here doc */
-extern Tree
-*getherevar(void) {
+extern Tree *
+getherevar(void)
+{
 	int c, len;
 	char *s;
 	Buffer *buf = openbuffer(0);
 
-	while (!dnw[c = input_getc()])
+	while(!dnw[c = input_getc()])
 		buf = bufputc(buf, c);
 
 	len = buf->len;
 	s = sealcountedbuffer(buf);
 
-	if (len == 0) {
+	if(len == 0) {
 		yyerror("null variable name in here document");
 		return NULL;
 	}
-	if (c != '^')
+	if(c != '^')
 		input_ungetc(c);
 
 	return flatten(mk(nVar, mk(nWord, s)), " ");
 }
 
 /* snarfheredoc -- read a heredoc until the eof marker */
-extern Tree *snarfheredoc(const char *eof, Boolean quoted) {
+extern Tree *
+snarfheredoc(const char *eof, Boolean quoted)
+{
 	Tree *tree, **tailp;
 	Buffer *buf;
 	unsigned char *s;
 
-	assert(quoted || strchr(eof, '$') == NULL);	/* can never be typed (whew!) */
-	if (strchr(eof, '\n') != NULL) {
+	assert(quoted || strchr(eof, '$') == NULL); /* can never be typed (whew!) */
+	if(strchr(eof, '\n') != NULL) {
 		yyerror("here document eof-marker contains a newline");
 		return NULL;
 	}
 	disablehistory = TRUE;
 
-	for (tree = NULL, tailp = &tree, buf = openbuffer(0);;) {
+	for(tree = NULL, tailp = &tree, buf = openbuffer(0);;) {
 		int c;
 		print_prompt2();
-		for (s = (unsigned char *) eof; (c = input_getc()) == *s; s++)
+		for(s = (unsigned char *)eof; (c = input_getc()) == *s; s++)
 			;
-		if (*s == '\0' && (c == '\n' || c == EOF)) {
-			if (buf->current == 0 && tree != NULL)
+		if(*s == '\0' && (c == '\n' || c == EOF)) {
+			if(buf->current == 0 && tree != NULL)
 				freebuffer(buf);
 			else
 				*tailp = treecons(mk(nQword, sealcountedbuffer(buf)), NULL);
 			break;
 		}
-		if (s != (unsigned char *) eof)
-			buf = bufncat(buf, eof, s - (unsigned char *) eof);
-		for (;; c = input_getc()) {
-			if (c == EOF) {
+		if(s != (unsigned char *)eof)
+			buf = bufncat(buf, eof, s - (unsigned char *)eof);
+		for(;; c = input_getc()) {
+			if(c == EOF) {
 				yyerror("incomplete here document");
 				freebuffer(buf);
 				disablehistory = FALSE;
 				return NULL;
 			}
-			if (c == '$' && !quoted && (c = input_getc()) != '$') {
+			if(c == '$' && !quoted && (c = input_getc()) != '$') {
 				Tree *var;
 				input_ungetc(c);
-				if (buf->current == 0)
+				if(buf->current == 0)
 					freebuffer(buf);
 				else {
 					*tailp = treecons(mk(nQword, sealcountedbuffer(buf)), NULL);
 					tailp = &(*tailp)->CDR;
 				}
 				var = getherevar();
-				if (var == NULL) {
+				if(var == NULL) {
 					freebuffer(buf);
 					disablehistory = FALSE;
 					return NULL;
@@ -91,7 +94,7 @@ extern Tree *snarfheredoc(const char *eof, Boolean quoted) {
 				continue;
 			}
 			buf = bufputc(buf, c);
-			if (c == '\n')
+			if(c == '\n')
 				break;
 		}
 	}
@@ -101,24 +104,28 @@ extern Tree *snarfheredoc(const char *eof, Boolean quoted) {
 }
 
 /* readheredocs -- read all the heredocs at the end of a line (or fail if at end of file) */
-extern Boolean readheredocs(Boolean endfile) {
-	for (; hereq != NULL; hereq = hereq->next) {
+extern Boolean
+readheredocs(Boolean endfile)
+{
+	for(; hereq != NULL; hereq = hereq->next) {
 		Tree *marker, *eof;
-		if (endfile) {
+		if(endfile) {
 			yyerror("end of file with pending here documents");
 			return FALSE;
 		}
 		marker = hereq->marker;
 		eof = marker->CAR;
 		marker->CAR = snarfheredoc(eof->u[0].s, eof->kind == nQword);
-		if (marker->CAR == NULL)
+		if(marker->CAR == NULL)
 			return FALSE;
 	}
 	return TRUE;
 }
 
 /* queueheredoc -- add a heredoc to the queue to process at the end of the line */
-extern Boolean queueheredoc(Tree *t) {
+extern Boolean
+queueheredoc(Tree *t)
+{
 	Tree *eof;
 	Here *here;
 
@@ -129,19 +136,21 @@ extern Boolean queueheredoc(Tree *t) {
 	assert(t->CDR->kind == nList);
 	eof = t->CDR->CDR;
 	assert(eof->kind == nList);
-	if (eof->CAR->kind != nWord && eof->CAR->kind != nQword) {
+	if(eof->CAR->kind != nWord && eof->CAR->kind != nQword) {
 		yyerror("here document eof-marker not a single literal word");
 		return FALSE;
 	}
 
-	here = gcalloc(sizeof (Here), tNil);
+	here = gcalloc(sizeof(Here), tNil);
 	here->next = hereq;
 	here->marker = eof;
 	hereq = here;
 	return TRUE;
 }
 
-extern void emptyherequeue(void) {
+extern void
+emptyherequeue(void)
+{
 	hereq = NULL;
 	disablehistory = FALSE;
 }

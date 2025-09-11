@@ -7,71 +7,79 @@ DefineTag(Tree1, static);
 DefineTag(Tree2, static);
 
 /* mk -- make a new node; used to generate the parse tree */
-Tree*
-mk(NodeKind t, ...) {
+Tree *
+mk(NodeKind t, ...)
+{
 	va_list ap;
 	Tree *n;
 	Tree *tree = NULL; Root r_tree;
 
 	gcdisable();
 	va_start(ap, t);
-	switch (t) {
-	    default:
+	switch(t) {
+	default:
 		panic("mk: bad node kind %d", t);
-	    case nWord: case nQword: case nPrim:
-			n = gcalloc(offsetof(Tree, u[1]), tTree1);
-			n->u[0].s = va_arg(ap, char *);
-			break;
-	    case nCall:
-	    case nThunk:
-	    case nVar:
-	    case nDict:
-	    case nRegex:
-			n = gcalloc(offsetof(Tree, u[1]), tTree1);
-			n->u[0].p = va_arg(ap, Tree *);
-			break;
-	    case nAssign:
-	    case nConcat:
-	    case nClosure:
-	    case nFor:
-	    case nLambda:
-	    case nLet:
-	    case nList:
-	    case nLocal:
-	    case nVarsub:
-	    case nMatch:
-	    case nExtract:
-	    case nLets:
-	    case nAssoc:
-			n = gcalloc(offsetof(Tree, u[2]), tTree2);
-			n->u[0].p = va_arg(ap, Tree *);
-			n->u[1].p = va_arg(ap, Tree *);
-			break;
-	    case nRedir:
-			n = gcalloc(offsetof(Tree, u[2]), tNil);
-			n->u[0].p = va_arg(ap, Tree *);
-			n->u[1].p = va_arg(ap, Tree *);
-			break;
-	    case nPipe:
-			n = gcalloc(offsetof(Tree, u[2]), tNil);
-			n->u[0].i = va_arg(ap, int);
-			n->u[1].i = va_arg(ap, int);
-			break;
- 	}
+		break;
+	case nWord:
+	case nQword:
+	case nPrim:
+		n = gcalloc(offsetof(Tree, u[1]), tTree1);
+		n->u[0].s = va_arg(ap, char *);
+		break;
+	case nCall:
+	case nThunk:
+	case nVar:
+	case nDict:
+	case nRegex:
+		n = gcalloc(offsetof(Tree, u[1]), tTree1);
+		n->u[0].p = va_arg(ap, Tree *);
+		break;
+	case nAssign:
+	case nConcat:
+	case nClosure:
+	case nFor:
+	case nLambda:
+	case nLet:
+	case nList:
+	case nLocal:
+	case nVarsub:
+	case nMatch:
+	case nExtract:
+	case nLets:
+	case nAssoc:
+		n = gcalloc(offsetof(Tree, u[2]), tTree2);
+		n->u[0].p = va_arg(ap, Tree *);
+		n->u[1].p = va_arg(ap, Tree *);
+		break;
+	case nRedir:
+		n = gcalloc(offsetof(Tree, u[2]), tNil);
+		n->u[0].p = va_arg(ap, Tree *);
+		n->u[1].p = va_arg(ap, Tree *);
+		break;
+	case nPipe:
+		n = gcalloc(offsetof(Tree, u[2]), tNil);
+		n->u[0].i = va_arg(ap, int);
+		n->u[1].i = va_arg(ap, int);
+		break;
+	}
 	n->kind = t;
 	va_end(ap);
 
 	tree = n;
-	gcref(&r_tree, (void**)&tree);
+	gcref(&r_tree, (void **)&tree);
 	gcenable();
-	gcderef(&r_tree, (void**)&tree);
+	gcderef(&r_tree, (void **)&tree);
 	return tree;
 }
 
-char*
+char *
 treekind(Tree *t)
 {
-	switch(t->kind){
+	switch(t->kind) {
+	default:
+		dprintf(2, "error: invalid NodeKind %d\n", t->kind);
+		abort();
+		break;
 	case nAssign:
 		return "nAssign";
 	case nCall:
@@ -118,9 +126,6 @@ treekind(Tree *t)
 		return "nDict";
 	case nRegex:
 		return "nRegex";
-	default:
-		dprintf(2, "error: invalid NodeKind %d\n", t->kind);
-		abort();
 	}
 }
 
@@ -130,27 +135,31 @@ treekind(Tree *t)
  *	the type to figure out size.
  */
 
-static void*
-Tree1Copy(void *op) {
+static void *
+Tree1Copy(void *op)
+{
 	void *np = gcalloc(offsetof(Tree, u[1]), tTree1);
 	memcpy(np, op, offsetof(Tree, u[1]));
 	return np;
 }
 
-static void*
-Tree2Copy(void *op) {
+static void *
+Tree2Copy(void *op)
+{
 	void *np = gcalloc(offsetof(Tree, u[2]), tTree2);
 	memcpy(np, op, offsetof(Tree, u[2]));
 	return np;
 }
 
 static size_t
-Tree1Scan(void *p) {
+Tree1Scan(void *p)
+{
 	Tree *n = p;
 
-	switch (n->kind) {
+	switch(n->kind) {
 	default:
 		panic("Tree1Scan: bad node kind %d", n->kind);
+		break;
 	case nPrim:
 	case nWord:
 	case nQword:
@@ -163,7 +172,7 @@ Tree1Scan(void *p) {
 	case nRegex:
 		n->u[0].p = forward(n->u[0].p);
 		break;
-	} 
+	}
 	return offsetof(Tree, u[1]);
 }
 
@@ -172,9 +181,9 @@ Tree1Mark(void *p)
 {
 	Tree *t;
 
-	t = (void*)p;
+	t = (void *)p;
 	gc_set_mark(header(p));
-	switch(t->kind){
+	switch(t->kind) {
 	default:
 		panic("Tree1Mark: bad node kind: %s\n", treekind(t));
 		break;
@@ -193,19 +202,31 @@ Tree1Mark(void *p)
 	}
 }
 
-static size_t Tree2Scan(void *p) {
+static size_t
+Tree2Scan(void *p)
+{
 	Tree *n = p;
-	switch (n->kind) {
-	    case nAssign:  case nConcat: case nClosure: case nFor:
-	    case nLambda: case nLet: case nList:  case nLocal:
-	    case nVarsub: case nMatch: case nExtract: case nLets:
-	    case nAssoc:
+	switch(n->kind) {
+	default:
+		panic("Tree2Scan: bad node kind %d", n->kind);
+		break;
+	case nAssign:
+	case nConcat:
+	case nClosure:
+	case nFor:
+	case nLambda:
+	case nLet:
+	case nList:
+	case nLocal:
+	case nVarsub:
+	case nMatch:
+	case nExtract:
+	case nLets:
+	case nAssoc:
 		n->u[0].p = forward(n->u[0].p);
 		n->u[1].p = forward(n->u[1].p);
 		break;
-	    default:
-		panic("Tree2Scan: bad node kind %d", n->kind);
-	} 
+	}
 	return offsetof(Tree, u[2]);
 }
 
@@ -214,9 +235,9 @@ Tree2Mark(void *p)
 {
 	Tree *t;
 
-	t = (Tree*)p;
+	t = (Tree *)p;
 	gc_set_mark(header(p));
-	switch(t->kind){
+	switch(t->kind) {
 	default:
 		panic("Tree2Mark: bad node kind: %s\n", treekind(t));
 		break;
@@ -238,4 +259,3 @@ Tree2Mark(void *p)
 		break;
 	}
 }
-

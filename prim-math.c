@@ -7,13 +7,13 @@ PRIM(add) {
 	int64_t b = 0;
 	int64_t res = 0;
 
-	if (list == NULL || list->next == NULL)
+	if(list == NULL || list->next == NULL)
 		fail("$&add", "missing arguments");
 	errno = 0;
 
 	a = strtoll(getstr(list->term), NULL, 10);
-	if(a == 0){
-		switch(errno){
+	if(a == 0) {
+		switch(errno) {
 		case EINVAL:
 			fail("$&add", str("invalid input: $1 = '%s'", getstr(list->term)));
 			break;
@@ -24,8 +24,8 @@ PRIM(add) {
 	}
 
 	b = strtoll(getstr(list->next->term), NULL, 10);
-	if(b == 0){
-		switch(errno){
+	if(b == 0) {
+		switch(errno) {
 		case EINVAL:
 			fail("$&add", str("invalid input: $2 = '%s'", getstr(list->next->term)));
 			break;
@@ -44,13 +44,13 @@ PRIM(sub) {
 	int64_t b = 0;
 	int64_t res = 0;
 
-	if (list == NULL || list->next == NULL)
+	if(list == NULL || list->next == NULL)
 		fail("$&sub", "missing arguments");
 	errno = 0;
 
 	a = strtoll(getstr(list->term), NULL, 10);
-	if(a == 0){
-		switch(errno){
+	if(a == 0) {
+		switch(errno) {
 		case EINVAL:
 			fail("$&sub", str("invalid input: $1 = '%s'", getstr(list->term)));
 			break;
@@ -61,8 +61,8 @@ PRIM(sub) {
 	}
 
 	b = strtoll(getstr(list->next->term), NULL, 10);
-	if(b == 0){
-		switch(errno){
+	if(b == 0) {
+		switch(errno) {
 		case EINVAL:
 			fail("$&sub", str("invalid input: $2 = '%s'", getstr(list->next->term)));
 			break;
@@ -81,13 +81,13 @@ PRIM(mul) {
 	int64_t b = 0;
 	int64_t res = 0;
 
-	if (list == NULL || list->next == NULL)
+	if(list == NULL || list->next == NULL)
 		fail("$&mul", "missing arguments");
 	errno = 0;
 
 	a = strtoll(getstr(list->term), NULL, 10);
-	if(a == 0){
-		switch(errno){
+	if(a == 0) {
+		switch(errno) {
 		case EINVAL:
 			fail("$&mul", str("invalid input: $1 = '%s'", getstr(list->term)));
 			break;
@@ -98,8 +98,8 @@ PRIM(mul) {
 	}
 
 	b = strtoll(getstr(list->next->term), NULL, 10);
-	if(b == 0){
-		switch(errno){
+	if(b == 0) {
+		switch(errno) {
 		case EINVAL:
 			fail("$&mul", str("invalid input: $2 = '%s'", getstr(list->next->term)));
 			break;
@@ -118,13 +118,13 @@ PRIM(div) {
 	int64_t b = 0;
 	int64_t res = 0;
 
-	if (list == NULL || list->next == NULL)
+	if(list == NULL || list->next == NULL)
 		fail("$&div", "missing arguments");
 	errno = 0;
 
 	a = strtoll(getstr(list->term), NULL, 10);
-	if(a == 0){
-		switch(errno){
+	if(a == 0) {
+		switch(errno) {
 		case EINVAL:
 			fail("$&div", str("invalid input: $1 = '%s'", getstr(list->term)));
 			break;
@@ -135,8 +135,8 @@ PRIM(div) {
 	}
 
 	b = strtoll(getstr(list->next->term), NULL, 10);
-	if(b == 0){
-		switch(errno){
+	if(b == 0) {
+		switch(errno) {
 		case EINVAL:
 			fail("$&div", str("invalid input: $2 = '%s'", getstr(list->next->term)));
 			break;
@@ -146,7 +146,7 @@ PRIM(div) {
 		}
 	}
 
-	if (b == 0)
+	if(b == 0)
 		fail("$&div", "divide by zero");
 	res = a / b;
 	return mklist(mkstr(str("%ld", res)), NULL);
@@ -157,13 +157,13 @@ PRIM(mod) {
 	int64_t b = 0;
 	int64_t res = 0;
 
-	if (list == NULL || list->next == NULL)
+	if(list == NULL || list->next == NULL)
 		fail("$&mod", "missing arguments");
 	errno = 0;
 
 	a = strtoll(getstr(list->term), NULL, 10);
-	if(a == 0){
-		switch(errno){
+	if(a == 0) {
+		switch(errno) {
 		case EINVAL:
 			fail("$&mod", str("invalid input: $1 = '%s'", getstr(list->term)));
 			break;
@@ -174,8 +174,8 @@ PRIM(mod) {
 	}
 
 	b = strtoll(getstr(list->next->term), NULL, 10);
-	if(b == 0){
-		switch(errno){
+	if(b == 0) {
+		switch(errno) {
 		case EINVAL:
 			fail("$&mod", str("invalid input: $2 = '%s'", getstr(list->next->term)));
 			break;
@@ -185,7 +185,7 @@ PRIM(mod) {
 		}
 	}
 
-	if (b == 0)
+	if(b == 0)
 		fail("$&mod", "divide by zero");
 	res = a % b;
 	return mklist(mkstr(str("%ld", res)), NULL);
@@ -197,13 +197,13 @@ PRIM(eq) {
 
 	if(list == NULL)
 		return list_false;
-	if (list->next == NULL)
+	if(list->next == NULL)
 		return list_false;
 	errno = 0;
 
 	a = strtoll(getstr(list->term), NULL, 10);
-	if(a == 0){
-		switch(errno){
+	if(a == 0) {
+		switch(errno) {
 		case EINVAL:
 		case ERANGE:
 			return list_false;
@@ -211,15 +211,15 @@ PRIM(eq) {
 	}
 
 	b = strtoll(getstr(list->next->term), NULL, 10);
-	if(b == 0){
-		switch(errno){
+	if(b == 0) {
+		switch(errno) {
 		case EINVAL:
 		case ERANGE:
 			return list_false;
 		}
 	}
 
-	if (a == b)
+	if(a == b)
 		return list_true;
 	return list_false;
 }
@@ -228,15 +228,15 @@ PRIM(gt) {
 	int64_t a = 0;
 	int64_t b = 0;
 
-	if (list == NULL)
+	if(list == NULL)
 		return list_false;
-	if (list->next == NULL)
+	if(list->next == NULL)
 		return list_false;
 	errno = 0;
 
 	a = strtoll(getstr(list->term), NULL, 10);
-	if(a == 0){
-		switch(errno){
+	if(a == 0) {
+		switch(errno) {
 		case EINVAL:
 		case ERANGE:
 			return list_false;
@@ -244,15 +244,15 @@ PRIM(gt) {
 	}
 
 	b = strtoll(getstr(list->next->term), NULL, 10);
-	if(b == 0){
-		switch(errno){
+	if(b == 0) {
+		switch(errno) {
 		case EINVAL:
 		case ERANGE:
 			return list_false;
 		}
 	}
 
-	if (a > b)
+	if(a > b)
 		return list_true;
 	return list_false;
 }
@@ -261,31 +261,31 @@ PRIM(lt) {
 	int64_t a = 0;
 	int64_t b = 0;
 
-	if (list == NULL)
+	if(list == NULL)
 		return list_false;
-	if (list->next == NULL)
+	if(list->next == NULL)
 		return list_false;
 	errno = 0;
 
 	a = strtoll(getstr(list->term), NULL, 10);
-	if(a == 0){
-		switch(errno){
+	if(a == 0) {
+		switch(errno) {
 		case EINVAL:
 		case ERANGE:
 			return list_false;
 		}
-	} 
+	}
 
 	b = strtoll(getstr(list->next->term), NULL, 10);
-	if(b == 0){
-		switch(errno){
+	if(b == 0) {
+		switch(errno) {
 		case EINVAL:
 		case ERANGE:
 			return list_false;
 		}
-	} 
+	}
 
-	if (a < b)
+	if(a < b)
 		return list_true;
 	return list_false;
 }
@@ -300,8 +300,8 @@ PRIM(tobase) {
 	errno = 0;
 
 	base = strtoll(getstr(list->term), NULL, 10);
-	if(base == 0){
-		switch(errno){
+	if(base == 0) {
+		switch(errno) {
 		case EINVAL:
 			fail("$&tobase", str("invalid input: $1 = '%s'", getstr(list->term)));
 			break;
@@ -309,12 +309,11 @@ PRIM(tobase) {
 			fail("$&tobase", str("conversion overflow: $1 = '%s'", getstr(list->term)));
 			break;
 		}
-
 	}
 
 	num = strtoll(getstr(list->next->term), NULL, 10);
-	if(num == 0){
-		switch(errno){
+	if(num == 0) {
+		switch(errno) {
 		case EINVAL:
 			fail("$&tobase", str("invalid input: $2 = '%s'", getstr(list->next->term)));
 			break;
@@ -330,11 +329,11 @@ PRIM(tobase) {
 		fail("$&tobase", "base > 16");
 
 	res = list;
-	gcref(&r_res, (void**)&res);
+	gcref(&r_res, (void **)&res);
 
 	gcdisable();
 
-	if(num == 0){
+	if(num == 0) {
 		gcenable();
 		gcrderef(&r_res);
 		return mklist(mkstr(str("0")), NULL);
@@ -345,8 +344,8 @@ PRIM(tobase) {
 	memset(s, 0, 256);
 
 	while(num) {
-		*--se = "0123456789abcdef"[num%base];
-		num = num/base;
+		*--se = "0123456789abcdef"[num % base];
+		num = num / base;
 		if(se == s) {
 			free(s);
 			gcenable();
@@ -370,8 +369,8 @@ PRIM(frombase) {
 	errno = 0;
 
 	base = strtoll(getstr(list->term), NULL, 10);
-	if(base == 0){
-		switch(errno){
+	if(base == 0) {
+		switch(errno) {
 		case EINVAL:
 			fail("$&frombase", str("invalid input: $1 = '%s'", getstr(list->next->term)));
 			break;
@@ -387,8 +386,8 @@ PRIM(frombase) {
 		fail("&frombase", "base > 16");
 
 	num = strtoll(getstr(list->next->term), NULL, base);
-	if(num == 0){
-		switch(errno){
+	if(num == 0) {
+		switch(errno) {
 		case EINVAL:
 			fail("$&frombase", str("invalid input: $2 = '%s'", getstr(list->next->term)));
 			break;
@@ -400,7 +399,7 @@ PRIM(frombase) {
 	return mklist(mkstr(str("%ld", num)), NULL);
 }
 
-Dict*
+Dict *
 initprims_math(Dict *primdict)
 {
 	X(add);
@@ -416,4 +415,3 @@ initprims_math(Dict *primdict)
 
 	return primdict;
 }
-

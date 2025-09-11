@@ -14,13 +14,13 @@ PRIM(dictget) {
 		fail("$&dictget", "missing arguments");
 
 	res = NULL;
-	gcref(&r_res, (void**)&res);
+	gcref(&r_res, (void **)&res);
 
 	d = getdict(list->term);
 	if(!d)
 		fail("$&dictget", "term not valid dict");
-	gcref(&r_d, (void**)&d);
-	gcref(&r_name, (void**)&name);
+	gcref(&r_d, (void **)&d);
+	gcref(&r_name, (void **)&name);
 	name = getstr(list->next->term);
 
 	res = dictget(d, name);
@@ -44,12 +44,12 @@ PRIM(dictput) {
 	d = getdict(list->term);
 	if(!d)
 		fail("$&dictput", "term not valid dict");
-	gcref(&r_d, (void**)&d);
-	gcref(&r_name, (void**)&name);
+	gcref(&r_d, (void **)&d);
+	gcref(&r_name, (void **)&name);
 
 	name = getstr(list->next->term);
 	v = list->next->next;
-	gcref(&r_v, (void**)&v);
+	gcref(&r_v, (void **)&v);
 
 	d = dictput(d, name, v);
 
@@ -69,7 +69,7 @@ PRIM(dictremove) {
 	d = getdict(list->term);
 	if(!d)
 		fail("$&dictremove", "term not valid dict");
-	gcref(&r_d, (void**)&d);
+	gcref(&r_d, (void **)&d);
 
 	name = getstr(list->next->term);
 
@@ -93,23 +93,23 @@ dicteval(void *vdfaargs, char *name, void *vdata)
 	List *res = NULL; Root r_res;
 	List *args = NULL; Root r_args;
 
-	gcref(&r_data, (void**)&data);
-	gcref(&r_args, (void**)&args);
-	gcref(&r_res, (void**)&res);
+	gcref(&r_data, (void **)&data);
+	gcref(&r_args, (void **)&args);
+	gcref(&r_res, (void **)&res);
 
 	dfaargs = vdfaargs;
 	data = vdata;
 	args = mklist(mkstr(name), data);
 
 	ExceptionHandler
-
+	{
 		res = prim("noreturn", mklist(dfaargs->function, args), dfaargs->binding, dfaargs->evalflags);
-
+	}
 	CatchException (e)
-
-		if (!termeq(e->term, "continue"))
+	{
+		if(!termeq(e->term, "continue"))
 			throw(e);
-
+	}
 	EndExceptionHandler;
 
 	gcrderef(&r_res);
@@ -138,15 +138,15 @@ PRIM(dictforall) {
 
 	gcdisable();
 	lp = list;
-	gcref(&r_lp, (void**)&lp);
+	gcref(&r_lp, (void **)&lp);
 	d = getdict(lp->term);
 	if(!d)
 		fail("$&dictforall", "term not valid dict");
-	gcref(&r_dict, (void**)&d);
+	gcref(&r_dict, (void **)&d);
 	lp = lp->next;
 
-	gcref(&r_binding, (void**)&args.binding);
-	gcref(&r_function, (void**)&args.function);
+	gcref(&r_binding, (void **)&args.binding);
+	gcref(&r_function, (void **)&args.function);
 	args = (DictForAllArgs){
 		.function = lp->term,
 		.evalflags = evalflags,
@@ -155,15 +155,15 @@ PRIM(dictforall) {
 	gcenable();
 
 	ExceptionHandler
-
+	{
 		dictforall(d, &dicteval, &args);
-
+	}
 	CatchException (e)
-
+	{
 		if(!termeq(e->term, "break"))
 			throw(e);
-
-	EndExceptionHandler
+	}
+	EndExceptionHandler;
 
 	/* varpop(&dfafn); */
 	gcrderef(&r_function);
@@ -183,11 +183,11 @@ PRIM(dictsize) {
 		fail("$&dictsize", "missing argument");
 
 	lp = list;
-	gcref(&r_lp, (void**)&lp);
+	gcref(&r_lp, (void **)&lp);
 	d = getdict(lp->term);
 	if(!d)
 		fail("$&dictforall", "term not valid dict");
-	gcref(&r_d, (void**)&d);
+	gcref(&r_d, (void **)&d);
 
 	dictforall(d, &dictsize, &sz);
 
@@ -201,7 +201,7 @@ PRIM(termtypeof) {
 	if(!list)
 		fail("$&termtypeof", "missing argument");
 
-	switch(list->term->kind){
+	switch(list->term->kind) {
 	case tkRegex:
 		return mklist(mkstr(str("regex")), NULL);
 	case tkString:
@@ -225,12 +225,12 @@ PRIM(dictcopy) {
 		fail("$&dictcopy", "missing arguments");
 
 	res = NULL;
-	gcref(&r_res, (void**)&res);
+	gcref(&r_res, (void **)&res);
 
 	d = getdict(list->term);
 	if(!d)
 		fail("$&dictcopy", "term not valid dict");
-	gcref(&r_d, (void**)&d);
+	gcref(&r_d, (void **)&d);
 
 	d = dictcopy(d);
 	res = mklist(mkdictterm(d), NULL);
@@ -240,7 +240,7 @@ PRIM(dictcopy) {
 	return res;
 }
 
-Dict*
+Dict *
 initprims_dict(Dict *primdict)
 {
 	X(dictnew);
@@ -253,4 +253,3 @@ initprims_dict(Dict *primdict)
 	X(dictcopy);
 	return primdict;
 }
-

@@ -445,7 +445,6 @@ mkdictassign(Tree *sub, Tree *assoc)
 	Tree *assoc_elem = NULL;
 	Tree *assoc_value = NULL;
 
-
 	assoc_elem = assoc->CAR;
 	assoc_value = assoc->CDR;
 	if(assoc_elem->kind == nWord)
@@ -466,4 +465,3 @@ mkappendassign(Tree *var, Tree *list)
 	assignlist = treecons(mk(nVar, var), list);
 	return mk(nAssign, var, assignlist);
 }
-

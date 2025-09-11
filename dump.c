@@ -3,7 +3,7 @@
 #include <es.h>
 #include <stdenv.h>
 
-#define	MAXVARNAME 20
+#define MAXVARNAME 20
 
 /*
  * the $&dumpstate prints the appropriate C data structures for
@@ -57,7 +57,7 @@ deepequal(Tree *t1, Tree *t2)
 	if(t1->kind != t2->kind)
 		return FALSE;
 
-	switch(t1->kind){
+	switch(t1->kind) {
 	case nWord:
 	case nQword:
 	case nPrim:
@@ -98,41 +98,63 @@ treededup(void *arg, char *unused, void *v)
 		*new = old;
 }
 
-static Boolean allprintable(const char *s) {
+static Boolean
+allprintable(const char *s)
+{
 	int c;
-	for (; (c = *(unsigned char *) s) != '\0'; s++)
-		if (!isprint(c) || c == '"' || c == '\\')
+	for(; (c = *(unsigned char *)s) != '\0'; s++)
+		if(!isprint(c) || c == '"' || c == '\\')
 			return FALSE;
 	return TRUE;
 }
 
-static char *dumpstring(char *string) {
+static char *
+dumpstring(char *string)
+{
 	char *name;
-	if (string == NULL)
+	if(string == NULL)
 		return "NULL";
 	name = dictget(strings, string);
-	if (name == NULL) {
+	if(name == NULL) {
 		name = str("S_%F", string);
-		if (strlen(name) > MAXVARNAME)
+		if(strlen(name) > MAXVARNAME)
 			name = str("X_%ulx", string);
 		print("static const char %s[] = ", name);
-		if (allprintable(string))
+		if(allprintable(string))
 			print("\"%s\";\n", string);
 		else {
 			int c;
 			char *s;
 			print("{ ");
-			for (s = string; (c = *(unsigned char *) s) != '\0'; s++) {
-				switch (c) {
-				case '\a':	print("'\\a'");		break;
-				case '\b':	print("'\\b'");		break;
-				case '\f':	print("'\\f'");		break;
-				case '\n':	print("'\\n'");		break;
-				case '\r':	print("'\\r'");		break;
-				case '\t':	print("'\\t'");		break;
-				case '\'':	print("'\\''");		break;
-				case '\\':	print("'\\\\'");	break;
-				default:	print(isprint(c) ? "'%c'" :"%d", c); break;
+			for(s = string; (c = *(unsigned char *)s) != '\0'; s++) {
+				switch(c) {
+				case '\a':
+					print("'\\a'");
+					break;
+				case '\b':
+					print("'\\b'");
+					break;
+				case '\f':
+					print("'\\f'");
+					break;
+				case '\n':
+					print("'\\n'");
+					break;
+				case '\r':
+					print("'\\r'");
+					break;
+				case '\t':
+					print("'\\t'");
+					break;
+				case '\'':
+					print("'\\''");
+					break;
+				case '\\':
+					print("'\\\\'");
+					break;
+				default:
+					print(isprint(c) ? "'%c'" : "%d", c);
+					break;
 				}
 				print(", ");
 			}
@@ -145,104 +167,135 @@ static char *dumpstring(char *string) {
 
 static char *dumplist(List *list);
 
-static const char *nodename(NodeKind k) {
+static const char *
+nodename(NodeKind k)
+{
 	switch(k) {
-	default:	panic("nodename: bad node kind %d", k);
-	case nAssign:	return "Assign";
-	case nCall:	return "Call";
-	case nClosure:	return "Closure";
-	case nConcat:	return "Concat";
-	case nFor:	return "For";
-	case nLambda:	return "Lambda";
-	case nLet:	return "Let";
-	case nLets: return "Lets";
-	case nList:	return "List";
-	case nLocal:	return "Local";
-	case nMatch:	return "Match";
-	case nExtract:	return "Extract";
-	case nPrim:	return "Prim";
-	case nQword:	return "Qword";
-	case nRegex:	return "Regex";
-	case nThunk:	return "Thunk";
-	case nVar:	return "Var";
-	case nVarsub:	return "Varsub";
-	case nWord:	return "Word";
+	default:
+		panic("nodename: bad node kind %d", k);
+	case nAssign:
+		return "Assign";
+	case nCall:
+		return "Call";
+	case nClosure:
+		return "Closure";
+	case nConcat:
+		return "Concat";
+	case nFor:
+		return "For";
+	case nLambda:
+		return "Lambda";
+	case nLet:
+		return "Let";
+	case nLets:
+		return "Lets";
+	case nList:
+		return "List";
+	case nLocal:
+		return "Local";
+	case nMatch:
+		return "Match";
+	case nExtract:
+		return "Extract";
+	case nPrim:
+		return "Prim";
+	case nQword:
+		return "Qword";
+	case nRegex:
+		return "Regex";
+	case nThunk:
+		return "Thunk";
+	case nVar:
+		return "Var";
+	case nVarsub:
+		return "Varsub";
+	case nWord:
+		return "Word";
 	}
 }
 
-char*
+char *
 dumptree(Tree *tree)
 {
 	char *name;
 
-	if (tree == NULL)
+	if(tree == NULL)
 		return "NULL";
 
 	/* dictforall(cvars, treededup, &tree); */
 
 	name = str("&T_%ulx", tree);
-	if (dictget(cvars, name) == NULL) {
-		switch (tree->kind) {
-		    default:
+	if(dictget(cvars, name) == NULL) {
+		switch(tree->kind) {
+		default:
 			panic("dumptree: bad node kind %d", tree->kind);
-		    case nWord: case nQword: case nPrim:
-			print("static const Tree_s %s = { n%s, { { (char *) %s } } };\n",
-			      name + 1, nodename(tree->kind), dumpstring(tree->u[0].s));
+		case nWord:
+		case nQword:
+		case nPrim:
+			print("static const Tree_s %s = { n%s, { { (char *) %s } } };\n", name + 1, nodename(tree->kind),
+				  dumpstring(tree->u[0].s));
 			break;
-		    case nCall: case nThunk: case nVar: case nRegex:
-			print("static const Tree_p %s = { n%s, { { (Tree *) %s } } };\n",
-			      name + 1, nodename(tree->kind), dumptree(tree->u[0].p));
+		case nCall:
+		case nThunk:
+		case nVar:
+		case nRegex:
+			print("static const Tree_p %s = { n%s, { { (Tree *) %s } } };\n", name + 1, nodename(tree->kind),
+				  dumptree(tree->u[0].p));
 			break;
-		    case nAssign:  case nConcat: case nClosure: case nFor:
-		    case nLambda: case nLet: case nList:  case nLocal:
-		    case nVarsub: case nMatch: case nExtract: case nLets:
-			print("static const Tree_pp %s = { n%s, { { (Tree *) %s }, { (Tree *) %s } } };\n",
-			      name + 1, nodename(tree->kind), dumptree(tree->u[0].p), dumptree(tree->u[1].p));
+		case nAssign:
+		case nConcat:
+		case nClosure:
+		case nFor:
+		case nLambda:
+		case nLet:
+		case nList:
+		case nLocal:
+		case nVarsub:
+		case nMatch:
+		case nExtract:
+		case nLets:
+			print("static const Tree_pp %s = { n%s, { { (Tree *) %s }, { (Tree *) %s } } };\n", name + 1,
+				  nodename(tree->kind), dumptree(tree->u[0].p), dumptree(tree->u[1].p));
 		}
 		cvars = dictput(cvars, name, tree);
 	}
 	return name;
 }
 
-static char *dumpbinding(Binding *binding) {
+static char *
+dumpbinding(Binding *binding)
+{
 	char *name;
-	if (binding == NULL)
+	if(binding == NULL)
 		return "NULL";
 	name = str("&B_%ulx", binding);
-	if (dictget(cvars, name) == NULL) {
-		print(
-			"static const Binding %s = { (char *) %s, (List *) %s, (Binding *) %s };\n",
-			name + 1,
-			dumpstring(binding->name),
-			dumplist(binding->defn),
-			dumpbinding(binding->next)
-		);
+	if(dictget(cvars, name) == NULL) {
+		print("static const Binding %s = { (char *) %s, (List *) %s, (Binding *) %s };\n", name + 1,
+			  dumpstring(binding->name), dumplist(binding->defn), dumpbinding(binding->next));
 		cvars = dictput(cvars, name, binding);
 	}
 	return name;
 }
 
-static char *dumpclosure(Closure *closure) {
+static char *
+dumpclosure(Closure *closure)
+{
 	char *name;
-	if (closure == NULL)
+	if(closure == NULL)
 		return "NULL";
 	name = str("&C_%ulx", closure);
-	if (dictget(cvars, name) == NULL) {
-		print(
-			"static const Closure %s = { (Binding *) %s, (Tree *) %s };\n",
-			name + 1,
-			dumpbinding(closure->binding),
-			dumptree(closure->tree)
-		);
+	if(dictget(cvars, name) == NULL) {
+		print("static const Closure %s = { (Binding *) %s, (Tree *) %s };\n", name + 1,
+			  dumpbinding(closure->binding), dumptree(closure->tree));
 		cvars = dictput(cvars, name, closure);
 	}
 	return name;
 }
 
-char*
+char *
 termtype(Term *term)
 {
-	switch(term->kind){
+	switch(term->kind) {
 	case tkRegex:
 		return "tkRegex";
 	case tkString:
@@ -257,89 +310,111 @@ termtype(Term *term)
 	}
 }
 
-static char *dumpterm(Term *term) {
+static char *
+dumpterm(Term *term)
+{
 	char *name;
-	if (term == NULL)
+	if(term == NULL)
 		return "NULL";
 	name = str("&E_%ulx", term);
-	if (dictget(cvars, name) == NULL) {
-		print(
-			"static const Term %s = {%s, ttNone, (char *) %s, (Closure *) %s, (Dict*) NULL };\n",
-			name + 1,
-			termtype(term),
-			dumpstring(term->str),
-			dumpclosure(term->closure)
-		);
+	if(dictget(cvars, name) == NULL) {
+		print("static const Term %s = {%s, ttNone, (char *) %s, (Closure *) %s, (Dict*) NULL };\n", name + 1,
+			  termtype(term), dumpstring(term->str), dumpclosure(term->closure));
 		cvars = dictput(cvars, name, term);
 	}
 	return name;
 }
 
-static char *dumplist(List *list) {
+static char *
+dumplist(List *list)
+{
 	char *name;
-	if (list == NULL)
+	if(list == NULL)
 		return "NULL";
 	name = str("&L_%ulx", list);
-	if (dictget(cvars, name) == NULL) {
-		print(
-			"static const List %s = { (Term *) %s, (List *) %s };\n",
-			name + 1,
-			dumpterm(list->term),
-			dumplist(list->next)
-		);
+	if(dictget(cvars, name) == NULL) {
+		print("static const List %s = { (Term *) %s, (List *) %s };\n", name + 1, dumpterm(list->term),
+			  dumplist(list->next));
 		cvars = dictput(cvars, name, list);
 	}
 	return name;
 }
 
-static void dumpvar(void *ignore, char *key, void *value) {
+static void
+dumpvar(void *ignore, char *key, void *value)
+{
 	Var *var = value;
 	dumpstring(key);
 	dumplist(var->defn);
 }
 
-static void dumpdef(char *name, Var *var) {
+static void
+dumpdef(char *name, Var *var)
+{
 	print("\t{ %s, (const List *) %s },\n", dumpstring(name), dumplist(var->defn));
 }
 
-static void dumpfunctions(void *ignore, char *key, void *value) {
-	if (hasprefix(key, "fn-"))
+static void
+dumpfunctions(void *ignore, char *key, void *value)
+{
+	if(hasprefix(key, "fn-"))
 		dumpdef(key, value);
 }
 
-static void dumpsettors(void *ignore, char *key, void *value) {
-	if (hasprefix(key, "set-"))
+static void
+dumpsettors(void *ignore, char *key, void *value)
+{
+	if(hasprefix(key, "set-"))
 		dumpdef(key, value);
 }
 
-static void dumpvariables(void *ignore, char *key, void *value) {
-	if (!hasprefix(key, "fn-") && !hasprefix(key, "set-"))
+static void
+dumpvariables(void *ignore, char *key, void *value)
+{
+	if(!hasprefix(key, "fn-") && !hasprefix(key, "set-"))
 		dumpdef(key, value);
 }
 
-#define TreeTypes \
-	typedef struct { NodeKind k; struct { char *s; } u[1]; } Tree_s; \
-	typedef struct { NodeKind k; struct { Tree *p; } u[1]; } Tree_p; \
-	typedef struct { NodeKind k; struct { Tree *p; } u[2]; } Tree_pp;
+#define TreeTypes    \
+	typedef struct { \
+		NodeKind k;  \
+		struct {     \
+			char *s; \
+		} u[1];      \
+	} Tree_s;        \
+	typedef struct { \
+		NodeKind k;  \
+		struct {     \
+			Tree *p; \
+		} u[1];      \
+	} Tree_p;        \
+	typedef struct { \
+		NodeKind k;  \
+		struct {     \
+			Tree *p; \
+		} u[2];      \
+	} Tree_pp;
 TreeTypes
-#define	PPSTRING(s)	STRING(s)
+#define PPSTRING(s) STRING(s)
 
-static void printheader(List *title) {
-	if (
-		   offsetof(Tree, u[0].s) != offsetof(Tree_s,  u[0].s)
-		|| offsetof(Tree, u[0].p) != offsetof(Tree_p,  u[0].p)
-		|| offsetof(Tree, u[0].p) != offsetof(Tree_pp, u[0].p)
-		|| offsetof(Tree, u[1].p) != offsetof(Tree_pp, u[1].p)
-	)
+	static void
+	printheader(List *title)
+{
+	if(offsetof(Tree, u[0].s) != offsetof(Tree_s, u[0].s) ||
+	   offsetof(Tree, u[0].p) != offsetof(Tree_p, u[0].p) ||
+	   offsetof(Tree, u[0].p) != offsetof(Tree_pp, u[0].p) ||
+	   offsetof(Tree, u[1].p) != offsetof(Tree_pp, u[1].p))
 		panic("dumpstate: Tree union sizes do not match struct sizes");
 
 	print("/* autogenerated file! do not edit! */\n\n#include \"es.h\"\n\n", title, " ");
 	print("%s\n\n", PPSTRING(TreeTypes));
 }
 
-extern void runinitial(void) {
+extern void
+runinitial(void)
+{
 	List *title = runfd(0, "system.es", 0);
-	
+
 	gcdisable();
 
 	cvars = mkdict();

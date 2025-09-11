@@ -12,14 +12,18 @@ Push *pushlist = NULL;
 Boolean debug_exceptions = FALSE;
 
 /* pophandler -- remove a handler */
-extern void pophandler(Handler *handler) {
+extern void
+pophandler(Handler *handler)
+{
 	assert(tophandler == handler);
 	assert(handler->rootlist == rootlist);
 	tophandler = handler->up;
 }
 
 /* throw -- raise an exception */
-extern noreturn throw(List *e) {
+extern noreturn
+throw(List *e)
+{
 	Handler *handler = tophandler;
 	Root exceptroot;
 
@@ -29,15 +33,15 @@ extern noreturn throw(List *e) {
 	tophandler = handler->up;
 
 	exceptionroot(&exceptroot, &e);
-	while (pushlist != handler->pushlist) {
+	while(pushlist != handler->pushlist) {
 		rootlist = &pushlist->defnroot;
 		varpop(pushlist);
 	}
 	exceptionunroot();
 	evaldepth = handler->evaldepth;
 
-	if(assertions == TRUE){
-		for (; rootlist != handler->rootlist; rootlist = rootlist->next)
+	if(assertions == TRUE) {
+		for(; rootlist != handler->rootlist; rootlist = rootlist->next)
 			assert(rootlist != NULL);
 	} else {
 		rootlist = handler->rootlist;
@@ -59,9 +63,7 @@ fail(const char *from, const char *fmt, ...)
 	va_end(args);
 
 	gcdisable();
-	Ref(List *, e, mklist(mkstr("error"),
-				mklist(mkstr((char *) from),
-					mklist(mkstr(s), NULL))));
+	Ref(List *, e, mklist(mkstr("error"), mklist(mkstr((char *)from), mklist(mkstr(s), NULL))));
 	while(gcisblocked())
 		gcenable();
 	throw(e);
@@ -69,14 +71,17 @@ fail(const char *from, const char *fmt, ...)
 }
 
 /* newchildcatcher -- remove the current handler chain for a new child */
-extern void newchildcatcher(void) {
+extern void
+newchildcatcher(void)
+{
 	tophandler = roothandler;
 }
 
 /* raised -- print exceptions as we climb the exception stack */
-extern List *raised(List *e) {
+extern List *
+raised(List *e)
+{
 	if(debug_exceptions == TRUE)
 		eprint("raised (sp @ %x) %L\n", &e, e, " ");
 	return e;
 }
-

@@ -1,10 +1,8 @@
 #include <stddef.h>
-#define	GARBAGE_COLLECTOR	1	/* for es.h */
+#define GARBAGE_COLLECTOR 1 /* for es.h */
 
 #include <es.h>
 #include <gc.h>
-
-#define nil ((void*)0)
 
 extern Tag ClosureTag;
 extern Tag BindingTag;
@@ -28,11 +26,13 @@ int gctype = OldGc;
 Tag *tags[13];
 
 /* globalroot -- add an external to the list of global roots */
-extern void globalroot(void *addr) {
+extern void
+globalroot(void *addr)
+{
 	Root *root;
 
 	if(assertions == TRUE) {
-		for (root = globalrootlist; root != NULL; root = root->next)
+		for(root = globalrootlist; root != NULL; root = root->next)
 			assert(root->p != addr);
 	}
 
@@ -51,10 +51,10 @@ exceptionroot(Root *root, List **e)
 
 	if(assertions == TRUE) {
 		for(r = exceptionrootlist; r != NULL; r = r->next)
-			assert(r->p != (void**)e);
+			assert(r->p != (void **)e);
 	}
 
-	root->p = (void**)e;
+	root->p = (void **)e;
 	if(exceptionrootlist)
 		exceptionrootlist->prev = root;
 	root->next = exceptionrootlist;
@@ -70,27 +70,27 @@ exceptionunroot(void)
 		exceptionrootlist->prev = NULL;
 }
 
-Tag*
+Tag *
 gettag(int t)
 {
-	assert(t >= tNil && (size_t)t < (sizeof(tags)/sizeof(Tag*)));
+	assert(t >= tNil && (size_t)t < (sizeof(tags) / sizeof(Tag *)));
 	assert(tags[t] == nil || tags[t]->magic == TAGMAGIC);
 	return tags[t];
 }
 
-Header*
+Header *
 header(void *p)
 {
 	void *v;
 
-	v = (void*)(p-sizeof(Header));
-	return (Header*)v;
+	v = (void *)(p - sizeof(Header));
+	return (Header *)v;
 }
 
 Boolean
 istracked(void *p)
 {
-	switch(gctype){
+	switch(gctype) {
 	case NewGc:
 		return gc_istracked(p);
 	case OldGc:
@@ -106,7 +106,7 @@ incref(void *p)
 {
 	Header *h;
 
-	if(p && istracked(p)){
+	if(p && istracked(p)) {
 		h = header(p);
 		h->refs++;
 		return h->refs;
@@ -119,7 +119,7 @@ decref(void *p)
 {
 	Header *h;
 
-	if(p && istracked(p)){
+	if(p && istracked(p)) {
 		h = header(p);
 		h->refs--;
 		if(ref_assertions == TRUE)
@@ -228,7 +228,7 @@ gcisblocked(void)
 	return old_gcisblocked();
 }
 
-void*
+void *
 gcalloc(size_t sz, int t)
 {
 	if(gctype == NewGc)
@@ -242,9 +242,11 @@ gcalloc(size_t sz, int t)
  *	contain pointers or '\0' until after sealbuffer() has been called.
  */
 
-extern Buffer *openbuffer(size_t minsize) {
+extern Buffer *
+openbuffer(size_t minsize)
+{
 	Buffer *buf;
-	if (minsize < 500)
+	if(minsize < 500)
 		minsize = 500;
 	buf = ealloc(offsetof(Buffer, str[minsize]));
 	buf->len = minsize;
@@ -252,41 +254,55 @@ extern Buffer *openbuffer(size_t minsize) {
 	return buf;
 }
 
-extern Buffer *expandbuffer(Buffer *buf, size_t minsize) {
+extern Buffer *
+expandbuffer(Buffer *buf, size_t minsize)
+{
 	buf->len += (minsize > buf->len) ? minsize : buf->len;
 	buf = erealloc(buf, offsetof(Buffer, str[buf->len]));
 	return buf;
 }
 
-extern char *sealbuffer(Buffer *buf) {
+extern char *
+sealbuffer(Buffer *buf)
+{
 	char *s = gcdup(buf->str);
 	efree(buf);
 	return s;
 }
 
-extern char *sealcountedbuffer(Buffer *buf) {
+extern char *
+sealcountedbuffer(Buffer *buf)
+{
 	char *s = gcndup(buf->str, buf->current);
 	efree(buf);
 	return s;
 }
 
-extern Buffer *bufncat(Buffer *buf, const char *s, size_t len) {
-	while (buf->current + len >= buf->len)
+extern Buffer *
+bufncat(Buffer *buf, const char *s, size_t len)
+{
+	while(buf->current + len >= buf->len)
 		buf = expandbuffer(buf, buf->current + len - buf->len);
 	memcpy(buf->str + buf->current, s, len);
 	buf->current += len;
 	return buf;
 }
 
-extern Buffer *bufcat(Buffer *buf, const char *s) {
+extern Buffer *
+bufcat(Buffer *buf, const char *s)
+{
 	return bufncat(buf, s, strlen(s));
 }
 
-extern Buffer *bufputc(Buffer *buf, char c) {
+extern Buffer *
+bufputc(Buffer *buf, char c)
+{
 	return bufncat(buf, &c, 1);
 }
 
-extern void freebuffer(Buffer *buf) {
+extern void
+freebuffer(Buffer *buf)
+{
 	efree(buf);
 }
 
@@ -297,11 +313,13 @@ extern void freebuffer(Buffer *buf) {
 #define notstatic
 DefineTag(String, notstatic);
 
-extern char *gcndup(const char *s, size_t n) {
+extern char *
+gcndup(const char *s, size_t n)
+{
 	char *ns;
 
 	gcdisable();
-	ns = gcalloc((n + 1) * sizeof (char), tString);
+	ns = gcalloc((n + 1) * sizeof(char), tString);
 	memcpy(ns, s, n);
 	ns[n] = '\0';
 	assert(strlen(ns) == n);
@@ -311,11 +329,15 @@ extern char *gcndup(const char *s, size_t n) {
 	RefReturn(result);
 }
 
-extern char *gcdup(const char *s) {
+extern char *
+gcdup(const char *s)
+{
 	return gcndup(s, strlen(s));
 }
 
-static void *StringCopy(void *op) {
+static void *
+StringCopy(void *op)
+{
 	Header *oh;
 
 	oh = header(op);
@@ -325,7 +347,9 @@ static void *StringCopy(void *op) {
 	return np;
 }
 
-static size_t StringScan(void *p) {
+static size_t
+StringScan(void *p)
+{
 	Header *h;
 
 	h = header(p);
@@ -333,7 +357,8 @@ static size_t StringScan(void *p) {
 }
 
 static void
-StringMark(void *p) {
+StringMark(void *p)
+{
 	Header *h;
 
 	h = header(p);
@@ -346,7 +371,7 @@ StringMark(void *p) {
 
 DefineTag(Anonymous, notstatic);
 
-void*
+void *
 gcmalloc(size_t sz)
 {
 	void *p;
@@ -357,7 +382,7 @@ gcmalloc(size_t sz)
 	return p;
 }
 
-static void*
+static void *
 AnonymousCopy(void *p)
 {
 	Header *h1;
@@ -391,111 +416,135 @@ AnonymousMark(void *p)
  * memdump -- print out all of gc space, as best as possible
  */
 
-char *tree1name(NodeKind k) {
+char *
+tree1name(NodeKind k)
+{
 	switch(k) {
-	default:	panic("tree1name: bad node kind %d", k);
-	case nPrim:	return "Prim";
-	case nQword:	return "Qword";
-	case nCall:	return "Call";
-	case nThunk:	return "Thunk";
-	case nVar:	return "Var";
-	case nWord:	return "Word";
+	default:
+		panic("tree1name: bad node kind %d", k);
+	case nPrim:
+		return "Prim";
+	case nQword:
+		return "Qword";
+	case nCall:
+		return "Call";
+	case nThunk:
+		return "Thunk";
+	case nVar:
+		return "Var";
+	case nWord:
+		return "Word";
 	}
 }
 
-char *tree2name(NodeKind k) {
+char *
+tree2name(NodeKind k)
+{
 	switch(k) {
-	default:	panic("tree2name: bad node kind %d", k);
-	case nAssign:	return "Assign";
-	case nConcat:	return "Concat";
-	case nClosure:	return "Closure";
-	case nFor:	return "For";
-	case nLambda:	return "Lambda";
-	case nLet:	return "Let";
-	case nLets: return "Lets";
-	case nList:	return "List";
-	case nLocal:	return "Local";
-	case nMatch:	return "Match";
-	case nExtract:	return "Extract";
-	case nVarsub:	return "Varsub";
+	default:
+		panic("tree2name: bad node kind %d", k);
+	case nAssign:
+		return "Assign";
+	case nConcat:
+		return "Concat";
+	case nClosure:
+		return "Closure";
+	case nFor:
+		return "For";
+	case nLambda:
+		return "Lambda";
+	case nLet:
+		return "Let";
+	case nLets:
+		return "Lets";
+	case nList:
+		return "List";
+	case nLocal:
+		return "Local";
+	case nMatch:
+		return "Match";
+	case nExtract:
+		return "Extract";
+	case nVarsub:
+		return "Varsub";
 	}
 }
 
-size_t dump(Tag *t, void *p) {
+size_t
+dump(Tag *t, void *p)
+{
 	char *s = t->typename;
 	print("%8ux %s\t", p, s);
 
-	if (streq(s, "String")) {
+	if(streq(s, "String")) {
 		print("%s\n", p);
 		return strlen(p) + 1;
 	}
 
-	if (streq(s, "Term")) {
+	if(streq(s, "Term")) {
 		Term *t = p;
 		print("str = %ux  closure = %ux\n", t->str, t->closure);
-		return sizeof (Term);
+		return sizeof(Term);
 	}
 
-	if (streq(s, "List")) {
+	if(streq(s, "List")) {
 		List *l = p;
 		print("term = %ux  next = %ux\n", l->term, l->next);
-		return sizeof (List);
+		return sizeof(List);
 	}
 
-	if (streq(s, "StrList")) {
+	if(streq(s, "StrList")) {
 		StrList *l = p;
 		print("str = %ux  next= %ux\n", l->str, l->next);
-		return sizeof (StrList);
+		return sizeof(StrList);
 	}
 
-	if (streq(s, "Closure")) {
+	if(streq(s, "Closure")) {
 		Closure *c = p;
 		print("tree = %ux  binding = %ux\n", c->tree, c->binding);
-		return sizeof (Closure);
+		return sizeof(Closure);
 	}
 
-	if (streq(s, "Binding")) {
+	if(streq(s, "Binding")) {
 		Binding *b = p;
 		print("name = %ux  defn = %ux  next = %ux\n", b->name, b->defn, b->next);
-		return sizeof (Binding);
+		return sizeof(Binding);
 	}
 
-	if (streq(s, "Var")) {
+	if(streq(s, "Var")) {
 		Var *v = p;
-		print("defn = %ux  env = %ux  flags = %d\n",
-		      v->defn, v->env, v->flags);
-		return sizeof (Var);
+		print("defn = %ux  env = %ux  flags = %d\n", v->defn, v->env, v->flags);
+		return sizeof(Var);
 	}
 
-	if (streq(s, "Tree1")) {
+	if(streq(s, "Tree1")) {
 		Tree *t = p;
 		print("%s	%ux\n", tree1name(t->kind), t->u[0].p);
 		return offsetof(Tree, u[1]);
 	}
 
-	if (streq(s, "Tree2")) {
+	if(streq(s, "Tree2")) {
 		Tree *t = p;
 		print("%s	%ux  %ux\n", tree2name(t->kind), t->u[0].p, t->u[1].p);
 		return offsetof(Tree, u[2]);
 	}
 
-	if (streq(s, "Vector")) {
+	if(streq(s, "Vector")) {
 		Vector *v = p;
 		int i;
 		print("alloclen = %d  count = %d [", v->alloclen, v->count);
-		for (i = 0; i <= v->alloclen; i++)
+		for(i = 0; i <= v->alloclen; i++)
 			print("%s%ux", i == 0 ? "" : " ", v->vector[i]);
 		print("]\n");
 		return offsetof(Vector, vector[v->alloclen + 1]);
 	}
 
-	if (streq(s, "Dict")) {
+	if(streq(s, "Dict")) {
 		Dict *d = p;
 		int i;
 		print("size = %d  remain = %d\n", d->size, d->remain);
-		for (i = 0; i < d->size; i++)
-			print("\tname = %ux  value = %ux\n",
-			      d->table[i].name, d->table[i].value);
+		for(i = 0; i < d->size; i++)
+			print("\tname = %ux  value = %ux\n", d->table[i].name, d->table[i].value);
 		return offsetof(Dict, table[d->size]);
 	}
 
@@ -511,4 +560,3 @@ memdump(void)
 	else
 		old_memdump();
 }
-

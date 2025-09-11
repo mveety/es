@@ -1,7 +1,7 @@
 /* prim-etc.c -- miscellaneous primitives ($Revision: 1.2 $) */
 
 #include <stdlib.h>
-#define	REQUIRE_PWD	1
+#define REQUIRE_PWD 1
 
 #include <es.h>
 #include <prim.h>
@@ -12,11 +12,11 @@ PRIM(result) {
 
 PRIM(echo) {
 	const char *eol = "\n";
-	if (list != NULL) {
-		if (termeq(list->term, "-n")) {
+	if(list != NULL) {
+		if(termeq(list->term, "-n")) {
 			eol = "";
 			list = list->next;
-		} else if (termeq(list->term, "--"))
+		} else if(termeq(list->term, "--"))
 			list = list->next;
 	}
 	print("%L%s", list, " ", eol);
@@ -43,28 +43,40 @@ PRIM(dot) {
 	int c, fd;
 	Push zero, star;
 	volatile int runflags = (evalflags & eval_inchild);
-	const char * const usage = ". [-einvxL] file [arg ...]";
+	const char *const usage = ". [-einvxL] file [arg ...]";
 
 	esoptbegin(list, "$&dot", usage);
-	while ((c = esopt("einvxL")) != EOF)
-		switch (c) {
-		case 'e':	runflags |= eval_exitonfalse;	break;
-		case 'i':	runflags |= run_interactive;	break;
-		case 'n':	runflags |= run_noexec;		break;
-		case 'v':	runflags |= run_echoinput;	break;
-		case 'x':	runflags |= run_printcmds;	break;
-		case 'L':	runflags |= run_lisptrees; break;
+	while((c = esopt("einvxL")) != EOF)
+		switch(c) {
+		case 'e':
+			runflags |= eval_exitonfalse;
+			break;
+		case 'i':
+			runflags |= run_interactive;
+			break;
+		case 'n':
+			runflags |= run_noexec;
+			break;
+		case 'v':
+			runflags |= run_echoinput;
+			break;
+		case 'x':
+			runflags |= run_printcmds;
+			break;
+		case 'L':
+			runflags |= run_lisptrees;
+			break;
 		}
 
 	Ref(List *, result, NULL);
 	Ref(List *, lp, esoptend());
-	if (lp == NULL)
+	if(lp == NULL)
 		fail("$&dot", "usage: %s", usage);
 
 	Ref(char *, file, getstr(lp->term));
 	lp = lp->next;
 	fd = eopen(file, oOpen);
-	if (fd == -1)
+	if(fd == -1)
 		fail("$&dot", "%s: %s", file, esstrerror(errno));
 
 	varpush(&star, "*", lp);
@@ -80,7 +92,7 @@ PRIM(dot) {
 
 PRIM(flatten) {
 	char *sep;
-	if (list == NULL)
+	if(list == NULL)
 		fail("$&flatten", "usage: %%flatten separator [args ...]");
 	Ref(List *, lp, list);
 	sep = getstr(lp->term);
@@ -90,20 +102,20 @@ PRIM(flatten) {
 
 PRIM(whatis) {
 	/* the logic in here is duplicated in eval() */
-	if (list == NULL || list->next != NULL)
+	if(list == NULL || list->next != NULL)
 		fail("$&whatis", "usage: $&whatis program");
 	Ref(Term *, term, list->term);
-	if (getclosure(term) == NULL) {
+	if(getclosure(term) == NULL) {
 		List *fn;
 		Ref(char *, prog, getstr(term));
 		assert(prog != NULL);
 		fn = varlookup2("fn-", prog, binding);
-		if (fn != NULL)
+		if(fn != NULL)
 			list = fn;
 		else {
-			if (isabsolute(prog)) {
+			if(isabsolute(prog)) {
 				char *error = checkexecutable(prog);
-				if (error != NULL)
+				if(error != NULL)
 					fail("$&whatis", "%s: %s", prog, error);
 			} else
 				list = pathsearch(term);
@@ -116,7 +128,7 @@ PRIM(whatis) {
 
 PRIM(split) {
 	char *sep;
-	if (list == NULL)
+	if(list == NULL)
 		fail("$&split", "usage: %%split separator [args ...]");
 	Ref(List *, lp, list);
 	sep = getstr(lp->term);
@@ -126,7 +138,7 @@ PRIM(split) {
 
 PRIM(fsplit) {
 	char *sep;
-	if (list == NULL)
+	if(list == NULL)
 		fail("$&fsplit", "usage: %%fsplit separator [args ...]");
 	Ref(List *, lp, list);
 	sep = getstr(lp->term);
@@ -136,7 +148,7 @@ PRIM(fsplit) {
 
 PRIM(var) {
 	Term *term;
-	if (list == NULL)
+	if(list == NULL)
 		return NULL;
 	Ref(List *, rest, list->next);
 	Ref(char *, name, getstr(list->term));
@@ -154,17 +166,14 @@ PRIM(parse) {
 	Ref(char *, prompt1, NULL);
 	Ref(char *, prompt2, NULL);
 	Ref(List *, lp, list);
-	if (lp != NULL) {
+	if(lp != NULL) {
 		prompt1 = getstr(lp->term);
-		if ((lp = lp->next) != NULL)
+		if((lp = lp->next) != NULL)
 			prompt2 = getstr(lp->term);
 	}
 	RefEnd(lp);
 	tree = parse(prompt1, prompt2);
-	result = (tree == NULL)
-		   ? NULL
-		   : mklist(mkterm(NULL, mkclosure(mk(nThunk, tree), NULL)),
-			    NULL);
+	result = (tree == NULL) ? NULL : mklist(mkterm(NULL, mkclosure(mk(nThunk, tree), NULL)), NULL);
 	RefEnd2(prompt2, prompt1);
 	return result;
 }
@@ -180,33 +189,31 @@ PRIM(batchloop) {
 	SIGCHK();
 
 	ExceptionHandler
-
-		for (;;) {
+	{
+		for(;;) {
 			List *parser, *cmd;
 			parser = varlookup("fn-%parse", NULL);
-			cmd = (parser == NULL)
-					? prim("parse", NULL, NULL, 0)
-					: eval(parser, NULL, 0);
+			cmd = (parser == NULL) ? prim("parse", NULL, NULL, 0) : eval(parser, NULL, 0);
 			SIGCHK();
 			dispatch = varlookup("fn-%dispatch", NULL);
-			if (cmd != NULL) {
-				if (dispatch != NULL)
+			if(cmd != NULL) {
+				if(dispatch != NULL)
 					cmd = append(dispatch, cmd);
 				result = eval(cmd, NULL, evalflags);
 				SIGCHK();
 			}
 		}
-
+	}
 	CatchException (e)
-
-		if (!termeq(e->term, "eof"))
+	{
+		if(!termeq(e->term, "eof"))
 			throw(e);
 		RefEnd(dispatch);
-		if (result == list_true)
+		if(result == list_true)
 			result = list_true;
 		RefReturn(result);
-
-	EndExceptionHandler
+	}
+	EndExceptionHandler;
 }
 
 PRIM(collect) {
@@ -216,9 +223,9 @@ PRIM(collect) {
 
 PRIM(home) {
 	struct passwd *pw;
-	if (list == NULL)
+	if(list == NULL)
 		return varlookup("home", NULL);
-	if (list->next != NULL)
+	if(list->next != NULL)
 		fail("$&home", "usage: %%home [user]");
 	pw = getpwnam(getstr(list->term));
 	return (pw == NULL) ? NULL : mklist(mkstr(gcdup(pw->pw_dir)), NULL);
@@ -237,11 +244,11 @@ PRIM(isinteractive) {
 }
 
 PRIM(noreturn) {
-	if (list == NULL)
+	if(list == NULL)
 		fail("$&noreturn", "usage: $&noreturn lambda args ...");
 	Ref(List *, lp, list);
 	Ref(Closure *, closure, getclosure(lp->term));
-	if (closure == NULL || closure->tree->kind != nLambda)
+	if(closure == NULL || closure->tree->kind != nLambda)
 		fail("$&noreturn", "$&noreturn: %E is not a lambda", lp->term);
 	Ref(Tree *, tree, closure->tree);
 	Ref(Binding *, context, bindargs(tree->u[0].p, lp->next, closure->binding));
@@ -251,11 +258,11 @@ PRIM(noreturn) {
 }
 
 PRIM(catch_noreturn) {
-	if (list == NULL)
+	if(list == NULL)
 		fail("$&catch_noreturn", "usage: $&catch_noreturn lambda args ...");
 	Ref(List *, lp, list);
 	Ref(Closure *, closure, getclosure(lp->term));
-	if (closure == NULL || closure->tree->kind != nLambda)
+	if(closure == NULL || closure->tree->kind != nLambda)
 		fail("$&catch_noreturn", "$&catch_noreturn: %E is not a lambda", lp->term);
 	Ref(Tree *, tree, closure->tree);
 	Ref(Binding *, context, bindargs(tree->u[0].p, lp->next, closure->binding));
@@ -268,17 +275,17 @@ PRIM(catch_noreturn) {
 PRIM(setmaxevaldepth) {
 	char *s;
 	long n;
-	if (list == NULL) {
+	if(list == NULL) {
 		maxevaldepth = MAXmaxevaldepth;
 		return NULL;
 	}
-	if (list->next != NULL)
+	if(list->next != NULL)
 		fail("$&setmaxevaldepth", "usage: $&setmaxevaldepth [limit]");
 	Ref(List *, lp, list);
 	n = strtol(getstr(lp->term), &s, 0);
-	if (n < 0 || (s != NULL && *s != '\0'))
+	if(n < 0 || (s != NULL && *s != '\0'))
 		fail("$&setmaxevaldepth", "max-eval-depth must be set to a positive integer");
-	if (n < MINmaxevaldepth)
+	if(n < MINmaxevaldepth)
 		n = (n == 0) ? MAXmaxevaldepth : MINmaxevaldepth;
 	maxevaldepth = n;
 	RefReturn(lp);
@@ -291,12 +298,13 @@ PRIM(resetterminal) {
 }
 #endif
 
-
 /*
  * initialization
  */
 
-extern Dict *initprims_etc(Dict *primdict) {
+extern Dict *
+initprims_etc(Dict *primdict)
+{
 	X(echo);
 	X(count);
 	X(exec);
@@ -324,4 +332,3 @@ extern Dict *initprims_etc(Dict *primdict) {
 #endif
 	return primdict;
 }
-

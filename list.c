@@ -9,7 +9,9 @@
 
 DefineTag(List, static);
 
-extern List *mklist(Term *term, List *next) {
+extern List *
+mklist(Term *term, List *next)
+{
 	gcdisable();
 	assert(term != NULL);
 	Ref(List *, list, gcnew(List));
@@ -19,17 +21,21 @@ extern List *mklist(Term *term, List *next) {
 	RefReturn(list);
 }
 
-static void *ListCopy(void *op) {
+static void *
+ListCopy(void *op)
+{
 	void *np = gcnew(List);
-	memcpy(np, op, sizeof (List));
+	memcpy(np, op, sizeof(List));
 	return np;
 }
 
-static size_t ListScan(void *p) {
+static size_t
+ListScan(void *p)
+{
 	List *list = p;
 	list->term = forward(list->term);
 	list->next = forward(list->next);
-	return sizeof (List);
+	return sizeof(List);
 }
 
 void
@@ -37,9 +43,9 @@ ListMark(void *p)
 {
 	List *l;
 
-	l = (List*)p;
+	l = (List *)p;
 	gc_set_mark(header(p));
-	assert((void*)l != (void*)l->term && l != l->next);
+	assert((void *)l != (void *)l->term && l != l->next);
 	gcmark(l->term);
 	gcmark(l->next);
 }
@@ -49,31 +55,35 @@ ListMark(void *p)
  */
 
 /* reverse -- destructively reverse a list */
-extern List *reverse(List *list) {
+extern List *
+reverse(List *list)
+{
 	List *prev, *next;
-	if (list == NULL)
+	if(list == NULL)
 		return NULL;
 	prev = NULL;
 	do {
 		next = list->next;
 		list->next = prev;
 		prev = list;
-	} while ((list = next) != NULL);
+	} while((list = next) != NULL);
 	return prev;
 }
 
 /* append -- merge two lists, non-destructively */
-extern List *really_old_append(List *head, List *tail) {
+extern List *
+really_old_append(List *head, List *tail)
+{
 	List *lp, **prevp;
 	Ref(List *, hp, head);
 	Ref(List *, tp, tail);
-	gcreserve(40 * sizeof (List));
+	gcreserve(40 * sizeof(List));
 	gcdisable();
 	head = hp;
 	tail = tp;
 	RefEnd2(tp, hp);
 
-	for (prevp = &lp; head != NULL; head = head->next) {
+	for(prevp = &lp; head != NULL; head = head->next) {
 		List *np = mklist(head->term, NULL);
 		*prevp = np;
 		prevp = &np->next;
@@ -91,11 +101,11 @@ append_start(AppendContext *ctx)
 	ctx->result = nil;
 	ctx->rlp = nil;
 	ctx->started = 1;
-	gcref(&ctx->r_result, (void**)&ctx->result);
-	gcref(&ctx->r_rlp, (void**)&ctx->rlp);
+	gcref(&ctx->r_result, (void **)&ctx->result);
+	gcref(&ctx->r_rlp, (void **)&ctx->rlp);
 }
 
-List*
+List *
 append_end(AppendContext *ctx)
 {
 	gcrderef(&ctx->r_rlp);
@@ -112,13 +122,13 @@ partial_append(AppendContext *ctx, List *list0)
 	if(!ctx->started)
 		return -1;
 
-	gcref(&r_list, (void**)&list);
-	gcref(&r_lp, (void**)&lp);
+	gcref(&r_list, (void **)&list);
+	gcref(&r_lp, (void **)&lp);
 
 	list = list0;
 	gcdisable();
-	for(lp = list; lp != nil; lp = lp->next){
-		if(ctx->result == nil){
+	for(lp = list; lp != nil; lp = lp->next) {
+		if(ctx->result == nil) {
 			ctx->result = mklist(lp->term, nil);
 			ctx->rlp = ctx->result;
 		} else {
@@ -133,7 +143,7 @@ partial_append(AppendContext *ctx, List *list0)
 	return 0;
 }
 
-List*
+List *
 using_partial_append(List *head0, List *tail0)
 {
 	List *head = nil; Root r_head;
@@ -141,9 +151,9 @@ using_partial_append(List *head0, List *tail0)
 	List *result = nil; Root r_result;
 	AppendContext ctx;
 
-	gcref(&r_head, (void**)&head);
-	gcref(&r_tail, (void**)&tail);
-	gcref(&r_result, (void**)&result);
+	gcref(&r_head, (void **)&head);
+	gcref(&r_tail, (void **)&tail);
+	gcref(&r_result, (void **)&result);
 
 	head = head0;
 	tail = tail0;
@@ -159,7 +169,7 @@ using_partial_append(List *head0, List *tail0)
 	return result;
 }
 
-List*
+List *
 append(List *head0, List *tail0)
 {
 	List *head = nil; Root r_head;
@@ -170,22 +180,22 @@ append(List *head0, List *tail0)
 	List *tmp = nil; Root r_tmp;
 	Term *term = nil; Root r_term;
 
-	gcref(&r_head, (void**)&head);
-	gcref(&r_tail, (void**)&tail);
-	gcref(&r_result, (void**)&result);
-	gcref(&r_lp, (void**)&lp);
-	gcref(&r_rp, (void**)&rp);
-	gcref(&r_tmp, (void**)&tmp);
-	gcref(&r_term, (void**)&term);
+	gcref(&r_head, (void **)&head);
+	gcref(&r_tail, (void **)&tail);
+	gcref(&r_result, (void **)&result);
+	gcref(&r_lp, (void **)&lp);
+	gcref(&r_rp, (void **)&rp);
+	gcref(&r_tmp, (void **)&tmp);
+	gcref(&r_term, (void **)&term);
 
 	head = head0;
 	tail = tail0;
 
 	gcdisable();
-	for(lp = head; lp != nil; lp = lp->next){
+	for(lp = head; lp != nil; lp = lp->next) {
 		term = lp->term;
 		tmp = mklist(term, nil);
-		if(!result){
+		if(!result) {
 			result = tmp;
 			rp = tmp;
 		} else {
@@ -211,28 +221,34 @@ append(List *head0, List *tail0)
 }
 
 /* listcopy -- make a copy of a list */
-extern List *listcopy(List *list) {
+extern List *
+listcopy(List *list)
+{
 	return append(list, NULL);
 }
 
 /* length -- lenth of a list */
-extern int length(List *list) {
+extern int
+length(List *list)
+{
 	int len = 0;
-	for (; list != NULL; list = list->next)
+	for(; list != NULL; list = list->next)
 		++len;
 	return len;
 }
 
 /* listify -- turn an argc/argv vector into a list */
-extern List *listify(int argc, char **argv) {
+extern List *
+listify(int argc, char **argv)
+{
 	List *list = nil; Root r_list;
 	int i;
 	char *s;
 
-	gcref(&r_list, (void**)&list);
+	gcref(&r_list, (void **)&list);
 
-	for(i = 1; i <= argc; i++){
-		s = argv[argc-i];
+	for(i = 1; i <= argc; i++) {
+		s = argv[argc - i];
 		list = mklist(mkstr(s), list);
 	}
 
@@ -241,29 +257,32 @@ extern List *listify(int argc, char **argv) {
 }
 
 /* nth -- return nth element of a list, indexed from 1 */
-extern Term *nth(List *list, int n) {
+extern Term *
+nth(List *list, int n)
+{
 	assert(n > 0);
-	for (; list != NULL; list = list->next) {
+	for(; list != NULL; list = list->next) {
 		assert(list->term != NULL);
-		if (--n == 0)
+		if(--n == 0)
 			return list->term;
 	}
 	return NULL;
 }
 
 /* sortlist */
-List*
-sortlist(List *list) {
+List *
+sortlist(List *list)
+{
 	Vector *v = nil; Root r_v;
 	List *l = nil; Root r_l;
 	List *lp = nil; Root r_lp;
 
-	gcref(&r_v, (void**)&v);
-	gcref(&r_l, (void**)&l);
-	gcref(&r_lp, (void**)&lp);
+	gcref(&r_v, (void **)&v);
+	gcref(&r_l, (void **)&l);
+	gcref(&r_lp, (void **)&lp);
 	l = list;
 
-	if (length(list) > 1) {
+	if(length(list) > 1) {
 		v = vectorize(l);
 		sortvector(v);
 		gcdisable();

@@ -4,64 +4,71 @@
 
 #if !HAVE_STRERROR
 /* strerror -- turn an error code into a string */
-static char *strerror(int n) {
+static char *
+strerror(int n)
+{
 	extern int sys_nerr;
 	extern char *sys_errlist[];
-	if (n > sys_nerr)
-	  return NULL;
+	if(n > sys_nerr)
+		return NULL;
 	return sys_errlist[n];
 }
 
 #endif
 
 /* esstrerror -- a wrapper around sterror(3) */
-extern char *esstrerror(int n) {
-  char *error = strerror(n);
+extern char *
+esstrerror(int n)
+{
+	char *error = strerror(n);
 
-  if (error == NULL)
-    return "unknown error";
-  return error;
+	if(error == NULL)
+		return "unknown error";
+	return error;
 }
 
-
-
 /* uerror -- print a unix error, our version of perror */
-extern void uerror(char *s) {
-	if (s != NULL)
+extern void
+uerror(char *s)
+{
+	if(s != NULL)
 		eprint("%s: %s\n", s, esstrerror(errno));
 	else
 		eprint("%s\n", esstrerror(errno));
 }
 
 /* isabsolute -- test to see if pathname begins with "/", "./", or "../" */
-extern Boolean isabsolute(char *path) {
-	return path[0] == '/'
-	       || (path[0] == '.' && (path[1] == '/'
-				      || (path[1] == '.' && path[2] == '/')));
+extern Boolean
+isabsolute(char *path)
+{
+	return path[0] == '/' || (path[0] == '.' && (path[1] == '/' || (path[1] == '.' && path[2] == '/')));
 }
 
 /* streq2 -- is a string equal to the concatenation of two strings? */
-extern Boolean streq2(const char *s, const char *t1, const char *t2) {
+extern Boolean
+streq2(const char *s, const char *t1, const char *t2)
+{
 	int c;
 	assert(s != NULL && t1 != NULL && t2 != NULL);
-	while ((c = *t1++) != '\0')
-		if (c != *s++)
+	while((c = *t1++) != '\0')
+		if(c != *s++)
 			return FALSE;
-	while ((c = *t2++) != '\0')
-		if (c != *s++)
+	while((c = *t2++) != '\0')
+		if(c != *s++)
 			return FALSE;
 	return *s == '\0';
 }
-
 
 /*
  * safe interface to malloc and friends
  */
 
 /* ealloc -- error checked malloc */
-extern void *ealloc(size_t n) {
+extern void *
+ealloc(size_t n)
+{
 	void *p = malloc(n);
-	if (p == NULL) {
+	if(p == NULL) {
 		uerror("malloc");
 		exit(1);
 	}
@@ -70,11 +77,13 @@ extern void *ealloc(size_t n) {
 }
 
 /* erealloc -- error checked realloc */
-extern void *erealloc(void *p, size_t n) {
-	if (p == NULL)
+extern void *
+erealloc(void *p, size_t n)
+{
+	if(p == NULL)
 		return ealloc(n);
 	p = realloc(p, n);
-	if (p == NULL) {
+	if(p == NULL) {
 		uerror("realloc");
 		exit(1);
 	}
@@ -82,26 +91,29 @@ extern void *erealloc(void *p, size_t n) {
 }
 
 /* efree -- error checked free */
-extern void efree(void *p) {
+extern void
+efree(void *p)
+{
 	assert(p != NULL);
 	free(p);
 }
-
 
 /*
  * private interfaces to system calls
  */
 
-extern void ewrite(int fd, const char *buf, size_t n) {
+extern void
+ewrite(int fd, const char *buf, size_t n)
+{
 	volatile long i, remain;
 	const char *volatile bufp = buf;
-	for (i = 0, remain = n; remain > 0; bufp += i, remain -= i) {
+	for(i = 0, remain = n; remain > 0; bufp += i, remain -= i) {
 		interrupted = FALSE;
-		if (!setjmp(slowlabel)) {
+		if(!setjmp(slowlabel)) {
 			slow = TRUE;
-			if (interrupted)
+			if(interrupted)
 				break;
-			else if ((i = write(fd, bufp, remain)) <= 0)
+			else if((i = write(fd, bufp, remain)) <= 0)
 				break; /* abort silently on errors in write() */
 		} else
 			break;
@@ -111,19 +123,21 @@ extern void ewrite(int fd, const char *buf, size_t n) {
 	SIGCHK();
 }
 
-extern long eread(int fd, char *buf, size_t n) {
+extern long
+eread(int fd, char *buf, size_t n)
+{
 	long r;
 	interrupted = FALSE;
-	if (!setjmp(slowlabel)) {
+	if(!setjmp(slowlabel)) {
 		slow = TRUE;
-		if (!interrupted)
+		if(!interrupted)
 			r = read(fd, buf, n);
 		else
 			r = -2;
 	} else
 		r = -2;
 	slow = FALSE;
-	if (r == -2) {
+	if(r == -2) {
 		errno = EINTR;
 		r = -1;
 	}

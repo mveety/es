@@ -6,7 +6,7 @@
 
 DefineTag(Term, static);
 
-Term*
+Term *
 mkterm1(char *str, Closure *closure, Dict *dict)
 {
 	Term *term = nil; Root r_term;
@@ -14,7 +14,7 @@ mkterm1(char *str, Closure *closure, Dict *dict)
 	assert(str != nil || closure != nil || dict != nil);
 	gcdisable();
 	term = gcnew(Term);
-	gcref(&r_term, (void**)&term);
+	gcref(&r_term, (void **)&term);
 	if(str != nil)
 		*term = (Term){tkString, ttNone, str, nil, nil};
 	else if(closure != nil)
@@ -22,30 +22,30 @@ mkterm1(char *str, Closure *closure, Dict *dict)
 	else if(dict != nil)
 		*term = (Term){tkDict, ttNone, nil, nil, dict};
 	gcenable();
-	gcderef(&r_term, (void**)&term);
+	gcderef(&r_term, (void **)&term);
 	return term;
 }
 
-Term*
+Term *
 mkterm(char *str, Closure *closure)
 {
 	return mkterm1(str, closure, nil);
 }
 
-Term*
+Term *
 mkstr(char *str)
 {
 	Term *term;
 	char *string = nil; Root r_string;
 
 	string = str;
-	gcref(&r_string, (void**)&string);
+	gcref(&r_string, (void **)&string);
 	term = mkterm(string, nil);
-	gcderef(&r_string, (void**)&string);
+	gcderef(&r_string, (void **)&string);
 	return term;
 }
 
-Term*
+Term *
 mkdictterm(Dict *d)
 {
 	if(!d)
@@ -73,7 +73,7 @@ isadict(char *s)
 	return 0;
 }
 
-Closure*
+Closure *
 getclosure(Term *term)
 {
 	Term *tp = nil; Root r_tp;
@@ -81,14 +81,14 @@ getclosure(Term *term)
 
 	if(term->kind == tkDict)
 		return nil;
-	if (term->closure == nil) {
+	if(term->closure == nil) {
 		assert(term->str != nil);
-		if(isfunction(term->str)){
-			gcref(&r_tp, (void**)&tp);
-			gcref(&r_np, (void**)&np);
+		if(isfunction(term->str)) {
+			gcref(&r_tp, (void **)&tp);
+			gcref(&r_np, (void **)&np);
 			tp = term;
 			np = parsestring(term->str);
-			if (np == nil) {
+			if(np == nil) {
 				gcrderef(&r_np);
 				gcrderef(&r_tp);
 				return nil;
@@ -114,8 +114,8 @@ assocfmt(void *vargs, char *name, void *vdata)
 	List *data = nil; Root r_data;
 
 	args = vargs;
-	gcref(&r_args_result, (void**)&args->result);
-	gcref(&r_data, (void**)&data);
+	gcref(&r_args_result, (void **)&args->result);
+	gcref(&r_data, (void **)&data);
 	data = vdata;
 
 	if(args->result == nil)
@@ -127,7 +127,7 @@ assocfmt(void *vargs, char *name, void *vdata)
 	gcrderef(&r_args_result);
 }
 
-char*
+char *
 getregex(Term *term)
 {
 	if(term->kind == tkRegex)
@@ -136,7 +136,7 @@ getregex(Term *term)
 		return getstr(term);
 }
 
-char*
+char *
 getstr(Term *term)
 {
 	Term *tp = nil; Root r_tp;
@@ -144,16 +144,16 @@ getstr(Term *term)
 	Dict *d = nil; Root r_d;
 	char *res = nil; Root r_res;
 
-	if(term->kind == tkString && term->str == nil){
+	if(term->kind == tkString && term->str == nil) {
 		/* TODO: This is wrong, but I still need to hunt down places where
 		 * strings are defined improperly
 		 */
-		gcref(&r_tp, (void**)&tp);
+		gcref(&r_tp, (void **)&tp);
 		tp = term;
-		if(term->closure != nil){
+		if(term->closure != nil) {
 			tp->str = str("%C", tp->closure);
 			tp->kind = tkClosure;
-		} else if(term->dict != nil){
+		} else if(term->dict != nil) {
 			tp->str = str("%V", tp->dict);
 			tp->kind = tkDict;
 		}
@@ -162,19 +162,19 @@ getstr(Term *term)
 	}
 	switch(term->kind) {
 	case tkString:
-			return term->str;
+		return term->str;
 	case tkRegex:
-			return str("%%re(%#S)", term->str);
+		return str("%%re(%#S)", term->str);
 	case tkClosure:
 		assert(term->closure != nil);
 		return str("%C", term->closure);
 	case tkDict:
 		assert(term->dict != nil);
 		args.result = nil;
-		gcref(&r_args_result, (void**)&args.result);
-		gcref(&r_tp, (void**)&tp);
-		gcref(&r_d, (void**)&r_d);
-		gcref(&r_res, (void**)&r_res);
+		gcref(&r_args_result, (void **)&args.result);
+		gcref(&r_tp, (void **)&tp);
+		gcref(&r_d, (void **)&r_d);
+		gcref(&r_res, (void **)&r_res);
 
 		d = term->dict;
 		dictforall(d, assocfmt, &args);
@@ -192,7 +192,7 @@ getstr(Term *term)
 	return nil;
 }
 
-Dict*
+Dict *
 getdict(Term *term)
 {
 	Term *t = nil; Root r_t;
@@ -200,17 +200,17 @@ getdict(Term *term)
 	List *glommed = nil; Root r_glommed;
 	Dict *dict = nil; Root r_dict;
 
-	switch(term->kind){
+	switch(term->kind) {
 	case tkDict:
 		return term->dict;
 	case tkString:
 		assert(term->str != nil);
 		if(!isadict(term->str))
 			return nil;
-		gcref(&r_t, (void**)&t);
-		gcref(&r_parsed, (void**)&parsed);
-		gcref(&r_glommed, (void**)&glommed);
-		gcref(&r_dict, (void**)&dict);
+		gcref(&r_t, (void **)&t);
+		gcref(&r_parsed, (void **)&parsed);
+		gcref(&r_glommed, (void **)&glommed);
+		gcref(&r_dict, (void **)&dict);
 
 		t = term;
 		parsed = parsestring(t->str);
@@ -234,34 +234,33 @@ done:
 	return nil;
 }
 
-Term*
+Term *
 termcat(Term *t1, Term *t2)
 {
 	Term *term = nil; Root r_term;
 	char *str1 = nil; Root r_str1;
 	char *str2 = nil; Root r_str2;
 
-	if (t1 == nil)
+	if(t1 == nil)
 		return t2;
-	if (t2 == nil)
+	if(t2 == nil)
 		return t1;
 
-	gcref(&r_term, (void**)&term);
+	gcref(&r_term, (void **)&term);
 	str1 = getstr(t1);
-	gcref(&r_str1, (void**)&str1);
+	gcref(&r_str1, (void **)&str1);
 	str2 = getstr(t2);
-	gcref(&r_str2, (void**)&str2);
+	gcref(&r_str2, (void **)&str2);
 
 	term = mkstr(str("%s%s", str1, str2));
 
-	gcderef(&r_str2, (void**)&str2);
-	gcderef(&r_str1, (void**)&str1);
-	gcderef(&r_term, (void**)&term);
+	gcderef(&r_str2, (void **)&str2);
+	gcderef(&r_str1, (void **)&str1);
+	gcderef(&r_term, (void **)&term);
 	return term;
 }
 
-
-void*
+void *
 TermCopy(void *op)
 {
 	void *np;
@@ -288,21 +287,25 @@ TermMark(void *p)
 {
 	Term *t;
 
-	t = (Term*)p;
+	t = (Term *)p;
 	gc_set_mark(header(p));
 	gcmark(t->closure);
 	gcmark(t->str);
 	gcmark(t->dict);
 }
 
-extern Boolean termeq(Term *term, const char *s) {
+extern Boolean
+termeq(Term *term, const char *s)
+{
 	assert(term != nil);
-	if (term->str == nil)
+	if(term->str == nil)
 		return FALSE;
 	return streq(term->str, s);
 }
 
-extern Boolean isclosure(Term *term) {
+extern Boolean
+isclosure(Term *term)
+{
 	assert(term != nil);
 	return term->closure != nil;
 }
@@ -315,4 +318,3 @@ isdict(Term *term)
 		return FALSE;
 	return TRUE;
 }
-

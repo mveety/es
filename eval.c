@@ -17,15 +17,15 @@ failexec(char *file, List *args)
 
 	assert(gcisblocked());
 	fn = varlookup("fn-%exec-failure", nil);
-	if (fn != nil) {
+	if(fn != nil) {
 		olderror = errno;
 		list = append(fn, mklist(mkstr(file), args));
-		gcref(&r_list, (void**)&list);
-		gcref(&r_file, (void**)&file);
+		gcref(&r_list, (void **)&list);
+		gcref(&r_file, (void **)&file);
 		gcenable();
-		gcderef(&r_file, (void**)&file);
+		gcderef(&r_file, (void **)&file);
 		eval(list, nil, 0);
-		gcderef(&r_list, (void**)&list);
+		gcderef(&r_list, (void **)&list);
 		errno = olderror;
 	}
 	eprint("%s: %s\n", file, esstrerror(errno));
@@ -33,7 +33,7 @@ failexec(char *file, List *args)
 }
 
 /* forkexec -- fork (if necessary) and exec */
-List*
+List *
 forkexec(char *file, List *list, Boolean inchild)
 {
 	int pid, status;
@@ -42,13 +42,13 @@ forkexec(char *file, List *list, Boolean inchild)
 	gcdisable();
 	env = mkenv();
 	pid = efork(!inchild, FALSE);
-	if (pid == 0) {
+	if(pid == 0) {
 		execve(file, vectorize(list)->vector, env->vector);
 		failexec(file, list);
 	}
 	gcenable();
 	status = ewaitfor(pid);
-	if ((status & 0xff) == 0) {
+	if((status & 0xff) == 0) {
 		sigint_newline = FALSE;
 		SIGCHK();
 		sigint_newline = TRUE;
@@ -58,7 +58,7 @@ forkexec(char *file, List *list, Boolean inchild)
 	return mklist(mkterm(mkstatus(status), nil), nil);
 }
 
-List*
+List *
 dictdestructassign(Tree *vardict0, Tree *valueform0, Binding *binding0)
 {
 	Tree *vardict = vardict0; Root r_vardict;
@@ -73,17 +73,17 @@ dictdestructassign(Tree *vardict0, Tree *valueform0, Binding *binding0)
 	List *varlist = nil; Root r_varlist;
 	List *dictdata = nil; Root r_dictdata;
 
-	gcref(&r_vardict, (void**)&vardict);
-	gcref(&r_valueform, (void**)&valueform);
-	gcref(&r_binding, (void**)&binding);
+	gcref(&r_vardict, (void **)&vardict);
+	gcref(&r_valueform, (void **)&valueform);
+	gcref(&r_binding, (void **)&binding);
 
-	gcref(&r_dictform, (void**)&dictform);
-	gcref(&r_assoc, (void**)&assoc);
-	gcref(&r_valuelist, (void**)&valuelist);
-	gcref(&r_valuedict, (void**)&valuedict);
-	gcref(&r_namelist, (void**)&namelist);
-	gcref(&r_varlist, (void**)&varlist);
-	gcref(&r_dictdata, (void**)&dictdata);
+	gcref(&r_dictform, (void **)&dictform);
+	gcref(&r_assoc, (void **)&assoc);
+	gcref(&r_valuelist, (void **)&valuelist);
+	gcref(&r_valuedict, (void **)&valuedict);
+	gcref(&r_namelist, (void **)&namelist);
+	gcref(&r_varlist, (void **)&varlist);
+	gcref(&r_dictdata, (void **)&dictdata);
 
 	dictform = vardict->u[0].p;
 
@@ -96,7 +96,7 @@ dictdestructassign(Tree *vardict0, Tree *valueform0, Binding *binding0)
 		fail("es:dictassign", "too many rhs elements");
 	valuedict = getdict(valuelist->term);
 
-	for(dictform = vardict->u[0].p; dictform != nil; dictform = dictform->u[1].p){
+	for(dictform = vardict->u[0].p; dictform != nil; dictform = dictform->u[1].p) {
 		assoc = dictform->u[0].p;
 		assert(assoc != nil && assoc->kind == nAssoc);
 		if(assoc->u[1].p == nil)
@@ -107,10 +107,10 @@ dictdestructassign(Tree *vardict0, Tree *valueform0, Binding *binding0)
 			continue;
 		if(namelist->next != nil)
 			fail("es:dictassign", "element name should not be a list");
-		dictdata = (List*)dictget(valuedict, getstr(namelist->term));
+		dictdata = (List *)dictget(valuedict, getstr(namelist->term));
 		if(dictdata == nil)
 			fail("es:dictassign", "element %s is empty", getstr(namelist->term));
-		for(; varlist != nil; varlist = varlist->next){
+		for(; varlist != nil; varlist = varlist->next) {
 			if(varlist->next == nil) {
 				if(!termeq(varlist->term, "_"))
 					vardef(getstr(varlist->term), binding, dictdata);
@@ -143,7 +143,7 @@ dictdestructassign(Tree *vardict0, Tree *valueform0, Binding *binding0)
 }
 
 /* assign -- bind a list of values to a list of variables */
-List*
+List *
 assign(Tree *varform, Tree *valueform0, Binding *binding0)
 {
 	List *value;
@@ -158,30 +158,30 @@ assign(Tree *varform, Tree *valueform0, Binding *binding0)
 		return dictdestructassign(varform, valueform0, binding0);
 
 	result = nil;
-	gcref(&r_result, (void**)&result);
+	gcref(&r_result, (void **)&result);
 
 	valueform = valueform0;
-	gcref(&r_valueform, (void**)&valueform);
+	gcref(&r_valueform, (void **)&valueform);
 
 	binding = binding0;
-	gcref(&r_binding, (void**)&binding);
+	gcref(&r_binding, (void **)&binding);
 
 	vars = glom(varform, binding, FALSE);
-	gcref(&r_vars, (void**)&vars);
+	gcref(&r_vars, (void **)&vars);
 
-	if (vars == nil)
+	if(vars == nil)
 		fail("es:assign", "null variable name");
 
 	values = glom(valueform, binding, TRUE);
-	gcref(&r_values, (void**)&values);
+	gcref(&r_values, (void **)&values);
 	result = values;
 
-	for (; vars != nil; vars = vars->next) {
+	for(; vars != nil; vars = vars->next) {
 		name = getstr(vars->term);
-		gcref(&r_name, (void**)&name);
-		if (values == nil)
+		gcref(&r_name, (void **)&name);
+		if(values == nil)
 			value = nil;
-		else if (vars->next == nil || values->next == nil) {
+		else if(vars->next == nil || values->next == nil) {
 			value = values;
 			values = nil;
 		} else {
@@ -190,19 +190,19 @@ assign(Tree *varform, Tree *valueform0, Binding *binding0)
 		}
 		if(!termeq(vars->term, "_"))
 			vardef(name, binding, value);
-		gcderef(&r_name, (void**)&name);
+		gcderef(&r_name, (void **)&name);
 	}
 
-	gcderef(&r_values, (void**)&values);
-	gcderef(&r_vars, (void**)&vars);
-	gcderef(&r_binding, (void**)&binding);
-	gcderef(&r_valueform, (void**)&valueform);
-	gcderef(&r_result, (void**)&result);
+	gcderef(&r_values, (void **)&values);
+	gcderef(&r_vars, (void **)&vars);
+	gcderef(&r_binding, (void **)&binding);
+	gcderef(&r_valueform, (void **)&valueform);
+	gcderef(&r_result, (void **)&result);
 	return result;
 }
 
 /* letbindings -- create a new Binding containing let-bound variables */
-Binding*
+Binding *
 letbindings1(Tree *defn0, Binding *outer0, Binding *context0, int evalflags, int letstar)
 {
 	Binding *binding = nil; Root r_binding;
@@ -215,34 +215,34 @@ letbindings1(Tree *defn0, Binding *outer0, Binding *context0, int evalflags, int
 	List *value;
 
 	binding = outer0;
-	gcref(&r_binding, (void**)&binding);
+	gcref(&r_binding, (void **)&binding);
 	context = context0;
-	gcref(&r_context, (void**)&context);
+	gcref(&r_context, (void **)&context);
 	defn = defn0;
-	gcref(&r_defn, (void**)&defn);
+	gcref(&r_defn, (void **)&defn);
 
-	for (; defn != nil; defn = defn->u[1].p) {
+	for(; defn != nil; defn = defn->u[1].p) {
 		assert(defn->kind == nList);
-		if (defn->u[0].p == nil)
+		if(defn->u[0].p == nil)
 			continue;
 
 		assign = defn->u[0].p;
-		gcref(&r_assign, (void**)&assign);
+		gcref(&r_assign, (void **)&assign);
 		assert(assign->kind == nAssign);
 		vars = glom(assign->u[0].p, context, FALSE);
-		gcref(&r_vars, (void**)&vars);
+		gcref(&r_vars, (void **)&vars);
 		values = glom(assign->u[1].p, context, TRUE);
-		gcref(&r_values, (void**)&values);
+		gcref(&r_values, (void **)&values);
 
-		if (vars == nil)
+		if(vars == nil)
 			fail("es:let", "null variable name");
 
-		for (; vars != nil; vars = vars->next) {
+		for(; vars != nil; vars = vars->next) {
 			name = getstr(vars->term);
-			gcref(&r_name, (void**)&name);
-			if (values == nil)
+			gcref(&r_name, (void **)&name);
+			if(values == nil)
 				value = nil;
-			else if (vars->next == nil || values->next == nil) {
+			else if(vars->next == nil || values->next == nil) {
 				value = values;
 				values = nil;
 			} else {
@@ -265,20 +265,20 @@ letbindings1(Tree *defn0, Binding *outer0, Binding *context0, int evalflags, int
 	return binding;
 }
 
-Binding*
+Binding *
 letbindings(Tree *defn, Binding *outer, Binding *context, int evalflags)
 {
 	return letbindings1(defn, outer, context, evalflags, 0);
 }
 
-Binding*
+Binding *
 letsbindings(Tree *defn, Binding *outer, Binding *context, int evalflags)
 {
 	return letbindings1(defn, outer, context, evalflags, 1);
 }
 
 /* localbind -- recursively convert a Bindings list into dynamic binding */
-List*
+List *
 localbind(Binding *dynamic0, Binding *lexical0, Tree *body0, int evalflags)
 {
 	Push p;
@@ -287,17 +287,17 @@ localbind(Binding *dynamic0, Binding *lexical0, Tree *body0, int evalflags)
 	Binding *dynamic = nil; Root r_dynamic;
 	Binding *lexical = nil; Root r_lexical;
 
-	if (dynamic0 == nil)
+	if(dynamic0 == nil)
 		return walk(body0, lexical0, evalflags);
 	else {
 		result = nil;
-		gcref(&r_result, (void**)&result);
+		gcref(&r_result, (void **)&result);
 		body = body0;
-		gcref(&r_body, (void**)&body);
+		gcref(&r_body, (void **)&body);
 		dynamic = dynamic0;
-		gcref(&r_dynamic, (void**)&dynamic);
+		gcref(&r_dynamic, (void **)&dynamic);
 		lexical = lexical0;
-		gcref(&r_lexical, (void**)&lexical);
+		gcref(&r_lexical, (void **)&lexical);
 
 		varpush(&p, dynamic->name, dynamic->defn);
 		result = localbind(dynamic->next, lexical, body, evalflags);
@@ -310,16 +310,15 @@ localbind(Binding *dynamic0, Binding *lexical0, Tree *body0, int evalflags)
 		return result;
 	}
 }
-	
+
 /* local -- build, recursively, one layer of local assignment */
-List*
+List *
 local(Tree *defn, Tree *body0, Binding *bindings0, int evalflags)
 {
 	Ref(List *, result, NULL);
 	Ref(Tree *, body, body0);
 	Ref(Binding *, bindings, bindings0);
-	Ref(Binding *, dynamic,
-	    reversebindings(letbindings(defn, NULL, bindings, evalflags)));
+	Ref(Binding *, dynamic, reversebindings(letbindings(defn, NULL, bindings, evalflags)));
 
 	result = localbind(dynamic, bindings, body, evalflags);
 
@@ -328,10 +327,10 @@ local(Tree *defn, Tree *body0, Binding *bindings0, int evalflags)
 }
 
 /* forloop -- evaluate a for loop */
-List*
+List *
 forloop(Tree *defn0, Tree *body0, Binding *binding, int evalflags)
 {
-	static List MULTIPLE = { NULL, NULL };
+	static List MULTIPLE = {NULL, NULL};
 
 	Ref(List *, result, list_true);
 	Ref(Binding *, outer, binding);
@@ -339,17 +338,17 @@ forloop(Tree *defn0, Tree *body0, Binding *binding, int evalflags)
 	Ref(Tree *, body, body0);
 
 	Ref(Tree *, defn, defn0);
-	for (; defn != NULL; defn = defn->u[1].p) {
+	for(; defn != NULL; defn = defn->u[1].p) {
 		assert(defn->kind == nList);
-		if (defn->u[0].p == NULL)
+		if(defn->u[0].p == NULL)
 			continue;
 		Ref(Tree *, assign, defn->u[0].p);
 		assert(assign->kind == nAssign);
 		Ref(List *, vars, glom(assign->u[0].p, outer, FALSE));
 		Ref(List *, list, glom(assign->u[1].p, outer, TRUE));
-		if (vars == NULL)
+		if(vars == NULL)
 			fail("es:for", "null variable name");
-		for (; vars != NULL; vars = vars->next) {
+		for(; vars != NULL; vars = vars->next) {
 			char *var = getstr(vars->term);
 			looping = mkbinding(var, list, looping);
 			list = &MULTIPLE;
@@ -361,22 +360,22 @@ forloop(Tree *defn0, Tree *body0, Binding *binding, int evalflags)
 	RefEnd(defn);
 
 	ExceptionHandler
-
-		for (;;) {
+	{
+		for(;;) {
 			Boolean allnull = TRUE;
 			Boolean underscore = FALSE;
 			Ref(Binding *, bp, outer);
 			Ref(Binding *, lp, looping);
 			Ref(Binding *, sequence, NULL);
-			for (; lp != NULL; lp = lp->next) {
+			for(; lp != NULL; lp = lp->next) {
 				underscore = FALSE;
 				if(strcmp(lp->name, "_") == 0)
 					underscore = TRUE;
 				Ref(List *, value, NULL);
-				if (lp->defn != &MULTIPLE)
+				if(lp->defn != &MULTIPLE)
 					sequence = lp;
 				assert(sequence != NULL);
-				if (sequence->defn != NULL) {
+				if(sequence->defn != NULL) {
 					if(underscore == FALSE)
 						value = mklist(sequence->defn->term, NULL);
 					sequence->defn = sequence->defn->next;
@@ -387,36 +386,40 @@ forloop(Tree *defn0, Tree *body0, Binding *binding, int evalflags)
 				RefEnd(value);
 			}
 			RefEnd2(sequence, lp);
-			if (allnull) {
+			if(allnull) {
 				RefPop(bp);
 				break;
 			}
 
 			ExceptionHandler
+			{
 				result = walk(body, bp, evalflags & eval_exitonfalse);
+			}
 			CatchException (e)
+			{
 				if(!termeq(e->term, "continue"))
 					throw(e);
-			EndExceptionHandler
+			}
+			EndExceptionHandler;
 
 			RefEnd(bp);
 			SIGCHK();
 		}
-
+	}
 	CatchException (e)
-
-		if (!termeq(e->term, "break"))
+	{
+		if(!termeq(e->term, "break"))
 			throw(e);
 		result = e->next;
-
-	EndExceptionHandler
+	}
+	EndExceptionHandler;
 
 	RefEnd3(body, looping, outer);
 	RefReturn(result);
 }
 
 /* matchpattern -- does the text match a pattern? */
-List*
+List *
 matchpattern(Tree *subjectform0, Tree *patternform0, Binding *binding)
 {
 	Binding *bp = binding; Root r_bp;
@@ -436,26 +439,26 @@ matchpattern(Tree *subjectform0, Tree *patternform0, Binding *binding)
 	RegexStatus status;
 	char errstr[128];
 
-	gcref(&r_bp, (void**)&bp);
-	gcref(&r_patternform, (void**)&patternform);
-	gcref(&r_subject, (void**)&subject);
-	gcref(&r_sp, (void**)&sp);
-	gcref(&r_pattern, (void**)&pattern);
-	gcref(&r_lp, (void**)&lp);
-	gcref(&r_pattern1, (void**)&pattern1);
-	gcref(&r_quote, (void**)&quote);
-	gcref(&r_quote1, (void**)&quote1);
-	gcref(&r_ql, (void**)&ql);
-	gcref(&r_ql1, (void**)&ql1);
-	gcref(&r_tmp, (void**)&tmp);
+	gcref(&r_bp, (void **)&bp);
+	gcref(&r_patternform, (void **)&patternform);
+	gcref(&r_subject, (void **)&subject);
+	gcref(&r_sp, (void **)&sp);
+	gcref(&r_pattern, (void **)&pattern);
+	gcref(&r_lp, (void **)&lp);
+	gcref(&r_pattern1, (void **)&pattern1);
+	gcref(&r_quote, (void **)&quote);
+	gcref(&r_quote1, (void **)&quote1);
+	gcref(&r_ql, (void **)&ql);
+	gcref(&r_ql1, (void **)&ql1);
+	gcref(&r_tmp, (void **)&tmp);
 
 	subject = glom(subjectform0, bp, TRUE);
 	pattern = glom2(patternform, bp, &quote);
 
-	for(lp = pattern, ql = quote; lp != nil; lp = lp->next, ql = ql->next){
-		if(lp->term->kind == tkRegex){
+	for(lp = pattern, ql = quote; lp != nil; lp = lp->next, ql = ql->next) {
+		if(lp->term->kind == tkRegex) {
 			hasregex = TRUE;
-			for(sp = subject; sp != nil; sp = sp->next){
+			for(sp = subject; sp != nil; sp = sp->next) {
 				memset(errstr, 0, sizeof(errstr)); /* I should probably not set errstr on a match fail */
 				status = (RegexStatus){ReNil, FALSE, 0, 0, nil, 0, &errstr[0], sizeof(errstr)};
 				regexmatch(&status, sp->term, lp->term);
@@ -466,14 +469,14 @@ matchpattern(Tree *subjectform0, Tree *patternform0, Binding *binding)
 				if(status.matchcode != 0 && status.matchcode != REG_NOMATCH)
 					fail("es:rematch", "match error: %s", errstr);
 
-				if(status.matched == TRUE){
+				if(status.matched == TRUE) {
 					result = status.matched;
 					goto done;
 				}
 			}
 		} else {
 			pattern1 = mklist(lp->term, pattern1);
-			if(quote1 == nil){
+			if(quote1 == nil) {
 				quote1 = mkstrlist(ql->str, nil);
 				ql1 = quote1;
 			} else {
@@ -487,10 +490,10 @@ matchpattern(Tree *subjectform0, Tree *patternform0, Binding *binding)
 	}
 
 	pattern1 = reverse(pattern1);
-	if(hasregex){
+	if(hasregex) {
 		if(verbose_match)
-			eprint("quote = [%Z], quote1 = [%Z], subject = (%L), pattern1 = (%L)\n",
-				quote, " ", quote1, ", ", subject, " ", pattern1, " ");
+			eprint("quote = [%Z], quote1 = [%Z], subject = (%L), pattern1 = (%L)\n", quote, " ", quote1, ", ",
+				   subject, " ", pattern1, " ");
 	} else
 		quote1 = quote;
 	result = listmatch(subject, pattern1, quote1);
@@ -513,7 +516,7 @@ done:
 }
 
 /* extractpattern -- Like matchpattern, but returns matches */
-List*
+List *
 extractpattern(Tree *subjectform0, Tree *patternform0, Binding *binding)
 {
 	List *pattern;
@@ -523,13 +526,13 @@ extractpattern(Tree *subjectform0, Tree *patternform0, Binding *binding)
 	Ref(Tree *, patternform, patternform0);
 	Ref(List *, subject, glom(subjectform0, bp, TRUE));
 	pattern = glom2(patternform, bp, &quote);
-	result = (List *) extractmatches(subject, pattern, quote);
+	result = (List *)extractmatches(subject, pattern, quote);
 	RefEnd3(subject, patternform, bp);
 	RefReturn(result);
 }
 
 /* walk -- walk through a tree, evaluating nodes */
-inline List*
+inline List *
 walk(Tree *tree0, Binding *binding0, int flags)
 {
 	Tree *volatile tree = tree0;
@@ -538,25 +541,35 @@ walk(Tree *tree0, Binding *binding0, int flags)
 	SIGCHK();
 
 top:
-	if (tree == NULL)
+	if(tree == NULL)
 		return list_true;
 
-	switch (tree->kind) {
+	switch(tree->kind) {
+	case nConcat:
+	case nList:
+	case nQword:
+	case nVar:
+	case nVarsub:
+	case nWord:
+	case nThunk:
+	case nLambda:
+	case nCall:
+	case nPrim:
+		{
+			List *list;
+			Ref(Binding *, bp, binding);
+			list = glom(tree, binding, TRUE);
+			binding = bp;
+			RefEnd(bp);
+			return eval(list, binding, flags);
+		}
 
-	    case nConcat: case nList: case nQword: case nVar: case nVarsub:
-	    case nWord: case nThunk: case nLambda: case nCall: case nPrim: {
-		List *list;
-		Ref(Binding *, bp, binding);
-		list = glom(tree, binding, TRUE);
-		binding = bp;
-		RefEnd(bp);
-		return eval(list, binding, flags);
-	    }
-
-	    case nAssign:
+	case nAssign:
 		return assign(tree->u[0].p, tree->u[1].p, binding);
 
-	    case nLet: case nClosure: case nLets:
+	case nLet:
+	case nClosure:
+	case nLets:
 		Ref(Tree *, body, tree->u[1].p);
 		if(tree->kind == nLets)
 			binding = letsbindings(tree->u[0].p, binding, binding, flags);
@@ -566,44 +579,43 @@ top:
 		RefEnd(body);
 		goto top;
 
-	    case nLocal:
+	case nLocal:
 		return local(tree->u[0].p, tree->u[1].p, binding, flags);
 
-	    case nFor:
+	case nFor:
 		return forloop(tree->u[0].p, tree->u[1].p, binding, flags);
-	
-	    case nMatch:
+
+	case nMatch:
 		return matchpattern(tree->u[0].p, tree->u[1].p, binding);
 
-	    case nExtract:
+	case nExtract:
 		return extractpattern(tree->u[0].p, tree->u[1].p, binding);
 
-	    default:
+	default:
 		panic("walk: bad node kind %s", treekind(tree));
-
 	}
 	NOTREACHED;
 }
 
 /* bindargs -- bind an argument list to the parameters of a lambda */
-Binding*
+Binding *
 bindargs(Tree *params, List *args, Binding *binding)
 {
 	Tree *param;
 	List *value;
 
-	if (params == NULL)
+	if(params == NULL)
 		return mkbinding("*", args, binding);
 
 	gcdisable();
 
-	for (; params != NULL; params = params->u[1].p) {
+	for(; params != NULL; params = params->u[1].p) {
 		assert(params->kind == nList);
 		param = params->u[0].p;
 		assert(param->kind == nWord || param->kind == nQword);
-		if (args == NULL)
+		if(args == NULL)
 			value = NULL;
-		else if (params->u[1].p == NULL || args->next == NULL) {
+		else if(params->u[1].p == NULL || args->next == NULL) {
 			value = args;
 			args = NULL;
 		} else {
@@ -619,13 +631,13 @@ bindargs(Tree *params, List *args, Binding *binding)
 }
 
 /* pathsearch -- evaluate fn %pathsearch + some argument */
-List*
+List *
 pathsearch(Term *term)
 {
 	List *search, *list;
 
 	search = varlookup("fn-%pathsearch", NULL);
-	if (search == NULL)
+	if(search == NULL)
 		fail("es:pathsearch", "%E: fn %%pathsearch undefined", term);
 
 	list = mklist(term, NULL);
@@ -633,14 +645,14 @@ pathsearch(Term *term)
 }
 
 /* eval -- evaluate a list, producing a list */
-List*
+List *
 eval(List *list0, Binding *binding0, int flags)
 {
 	Closure *volatile cp;
 	List *fn;
 	char *error, *binname;
 
-	if (++evaldepth >= maxevaldepth)
+	if(++evaldepth >= maxevaldepth)
 		fail("es:eval", "max-eval-depth exceeded");
 
 	Ref(List *, list, list0);
@@ -648,7 +660,7 @@ eval(List *list0, Binding *binding0, int flags)
 	Ref(char *, funcname, NULL);
 
 restart:
-	if (list == NULL) {
+	if(list == NULL) {
 		RefPop3(funcname, binding, list);
 		--evaldepth;
 		return list_true;
@@ -656,8 +668,8 @@ restart:
 
 	assert(list->term != NULL);
 
-	if ((cp = getclosure(list->term)) != NULL) {
-		switch (cp->tree->kind) {
+	if((cp = getclosure(list->term)) != NULL) {
+		switch(cp->tree->kind) {
 		case nPrim:
 			assert(cp->binding == NULL);
 			list = prim(cp->tree->u[0].s, list->next, binding, flags);
@@ -667,32 +679,26 @@ restart:
 			break;
 		case nLambda:
 			ExceptionHandler
-
+			{
 				Push p;
 				Ref(Tree *, tree, cp->tree);
-				Ref(Binding *, context,
-					       bindargs(tree->u[0].p,
-							list->next,
-							cp->binding));
-				if (funcname != NULL)
-					varpush(&p, "0",
-						    mklist(mkterm(funcname,
-								  NULL),
-							   NULL));
+				Ref(Binding *, context, bindargs(tree->u[0].p, list->next, cp->binding));
+				if(funcname != NULL)
+					varpush(&p, "0", mklist(mkterm(funcname, NULL), NULL));
 				list = walk(tree->u[1].p, context, flags);
-				if (funcname != NULL)
+				if(funcname != NULL)
 					varpop(&p);
 				RefEnd2(context, tree);
-	
+			}
 			CatchException (e)
-
-				if (termeq(e->term, "return")) {
+			{
+				if(termeq(e->term, "return")) {
 					list = e->next;
 					goto done;
 				}
 				throw(e);
-
-			EndExceptionHandler
+			}
+			EndExceptionHandler;
 			break;
 		case nList:
 			list = glom(cp->tree, cp->binding, TRUE);
@@ -716,15 +722,15 @@ restart:
 
 	Ref(char *, name, getstr(list->term));
 	fn = varlookup2("fn-", name, binding);
-	if (fn != NULL) {
+	if(fn != NULL) {
 		funcname = name;
 		list = append(fn, list->next);
 		RefPop(name);
 		goto restart;
 	}
-	if (isabsolute(name)) {
+	if(isabsolute(name)) {
 		error = checkexecutable(name);
-		if (error != NULL)
+		if(error != NULL)
 			fail("$&whatis", "%s: %s", name, error);
 		list = forkexec(name, list, flags & eval_inchild);
 		RefPop(name);
@@ -733,8 +739,7 @@ restart:
 	RefEnd(name);
 
 	fn = pathsearch(list->term);
-	if (fn != NULL && fn->next == NULL
-	    && (cp = getclosure(fn->term)) == NULL) {
+	if(fn != NULL && fn->next == NULL && (cp = getclosure(fn->term)) == NULL) {
 		binname = getstr(fn->term);
 		list = forkexec(binname, list, flags & eval_inchild);
 		goto done;
@@ -745,16 +750,15 @@ restart:
 
 done:
 	--evaldepth;
-	if ((flags & eval_exitonfalse) && !istrue(list))
+	if((flags & eval_exitonfalse) && !istrue(list))
 		exit(exitstatus(list));
 	RefEnd2(funcname, binding);
 	RefReturn(list);
 }
 
 /* eval1 -- evaluate a term, producing a list */
-List*
+List *
 eval1(Term *term, int flags)
 {
 	return eval(mklist(term, NULL), NULL, flags);
 }
-

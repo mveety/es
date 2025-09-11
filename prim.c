@@ -5,10 +5,12 @@
 
 static Dict *prims;
 
-extern List *prim(char *s, List *list, Binding *binding, int evalflags) {
+extern List *
+prim(char *s, List *list, Binding *binding, int evalflags)
+{
 	List *(*p)(List *, Binding *, int);
-	p = (List *(*)(List *, Binding *, int)) dictget(prims, s);
-	if (p == NULL)
+	p = (List * (*)(List *, Binding *, int)) dictget(prims, s);
+	if(p == NULL)
 		fail("es:prim", "unknown primitive: %s", s);
 	return (*p)(list, binding, evalflags);
 }
@@ -16,7 +18,7 @@ extern List *prim(char *s, List *list, Binding *binding, int evalflags) {
 PRIM(primitives) {
 	static List *primlist = nil;
 
-	if (primlist == nil) {
+	if(primlist == nil) {
 		globalroot(&primlist);
 		dictforall(prims, addtolist, &primlist);
 		primlist = sortlist(primlist);
@@ -25,7 +27,9 @@ PRIM(primitives) {
 	return primlist;
 }
 
-extern void initprims(void) {
+extern void
+initprims(void)
+{
 	prims = mkdict();
 	globalroot(&prims);
 
@@ -39,7 +43,6 @@ extern void initprims(void) {
 	prims = initprims_mv(prims);
 	prims = initprims_dict(prims);
 
-#define	primdict prims
+#define primdict prims
 	X(primitives);
 }
-

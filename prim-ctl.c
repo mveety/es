@@ -6,22 +6,22 @@
 PRIM(seq) {
 	Ref(List *, result, list_true);
 	Ref(List *, lp, list);
-	for (; lp != NULL; lp = lp->next)
-		result = eval1(lp->term, evalflags &~ (lp->next == NULL ? 0 : eval_inchild));
+	for(; lp != NULL; lp = lp->next)
+		result = eval1(lp->term, evalflags & ~(lp->next == NULL ? 0 : eval_inchild));
 	RefEnd(lp);
 	RefReturn(result);
 }
 
 PRIM(if) {
 	Ref(List *, lp, list);
-	for (; lp != NULL; lp = lp->next) {
+	for(; lp != NULL; lp = lp->next) {
 		List *cond = eval1(lp->term, evalflags & (lp->next == NULL ? eval_inchild : 0));
 		lp = lp->next;
-		if (lp == NULL) {
+		if(lp == NULL) {
 			RefPop(lp);
 			return cond;
 		}
-		if (istrue(cond)) {
+		if(istrue(cond)) {
 			List *result = eval1(lp->term, evalflags);
 			RefPop(lp);
 			return result;
@@ -33,14 +33,14 @@ PRIM(if) {
 
 PRIM(forever) {
 	Ref(List *, body, list);
-	for (;;)
+	for(;;)
 		list = eval(body, NULL, evalflags & eval_exitonfalse);
 	RefEnd(body);
 	return list;
 }
 
 PRIM(throw) {
-	if (list == NULL)
+	if(list == NULL)
 		fail("$&throw", "usage: throw exception [args ...]");
 	if(list->term->tag == ttError && list->term->kind == tkClosure)
 		eval(mklist(list->term, mklist(mkstr(str("throw")), NULL)), binding, evalflags);
@@ -52,7 +52,7 @@ PRIM(throw) {
 PRIM(catch) {
 	Atomic retry;
 
-	if (list == NULL)
+	if(list == NULL)
 		fail("$&catch", "usage: catch catcher body");
 
 	Ref(List *, result, NULL);
@@ -62,33 +62,40 @@ PRIM(catch) {
 		retry = FALSE;
 
 		ExceptionHandler
+		{
 
 			result = eval(lp->next, NULL, evalflags);
-
+		}
 		CatchException (frombody)
+		{
 
 			blocksignals();
 			ExceptionHandler
+			{
 				result = prim("catch_noreturn", mklist(lp->term, frombody), NULL, evalflags);
 				unblocksignals();
+			}
 			CatchException (fromcatcher)
-
-				if (termeq(fromcatcher->term, "retry")) {
+			{
+				if(termeq(fromcatcher->term, "retry")) {
 					retry = TRUE;
 					unblocksignals();
 				} else {
 					unblocksignals();
 					throw(fromcatcher);
 				}
-			EndExceptionHandler
-
-		EndExceptionHandler
-	} while (retry);
+			}
+			EndExceptionHandler;
+		}
+		EndExceptionHandler;
+	} while(retry);
 	RefEnd(lp);
 	RefReturn(result);
 }
 
-extern Dict *initprims_controlflow(Dict *primdict) {
+extern Dict *
+initprims_controlflow(Dict *primdict)
+{
 	X(seq);
 	X(if);
 	X(throw);

@@ -35,18 +35,20 @@ isquoted(const char *q, size_t qi, size_t quotelen)
 	return 0;
 }
 
-char*
+char *
 tailquote(const char *q, size_t qi, size_t quotelen)
 {
 	if(q == UNQUOTED)
 		return UNQUOTED;
 	if(qi < quotelen)
-		return (char*)&q[qi];
+		return (char *)&q[qi];
 	return UNQUOTED;
 }
 
 /* rangematch -- match a character against a character class */
-static int rangematch(const char *p, const char *q, char c) {
+static int
+rangematch(const char *p, const char *q, char c)
+{
 	const char *orig = p;
 	Boolean neg;
 	Boolean matched = FALSE;
@@ -59,93 +61,94 @@ static int rangematch(const char *p, const char *q, char c) {
 	/* i think it's fixed now? */
 	if(verbose_rangematch)
 		dprintf(2, "rangematch: p = \"%s\", q = \"%s\", c = %c\n", p, q, c);
-	if (*p == '~' && !isquoted(q, qi, quotelen)) {
+	if(*p == '~' && !isquoted(q, qi, quotelen)) {
 		p++, q++;
-	    	neg = TRUE;
+		neg = TRUE;
 	} else
 		neg = FALSE;
-	if (*p == ']' && !isquoted(q, qi, quotelen)) {
+	if(*p == ']' && !isquoted(q, qi, quotelen)) {
 		p++, q++;
 		matched = (c == ']');
 	}
-	for (; *p != ']' || isquoted(q, qi, quotelen); p++, qi++) {
-		if(verbose_rangematch){
+	for(; *p != ']' || isquoted(q, qi, quotelen); p++, qi++) {
+		if(verbose_rangematch) {
 			dprintf(2, "rangematch: p = \"%s\", q = \"%s\", qi = %lu, c = %c", p, q, qi, c);
-			dprintf(2, ", matched = %s", matched == TRUE ? "true": "false");
+			dprintf(2, ", matched = %s", matched == TRUE ? "true" : "false");
 			dprintf(2, ", isquoted = %d\n", isquoted(q, qi, quotelen));
 		}
-		if (*p == '\0')
-			return RANGE_ERROR;	/* bad syntax */
-		if (p[1] == '-' &&
-				!isquoted(q, qi+1, quotelen) &&
-				((p[2] != ']' && p[2] != '\0') || isquoted(q, qi+2, quotelen))) {
+		if(*p == '\0')
+			return RANGE_ERROR; /* bad syntax */
+		if(p[1] == '-' && !isquoted(q, qi + 1, quotelen) &&
+		   ((p[2] != ']' && p[2] != '\0') || isquoted(q, qi + 2, quotelen))) {
 			/* check for [..-..] but ignore [..-] */
-			if (c >= *p && c <= p[2])
+			if(c >= *p && c <= p[2])
 				matched = TRUE;
 			p += 2;
 			q += 2;
-		} else if (*p == c)
+		} else if(*p == c)
 			matched = TRUE;
 	}
-	if (matched ^ neg)
+	if(matched ^ neg)
 		return p - orig + 1; /* skip the right-bracket */
 	else
 		return RANGE_FAIL;
 }
 
 /* match -- match a single pattern against a single string. */
-extern Boolean match(const char *s, const char *p, const char *q) {
+extern Boolean
+match(const char *s, const char *p, const char *q)
+{
 	int i;
 	size_t qlen;
 
 	qlen = strlen(q);
-	if (q == QUOTED)
+	if(q == QUOTED)
 		return streq(s, p);
-	for (i = 0;;) {
+	for(i = 0;;) {
 		int c = p[i++];
-		if (c == '\0')
+		if(c == '\0')
 			return *s == '\0';
-		else if (q == UNQUOTED || q[i - 1] == 'r') {
-			switch (c) {
+		else if(q == UNQUOTED || q[i - 1] == 'r') {
+			switch(c) {
 			case '?':
-				if (*s++ == '\0')
+				if(*s++ == '\0')
 					return FALSE;
 				break;
 			case '*':
-				while (p[i] == '*' && (q == UNQUOTED || q[i] == 'r'))	/* collapse multiple stars */
+				while(p[i] == '*' && (q == UNQUOTED || q[i] == 'r')) /* collapse multiple stars */
 					i++;
-				if (p[i] == '\0') 	/* star at end of pattern? */
+				if(p[i] == '\0') /* star at end of pattern? */
 					return TRUE;
-				while (*s != '\0')
-					if (match(s++, p + i, tailquote(q, i, qlen)))
+				while(*s != '\0')
+					if(match(s++, p + i, tailquote(q, i, qlen)))
 						return TRUE;
 				return FALSE;
-			case '[': {
-				int j;
-				if (*s == '\0')
-					return FALSE;
-				switch (j = rangematch(p + i, tailquote(q, i, qlen), *s)) {
-				default:
-					i += j;
-					break;
-				case RANGE_FAIL:
-					return FALSE;
-				case RANGE_ERROR:
-					if (*s != '[')
+			case '[':
+				{
+					int j;
+					if(*s == '\0')
 						return FALSE;
+					switch(j = rangematch(p + i, tailquote(q, i, qlen), *s)) {
+					default:
+						i += j;
+						break;
+					case RANGE_FAIL:
+						return FALSE;
+					case RANGE_ERROR:
+						if(*s != '[')
+							return FALSE;
+					}
+					s++;
+					break;
 				}
-				s++;
-				break;
-			}
 			default:
-				if (c != *s++)
+				if(c != *s++)
 					return FALSE;
 			}
-		} else if (c != *s++)
+		} else if(c != *s++)
 			return FALSE;
 	}
 }
-
 
 /*
  * listmatch
@@ -155,25 +158,26 @@ extern Boolean match(const char *s, const char *p, const char *q) {
  *	() matches (), but otherwise null patterns match nothing.
  */
 
-extern Boolean listmatch(List *subject, List *pattern, StrList *quote) {
-	if (subject == NULL) {
-		if (pattern == NULL)
+extern Boolean
+listmatch(List *subject, List *pattern, StrList *quote)
+{
+	if(subject == NULL) {
+		if(pattern == NULL)
 			return TRUE;
 		Ref(List *, p, pattern);
 		Ref(StrList *, q, quote);
-		for (; p != NULL; p = p->next, q = q->next) {
+		for(; p != NULL; p = p->next, q = q->next) {
 			/* one or more stars match null */
 			char *pw = getstr(p->term), *qw = q->str;
-			if (*pw != '\0' && qw != QUOTED) {
+			if(*pw != '\0' && qw != QUOTED) {
 				int i;
 				Boolean matched = TRUE;
-				for (i = 0; pw[i] != '\0'; i++)
-					if (pw[i] != '*'
-					    || (qw != UNQUOTED && qw[i] != 'r')) {
+				for(i = 0; pw[i] != '\0'; i++)
+					if(pw[i] != '*' || (qw != UNQUOTED && qw[i] != 'r')) {
 						matched = FALSE;
 						break;
 					}
-				if (matched) {
+				if(matched) {
 					RefPop2(q, p);
 					return TRUE;
 				}
@@ -187,16 +191,16 @@ extern Boolean listmatch(List *subject, List *pattern, StrList *quote) {
 	Ref(List *, p, pattern);
 	Ref(StrList *, q, quote);
 
-	for (; p != NULL; p = p->next, q = q->next) {
+	for(; p != NULL; p = p->next, q = q->next) {
 		assert(q != NULL);
 		assert(p->term != NULL);
 		assert(q->str != NULL);
 		Ref(char *, pw, getstr(p->term));
 		Ref(char *, qw, q->str);
 		Ref(List *, t, s);
-		for (; t != NULL; t = t->next) {
+		for(; t != NULL; t = t->next) {
 			char *tw = getstr(t->term);
-			if (match(tw, pw, qw)) {
+			if(match(tw, pw, qw)) {
 				RefPop3(t, qw, pw);
 				RefPop3(q, p, s);
 				return TRUE;
@@ -213,7 +217,7 @@ extern Boolean listmatch(List *subject, List *pattern, StrList *quote) {
  *			 single pattern, returning it backwards
  */
 
-List*
+List *
 extractsinglematch(char *subject0, char *pattern0, char *quoting0, List *result0)
 {
 
@@ -230,10 +234,10 @@ extractsinglematch(char *subject0, char *pattern0, char *quoting0, List *result0
 	char *q = nil;
 	int c, j;
 
-	gcref(&r_subject, (void**)&subject);
-	gcref(&r_pattern, (void**)&pattern);
-	gcref(&r_quoting, (void**)&quoting);
-	gcref(&r_result, (void**)&result);
+	gcref(&r_subject, (void **)&subject);
+	gcref(&r_pattern, (void **)&pattern);
+	gcref(&r_quoting, (void **)&quoting);
+	gcref(&r_result, (void **)&result);
 
 	subject = subject0;
 	pattern = pattern0;
@@ -244,29 +248,29 @@ extractsinglematch(char *subject0, char *pattern0, char *quoting0, List *result0
 	patternlen = strlen(pattern);
 	quotelen = strlen(quoting);
 
-	if (!haswild(pattern, quoting) || !match(subject, pattern, quoting)){
+	if(!haswild(pattern, quoting) || !match(subject, pattern, quoting)) {
 		result = nil;
 		goto done;
 	}
 
-	for (si = 0, i = 0; pattern[i] != '\0' && i < patternlen && si < subjectlen; si++) {
-		if (isquoted(quoting, i, quotelen))
+	for(si = 0, i = 0; pattern[i] != '\0' && i < patternlen && si < subjectlen; si++) {
+		if(isquoted(quoting, i, quotelen))
 			i++;
 		else {
 			c = pattern[i++];
-			switch (c) {
+			switch(c) {
 			case '*':
-				if (pattern[i] == '\0'){
+				if(pattern[i] == '\0') {
 					result = mklist(mkstr(gcdup(&subject[si])), result);
 					goto done;
 				}
-				for (begin = si;; si++) {
+				for(begin = si;; si++) {
 					/* q = TAILQUOTE(quoting, i);*/
 					q = tailquote(quoting, i, quotelen);
 					assert(subject[si] != '\0');
-					if (match(&subject[si], &pattern[i], q)) {
+					if(match(&subject[si], &pattern[i], q)) {
 						result = mklist(mkstr(gcndup(&subject[begin], si - begin)), result);
-						if(haswild(&pattern[i], q)){
+						if(haswild(&pattern[i], q)) {
 							result = extractsinglematch(&subject[si], &pattern[i], q, result);
 							goto done;
 						} else
@@ -277,7 +281,7 @@ extractsinglematch(char *subject0, char *pattern0, char *quoting0, List *result0
 			case '[':
 				j = rangematch(&pattern[i], tailquote(quoting, i, quotelen), subject[si]);
 				assert(j != RANGE_FAIL);
-				if (j == RANGE_ERROR) {
+				if(j == RANGE_ERROR) {
 					assert(subject[si] == '[');
 					break;
 				}
@@ -308,8 +312,9 @@ done:
  *	subjects as the result.
  */
 
-List* /* new implementation that adds regex and lets the gc run */
-extractmatches(List *subjects0, List *patterns0, StrList *quotes0) {
+List * /* new implementation that adds regex and lets the gc run */
+extractmatches(List *subjects0, List *patterns0, StrList *quotes0)
+{
 	List *subjects = nil; Root r_subjects;
 	List *subject = nil; Root r_subject;
 	List *patterns = nil; Root r_patterns;
@@ -323,25 +328,24 @@ extractmatches(List *subjects0, List *patterns0, StrList *quotes0) {
 	char errstr[128];
 	AppendContext ctx;
 
-	gcref(&r_subjects, (void**)&subjects);
-	gcref(&r_subject, (void**)&subject);
-	gcref(&r_patterns, (void**)&patterns);
-	gcref(&r_pattern, (void**)&pattern);
-	gcref(&r_quotes, (void**)&quotes);
-	gcref(&r_quote, (void**)&quote);
-	gcref(&r_result, (void**)&result);
-	gcref(&r_rlp, (void**)&rlp);
-	gcref(&r_match, (void**)&match);
+	gcref(&r_subjects, (void **)&subjects);
+	gcref(&r_subject, (void **)&subject);
+	gcref(&r_patterns, (void **)&patterns);
+	gcref(&r_pattern, (void **)&pattern);
+	gcref(&r_quotes, (void **)&quotes);
+	gcref(&r_quote, (void **)&quote);
+	gcref(&r_result, (void **)&result);
+	gcref(&r_rlp, (void **)&rlp);
+	gcref(&r_match, (void **)&match);
 	append_start(&ctx);
 
 	subjects = subjects0;
 	patterns = patterns0;
 	quotes = quotes0;
 
-	for(subject = subjects; subject != nil; subject = subject->next){
-		for(pattern = patterns, quote = quotes;
-				pattern != nil;
-				pattern = pattern->next, quote = quote->next) {
+	for(subject = subjects; subject != nil; subject = subject->next) {
+		for(pattern = patterns, quote = quotes; pattern != nil;
+			pattern = pattern->next, quote = quote->next) {
 			if(pattern->term->kind == tkRegex) {
 				memset(errstr, 0, sizeof(errstr));
 				status = (RegexStatus){ReNil, FALSE, 0, 0, nil, 0, &errstr[0], sizeof(errstr)};
@@ -353,15 +357,14 @@ extractmatches(List *subjects0, List *patterns0, StrList *quotes0) {
 				if(status.matchcode != 0 && status.matchcode != REG_NOMATCH)
 					fail("es:reextract", "match error: %s", errstr);
 
-				if(status.matched == TRUE && status.substrs->next != nil){
+				if(status.matched == TRUE && status.substrs->next != nil) {
 					partial_append(&ctx, status.substrs->next);
 					break;
 				}
 			} else {
 				match = nil;
-				match = extractsinglematch(getstr(subject->term),
-							getstr(pattern->term), quote->str, nil);
-				if(match != nil){
+				match = extractsinglematch(getstr(subject->term), getstr(pattern->term), quote->str, nil);
+				if(match != nil) {
 					match = reverse(match);
 					partial_append(&ctx, match);
 					break;
@@ -386,7 +389,7 @@ extractmatches(List *subjects0, List *patterns0, StrList *quotes0) {
 
 Boolean regex_debug = FALSE;
 
-RegexStatus*
+RegexStatus *
 regexmatch(RegexStatus *status, Term *subject0, Term *pattern0)
 {
 	Term *subject = subject0; Root r_subject;
@@ -396,18 +399,18 @@ regexmatch(RegexStatus *status, Term *subject0, Term *pattern0)
 	regex_t regex;
 	regmatch_t pmatch[1];
 
-	gcref(&r_subject, (void**)&subject);
-	gcref(&r_pattern, (void**)&pattern);
+	gcref(&r_subject, (void **)&subject);
+	gcref(&r_pattern, (void **)&pattern);
 
 	status->type = ReMatch;
 	subjectstr = strdup(getregex(subject));
 	patternstr = strdup(getregex(pattern));
 	if(!subjectstr || !patternstr)
 		panic("regex strdup failed!");
-	status->compcode = regcomp(&regex, patternstr, REG_EXTENDED|REG_NOSUB);
-	if(status->compcode != 0){
+	status->compcode = regcomp(&regex, patternstr, REG_EXTENDED | REG_NOSUB);
+	if(status->compcode != 0) {
 		if(status->errstrsz > 0)
-			regerror(status->compcode, &regex, status->errstr, status->errstrsz-1);
+			regerror(status->compcode, &regex, status->errstr, status->errstrsz - 1);
 		goto done;
 	}
 
@@ -416,7 +419,7 @@ regexmatch(RegexStatus *status, Term *subject0, Term *pattern0)
 		status->matched = TRUE;
 	else {
 		if(status->errstrsz > 0)
-			regerror(status->compcode, &regex, status->errstr, status->errstrsz-1);
+			regerror(status->compcode, &regex, status->errstr, status->errstrsz - 1);
 	}
 
 done:
@@ -428,7 +431,7 @@ done:
 	return status;
 }
 
-RegexStatus*
+RegexStatus *
 regexextract(RegexStatus *status, Term *subject0, Term *pattern0)
 {
 	Term *subject = subject0; Root r_subject;
@@ -444,10 +447,10 @@ regexextract(RegexStatus *status, Term *subject0, Term *pattern0)
 	size_t nmatch;
 	int i;
 
-	gcref(&r_subject, (void**)&subject);
-	gcref(&r_pattern, (void**)&pattern);
-	gcref(&r_substrs, (void**)&substrs);
-	gcref(&r_status_substrs, (void**)&status->substrs);
+	gcref(&r_subject, (void **)&subject);
+	gcref(&r_pattern, (void **)&pattern);
+	gcref(&r_substrs, (void **)&substrs);
+	gcref(&r_status_substrs, (void **)&status->substrs);
 
 	status->type = ReExtract;
 	subjectstr = strdup(getregex(subject));
@@ -458,33 +461,33 @@ regexextract(RegexStatus *status, Term *subject0, Term *pattern0)
 	copybuf = ealloc(copybufsz);
 
 	status->compcode = regcomp(&regex, patternstr, REG_EXTENDED);
-	if(status->compcode > 0){
+	if(status->compcode > 0) {
 		if(status->errstrsz > 0)
-			regerror(status->compcode, &regex, status->errstr, status->errstrsz-1);
+			regerror(status->compcode, &regex, status->errstr, status->errstrsz - 1);
 		goto done;
 	}
-	nmatch = regex.re_nsub+1;
-	pmatch = ealloc(nmatch*sizeof(regmatch_t));
+	nmatch = regex.re_nsub + 1;
+	pmatch = ealloc(nmatch * sizeof(regmatch_t));
 
 	status->matchcode = regexec(&regex, subjectstr, regex.re_nsub, pmatch, 0);
-	if(status->matchcode){
+	if(status->matchcode) {
 		if(status->errstrsz > 0)
-			regerror(status->compcode, &regex, status->errstr, status->errstrsz-1);
+			regerror(status->compcode, &regex, status->errstr, status->errstrsz - 1);
 		goto done;
 	}
 	status->matched = TRUE;
-	for(i = (nmatch-1); i >= 0; i--){
+	for(i = (nmatch - 1); i >= 0; i--) {
 		if(pmatch[i].rm_so < 0 && pmatch[i].rm_eo < 0)
 			continue;
 		memset(copybuf, 0, copybufsz);
-		memcpy(copybuf, (subjectstr+pmatch[i].rm_so), pmatch[i].rm_eo - pmatch[i].rm_so);
+		memcpy(copybuf, (subjectstr + pmatch[i].rm_so), pmatch[i].rm_eo - pmatch[i].rm_so);
 		if(strlen(copybuf) == 0)
 			continue;
-		if(regex_debug == TRUE){
-			dprintf(2, "pmatch[%d].rm_so = %lu, pmatch[%d].rm_eo = %lu, ",
-					i, (uint64_t)pmatch[i].rm_so, i, (uint64_t)pmatch[i].rm_eo);
-			dprintf(2, "pmatch[%d].rm_eo - pmatch[%d].rm_so = %lu, ",
-					i, i, (uint64_t)(pmatch[i].rm_eo - pmatch[i].rm_so));
+		if(regex_debug == TRUE) {
+			dprintf(2, "pmatch[%d].rm_so = %lu, pmatch[%d].rm_eo = %lu, ", i, (uint64_t)pmatch[i].rm_so, i,
+					(uint64_t)pmatch[i].rm_eo);
+			dprintf(2, "pmatch[%d].rm_eo - pmatch[%d].rm_so = %lu, ", i, i,
+					(uint64_t)(pmatch[i].rm_eo - pmatch[i].rm_so));
 			dprintf(2, "i = %d, nmatch = %lu, copybuf = %s\n", i, nmatch, copybuf);
 		}
 		substrs = mklist(mkstr(str("%s", copybuf)), substrs);
@@ -504,4 +507,3 @@ done:
 	gcrderef(&r_subject);
 	return status;
 }
-

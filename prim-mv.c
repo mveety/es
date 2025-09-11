@@ -11,17 +11,17 @@ extern uint32_t gc_oldage;
 extern int gc_oldsweep_after;
 
 PRIM(version) {
-	return mklist(mkstr((char *) version), NULL);
+	return mklist(mkstr((char *)version), NULL);
 }
 
 PRIM(buildstring) {
-	return mklist(mkstr((char *) buildstring), NULL);
+	return mklist(mkstr((char *)buildstring), NULL);
 }
 
 #if READLINE
 
 PRIM(addhistory) {
-	if (list == NULL)
+	if(list == NULL)
 		fail("$&addhistory", "usage: $&addhistory [string]");
 	add_history(getstr(list->term));
 	return NULL;
@@ -34,8 +34,8 @@ PRIM(addhistorylist) {
 	if(list == NULL)
 		fail("$&addhistorylist", "usage: $&addhistorylist [list of strings]");
 
-	gcref(&r_list, (void**)&list);
-	gcref(&r_lp, (void**)&lp);
+	gcref(&r_list, (void **)&list);
+	gcref(&r_lp, (void **)&lp);
 
 	for(lp = list; lp != NULL; lp = lp->next)
 		add_history(getstr(lp->term));
@@ -69,7 +69,7 @@ PRIM(rlconf) {
 #endif
 
 PRIM(sethistory) {
-	if (list == NULL) {
+	if(list == NULL) {
 		sethistory(NULL);
 		return NULL;
 	}
@@ -80,8 +80,8 @@ PRIM(sethistory) {
 
 PRIM(getlast) {
 	if(lastcmd == NULL)
-		return mklist(mkstr((char *) ""), NULL);
-	return mklist(mkstr((char *) lastcmd), NULL);
+		return mklist(mkstr((char *)""), NULL);
+	return mklist(mkstr((char *)lastcmd), NULL);
 }
 
 PRIM(getevaldepth) {
@@ -98,8 +98,8 @@ PRIM(range) {
 	errno = 0;
 
 	start = (int)strtol(getstr(list->term), NULL, 10);
-	if(start == 0){
-		switch(errno){
+	if(start == 0) {
+		switch(errno) {
 		case EINVAL:
 			fail("$&range", str("invalid input: $1 = '%s'", getstr(list->term)));
 			break;
@@ -110,8 +110,8 @@ PRIM(range) {
 	}
 
 	end = (int)strtol(getstr(list->next->term), NULL, 10);
-	if(start == 0){
-		switch(errno){
+	if(start == 0) {
+		switch(errno) {
 		case EINVAL:
 			fail("$&range", str("invalid input: $2 = '%s'", getstr(list->term)));
 			break;
@@ -124,14 +124,14 @@ PRIM(range) {
 	if(start > end)
 		fail("$&range", "start > end");
 
-	gcref(&r_res, (void**)&res);
+	gcref(&r_res, (void **)&res);
 
 	gcdisable();
 	for(i = end; i >= start; i--)
 		res = mklist(mkstr(str("%d", i)), res);
 	gcenable();
 
-	gcderef(&r_res, (void**)&res);
+	gcderef(&r_res, (void **)&res);
 	return res;
 }
 
@@ -142,12 +142,12 @@ PRIM(reverse) {
 	if(list == NULL)
 		return NULL;
 
-	gcref(&r_res, (void**)&res);
+	gcref(&r_res, (void **)&res);
 
 	for(l = list; l != NULL; l = l->next)
 		res = mklist(l->term, res);
 
-	gcderef(&r_res, (void**)&res);
+	gcderef(&r_res, (void **)&res);
 	return res;
 }
 
@@ -164,7 +164,7 @@ PRIM(unixtimens) {
 
 	clock_gettime(CLOCK_REALTIME, &ts);
 
-	curtime = ((int64_t)ts.tv_sec)*1000000000LL + ts.tv_nsec;
+	curtime = ((int64_t)ts.tv_sec) * 1000000000LL + ts.tv_nsec;
 	return mklist(mkstr(str("%ld", curtime)), NULL);
 }
 
@@ -201,8 +201,8 @@ PRIM(settermtag) {
 	if(list == NULL || list->next == NULL)
 		fail("$&settermtag", "missing arguments");
 
-	gcref(&r_lp, (void**)&lp);
-	gcref(&r_term, (void**)&term);
+	gcref(&r_lp, (void **)&lp);
+	gcref(&r_term, (void **)&term);
 	lp = list;
 	gcdisable();
 	tagname = getstr(lp->term);
@@ -234,7 +234,7 @@ PRIM(gettermtag) {
 	if(list == NULL)
 		fail("$&gettermtag", "missing argument");
 
-	switch(list->term->tag){
+	switch(list->term->tag) {
 	default:
 		fail("$&gettermtag", "invalid tag %d", list->term->tag);
 		return list_false;
@@ -310,9 +310,9 @@ PRIM(gcstats) {
 	List *res = NULL; Root r_res;
 	GcStats stats;
 
-	gcref(&r_res, (void**)&res);
+	gcref(&r_res, (void **)&res);
 
-	if(gctype == NewGc){
+	if(gctype == NewGc) {
 		gc_getstats(&stats);
 		res = mklist(mkstr(str("%d", stats.gc_oldsweep_after)), res);
 		res = mklist(mkstr(str("%lud", stats.oldage)), res);
@@ -350,7 +350,7 @@ PRIM(gcstats) {
 		res = mklist(mkstr(str("old")), res);
 	}
 
-	gcderef(&r_res, (void**)&res);
+	gcderef(&r_res, (void **)&res);
 	return res;
 }
 
@@ -366,14 +366,14 @@ PRIM(dumpregions) {
 	if(gctype == OldGc)
 		fail("$&dumpregions", "using old gc");
 
-	gcref(&r_res, (void**)&res);
+	gcref(&r_res, (void **)&res);
 
-	for(r = regions; r != NULL; r = r->next){
+	for(r = regions; r != NULL; r = r->next) {
 		res = mklist(mkstr(str("%lud", r->size)), res);
 		res = mklist(mkstr(str("%ulx", r->start)), res);
 	}
 
-	gcderef(&r_res, (void**)&res);
+	gcderef(&r_res, (void **)&res);
 	return res;
 }
 
@@ -381,8 +381,8 @@ PRIM(gctuning) {
 	List *res = NULL; Root r_res;
 	int v = 0;
 
-	if (list == NULL) {
-		gcref(&r_res, (void**)&res);
+	if(list == NULL) {
+		gcref(&r_res, (void **)&res);
 		res = mklist(mkstr(str("%d", gc_oldsweep_after)), res);
 		res = mklist(mkstr(str("%ud", gc_oldage)), res);
 		res = mklist(mkstr(str("%d", gc_coalesce_after_n)), res);
@@ -396,8 +396,8 @@ PRIM(gctuning) {
 
 	errno = 0;
 	v = (int)strtol(getstr(list->next->term), NULL, 10);
-	if(v == 0){
-		switch(errno){
+	if(v == 0) {
+		switch(errno) {
 		case EINVAL:
 			fail("$&gctuning", str("invalid input: $2 = '%s'", getstr(list->next->term)));
 			break;
@@ -408,27 +408,27 @@ PRIM(gctuning) {
 	}
 
 	gcdisable();
-	if(termeq(list->term, "gcafter")){
+	if(termeq(list->term, "gcafter")) {
 		gc_after = v;
 		gcenable();
 		return list_true;
 	}
-	if(termeq(list->term, "sortaftern")){
+	if(termeq(list->term, "sortaftern")) {
 		gc_sort_after_n = v;
 		gcenable();
 		return list_true;
 	}
-	if(termeq(list->term, "coalesceaftern")){
+	if(termeq(list->term, "coalesceaftern")) {
 		gc_coalesce_after_n = v;
 		gcenable();
 		return list_true;
 	}
-	if(termeq(list->term, "oldage")){
+	if(termeq(list->term, "oldage")) {
 		gc_oldage = v;
 		gcenable();
 		return list_true;
 	}
-	if(termeq(list->term, "oldsweepafter")){
+	if(termeq(list->term, "oldsweepafter")) {
 		gc_oldsweep_after = v;
 		gcenable();
 		return list_true;
@@ -448,21 +448,21 @@ PRIM(parsestring) {
 	if(list == NULL)
 		fail("$&parsestring", "missing argument");
 
-	gcref(&r_result, (void**)&result);
-	gcref(&r_lp, (void**)&lp);
-	gcref(&r_tree, (void**)&tree);
-	gcref(&r_str, (void**)&str);
+	gcref(&r_result, (void **)&result);
+	gcref(&r_lp, (void **)&lp);
+	gcref(&r_tree, (void **)&tree);
+	gcref(&r_str, (void **)&str);
 
 	lp = list;
 	str = getstr(lp->term);
-	if(str == NULL){
+	if(str == NULL) {
 		gcrderef(&r_str);
 		gcrderef(&r_tree);
 		gcrderef(&r_lp);
 		gcrderef(&r_result);
 		fail("$&parsestring", "invalid term");
 	}
-	tree = parsestring((const char*)str);
+	tree = parsestring((const char *)str);
 	if(tree == NULL)
 		goto done;
 	result = mklist(mkterm(NULL, mkclosure(mk(nThunk, tree), NULL)), NULL);
@@ -484,10 +484,10 @@ PRIM(fmtvar) {
 	if(list == NULL)
 		fail("$&fmtvar", "missing var");
 
-	gcref(&r_term, (void**)&term);
-	gcref(&r_res, (void**)&res);
-	gcref(&r_name, (void**)&name);
-	gcref(&r_defn, (void**)&defn);
+	gcref(&r_term, (void **)&term);
+	gcref(&r_res, (void **)&res);
+	gcref(&r_name, (void **)&name);
+	gcref(&r_defn, (void **)&defn);
 
 	name = getstr(list->term);
 	defn = varlookup(name, binding);
@@ -538,9 +538,9 @@ PRIM(rematch) {
 	if(list == NULL || list->next == NULL)
 		fail("$&rematch", "missing arguments");
 
-	gcref(&r_lp, (void**)&lp);
-	gcref(&r_subject, (void**)&subject);
-	gcref(&r_pattern, (void**)&pattern);
+	gcref(&r_lp, (void **)&lp);
+	gcref(&r_subject, (void **)&subject);
+	gcref(&r_pattern, (void **)&pattern);
 
 	memset(errstr, 0, sizeof(errstr));
 	status = (RegexStatus){ReNil, FALSE, 0, 0, nil, 0, &errstr[0], sizeof(errstr)};
@@ -577,10 +577,10 @@ PRIM(reextract) {
 		fail("$&rematch", "missing arguments");
 
 	status = (RegexStatus){ReNil, FALSE, 0, 0, nil, 0, &errstr[0], sizeof(errstr)};
-	gcref(&r_lp, (void**)&lp);
-	gcref(&r_subject, (void**)&subject);
-	gcref(&r_pattern, (void**)&pattern);
-	gcref(&r_st_substrs, (void**)&status.substrs);
+	gcref(&r_lp, (void **)&lp);
+	gcref(&r_subject, (void **)&subject);
+	gcref(&r_pattern, (void **)&pattern);
+	gcref(&r_st_substrs, (void **)&status.substrs);
 
 	memset(errstr, 0, sizeof(errstr));
 	subject = lp->term;
@@ -605,8 +605,7 @@ PRIM(reextract) {
 	return nil;
 }
 
-
-Dict*
+Dict *
 initprims_mv(Dict *primdict)
 {
 	X(version);
@@ -645,4 +644,3 @@ initprims_mv(Dict *primdict)
 
 	return primdict;
 }
-
