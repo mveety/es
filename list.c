@@ -116,6 +116,7 @@ partial_append(AppendContext *ctx, List *list0)
 	gcref(&r_lp, (void**)&lp);
 
 	list = list0;
+	gcdisable();
 	for(lp = list; lp != nil; lp = lp->next){
 		if(ctx->result == nil){
 			ctx->result = mklist(lp->term, nil);
@@ -125,6 +126,7 @@ partial_append(AppendContext *ctx, List *list0)
 			ctx->rlp = ctx->rlp->next;
 		}
 	}
+	gcenable();
 
 	gcrderef(&r_lp);
 	gcrderef(&r_list);

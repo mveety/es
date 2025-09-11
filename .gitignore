@@ -49,4 +49,6 @@ mveety.esrc
 work/*
 test_*.log
 test_logs/*
+massif.*
+cachegrind.*
 
