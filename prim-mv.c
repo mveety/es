@@ -314,6 +314,11 @@ PRIM(gcstats) {
 
 	if(gctype == NewGc) {
 		gc_getstats(&stats);
+		res = mklist(mkstr(str("%d", stats.gcblocked)), res);
+		if(stats.array_sort == TRUE)
+			res = mklist(mkstr(str("array_sort")), res);
+		else
+			res = mklist(mkstr(str("list_sort")), res);
 		res = mklist(mkstr(str("%d", stats.gc_oldsweep_after)), res);
 		res = mklist(mkstr(str("%lud", stats.oldage)), res);
 		res = mklist(mkstr(str("%lud", stats.old_blocks)), res);
@@ -342,6 +347,7 @@ PRIM(gcstats) {
 			res = mklist(mkstr(str("new")), res);
 	} else if(gctype == OldGc) {
 		old_getstats(&stats);
+		res = mklist(mkstr(str("%d", stats.gcblocked)), res);
 		res = mklist(mkstr(str("%lud", stats.ngcs)), res);
 		res = mklist(mkstr(str("%lud", stats.allocations)), res);
 		res = mklist(mkstr(str("%lud", stats.nallocs)), res);

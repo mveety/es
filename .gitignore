@@ -51,4 +51,7 @@ test_*.log
 test_logs/*
 massif.*
 cachegrind.*
+dtrace.*.out
+stacks.*.out
+*.svg
 

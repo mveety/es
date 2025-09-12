@@ -47,6 +47,7 @@ fn %gcinfo {
 			echo 'objects =' $matchexpr(4)
 			echo 'allocations =' $matchexpr(5)
 			echo 'number of gcs =' $matchexpr(6)
+			echo 'gcblocked =' $matchexpr(7)
 		}
 		(new generational) {
 			echo 'type =' $matchexpr(1)
@@ -72,6 +73,8 @@ fn %gcinfo {
 			echo 'nsort =' $matchexpr(18)
 			echo 'ncoalesce =' $matchexpr(19)
 			echo 'blocksize =' $matchexpr(20)
+			echo 'sorting type =' $matchexpr(24)
+			echo 'gcblocked =' $matchexpr(25)
 			if {~ $matchexpr(1) generational} {
 				echo 'oldage =' $matchexpr(22)
 				echo 'oldsweep_after =' $matchexpr(23)

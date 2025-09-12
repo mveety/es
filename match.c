@@ -218,13 +218,9 @@ listmatch(List *subject, List *pattern, StrList *quote)
  */
 
 List *
-extractsinglematch(char *subject0, char *pattern0, char *quoting0, List *result0)
+extractsinglematch(char *subject, char *pattern, char *quoting, List *result)
 {
 
-	char *subject = nil; Root r_subject;
-	char *pattern = nil; Root r_pattern;
-	char *quoting = nil; Root r_quoting;
-	List *result = nil; Root r_result;
 	size_t i;
 	size_t subjectlen;
 	size_t si = 0;
@@ -233,16 +229,6 @@ extractsinglematch(char *subject0, char *pattern0, char *quoting0, List *result0
 	size_t begin;
 	char *q = nil;
 	int c, j;
-
-	gcref(&r_subject, (void **)&subject);
-	gcref(&r_pattern, (void **)&pattern);
-	gcref(&r_quoting, (void **)&quoting);
-	gcref(&r_result, (void **)&result);
-
-	subject = subject0;
-	pattern = pattern0;
-	quoting = quoting0;
-	result = result0;
 
 	subjectlen = strlen(subject);
 	patternlen = strlen(pattern);
@@ -297,10 +283,6 @@ extractsinglematch(char *subject0, char *pattern0, char *quoting0, List *result0
 	}
 
 done:
-	gcrderef(&r_result);
-	gcrderef(&r_quoting);
-	gcrderef(&r_pattern);
-	gcrderef(&r_subject);
 	return result;
 }
 
@@ -362,8 +344,10 @@ extractmatches(List *subjects0, List *patterns0, StrList *quotes0)
 					break;
 				}
 			} else {
+				gcdisable();
 				match = nil;
 				match = extractsinglematch(getstr(subject->term), getstr(pattern->term), quote->str, nil);
+				gcenable();
 				if(match != nil) {
 					match = reverse(match);
 					partial_append(&ctx, match);

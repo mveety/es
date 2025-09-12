@@ -3,6 +3,11 @@
 
 /* simple allocator */
 
+typedef struct BlockArray {
+	Block **blocks;
+	size_t len;
+} BlockArray;
+
 Region *regions;
 
 Block *usedlist = nil;
@@ -23,13 +28,15 @@ volatile int nsortgc = 0;
 volatile int ncoalescegc = 0;
 volatile int noldsweep = 30;
 /* tuning */
-int gc_after = 5000;
-int gc_sort_after_n = 10;
-int gc_coalesce_after_n = 10;
+int gc_after = 30000;
+int gc_sort_after_n = 1;
+int gc_coalesce_after_n = 1;
 uint32_t gc_oldage = 5;
-int gc_oldsweep_after = 25;
+int gc_oldsweep_after = 15;
 Boolean generational = FALSE;
 uint64_t nsortsn = 0;
+Boolean use_array_sort = TRUE;
+size_t triedgcs = 0;
 // size_t gen = 0;
 
 size_t blocksize = MIN_minspace;
@@ -110,6 +117,112 @@ checklist(Block *list)
 	return checklist1(list, 0);
 }
 
+size_t /* number of blocks */
+nblocks_stats(Block *list)
+{
+	size_t stats;
+
+	stats = 0;
+	if(!list)
+		return 0;
+
+	for(; list != nil; list = list->next)
+		stats++;
+
+	return stats;
+}
+
+void
+list_rating(Block *list)
+{
+	Block *l;
+	int64_t sortrating = 0;
+
+	for(l = list; l != nil; l = l->next) {
+		if(l->prev == nil)
+			continue;
+		if(l > l->prev)
+			sortrating++;
+		else
+			sortrating--;
+	}
+	nsortsn++;
+	dprintf(2, "%lu: sortrating = %ld (listlen = %lu)\n", nsortsn, sortrating, nblocks_stats(list));
+}
+
+BlockArray *
+list_arrayify(Block *list)
+{
+	BlockArray *res;
+	size_t i;
+
+	res = ealloc(sizeof(BlockArray));
+	res->len = nblocks_stats(list);
+	res->blocks = ealloc(sizeof(Block *) * res->len);
+
+	for(i = 0; list != nil && i < res->len; list = list->next, i++)
+		res->blocks[i] = list;
+
+	return res;
+}
+
+Block *
+array_listify(BlockArray *array)
+{
+	Block *res = nil;
+	Block *p = nil;
+	size_t i = 0;
+
+	for(i = 0; i < array->len; i++) {
+		if(res == nil) {
+			res = array->blocks[i];
+			assert(res != nil);
+			res->next = nil;
+			res->prev = nil;
+			p = res;
+		} else {
+			p->next = array->blocks[i];
+			p->next->prev = p;
+			p->next->next = nil;
+			p = p->next;
+		}
+	}
+
+	efree(array->blocks);
+	efree(array);
+	return res;
+}
+
+int
+block_compare(const void *a, const void *b)
+{
+	Block **blocka;
+	Block **blockb;
+
+	blocka = (Block **)a;
+	blockb = (Block **)b;
+
+	if(*blocka < *blockb)
+		return -1;
+	if(*blocka > *blockb)
+		return 1;
+	// if(*blocka == *blockb)
+	return 0;
+}
+
+Block *
+l2a_sortlist(Block *list)
+{
+	BlockArray *array;
+	Block *result;
+
+	array = list_arrayify(list);
+	qsort(array->blocks, array->len, sizeof(Block *), &block_compare);
+	result = array_listify(array);
+
+	return result;
+}
+
 Block * /* cheat a little */
 sort_pivot(Block *list, size_t len)
 {
@@ -121,7 +234,7 @@ sort_pivot(Block *list, size_t len)
 }
 
 Block *
-sort_list(Block *list, size_t len)
+l_sort_list(Block *list, size_t len)
 {
 	Block *pivot;
 	Block *p = nil, *n = nil, *l = nil;
@@ -161,8 +274,8 @@ sort_list(Block *list, size_t len)
 		}
 	}
 
-	left = sort_list(left, leftlen);
-	right = sort_list(right, rightlen);
+	left = l_sort_list(left, leftlen);
+	right = l_sort_list(right, rightlen);
 
 	head = left;
 	l = left;
@@ -190,35 +303,12 @@ sort_list(Block *list, size_t len)
 		return pivot;
 }
 
-size_t /* number of blocks */
-nblocks_stats(Block *list)
+Block *
+sort_list(Block *list, size_t len)
 {
-	size_t stats;
-
-	stats = 0;
-	if(!list)
-		return 0;
-
-	for(; list != nil; list = list->next)
-		stats++;
-
-	return stats;
-}
-
-void
-list_rating(Block *list)
-{
-	Block *l;
-	uint64_t sortrating = 0;
-
-	for(l = list; l != nil; l = l->next) {
-		if(l->prev == nil)
-			continue;
-		if(l < l->prev)
-			sortrating++;
-	}
-	nsortsn++;
-	dprintf(2, "%lu: sortrating = %lu (oldlistlen = %lu)\n", nsortsn, sortrating, nblocks_stats(oldlist));
+	if(use_array_sort)
+		return l2a_sortlist(list);
+	return l_sort_list(list, len);
 }
 
 void
@@ -230,6 +320,8 @@ add_to_freelist(Block *b)
 	bytesfree += b->size;
 	used(&len);
 
+	if(gcverbose)
+		dprintf(2, ">>> adding %p to freelist\n", b);
 	if(assertions)
 		len = checklist(freelist);
 	b->next = freelist;
@@ -290,8 +382,8 @@ coalesce1(Block *a, Block *b)
 	if(a->next == nil || b == nil)
 		return -2;
 	if(gcverbose)
-		dprintf(2, "coalesce: a = %p, a->size = %x, a+a->size = %lx, b = %p\n", a, a->size,
-				(size_t)((char *)a) + a->size, b);
+		dprintf(2, "coalesce: a = %p, a->size = %x, a+a->size = %lx, b = %p, b->size = %x\n", a, a->size,
+				(size_t)((char *)a) + a->size, b, b->size);
 	if(((char *)a) + a->size != (void *)b)
 		return -3;
 
@@ -448,6 +540,8 @@ gc_getstats(GcStats *stats)
 	stats->oldage = gc_oldage;
 	stats->generational = generational;
 	stats->gc_oldsweep_after = gc_oldsweep_after;
+	stats->array_sort = use_array_sort;
+	stats->gcblocked = gcblocked;
 }
 
 int
@@ -604,6 +698,8 @@ gcoldsweep(void)
 {
 	SweepData d;
 
+	if(!generational)
+		return 0;
 	d = sweeplist(oldlist, nil, FALSE);
 	assert(d.olist == nil);
 	oldlist = d.list;
@@ -650,18 +746,18 @@ ms_initgc(void)
 	}
 }
 
-void
+/*void
 ms_gc(Boolean full, Boolean inalloc)
 {
 	GcStats starting, ending;
 
-	/* set things to their defaults if it's weird */
+	* set things to their defaults if it's weird *
 	if(gc_after < 1)
-		gc_after = 5000;
+		gc_after = 100;
 	if(gc_sort_after_n < 1)
-		gc_sort_after_n = 100;
+		gc_sort_after_n = 5;
 	if(gc_coalesce_after_n < 1)
-		gc_coalesce_after_n = 100;
+		gc_coalesce_after_n = 5;
 
 	if(allocations < (size_t)gc_after && !(full || inalloc))
 		return;
@@ -729,6 +825,39 @@ ms_gc(Boolean full, Boolean inalloc)
 	rangc = 1;
 	if(gcverbose)
 		dprintf(2, "GC finished\n");
+}*/
+
+void
+ms_gc(Boolean full, Boolean inalloc)
+{
+	if(allocations < (size_t)gc_after && !full)
+		return;
+
+	if(gcblocked > 0) {
+		triedgcs++;
+		return;
+	}
+
+	gc_markrootlist(rootlist);
+	gc_markrootlist(globalrootlist);
+	gc_markrootlist(exceptionrootlist);
+
+	gcsweep();
+	freelist = sort_list(freelist, nfrees);
+	freelist = coalesce_list(freelist);
+
+	if(noldsweep >= gc_oldsweep_after) {
+		gcoldsweep();
+		noldsweep = 0;
+	}
+
+	ngcs++;
+	nsortgc++;
+	ncoalescegc++;
+	noldsweep++;
+	allocations = 0;
+	rangc = 1;
+	triedgcs = 0;
 }
 
 void *
@@ -741,6 +870,11 @@ ms_gcallocate(size_t sz, int tag)
 	gettag(tag);
 
 	realsz = ALIGN(sz + sizeof(Header));
+	nb = allocate1(realsz);
+	if(nb)
+		goto done;
+
+	ms_gc(TRUE, TRUE);
 	nb = allocate1(realsz);
 	if(nb)
 		goto done;
@@ -804,7 +938,8 @@ ms_gcenable(void)
 {
 	assert(gcblocked > 0);
 	gcblocked--;
-	//	ms_gc(FALSE, FALSE);
+	if(!gcblocked && triedgcs > 0)
+		ms_gc(FALSE, FALSE);
 }
 
 void

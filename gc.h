@@ -70,6 +70,8 @@ struct GcStats {
 	size_t oldage;
 	int gc_oldsweep_after;
 	Boolean generational;
+	Boolean array_sort;
+	int gcblocked;
 };
 
 struct Buffer {
