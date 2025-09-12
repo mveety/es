@@ -35,7 +35,7 @@ uint32_t gc_oldage = 5;
 int gc_oldsweep_after = 15;
 Boolean generational = FALSE;
 uint64_t nsortsn = 0;
-Boolean use_array_sort = TRUE;
+Boolean use_array_sort = FALSE;
 size_t triedgcs = 0;
 // size_t gen = 0;
 
