@@ -21,6 +21,9 @@ ENABLE_LOGINSHELL=false
 sys_wait_w_forms=yes
 assertions=yes
 DEVFD_IMPL=devfd
+DYNLIBS=no
+CFILEOPTS='$(MAINCFILES)'
+OFILEOPTS='$(MAINOFILES)'
 
 AC_ARG_WITH(readline,
 --with-readline		Use GNU Readline, use_readline=yes)
@@ -30,9 +33,13 @@ AC_ARG_WITH(internalwaitforms,
 --with-internalwaitforms	Do not use W forms of IFSIGNALED and friends from sys/wait.h, sys_wait_w_forms=no)
 AC_ARG_WITH(noassert,
 --with-noassert	Disable asserts, assertions=no)
+AC_ARG_WITH(dynlibs, --with-dynlibs	Allow loading of dynamic libraries,
+			DYNLIBS=yes)
 
 AC_SUBST(ENABLE_LOGINSHELL)
 AC_SUBST(DEVFD_IMPL)
+AC_SUBST(CFILEOPTS)
+AC_SUBST(OFILEOPTS)
 AC_CANONICAL_HOST
 
 dnl saved_CFLAGS="$CFLAGS"
@@ -105,6 +112,12 @@ AC_CACHE_CHECK(for extra LDFLAGS for $CC on $host_os, es_cv_ldextras,
 				])
 
 dnl CFLAGS="$CFLAGS $saved_CFLAGS"
+
+if test "$DYNLIBS" = "yes"
+then
+	CFILEOPTS='$(MAINCFILES) $(DYNCFILES)'
+	OFILEOPTS='$(MAINOFILES) $(DYNOFILES)'
+fi
 
 dnl ----------------------------
 dnl CHECK FOR /dev/fd FILESYSTEM
@@ -184,6 +197,11 @@ fi
 if test "$assertions" = "yes"
 then
 	AC_DEFINE(ASSERTIONS)
+fi
+
+if test "$DYNLIBS" = "yes"
+then
+	AC_DEFINE(DYNAMIC_LIBRARIES)
 fi
 
 AC_CONFIG_FILES([Makefile])

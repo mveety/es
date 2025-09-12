@@ -145,3 +145,6 @@
 
 /* enable assertions */
 #undef ASSERTIONS
+
+/* enable dynamic libraries */
+#undef DYNAMIC_LIBRARIES

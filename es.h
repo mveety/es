@@ -458,6 +458,10 @@ extern int eopen(char *name, OpenKind k);
 extern const char * const version;
 extern const char * const buildstring;
 
+/* dynlib.c */
+extern int open_library(char *fname, char *errstr, size_t errstrlen);
+extern int close_library(char *fname, char *errstr, size_t errstrlen);
+
 /* gc.c, ms_gc.c, gc_common.c -- see gc.h for more */
 
 enum {

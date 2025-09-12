@@ -18,4 +18,11 @@ extern Dict *initprims_access(Dict *primdict);		/* access.c */
 extern Dict *initprims_dict(Dict *primdict); /* prim-dict.c */
 extern Dict *initprims_mv(Dict *primdict); /* prim-mv.c */
 extern Dict *initprims_math(Dict *primdict); /* prim-math.c */
+#ifdef DYNAMIC_LIBRARIES
+extern Dict *initprims_dynlib(Dict *primdict); /* dynlib.c */
+#endif
+
+
+extern void add_prim(char *name, void (*primfn)(void));
+extern void remove_prim(char *name);
 

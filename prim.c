@@ -42,7 +42,34 @@ initprims(void)
 	prims = initprims_math(prims);
 	prims = initprims_mv(prims);
 	prims = initprims_dict(prims);
+#ifdef DYNAMIC_LIBRARIES
+	prims = initprims_dynlib(prims);
+#endif
 
 #define primdict prims
 	X(primitives);
 }
+
+void
+add_prim(char *name, void (*primfn)(void))
+{
+	char *gcname = nil; Root r_gcname;
+
+	gcref(&r_gcname, (void**)&gcname);
+	gcdisable();
+
+	gcname = str("%s", name);
+	prims = dictput(prims, gcname, primfn);
+
+	gcenable();
+	gcrderef(&r_gcname);
+}
+
+void
+remove_prim(char *name)
+{
+	gcdisable();
+	prims = dictput(prims, name, nil);
+	gcenable();
+}
+
