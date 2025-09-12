@@ -214,12 +214,63 @@ PRIM(loadedlibraries) {
 	return res;
 }
 
+PRIM(libraryprims) {
+	List *res = nil; Root r_res;
+	char *fname = nil; Root r_fname;
+	DynamicLibrary *lib;
+	size_t i;
+
+	if(list == nil)
+		fail("$&libraryprims", "missing args");
+
+	if(loaded_libs == nil)
+		fail("$&libraryprims", "library %s not loaded", getstr(list->term));
+
+	gcref(&r_res, (void**)&res);
+	gcref(&r_fname, (void**)&fname);
+
+	fname = getstr(list->term);
+	for(lib = loaded_libs; lib != nil; lib = lib->next){
+		if(streq(lib->fname, fname)){
+			for(i = 0; i < *lib->primslen; i++)
+				res = mklist(mkstr(str("%s", lib->prims[i])), res);
+			goto done;
+		}
+	}
+	fail("$&libraryprims", "library %s not loaded", fname);
+
+done:
+	gcrderef(&r_fname);
+	gcrderef(&r_res);
+	return res;
+}
+
+PRIM(openlibrary) {
+	char *fname; Root r_fname;
+	char errstr[256];
+
+	if(list == nil)
+		fail("$&openlibrary", "missing arg");
+
+	gcref(&r_fname, (void**)&fname);
+
+	fname = getstr(list->term);
+	if(open_library(fname, &errstr[0], sizeof(errstr)))
+		fail("$&openlibrary", "unable to open library %s: %s", fname, errstr);
+
+	gcrderef(&r_fname);
+
+	return list_true;
+}
+
 Dict *
 initprims_dynlib(Dict *primdict)
 {
 	loaded_libs = nil;
 
 	X(loadedlibraries);
+	X(libraryprims);
+	X(openlibrary);
 
 	return primdict;
 }
