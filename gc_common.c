@@ -216,8 +216,9 @@ void
 gcreserve(size_t sz)
 {
 	if(gctype == NewGc)
-		return;
-	old_gcreserve(sz);
+		ms_gc(FALSE, FALSE);
+	else
+		old_gcreserve(sz);
 }
 
 Boolean
