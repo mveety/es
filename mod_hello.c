@@ -2,7 +2,7 @@
 #include "prim.h"
 #include "gc.h"
 
-List*
+List *
 hellotest(List *list, Binding *binding, int evalflags)
 {
 	used(list);
@@ -18,4 +18,3 @@ DYNPRIMS() = {
 	{"hellotest", &hellotest},
 };
 DYNPRIMSLEN();
-

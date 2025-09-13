@@ -21,7 +21,7 @@ termtof(Term *term, char *funname, int arg)
 	return res;
 }
 
-List*
+List *
 prim_addf(List *list, Binding *binding, int evalflags)
 {
 	float a, b, res;
@@ -42,14 +42,14 @@ prim_addf(List *list, Binding *binding, int evalflags)
 	if(printlen >= (int)sizeof(temp))
 		fail("$&addf", "result conversion failed (temp string too short)");
 
-	gcref(&r_result, (void**)&result);
+	gcref(&r_result, (void **)&result);
 	result = mklist(mkstr(str("%s", temp)), nil);
 	gcrderef(&r_result);
 
 	return result;
 }
 
-List*
+List *
 prim_subf(List *list, Binding *binding, int evalflags)
 {
 	float a, b, res;
@@ -70,14 +70,14 @@ prim_subf(List *list, Binding *binding, int evalflags)
 	if(printlen >= (int)sizeof(temp))
 		fail("$&subf", "result conversion failed (temp string too short)");
 
-	gcref(&r_result, (void**)&result);
+	gcref(&r_result, (void **)&result);
 	result = mklist(mkstr(str("%s", temp)), nil);
 	gcrderef(&r_result);
 
 	return result;
 }
 
-List*
+List *
 prim_mulf(List *list, Binding *binding, int evalflags)
 {
 	float a, b, res;
@@ -98,14 +98,14 @@ prim_mulf(List *list, Binding *binding, int evalflags)
 	if(printlen >= (int)sizeof(temp))
 		fail("$&mulf", "result conversion failed (temp string too short)");
 
-	gcref(&r_result, (void**)&result);
+	gcref(&r_result, (void **)&result);
 	result = mklist(mkstr(str("%s", temp)), nil);
 	gcrderef(&r_result);
 
 	return result;
 }
 
-List*
+List *
 prim_divf(List *list, Binding *binding, int evalflags)
 {
 	float a, b, res;
@@ -128,7 +128,7 @@ prim_divf(List *list, Binding *binding, int evalflags)
 	if(printlen >= (int)sizeof(temp))
 		fail("$&divf", "result conversion failed (temp string too short)");
 
-	gcref(&r_result, (void**)&result);
+	gcref(&r_result, (void **)&result);
 	result = mklist(mkstr(str("%s", temp)), nil);
 	gcrderef(&r_result);
 
@@ -143,4 +143,3 @@ DYNPRIMS() = {
 	{"divf", &prim_divf},
 };
 DYNPRIMSLEN();
-
