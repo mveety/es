@@ -164,6 +164,9 @@ fn run_subproc_test testname testfn test_log tfp libdir {
 	libraries = $libdir
 	info 'running '^$testname^' in pid '^$pid > $test_log
 	catch @ e {
+		if {~ $e abort} {
+			exit 2
+		}
 		if {! $$tfp} {
 			echo 'got exception: '^$^e >> $test_log
 		}
@@ -172,6 +175,7 @@ fn run_subproc_test testname testfn test_log tfp libdir {
 		local(es_assert_def = $fn-assert; es_assert2_def = $fn-assert2) local (
 			fn-assert = @{ echo 'try assert:' $* ; $es_assert_def $*}
 			fn-assert2 = @{ echo 'try assert2:' $*(1) ':' $*(2 ...) ; $es_assert2_def $*}
+			fn-abort = @{ throw abort }
 			es = $esbin
 		) {
 			$testfn >> $test_log
@@ -192,6 +196,7 @@ fn run_test_file file {
 			}
 		}
 		passed = false
+		skipped = false
 		test_exception=
 		test_log='/tmp/es_'^$pid^'_test_'^$testname^'.log'
 		tfp = <={
@@ -208,6 +213,9 @@ fn run_test_file file {
 				result 'test_'^$testname^'_subprocess'
 			}
 		}
+		redbold = <={%string \x01 \x1b '[' 31 ';' 1 'm' \x02}
+		green = <={%string \x01 \x1b '[' 32 'm' \x02}
+		nocolor = <={%string \x01 \x1b '[' 0 'm' \x02}
 	) {
 		. $file
 		if {~ <={%count $$tfp} 0} {
@@ -217,11 +225,15 @@ fn run_test_file file {
 			$tsp = $subprocess_default
 		}
 		catch @ e {
-			test_exception = $e
-			if {$$tfp} {
-				passed = true
+			if {~ $e abort} {
+				skipped = true
 			} {
-				passed = false
+				test_exception = $e
+				if {$$tfp} {
+					passed = true
+				} {
+					passed = false
+				}
 			}
 		} {
 			if {$$tsp} {
@@ -229,13 +241,15 @@ fn run_test_file file {
 				if {$extra_es_args} { escmd = $escmd $restargs }
 				escmd = $escmd -c 'run_subproc_test '^$testname^' run_test_'^$testname^' '^$test_log^' '^$tfp^' '^$libdir
 				if {$estest_debugging} { info 'running: ' $escmd }
-				if {! $escmd} {
-					throw error run_subproc 'returned false'
-				}
+				match <={$escmd} (
+					1 { throw error run_subproc 'return false' }
+					2 { throw abort }
+				)
 			} {
 				local(es_assert_def = $fn-assert; es_assert2_def = $fn-assert2) local(
 					fn-assert = @{echo 'try assert:' $* ; $es_assert_def $*}
 					fn-assert2 = @{ echo 'try assert2:' $*(1) ':' $*(2 ...) ; $es_assert2_def $*}
+					fn-abort = @{ throw abort }
 					es = $esbin
 				) {
 					run_test_$testname > $test_log
@@ -256,8 +270,10 @@ fn run_test_file file {
 				echo -n 'test '^$testname^': '
 			}
  		}
-		if {$passed} {
-			echo 'passed!'
+		if {$skipped} {
+			echo 'skipped.'
+		} {$passed} {
+			echo $green^'passed!'^$nocolor
 			if {$testoutput} {
 				output '>>> '^$testname^' output:'
 				for(outline = ``(\n) {cat $test_log}) {
@@ -265,7 +281,7 @@ fn run_test_file file {
 				}
 			}
 		} {
-			echo 'failed!'
+			echo $redbold^'failed!'^$nocolor
 			echo '>>> exception: '^$^test_exception
 			if {$print_failure_output} {
 				output '>>> '^$testname^' output:'
