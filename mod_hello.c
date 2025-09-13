@@ -2,10 +2,6 @@
 #include "prim.h"
 #include "gc.h"
 
-char *dynprims[] = {"hellotest"};
-size_t dynprimslen = (sizeof(dynprims)/sizeof(char*));
-extern List *list_true;
-
 List*
 hellotest(List *list, Binding *binding, int evalflags)
 {
@@ -17,4 +13,9 @@ hellotest(List *list, Binding *binding, int evalflags)
 
 	return nil;
 }
+
+DYNPRIMS() = {
+	{"hellotest", &hellotest},
+};
+DYNPRIMSLEN();
 

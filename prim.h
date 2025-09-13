@@ -9,6 +9,17 @@
 				(void *) CONCAT(prim_,name) \
 			))
 
+#define DYNPRIMS() Primitive dynprims[]
+#define DX(name) {STRING(name), CONCAT(&prim_,name)},
+#define DYNPRIMSLEN() size_t dynprimslen = (sizeof(dynprims)/sizeof(Primitive))
+
+typedef struct Primitive Primitive;
+
+struct Primitive {
+	char *name;
+	List* (*symbol)(List*, Binding*, int);
+};
+
 extern Dict *initprims_controlflow(Dict *primdict);	/* prim-ctl.c */
 extern Dict *initprims_io(Dict *primdict);		/* prim-io.c */
 extern Dict *initprims_etc(Dict *primdict);		/* prim-etc.c */
@@ -23,6 +34,6 @@ extern Dict *initprims_dynlib(Dict *primdict); /* dynlib.c */
 #endif
 
 
-extern void add_prim(char *name, void (*primfn)(void));
+extern void add_prim(char *name, List* (*primfn)(List*, Binding*, int));
 extern void remove_prim(char *name);
 

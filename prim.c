@@ -50,7 +50,7 @@ initprims(void)
 }
 
 void
-add_prim(char *name, void (*primfn)(void))
+add_prim(char *name, List* (*primfn)(List*, Binding*, int))
 {
 	char *gcname = nil; Root r_gcname;
 

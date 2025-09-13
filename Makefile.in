@@ -71,9 +71,9 @@ MAINOFILES	= access.o closure.o conv.o dict.o eval.o except.o fd.o gc.o \
 
 DYNOFILES = dynlib.o
 
-MODOFILES = mod_hello.o
+MODOFILES = mod_hello.o mod_float.o
 
-MODULES = mod_hello.so
+MODULES = mod_hello.so mod_float.so
 
 CFILES = @CFILEOPTS@
 
@@ -101,6 +101,12 @@ mod_hello.o : mod_hello.c ${ESHFILES} prim.h gc.h
 
 mod_hello.so : mod_hello.o
 	${CC} ${LDFLAGS} -shared -o mod_hello.so mod_hello.o
+
+mod_float.o : mod_float.c ${ESHFILES} prim.h gc.h
+	${CC} ${CFLAGS} -c -fPIC -o mod_float.o mod_float.c
+
+mod_float.so : mod_float.o
+	${CC} ${LDFLAGS} -shared -o mod_float.so mod_float.o
 
 modules : ${MODULES}
 

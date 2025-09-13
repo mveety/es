@@ -8,7 +8,7 @@ typedef struct DynamicLibrary DynamicLibrary;
 struct DynamicLibrary {
 	char *fname;
 	void *handle;
-	char **prims;
+	Primitive *prims;
 	size_t *primslen;
 	DynamicLibrary *next;
 };
@@ -76,7 +76,7 @@ dump_prims_lib(DynamicLibrary *lib)
 
 	dprintf(2, "Library %s\n", lib->fname);
 	for(i = 0; i < *lib->primslen; i++)
-		dprintf(2, "\t%lu: primitive %s\n", i, lib->prims[i]);
+		dprintf(2, "\t%lu: primitive %s\n", i, lib->prims[i].name);
 }
 
 void
@@ -91,27 +91,17 @@ dump_dynamic_prims(void)
 int
 load_prims_lib(DynamicLibrary *lib)
 {
-	void (*primfn)(void);
-	char *primname;
+	Primitive *prim;
 	size_t i = 0;
 	int res = 0;
 
 	for(i = 0; i < *lib->primslen; i++) {
-		primname = lib->prims[i];
-		if(dynlib_verbose)
-			dprintf(2, "loading %s from %s...", primname, lib->fname);
-		primfn = (void (*)(void))dlfunc(lib->handle, primname);
-		if(primfn == nil) {
-			dprintf(2, "failed!\n");
-			if(dynlib_fail_cancel)
-				return -1;
-			else
-				res -= 1;
-			continue;
-		}
-		add_prim(primname, primfn);
-		if(dynlib_verbose)
-			dprintf(2, "done.\n");
+		prim = &lib->prims[i];
+//		if(dynlib_verbose)
+//			dprintf(2, "loading %s from %s...", prim->name, lib->fname);
+		add_prim(prim->name, prim->symbol);
+//		if(dynlib_verbose)
+//			dprintf(2, "done.\n");
 	}
 
 	return res;
@@ -120,14 +110,14 @@ load_prims_lib(DynamicLibrary *lib)
 int
 unload_prims_lib(DynamicLibrary *lib)
 {
-	char *primname;
+	Primitive *prim;
 	size_t i = 0;
 
 	for(i = 0; i < *lib->primslen; i++) {
-		primname = lib->prims[i];
+		prim = &lib->prims[i];
 		if(dynlib_verbose)
-			dprintf(2, "unloading %s from %s...", primname, lib->fname);
-		remove_prim(primname);
+			dprintf(2, "unloading %s from %s...", prim->name, lib->fname);
+		remove_prim(prim->name);
 		if(dynlib_verbose)
 			dprintf(2, "done.\n");
 	}
@@ -199,7 +189,7 @@ close_library(char *fname, char *errstr, size_t errstrlen)
 	return destroy_library(lib, errstr, errstrlen);
 }
 
-PRIM(loadedlibraries) {
+PRIM(listdynlibs) {
 	List *res = nil; Root r_res;
 	DynamicLibrary *lib;
 
@@ -215,7 +205,7 @@ PRIM(loadedlibraries) {
 	return res;
 }
 
-PRIM(libraryprims) {
+PRIM(dynlibprims) {
 	List *res = nil; Root r_res;
 	char *fname = nil; Root r_fname;
 	DynamicLibrary *lib;
@@ -234,7 +224,7 @@ PRIM(libraryprims) {
 	for(lib = loaded_libs; lib != nil; lib = lib->next) {
 		if(streq(lib->fname, fname)) {
 			for(i = 0; i < *lib->primslen; i++)
-				res = mklist(mkstr(str("$&%s", lib->prims[i])), res);
+				res = mklist(mkstr(str("%s", lib->prims[i])), res);
 			goto done;
 		}
 	}
@@ -246,7 +236,7 @@ done:
 	return res;
 }
 
-PRIM(openlibrary) {
+PRIM(opendynlib) {
 	char *fname; Root r_fname;
 	char errstr[256];
 
@@ -269,9 +259,9 @@ initprims_dynlib(Dict *primdict)
 {
 	loaded_libs = nil;
 
-	X(loadedlibraries);
-	X(libraryprims);
-	X(openlibrary);
+	X(listdynlibs);
+	X(dynlibprims);
+	X(opendynlib);
 
 	return primdict;
 }
