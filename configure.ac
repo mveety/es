@@ -74,8 +74,12 @@ AC_CACHE_CHECK(for extra CFLAGS for $CC on $host_os, es_cv_ccextras,
 								CFLAGS="$CFLAGS -I/usr/local/include"
 								;;
 							gcc1*)
-								es_cv_ccextras="-Wl,-rpath=/usr/local/lib/${CC}"
-								CFLAGS="$CFLAGS -Wl,-rpath=/usr/local/lib/${CC}"
+								es_cv_ccextras="-Wno-stringop-truncation -Wl,-rpath=/usr/local/lib/${CC}"
+								CFLAGS="$CFLAGS -Wno-stringop-truncation -Wl,-rpath=/usr/local/lib/${CC}"
+								;;
+							gcc)
+								es_cv_ccextras="-Wno-stringop-truncation"
+								CFLAGS="$CFLAGS -Wno-stringop-truncation"
 								;;
 							*)
 								es_cv_ccextras="none needed"
@@ -83,7 +87,15 @@ AC_CACHE_CHECK(for extra CFLAGS for $CC on $host_os, es_cv_ccextras,
 						esac
 						;;
 					*)
-						es_cv_ccextras="none needed"
+						case "`basename ${CC}`" in
+							gcc | gcc*)
+								es_cv_ccextras="-Wno-stringop-truncation"
+								CFLAGS="$CFLAGS -Wno-stringop-truncation"
+								;;
+							*)
+								es_cv_ccextras="none needed"
+								;;
+						esac
 						;;
 				esac
 				])

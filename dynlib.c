@@ -65,7 +65,8 @@ destroy_library(DynamicLibrary *lib, char *errstr, size_t errstrlen)
 	res = dlclose(lib->handle);
 	if(res) {
 		dlerrstr = dlerror();
-		strncpy(errstr, dlerrstr, errstrlen);
+		if(errstr && errstrlen > 0)
+			strncpy(errstr, dlerrstr, errstrlen);
 	}
 	free(lib->fname);
 	free(lib);
@@ -130,7 +131,7 @@ lib_add_to_list(DynamicLibrary *lib)
 }
 
 DynamicLibrary *
-lib_remove_from_list(char *fname)
+lib_remove_from_list(char *name)
 {
 	DynamicLibrary *last = nil;
 	DynamicLibrary *cur = nil;
@@ -139,7 +140,7 @@ lib_remove_from_list(char *fname)
 
 	cur = loaded_libs;
 	while(1) {
-		if(strcmp(cur->fname, fname) == 0) {
+		if(strcmp(cur->name, name) == 0) {
 			result = cur;
 			if(cur == loaded_libs)
 				loaded_libs = loaded_libs->next;
@@ -202,11 +203,11 @@ open_library(char *fname, char *errstr, size_t errstrlen)
 }
 
 int
-close_library(char *fname, char *errstr, size_t errstrlen)
+close_library(char *name, char *errstr, size_t errstrlen)
 {
-	DynamicLibrary *lib;
+	DynamicLibrary *lib = nil;
 
-	lib = lib_remove_from_list(fname);
+	lib = lib_remove_from_list(name);
 	if(!lib)
 		return -1;
 	unload_prims_lib(lib);
@@ -311,6 +312,34 @@ PRIM(opendynlib) {
 	return list_true;
 }
 
+PRIM(closedynlib) {
+	char *name = nil; Root r_name;
+	List *result = nil; Root r_result;
+	int res = 0;
+	char errstr[256];
+	DynamicLibrary *lib;
+
+	if(list == nil)
+		fail("$&openlibrary", "missing arg");
+
+	gcref(&r_name, (void**)&name);
+	gcref(&r_result, (void**)&result);
+
+	name = getstr(list->term);
+	lib = lib_find_name(name);
+	if(lib == nil)
+		fail("$&openlibrary", "unable to close library %s: already closed", name);
+
+	res = close_library(name, &errstr[0], sizeof(errstr));
+
+	result = mklist(mkstr(str("%d", res)), nil);
+
+	gcrderef(&r_result);
+	gcrderef(&r_name);
+
+	return result;
+}
+
 Dict *
 initprims_dynlib(Dict *primdict)
 {
@@ -320,6 +349,7 @@ initprims_dynlib(Dict *primdict)
 	X(dynlibprims);
 	X(dynlibfile);
 	X(opendynlib);
+	X(closedynlib);
 
 	return primdict;
 }

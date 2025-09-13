@@ -105,7 +105,7 @@ fn import {
 			throw $e $type $msg
 		} {
 			catch @ e t m {
-				if {~ $e library_error && ~ $t already_imported && $es_conf_import-panic} {
+				if {$es_conf_import-panic} {
 					throw $e $t $m
 				}
 				return <=true
@@ -172,6 +172,118 @@ fn havelib name {
 		if {! ~ $#userlibname 0} { return <=true }
 		if {! ~ $#syslibname 0} { return <=true }
 		return <=false
+	}
+}
+
+if {~ <=$&primitives opendynlib} {
+
+	if {~ $#es_conf_dynlib-automatic-reload 0} {
+		es_conf_dynlib-automatic-reload = false
+		set-es_conf_dynlib-automatic-reload = @ arg args {
+			if {! ~ $arg true false } {
+				result $es_conf_dynlib-automatic-reload
+			} {
+				result $arg
+			}
+		}
+	}
+
+	if {~ $#es_conf_dynlib-extension 0} {
+		set-es_conf_dynlib-extension = @{
+			result <={match <={%split ' ' $buildstring |> %elem 5} (
+				'Darwin' { result 'dylib' }
+				* { result 'so' }
+			)}
+		}
+		es_conf_dynlib-extension = set
+		noexport += es_conf_dynlib-extension
+	}
+
+	fn-%dynlibs = $&listdynlibs
+	fn-%dynlib_prims = $&dynlibprims
+	fn-%dynlib_file = $&dynlibfile
+	fn-%open_dynlib = $&opendynlib
+	fn-%close_dynlib = $&closedynlib
+
+
+	fn load-dynlib lib {
+		lets (
+			platform = <={%split ' ' $buildstring |> %elem 5}
+			arch = <={%split ' ' $buildstring |> %elem 6}
+			ext = $es_conf_dynlib-extension
+			sysdynlib = <={access -n $lib.$platform.$arch.$ext -1r $corelib}
+			userdynlib = <={access -n $lib.$platform.$arch.$ext -1r $libraries}
+			e =
+		) {
+			if {~ <=%dynlibs $lib} {
+				if {$es_conf_dynlib-automatic-reload} {
+					%close_dynlib $lib
+				} {
+					throw error load-dynlib 'dynamic library '^$lib^' already loaded'
+				}
+			}
+			if {! ~ $#userdynlib 0} {
+				(e _) = <={try %open_dynlib $userdynlib}
+				if {! $e} {
+					return <=true
+				} {! ~ <={$e msg} *^'Cannot open'^*} {
+					throw $e
+				}
+			}
+			if {! ~ $#sysdynlib 0} {
+				(e _) = <={try %open_dynlib $sysdynlib}
+				if {! $e} {
+					return <=true
+				} {! ~ <={$e msg} *^'Cannot open'^*} {
+					throw $e
+				}
+			}
+			if {$es_conf_dynlib-local-search} {
+				(e _) = <={try %open_dynlib ./$lib.$ext}
+				if {! $e} {
+					return <=true
+				} {! ~ <={$e msg} *^'Cannot open'^*} {
+					throw $e
+				}
+			}
+			throw error load-dynlib 'unable to find dynamic library '^$lib
+		}
+	}
+
+	fn is-dynlib-loaded lib {
+		if {~ <=%dynlibs $lib} {
+			result <=true
+		} {
+			result <=false
+		}
+	}
+
+	fn with-dynlibs argsbody {
+		local(
+			args = <={__es_getargs $argsbody}
+			body = <={__es_getbody $argsbody}
+		) {
+			if {~ $#args 0} { throw error with-dynlibs 'missing dynamic libraries' }
+			if {! ~ $#body 1} { throw error with-dynlibs 'missing body' }
+			for (dl = $args) {
+				if {! ~ <=%dynlibs $dl} {
+					load-dynlib $dl
+				}
+			}
+			result <={$body}
+		}
+	}
+
+} {
+	let (failfn = @{ throw error 'es:dynlibs' 'dynamic libraries not enabled' }) {
+		fn-%dynlibs = $failfn
+		fn-%dynlib_prims = $failfn
+		fn-%dynlib_file = $failfn
+		fn-%open_dynlib = $failfn
+		fn-%close_dynlib = $failfn
+		fn-load-dynlib = $failfn
+		fn-is-dynlib-loaded = $failfn
+		fn-with-dynlibs = $failfn
 	}
 }
 
