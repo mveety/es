@@ -1,7 +1,7 @@
 /* dump.c -- dump es's internal state as a c program ($Revision: 1.1.1.1 $) */
 
-#include <es.h>
-#include <stdenv.h>
+#include "es.h"
+#include "stdenv.h"
 
 #define MAXVARNAME 20
 

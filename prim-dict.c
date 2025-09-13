@@ -1,5 +1,5 @@
-#include <es.h>
-#include <prim.h>
+#include "es.h"
+#include "prim.h"
 
 PRIM(dictnew) {
 	return mklist(mkdictterm(NULL), NULL);

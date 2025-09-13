@@ -1,6 +1,6 @@
 /* status.c -- status manipulations ($Revision: 1.1.1.1 $) */
 
-#include <es.h>
+#include "es.h"
 
 // clang-format off
 static const Term

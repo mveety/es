@@ -2,8 +2,8 @@
 
 #define GARBAGE_COLLECTOR 1 /* for es.h */
 
-#include <es.h>
-#include <gc.h>
+#include "es.h"
+#include "gc.h"
 
 typedef struct Space Space;
 struct Space {

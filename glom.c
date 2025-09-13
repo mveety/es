@@ -1,7 +1,7 @@
 /* glom.c -- walk parse tree to produce list ($Revision: 1.1.1.1 $) */
 
-#include <es.h>
-#include <gc.h>
+#include "es.h"
+#include "gc.h"
 
 extern char DEAD[]; // from dict.c
 Dict *dictlistconcat(Dict *, List *, Boolean);

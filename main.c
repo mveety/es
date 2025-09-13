@@ -1,8 +1,8 @@
 /* main.c -- initialization for es ($Revision: 1.3 $) */
 
-#include <es.h>
-#include <gc.h>
-#include <stdenv.h>
+#include "es.h"
+#include "gc.h"
+#include "stdenv.h"
 #include <stdio.h>
 
 Boolean gcverbose = FALSE;			/* -G */
@@ -30,6 +30,9 @@ extern int gc_oldsweep_after;
 extern Boolean regex_debug;
 extern Boolean dump_tok_status;
 extern Boolean verbose_rangematch;
+#ifdef DYNAMIC_LIBRARIES
+extern Boolean dynlib_verbose;
+#endif
 
 void *
 used(void *v)
@@ -175,7 +178,11 @@ debug_flag_usage(void)
 			"	A -- ref_assertions (likely to crash)\n"
 			"	M -- verbose_match\n"
 			"	T -- dump_tok_status\n"
-			"	r -- verbose_rangematch\n");
+			"	r -- verbose_rangematch\n"
+#ifdef DYNAMIC_LIBRARIES
+			"	m -- dynlib_verbose\n"
+#endif
+	);
 	exit(1);
 }
 
@@ -259,6 +266,11 @@ main(int argc, char *argv[])
 				case 'r':
 					verbose_rangematch = TRUE;
 					break;
+#ifdef DYNAMIC_LIBRARIES
+				case 'm':
+					dynlib_verbose = TRUE;
+					break;
+#endif
 				case '?':
 					debug_flag_usage();
 					break;

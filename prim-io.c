@@ -1,8 +1,8 @@
 /* prim-io.c -- input/output and redirection primitives ($Revision: 1.2 $) */
 
-#include <es.h>
-#include <gc.h>
-#include <prim.h>
+#include "es.h"
+#include "gc.h"
+#include "prim.h"
 
 static int
 getnumber(const char *caller, const char *s)

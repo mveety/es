@@ -1,7 +1,7 @@
 /* list.c -- operations on lists ($Revision: 1.1.1.1 $) */
 
-#include <es.h>
-#include <gc.h>
+#include "es.h"
+#include "gc.h"
 
 /*
  * allocation and garbage collector support

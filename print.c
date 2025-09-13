@@ -1,7 +1,7 @@
 /* print.c -- formatted printing routines ($Revision: 1.1.1.1 $) */
 
-#include <es.h>
-#include <print.h>
+#include "es.h"
+#include "print.h"
 
 #define MAXCONV 256
 

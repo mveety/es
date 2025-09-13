@@ -1,6 +1,6 @@
 /* util.c -- the kitchen sink ($Revision: 1.2 $) */
 
-#include <es.h>
+#include "es.h"
 
 #if !HAVE_STRERROR
 /* strerror -- turn an error code into a string */

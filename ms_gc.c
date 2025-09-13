@@ -1,5 +1,5 @@
-#include <es.h>
-#include <gc.h>
+#include "es.h"
+#include "gc.h"
 
 /* simple allocator */
 

@@ -1,8 +1,8 @@
 /* conv.c -- convert between internal and external forms ($Revision: 1.1.1.1 $) */
 
-#include <es.h>
-#include <print.h>
-#include <stdenv.h>
+#include "es.h"
+#include "print.h"
+#include "stdenv.h"
 
 /* %L -- print a list */
 static Boolean

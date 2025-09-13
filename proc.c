@@ -1,6 +1,6 @@
 /* proc.c -- process control system calls ($Revision: 1.2 $) */
 
-#include <es.h>
+#include "es.h"
 
 /* TODO: the rusage code for the time builtin really needs to be cleaned up */
 

@@ -4,8 +4,8 @@
 #include <unistd.h>
 #define REQUIRE_IOCTL 1
 
-#include <es.h>
-#include <prim.h>
+#include "es.h"
+#include "prim.h"
 
 #ifdef HAVE_SETRLIMIT
 #define BSD_LIMITS 1

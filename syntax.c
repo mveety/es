@@ -1,9 +1,9 @@
 /* syntax.c -- abstract syntax tree re-writing rules ($Revision: 1.1.1.1 $) */
 
-#include <es.h>
-#include <input.h>
-#include <syntax.h>
-#include <token.h>
+#include "es.h"
+#include "input.h"
+#include "syntax.h"
+#include "token.h"
 
 Tree errornode;
 Tree *parsetree;
