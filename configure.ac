@@ -21,7 +21,7 @@ ENABLE_LOGINSHELL=false
 sys_wait_w_forms=yes
 assertions=yes
 DEVFD_IMPL=devfd
-DYNLIBS=no
+DYNLIBS=false
 CFILEOPTS='$(MAINCFILES)'
 OFILEOPTS='$(MAINOFILES)'
 
@@ -34,12 +34,13 @@ AC_ARG_WITH(internalwaitforms,
 AC_ARG_WITH(noassert,
 --with-noassert	Disable asserts, assertions=no)
 AC_ARG_WITH(dynlibs, --with-dynlibs	Allow loading of dynamic libraries,
-			DYNLIBS=yes)
+			DYNLIBS=true)
 
 AC_SUBST(ENABLE_LOGINSHELL)
 AC_SUBST(DEVFD_IMPL)
 AC_SUBST(CFILEOPTS)
 AC_SUBST(OFILEOPTS)
+AC_SUBST(DYNLIBS)
 AC_CANONICAL_HOST
 
 dnl saved_CFLAGS="$CFLAGS"
@@ -113,10 +114,11 @@ AC_CACHE_CHECK(for extra LDFLAGS for $CC on $host_os, es_cv_ldextras,
 
 dnl CFLAGS="$CFLAGS $saved_CFLAGS"
 
-if test "$DYNLIBS" = "yes"
+if test "$DYNLIBS" = "true"
 then
 	CFILEOPTS='$(MAINCFILES) $(DYNCFILES)'
 	OFILEOPTS='$(MAINOFILES) $(DYNOFILES)'
+	LDFLAGS="$LDFLAGS -rdynamic"
 fi
 
 dnl ----------------------------
@@ -199,7 +201,7 @@ then
 	AC_DEFINE(ASSERTIONS)
 fi
 
-if test "$DYNLIBS" = "yes"
+if test "$DYNLIBS" = "true"
 then
 	AC_DEFINE(DYNAMIC_LIBRARIES)
 fi

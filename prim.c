@@ -16,13 +16,12 @@ prim(char *s, List *list, Binding *binding, int evalflags)
 }
 
 PRIM(primitives) {
-	static List *primlist = nil;
+	List *primlist = nil; Root r_primlist;
 
-	if(primlist == nil) {
-		globalroot(&primlist);
-		dictforall(prims, addtolist, &primlist);
-		primlist = sortlist(primlist);
-	}
+	gcref(&r_primlist, (void**)&primlist);
+	dictforall(prims, addtolist, &primlist);
+	primlist = sortlist(primlist);
+	gcrderef(&r_primlist);
 
 	return primlist;
 }

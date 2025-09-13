@@ -1,6 +1,6 @@
-#include <es.h>
-#include <prim.h>
-#include <gc.h>
+#include "es.h"
+#include "prim.h"
+#include "gc.h"
 #include <dlfcn.h>
 
 typedef struct DynamicLibrary DynamicLibrary;
@@ -14,7 +14,7 @@ struct DynamicLibrary {
 };
 
 DynamicLibrary *loaded_libs;
-Boolean dynlib_verbose = FALSE;
+Boolean dynlib_verbose = TRUE;
 Boolean dynlib_fail_cancel = TRUE;
 
 DynamicLibrary*
@@ -30,7 +30,7 @@ create_library(char *fname, char *errstr, size_t errstrlen)
 	if(!lib->handle){
 		dlerrstr = dlerror();
 		if(errstr)
-			strncpy(errstr, dlerrstr, errstrlen < strlen(dlerrstr) ? errstrlen : strlen(dlerrstr));
+			strncpy(errstr, dlerrstr, errstrlen);
 		free(lib->fname);
 		free(lib);
 		return nil;
@@ -43,7 +43,7 @@ create_library(char *fname, char *errstr, size_t errstrlen)
 		if(dlclose(lib->handle)){
 			dlerrstr = dlerror();
 			if(errstr)
-				strncpy(errstr, dlerrstr, errstrlen < strlen(dlerrstr) ? errstrlen : strlen(dlerrstr));
+				strncpy(errstr, dlerrstr, errstrlen);
 		}
 		free(lib->fname);
 		free(lib);
@@ -62,7 +62,7 @@ destroy_library(DynamicLibrary *lib, char *errstr, size_t errstrlen)
 	res = dlclose(lib->handle);
 	if(res){
 		dlerrstr = dlerror();
-		strncpy(errstr, dlerrstr, errstrlen < strlen(dlerrstr) ? errstrlen : strlen(dlerrstr));
+		strncpy(errstr, dlerrstr, errstrlen);
 	}
 	free(lib->fname);
 	free(lib);
@@ -139,6 +139,7 @@ int
 lib_add_to_list(DynamicLibrary *lib)
 {
 	lib->next = loaded_libs;
+	loaded_libs = lib;
 	return 0;
 }
 
@@ -233,7 +234,7 @@ PRIM(libraryprims) {
 	for(lib = loaded_libs; lib != nil; lib = lib->next){
 		if(streq(lib->fname, fname)){
 			for(i = 0; i < *lib->primslen; i++)
-				res = mklist(mkstr(str("%s", lib->prims[i])), res);
+				res = mklist(mkstr(str("$&%s", lib->prims[i])), res);
 			goto done;
 		}
 	}
