@@ -1,6 +1,7 @@
 #include "es.h"
 #include "prim.h"
 #include <stdlib.h>
+LIBNAME(mod_float);
 
 float
 termtof(Term *term, char *funname, int arg)

@@ -1,6 +1,7 @@
 #include "es.h"
 #include "prim.h"
 #include "gc.h"
+LIBNAME(mod_hello);
 
 List *
 hellotest(List *list, Binding *binding, int evalflags)

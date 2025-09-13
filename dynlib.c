@@ -2,11 +2,13 @@
 #include "prim.h"
 #include "gc.h"
 #include <dlfcn.h>
+#include <stdio.h>
 
 typedef struct DynamicLibrary DynamicLibrary;
 
 struct DynamicLibrary {
 	char *fname;
+	char *name;
 	void *handle;
 	Primitive *prims;
 	size_t *primslen;
@@ -36,10 +38,11 @@ create_library(char *fname, char *errstr, size_t errstrlen)
 		return nil;
 	}
 
+	lib->name = dlsym(lib->handle, "dynlibname");
 	lib->prims = dlsym(lib->handle, "dynprims");
 	lib->primslen = dlsym(lib->handle, "dynprimslen");
 
-	if(!lib->prims || !lib->primslen) {
+	if(!lib->name || !lib->prims || !lib->primslen) {
 		if(dlclose(lib->handle)) {
 			dlerrstr = dlerror();
 			if(errstr)
@@ -74,7 +77,7 @@ dump_prims_lib(DynamicLibrary *lib)
 {
 	size_t i = 0;
 
-	dprintf(2, "Library %s\n", lib->fname);
+	dprintf(2, "Library %s (%s)\n", lib->name, lib->fname);
 	for(i = 0; i < *lib->primslen; i++)
 		dprintf(2, "\t%lu: primitive %s\n", i, lib->prims[i].name);
 }
@@ -109,7 +112,7 @@ unload_prims_lib(DynamicLibrary *lib)
 	for(i = 0; i < *lib->primslen; i++) {
 		prim = &lib->prims[i];
 		if(dynlib_verbose)
-			dprintf(2, "unloading %s from %s...", prim->name, lib->fname);
+			dprintf(2, "unloading %s from %s...", prim->name, lib->name);
 		remove_prim(prim->name);
 		if(dynlib_verbose)
 			dprintf(2, "done.\n");
@@ -154,6 +157,28 @@ lib_remove_from_list(char *fname)
 	return nil;
 }
 
+DynamicLibrary*
+lib_find_fname(char *fname)
+{
+	DynamicLibrary *lib;
+
+	for(lib = loaded_libs; lib != nil; lib = lib->next)
+		if(streq(lib->fname, fname))
+			return lib;
+	return nil;
+}
+
+DynamicLibrary*
+lib_find_name(char *name)
+{
+	DynamicLibrary *lib;
+
+	for(lib = loaded_libs; lib != nil; lib = lib->next)
+		if(streq(lib->name, name))
+			return lib;
+	return nil;
+}
+
 int
 open_library(char *fname, char *errstr, size_t errstrlen)
 {
@@ -162,6 +187,12 @@ open_library(char *fname, char *errstr, size_t errstrlen)
 	lib = create_library(fname, errstr, errstrlen);
 	if(!lib)
 		return -1;
+
+	if(lib_find_name(lib->name) != nil){
+		snprintf(errstr, errstrlen, "library %s already loaded", lib->name);
+		destroy_library(lib, nil, 0);
+		return -1;
+	}
 
 	if(dynlib_verbose)
 		dump_prims_lib(lib);
@@ -192,7 +223,7 @@ PRIM(listdynlibs) {
 	gcref(&r_res, (void **)&res);
 
 	for(lib = loaded_libs; lib != nil; lib = lib->next)
-		res = mklist(mkstr(str("%s", lib->fname)), res);
+		res = mklist(mkstr(str("%s", lib->name)), res);
 
 	gcrderef(&r_res);
 	return res;
@@ -200,7 +231,7 @@ PRIM(listdynlibs) {
 
 PRIM(dynlibprims) {
 	List *res = nil; Root r_res;
-	char *fname = nil; Root r_fname;
+	char *name = nil; Root r_name;
 	DynamicLibrary *lib;
 	size_t i;
 
@@ -211,27 +242,55 @@ PRIM(dynlibprims) {
 		fail("$&libraryprims", "library %s not loaded", getstr(list->term));
 
 	gcref(&r_res, (void **)&res);
-	gcref(&r_fname, (void **)&fname);
+	gcref(&r_name, (void **)&name);
 
-	fname = getstr(list->term);
+	name = getstr(list->term);
 	for(lib = loaded_libs; lib != nil; lib = lib->next) {
-		if(streq(lib->fname, fname)) {
+		if(streq(lib->name, name)) {
 			for(i = 0; i < *lib->primslen; i++)
 				res = mklist(mkstr(str("%s", lib->prims[i])), res);
 			goto done;
 		}
 	}
-	fail("$&libraryprims", "library %s not loaded", fname);
+	fail("$&libraryprims", "library %s not loaded", name);
 
 done:
-	gcrderef(&r_fname);
+	gcrderef(&r_name);
 	gcrderef(&r_res);
+	return res;
+}
+
+PRIM(dynlibfile) {
+	List *res = nil; Root r_res;
+	char *name = nil; Root r_name;
+	DynamicLibrary *lib;
+
+	if(list == nil)
+		fail("$&dynlibfile", "missing args");
+
+	if(loaded_libs == nil)
+		fail("$&dynlibfile", "library %s not loaded", getstr(list->term));
+
+	gcref(&r_res, (void**)&res);
+	gcref(&r_name, (void**)&name);
+
+	name = getstr(list->term);
+	lib = lib_find_name(name);
+	if(lib == nil)
+		fail("$&dynlibfile", "library %s not loaded", name);
+
+	res = mklist(mkstr(str("%s", lib->fname)), res);
+
+	gcrderef(&r_name);
+	gcrderef(&r_res);
+
 	return res;
 }
 
 PRIM(opendynlib) {
 	char *fname; Root r_fname;
 	char errstr[256];
+	DynamicLibrary *testlib;
 
 	if(list == nil)
 		fail("$&openlibrary", "missing arg");
@@ -239,6 +298,11 @@ PRIM(opendynlib) {
 	gcref(&r_fname, (void **)&fname);
 
 	fname = getstr(list->term);
+
+	testlib = lib_find_fname(fname);
+	if(testlib != nil)
+		fail("$&openlibrary", "unable to open library %s: already open", testlib->name);
+
 	if(open_library(fname, &errstr[0], sizeof(errstr)))
 		fail("$&openlibrary", "unable to open library %s: %s", fname, errstr);
 
@@ -254,6 +318,7 @@ initprims_dynlib(Dict *primdict)
 
 	X(listdynlibs);
 	X(dynlibprims);
+	X(dynlibfile);
 	X(opendynlib);
 
 	return primdict;
