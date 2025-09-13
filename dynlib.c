@@ -91,18 +91,11 @@ dump_dynamic_prims(void)
 int
 load_prims_lib(DynamicLibrary *lib)
 {
-	Primitive *prim;
 	size_t i = 0;
 	int res = 0;
 
-	for(i = 0; i < *lib->primslen; i++) {
-		prim = &lib->prims[i];
-//		if(dynlib_verbose)
-//			dprintf(2, "loading %s from %s...", prim->name, lib->fname);
-		add_prim(prim->name, prim->symbol);
-//		if(dynlib_verbose)
-//			dprintf(2, "done.\n");
-	}
+	for(i = 0; i < *lib->primslen; i++)
+		add_prim(lib->prims[i].name, lib->prims[i].symbol);
 
 	return res;
 }
