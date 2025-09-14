@@ -204,7 +204,7 @@ PRIM(termtypeof) {
 	switch(list->term->kind) {
 	default:
 		//fail("$&termtypeof", "invalid term type!");
-		unreachable;
+		unreachable();
 		break;
 	case tkRegex:
 		return mklist(mkstr(str("regex")), NULL);
@@ -215,7 +215,7 @@ PRIM(termtypeof) {
 	case tkDict:
 		return mklist(mkstr(str("dict")), NULL);
 	}
-	unreachable;
+	unreachable();
 	return list_false;
 }
 

@@ -364,7 +364,7 @@ mkmatch(Tree *subj, Tree *cases)
 			wildcard = treecons(thunkify(wildpattern), treecons(cmd, nil));
 			has_wild = 1;
 		} else {
-			unreachable;
+			unreachable();
 		}
 	}
 	/* it might not be a bad idea to generate an unreachable assert if there's

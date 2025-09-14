@@ -628,6 +628,6 @@ extern List *raised(List *e);
 #endif
 
 #ifndef unreachable
-#define unreachable STMT(assert(UNREACHABLE));
+#define unreachable() STMT(assert(UNREACHABLE));
 #endif
 

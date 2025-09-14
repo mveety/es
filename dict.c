@@ -102,14 +102,14 @@ strhash2(const char *str1, const char *str2)
 {
 	switch(hashfunction){
 	default:
-		unreachable;
+		unreachable();
 		break;
 	case HaahrHash:
 		return haahr_strhash2(str1, str2);
 	case FNV1AHash:
 		return fnv1a_strhash2(str1, str2);
 	}
-	unreachable;
+	unreachable();
 	return 0;
 }
 
@@ -118,14 +118,14 @@ strhash(const char *str)
 {
 	switch(hashfunction){
 	default:
-		unreachable;
+		unreachable();
 		break;
 	case HaahrHash:
 		return haahr_strhash(str);
 	case FNV1AHash:
 		return fnv1a_strhash(str);
 	}
-	unreachable;
+	unreachable();
 	return 0;
 }
 

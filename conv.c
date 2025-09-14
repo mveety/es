@@ -34,7 +34,7 @@ Vconv(Format *f)
 	if(lp != NULL && lp->next == NULL) {
 		switch(lp->term->kind) {
 		default:
-			unreachable;
+			unreachable();
 		case tkRegex:
 		case tkString:
 			fmtprint(f, "%S", getstr(lp->term));
@@ -52,7 +52,7 @@ Vconv(Format *f)
 		next = lp->next;
 		switch(lp->term->kind) {
 		default:
-			unreachable;
+			unreachable();
 		case tkRegex:
 		case tkString:
 			fmtprint(f, "%S%s", getstr(lp->term), next == NULL ? "" : sep);
@@ -247,7 +247,7 @@ top:
 	default:
 		panic("bad node kind: %d", n->kind);
 	}
-	unreachable;
+	unreachable();
 }
 
 /* enclose -- build up a closure */
@@ -392,7 +392,7 @@ quoteit:
 
 	switch(state) {
 	default:
-		unreachable;
+		unreachable();
 	case Begin:
 		fmtprint(f, "''");
 		break;
@@ -492,7 +492,7 @@ Bconv(Format *f)
 	}
 	switch(n->kind) {
 	default:
-		unreachable;
+		unreachable();
 
 	case nWord:
 		fmtprint(f, "(word \"%s\")", n->u[0].s);

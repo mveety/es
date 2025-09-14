@@ -23,7 +23,7 @@ istrue(List *status)
 	for(; status != NULL; status = status->next) {
 		switch(status->term->kind) {
 		default:
-			unreachable;
+			unreachable();
 			break;
 		case tkClosure:
 			if(status->term->tag == ttError)
@@ -66,7 +66,7 @@ exitstatus(List *status)
 	term = status->term;
 	switch(term->kind) {
 	default:
-		unreachable;
+		unreachable();
 	case tkClosure:
 	case tkDict:
 	case tkRegex:
@@ -80,7 +80,7 @@ exitstatus(List *status)
 			return 1;
 		return n;
 	}
-	unreachable;
+	unreachable();
 }
 
 /* mkstatus -- turn a unix exit(2) status into a string */

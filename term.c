@@ -162,7 +162,7 @@ getstr(Term *term)
 	}
 	switch(term->kind) {
 	default:
-		unreachable;
+		unreachable();
 	case tkString:
 		return term->str;
 	case tkRegex:
@@ -191,7 +191,7 @@ getstr(Term *term)
 		gcrderef(&r_args_result);
 		return res;
 	}
-	unreachable;
+	unreachable();
 	return nil;
 }
 
@@ -205,7 +205,7 @@ getdict(Term *term)
 
 	switch(term->kind) {
 	default:
-		unreachable;
+		unreachable();
 	case tkDict:
 		return term->dict;
 	case tkString:
