@@ -3,17 +3,17 @@
 #include <stdlib.h>
 LIBNAME(mod_float);
 
-float
+double
 termtof(Term *term, char *funname, int arg)
 {
 	char *str = nil;
 	char *endptr = nil;
-	float res;
+	double res;
 
 	errno = 0;
 
 	str = getstr(term);
-	res = strtof(str, &endptr);
+	res = strtod(str, &endptr);
 	if(res == 0 && str == endptr)
 		fail(funname, "invalid input: $%d = %s", arg, str);
 	if(res == 0 && errno == ERANGE)
@@ -25,7 +25,7 @@ termtof(Term *term, char *funname, int arg)
 List *
 prim_addf(List *list, Binding *binding, int evalflags)
 {
-	float a, b, res;
+	double a, b, res;
 	char temp[256];
 	int printlen;
 	List *result; Root r_result;
@@ -39,7 +39,7 @@ prim_addf(List *list, Binding *binding, int evalflags)
 	b = termtof(list->next->term, "$&addf", 2);
 
 	res = a + b;
-	printlen = snprintf(&temp[0], sizeof(temp), "%f", res);
+	printlen = snprintf(&temp[0], sizeof(temp), "%g", res);
 	if(printlen >= (int)sizeof(temp))
 		fail("$&addf", "result conversion failed (temp string too short)");
 
@@ -53,7 +53,7 @@ prim_addf(List *list, Binding *binding, int evalflags)
 List *
 prim_subf(List *list, Binding *binding, int evalflags)
 {
-	float a, b, res;
+	double a, b, res;
 	char temp[256];
 	int printlen;
 	List *result; Root r_result;
@@ -67,7 +67,7 @@ prim_subf(List *list, Binding *binding, int evalflags)
 	b = termtof(list->next->term, "$&subf", 2);
 
 	res = a - b;
-	printlen = snprintf(&temp[0], sizeof(temp), "%f", res);
+	printlen = snprintf(&temp[0], sizeof(temp), "%g", res);
 	if(printlen >= (int)sizeof(temp))
 		fail("$&subf", "result conversion failed (temp string too short)");
 
@@ -81,7 +81,7 @@ prim_subf(List *list, Binding *binding, int evalflags)
 List *
 prim_mulf(List *list, Binding *binding, int evalflags)
 {
-	float a, b, res;
+	double a, b, res;
 	char temp[256];
 	int printlen;
 	List *result; Root r_result;
@@ -95,7 +95,7 @@ prim_mulf(List *list, Binding *binding, int evalflags)
 	b = termtof(list->next->term, "$&mulf", 2);
 
 	res = a * b;
-	printlen = snprintf(&temp[0], sizeof(temp), "%f", res);
+	printlen = snprintf(&temp[0], sizeof(temp), "%g", res);
 	if(printlen >= (int)sizeof(temp))
 		fail("$&mulf", "result conversion failed (temp string too short)");
 
@@ -109,7 +109,7 @@ prim_mulf(List *list, Binding *binding, int evalflags)
 List *
 prim_divf(List *list, Binding *binding, int evalflags)
 {
-	float a, b, res;
+	double a, b, res;
 	char temp[256];
 	int printlen;
 	List *result; Root r_result;
@@ -125,7 +125,7 @@ prim_divf(List *list, Binding *binding, int evalflags)
 	if(b == 0)
 		fail("$&divf", "divide by zero");
 	res = a / b;
-	printlen = snprintf(&temp[0], sizeof(temp), "%f", res);
+	printlen = snprintf(&temp[0], sizeof(temp), "%g", res);
 	if(printlen >= (int)sizeof(temp))
 		fail("$&divf", "result conversion failed (temp string too short)");
 
@@ -136,11 +136,170 @@ prim_divf(List *list, Binding *binding, int evalflags)
 	return result;
 }
 
+List *
+prim_feq(List *list, Binding *binding, int evalflags)
+{
+	char *str = nil;
+	char *endptr = nil;
+	double a, b;
+
+	if(list == nil || list->next == nil)
+		return list_false;
+
+	errno = 0;
+	str = getstr(list->term);
+	a = strtod(str, &endptr);
+	if(a == 0 && str == endptr)
+		return list_false;
+	if(a == 0 && errno == ERANGE)
+		return list_false;
+
+	str = endptr = nil;
+	errno = 0;
+	str = getstr(list->next->term);
+	b = strtod(str, &endptr);
+	if(b == 0 && str == endptr)
+		return list_false;
+	if(b == 0 && errno == ERANGE)
+		return list_false;
+
+	if(a == b)
+		return list_true;
+	return list_false;
+}
+
+List *
+prim_fgt(List *list, Binding *binding, int evalflags)
+{
+	char *str = nil;
+	char *endptr = nil;
+	double a, b;
+
+	if(list == nil || list->next == nil)
+		return list_false;
+
+	errno = 0;
+	str = getstr(list->term);
+	a = strtod(str, &endptr);
+	if(a == 0 && str == endptr)
+		return list_false;
+	if(a == 0 && errno == ERANGE)
+		return list_false;
+
+	str = endptr = nil;
+	errno = 0;
+	str = getstr(list->next->term);
+	b = strtod(str, &endptr);
+	if(b == 0 && str == endptr)
+		return list_false;
+	if(b == 0 && errno == ERANGE)
+		return list_false;
+
+	if(a > b)
+		return list_true;
+	return list_false;
+}
+
+List *
+prim_fgte(List *list, Binding *binding, int evalflags)
+{
+	char *str = nil;
+	char *endptr = nil;
+	double a, b;
+
+	if(list == nil || list->next == nil)
+		return list_false;
+
+	errno = 0;
+	str = getstr(list->term);
+	a = strtod(str, &endptr);
+	if(a == 0 && str == endptr)
+		return list_false;
+	if(a == 0 && errno == ERANGE)
+		return list_false;
+
+	str = endptr = nil;
+	errno = 0;
+	str = getstr(list->next->term);
+	b = strtod(str, &endptr);
+	if(b == 0 && str == endptr)
+		return list_false;
+	if(b == 0 && errno == ERANGE)
+		return list_false;
+
+	if(a >= b)
+		return list_true;
+	return list_false;
+}
+
+List *
+prim_flt(List *list, Binding *binding, int evalflags)
+{
+	char *str = nil;
+	char *endptr = nil;
+	double a, b;
+
+	if(list == nil || list->next == nil)
+		return list_false;
+
+	errno = 0;
+	str = getstr(list->term);
+	a = strtod(str, &endptr);
+	if(a == 0 && str == endptr)
+		return list_false;
+	if(a == 0 && errno == ERANGE)
+		return list_false;
+
+	str = endptr = nil;
+	errno = 0;
+	str = getstr(list->next->term);
+	b = strtod(str, &endptr);
+	if(b == 0 && str == endptr)
+		return list_false;
+	if(b == 0 && errno == ERANGE)
+		return list_false;
+
+	if(a < b)
+		return list_true;
+	return list_false;
+}
+
+List *
+prim_flte(List *list, Binding *binding, int evalflags)
+{
+	char *str = nil;
+	char *endptr = nil;
+	double a, b;
+
+	if(list == nil || list->next == nil)
+		return list_false;
+
+	errno = 0;
+	str = getstr(list->term);
+	a = strtod(str, &endptr);
+	if(a == 0 && str == endptr)
+		return list_false;
+	if(a == 0 && errno == ERANGE)
+		return list_false;
+
+	str = endptr = nil;
+	errno = 0;
+	str = getstr(list->next->term);
+	b = strtod(str, &endptr);
+	if(b == 0 && str == endptr)
+		return list_false;
+	if(b == 0 && errno == ERANGE)
+		return list_false;
+
+	if(a <= b)
+		return list_true;
+	return list_false;
+}
+
 
 DYNPRIMS() = {
-	{"addf", &prim_addf},
-	{"subf", &prim_subf},
-	{"mulf", &prim_mulf},
-	{"divf", &prim_divf},
+	{"addf", &prim_addf}, {"subf", &prim_subf}, {"mulf", &prim_mulf},
+	{"divf", &prim_divf}, {"feq", &prim_feq},	{"fgt", &prim_fgt},
+	{"fgte", &prim_fgte}, {"flt", &prim_flt},	{"flte", &prim_flte},
 };
 DYNPRIMSLEN();

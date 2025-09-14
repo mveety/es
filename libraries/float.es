@@ -3,7 +3,9 @@ with-dynlibs mod_float {
 
 	fn is-float num {
 		if {! ~ $#num 1} { return <=false }
-		result <={~ $num %re('[+-]?[0-9]+[.][ 0-9]*([e][+-]?[0-9]+)?')} #'
+		if {$&fgt $num 9223372036854775806} { return true }
+		if {$&flt $num -9223372036854775807} { return true }
+		result <={~ $num %re('^[+-]?[0-9]+[.][ 0-9]*([e][+-]?[0-9]+)?$')} #'
 	}
 
 	let (
@@ -18,7 +20,28 @@ with-dynlibs mod_float {
 				todecimal $n
 			}
 		}
+
+		fn intlte a b {
+			if {%numcompfun $&eq $a $b} {
+				true
+			} {%numcompfun $&lt $a $b} {
+				true
+			} {
+				false
+			}
+		}
+		fn intgte a b {
+			if {%numcompfun $&eq $a $b} {
+				true
+			} {%numcompfun $&gt $a $b} {
+				true
+			} {
+				false
+			}
+		}
+
 		fn remove_trailing_zeros str {
+			if {~ $str *^'e'^*} { return $str}
 			local(strl=<={reverse $:str}; res=(); remove=true) {
 				for (c = $strl) {
 					if {! $remove || ! ~ $c 0} {
@@ -81,6 +104,57 @@ with-dynlibs mod_float {
 				old_div $a $b
 			}
 		}
+
+		fn eq a b {
+			if {~ $#a 0} { return <=true}
+			if {~ $#b 0} { b = 0 }
+			if {is-float $a || is-float $b} {
+				$&feq $a $b
+			} {
+				%numcompfun $&eq $a $b
+			}
+		}
+
+		fn gt a b {
+			if {~ $#a 0} { return <=false}
+			if {~ $#b 0} { b = 0 }
+			if {is-float $a || is-float $b} {
+				$&fgt $a $b
+			} {
+				%numcompfun $&gt $a $b
+			}
+		}
+
+		fn gte a b {
+			if {~ $#a 0} { return <=true}
+			if {~ $#b 0} { b = 0 }
+			if {is-float $a || is-float $b} {
+				$&fgte $a $b
+			} {
+				intgte $a $b
+			}
+		}
+
+		fn lt a b {
+			if {~ $#a 0} { return <=false}
+			if {~ $#b 0} { b = 0 }
+			if {is-float $a || is-float $b} {
+				$&flt $a $b
+			} {
+				%numcompfun $&lt $a $b
+			}
+		}
+
+		fn lte a b {
+			if {~ $#a 0} { return <=true}
+			if {~ $#b 0} { b = 0 }
+			if {is-float $a || is-float $b} {
+				$&flte $a $b
+			} {
+				intlte $a $b
+			}
+		}
+
 	}
 }
 

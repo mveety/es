@@ -222,6 +222,14 @@ if {~ <=$&primitives opendynlib} {
 					throw error load-dynlib 'dynamic library '^$lib^' already loaded'
 				}
 			}
+			if {$es_conf_dynlib-local-search} {
+				(e _) = <={try %open_dynlib ./$lib.$ext}
+				if {! $e} {
+					return <=true
+				} {! ~ <={$e msg} *^'Cannot open'^*} {
+					throw $e
+				}
+			}
 			if {! ~ $#userdynlib 0} {
 				(e _) = <={try %open_dynlib $userdynlib}
 				if {! $e} {
@@ -232,14 +240,6 @@ if {~ <=$&primitives opendynlib} {
 			}
 			if {! ~ $#sysdynlib 0} {
 				(e _) = <={try %open_dynlib $sysdynlib}
-				if {! $e} {
-					return <=true
-				} {! ~ <={$e msg} *^'Cannot open'^*} {
-					throw $e
-				}
-			}
-			if {$es_conf_dynlib-local-search} {
-				(e _) = <={try %open_dynlib ./$lib.$ext}
 				if {! $e} {
 					return <=true
 				} {! ~ <={$e msg} *^'Cannot open'^*} {
