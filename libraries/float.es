@@ -42,6 +42,7 @@ with-dynlibs mod_float {
 
 		fn remove_trailing_zeros str {
 			if {~ $str *^'e'^*} { return $str}
+			if {! ~ $str *^'.'^*} { return $str}
 			local(strl=<={reverse $:str}; res=(); remove=true) {
 				for (c = $strl) {
 					if {! $remove || ! ~ $c 0} {
