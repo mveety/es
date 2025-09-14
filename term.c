@@ -161,6 +161,8 @@ getstr(Term *term)
 		term = tp;
 	}
 	switch(term->kind) {
+	default:
+		unreachable;
 	case tkString:
 		return term->str;
 	case tkRegex:
@@ -189,6 +191,7 @@ getstr(Term *term)
 		gcrderef(&r_args_result);
 		return res;
 	}
+	unreachable;
 	return nil;
 }
 
@@ -201,6 +204,8 @@ getdict(Term *term)
 	Dict *dict = nil; Root r_dict;
 
 	switch(term->kind) {
+	default:
+		unreachable;
 	case tkDict:
 		return term->dict;
 	case tkString:
@@ -228,7 +233,8 @@ done:
 		gcrderef(&r_parsed);
 		gcrderef(&r_t);
 		return dict;
-	default:
+	case tkClosure:
+	case tkRegex:
 		return nil;
 	}
 	return nil;

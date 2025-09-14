@@ -202,6 +202,10 @@ PRIM(termtypeof) {
 		fail("$&termtypeof", "missing argument");
 
 	switch(list->term->kind) {
+	default:
+		//fail("$&termtypeof", "invalid term type!");
+		unreachable;
+		break;
 	case tkRegex:
 		return mklist(mkstr(str("regex")), NULL);
 	case tkString:
@@ -210,10 +214,8 @@ PRIM(termtypeof) {
 		return mklist(mkstr(str("closure")), NULL);
 	case tkDict:
 		return mklist(mkstr(str("dict")), NULL);
-	default:
-		fail("$&termtypeof", "invalid term type!");
-		break;
 	}
+	unreachable;
 	return list_false;
 }
 
