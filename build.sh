@@ -23,6 +23,7 @@ case "$PLATFORM" in
 		echo "warning: es has not been tested on your platform"
 		# just let configure work out the best defaults
 		./configure
+		;;
 esac
 
 make es
