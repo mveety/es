@@ -5,18 +5,27 @@ I've tested it on FreeBSD, OpenBSD, and Ubuntu, so it should build
 everywhere sane. I would like testing and reports back for solaris/illumos,
 macOS, Haiku, NetBSD, and anything else you can think of.
 
-Building:
-	% ./setup-autoconf.sh
-	% ./configure
-	% make
-	% make install
+Building without modules:
+	user% ./setup-autoconf.sh
+	user% ./configure
+	user% make
+	root% make install
+	root% make syslib-install # if you want libs installed globally
+	user% make userlib-install # or only in ~/.config/es-mveety
 
-Some Notes:
-Be sure to install the libraries using 'make userlib-install'. They'll get
-copied to $home/eslib; be sure to add that to your $libraries list. If you
-want to install the libraries for everyone run make syslib-install.
-Be sure to reference the included *.es files as examples and the CHANGES
-file for more information. the manpage is still functional and broadly
-applicable but reflects es at the time of forking and not it's current
-state.
+Building with modules:
+	user% ./setup-autoconf.sh
+	user% ./configure --with-dynlibs
+	user% make
+	user% make modules
+	root% make install
+	root% make syslib-install # if you want libs installed globally
+	user% make userlib-install # or only in ~/.config/es-mveety
+
+If your system installed software in /usr/local you're good to go without
+using --prefix on configure. If your system installs things somewhere else
+(or you want it somewhere else) use --prefix=/your/install/path.
+
+Sorry about the lack of docs. the old manpage is still a good primer.
+
 
