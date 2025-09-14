@@ -71,7 +71,7 @@ stepsplit(char *in, size_t len, Boolean endword)
 			if(isifs[c]) {
 				Term *term = mkstr(sealcountedbuffer(buf));
 				value = mklist(term, value);
-				buffer = buf = coalesce ? NULL : openbuffer(0);
+				buffer = coalesce ? NULL : openbuffer(0);
 				return (char *)s;
 			} else
 				buf = bufputc(buf, c);

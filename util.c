@@ -105,9 +105,9 @@ efree(void *p)
 extern void
 ewrite(int fd, const char *buf, size_t n)
 {
-	volatile long i, remain;
+	volatile long i = 0, remain;
 	const char *volatile bufp = buf;
-	for(i = 0, remain = n; remain > 0; bufp += i, remain -= i) {
+	for(remain = n; remain > 0; bufp += i, remain -= i) {
 		interrupted = FALSE;
 		if(!setjmp(slowlabel)) {
 			slow = TRUE;

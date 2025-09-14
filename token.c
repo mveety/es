@@ -125,7 +125,8 @@ getfds(int fd[2], int c, int default0, int default1)
 		n = n * 10 + c;
 	fd[0] = n;
 
-	switch(c += '0') {
+	c += '0';
+	switch(c) {
 	case '=':
 		if((unsigned int)(n = input_getc() - '0') > 9) {
 			if(n != ']' - '0') {

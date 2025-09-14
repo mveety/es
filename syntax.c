@@ -184,10 +184,14 @@ mkfunpipe(Tree *t1, Tree *t2)
 {
 	Tree *firstcall, *res;
 
-	if(t1 == NULL || t2 == NULL)
+	if(t1 == NULL || t2 == NULL){
 		fail("$&parse", "syntax error in function pipe");
-	if(t1->kind != nList || t2->kind != nList)
+		return nil;
+	}
+	if(t1->kind != nList || t2->kind != nList){
 		fail("&parse", "syntax error in function pipe");
+		return nil;
+	}
 
 	firstcall = mk(nCall, thunkify(t1));
 	res = treeconsend(t2, firstcall);

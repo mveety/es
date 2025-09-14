@@ -235,13 +235,10 @@ PRIM(apids) {
 
 	gcref(&r_lp, (void **)&lp);
 
-	if(list != NULL && termeq(list->term, "-a")) {
+	if(list != NULL && termeq(list->term, "-a"))
 		dead = 0;
-		list = list->next;
-	} else if(list != NULL && termeq(list->term, "-d")) {
+	else if(list != NULL && termeq(list->term, "-d"))
 		alive = 0;
-		list = list->next;
-	}
 
 	for(p = proclist; p != NULL; p = p->next)
 		if(p->background) {
