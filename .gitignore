@@ -55,4 +55,5 @@ cachegrind.*
 dtrace.*.out
 stacks.*.out
 *.svg
+*.plist
 
