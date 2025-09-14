@@ -14,10 +14,10 @@ fi
 # run configure
 case "$PLATFORM" in
 	FreeBSD)
-		CC=clang ./configure
+		CC=clang ./configure --with-dynlibs
 		;;
 	Linux)
-		CC=gcc ./configure --prefix=/usr
+		CC=gcc ./configure --prefix=/usr --with-dynlibs
 		;;
 	*)
 		echo "warning: es has not been tested on your platform"
@@ -25,5 +25,6 @@ case "$PLATFORM" in
 		./configure
 esac
 
-make
+make es
+make modules
 
