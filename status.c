@@ -18,27 +18,33 @@ List
 extern Boolean
 istrue(List *status)
 {
+	char *str = nil;
+
 	for(; status != NULL; status = status->next) {
-		Term *term = status->term;
-		if(term->closure != NULL){
-			if(term->tag == ttError)
+		switch(status->term->kind) {
+		default:
+			unreachable;
+			break;
+		case tkClosure:
+			if(status->term->tag == ttError)
 				return TRUE;
 			else
 				return FALSE;
-		}
-
-		if(term->dict != nil)
+		case tkDict:
+		case tkRegex:
 			return FALSE;
-
-		if(termeq(term, "true"))
-			return TRUE;
-		else if(termeq(term, "false"))
-			return FALSE;
-		else {
-			const char *str = term->str;
-			assert(str != NULL);
-			if(*str != '\0' && (*str != '0' || str[1] != '\0'))
+		case tkString:
+			if(termeq(status->term, "true"))
+				return TRUE;
+			else if(termeq(status->term, "false"))
 				return FALSE;
+			else {
+				str = status->term->str;
+				assert(str != NULL);
+				if(*str != '\0' && (*str != '0' || str[1] != '\0'))
+					return FALSE;
+			}
+			break;
 		}
 	}
 	return TRUE;
@@ -56,17 +62,25 @@ exitstatus(List *status)
 		return 0;
 	if(status->next != NULL)
 		return istrue(status) ? 0 : 1;
-	term = status->term;
-	if(term->closure != NULL)
-		return 1;
 
-	s = term->str;
-	if(*s == '\0')
-		return 0;
-	n = strtol(s, &s, 0);
-	if(*s != '\0' || n > 255)
+	term = status->term;
+	switch(term->kind) {
+	default:
+		unreachable;
+	case tkClosure:
+	case tkDict:
+	case tkRegex:
 		return 1;
-	return n;
+	case tkString:
+		s = term->str;
+		if(*s == '\0')
+			return 0;
+		n = strtol(s, &s, 0);
+		if(*s != '\0' || n > 255)
+			return 1;
+		return n;
+	}
+	unreachable;
 }
 
 /* mkstatus -- turn a unix exit(2) status into a string */
