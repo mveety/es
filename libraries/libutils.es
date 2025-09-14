@@ -433,3 +433,23 @@ fn libutil_funs libraries {
 	}
 }
 
+fn dynlib_info dynlib {
+	if {! ~ <=%dynlibs $dynlib} {
+		throw error dynlib_info 'dynlib '^$^dynlib^' is not loaded'
+	}
+	echo 'Dynamic Library '^$dynlib^' ('^<={%dynlib_file $dynlib}^')'
+	for (prim = <={%dynlib_prims $dynlib}) {
+		echo '    Primitive $&'^$prim
+	}
+}
+
+fn dynlibs {
+	if {~ <={%dynlibs |> %count} 0} {
+		echo 'no dynamic libraries loaded'
+	} {
+		for (dynlib = <=%dynlibs) {
+			dynlib_info $dynlib
+		}
+	}
+}
+

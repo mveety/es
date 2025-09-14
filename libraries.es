@@ -11,7 +11,7 @@ set-es_conf_libraries = @{ local (set-libraries =) { libraries = $* }; result $*
 if {~ $#libraries 0} { libraries = () }
 if {~ $#default_libraries 0} { default_libraries = () }
 if {~ $#es_conf_library-import 0} { es_conf_library-import = true }
-if {~ $#es_conf_import-panic 0} { es_conf_import-panic = false }
+if {~ $#es_conf_import-panic 0} { es_conf_import-panic = true }
 if {~ $#es_conf_automatic-import 0} { es_conf_automatic-import = true }
 if {~ $#es_conf_library-import-once 0} { es_conf_library-import-once = false }
 
