@@ -43,6 +43,11 @@ typedef enum {
 	ttRegex,
 } Termtag;
 
+typedef enum {
+	HaahrHash,
+	FNV1AHash,
+} HashFunction;
+
 struct Term {
 	TermKind kind;
 	Termtag tag;
@@ -322,6 +327,9 @@ extern int ewaitfor(int pid);
 
 /* dict.c */
 
+extern HashFunction hashfunction;
+extern uint64_t strhash2(const char*, const char*);
+extern uint64_t strhash(const char*);
 extern Dict *mkdict(void);
 extern void dictforall(Dict *dict, void (*proc)(void *, char *, void *), void *arg);
 extern void *dictget(Dict *dict, const char *name);
@@ -618,4 +626,7 @@ extern List *raised(List *e);
 #else
 # define fallthrough do {} while (0)  /* fallthrough */
 #endif
+
+#define unreachable STMT(assert(UNREACHABLE));
+
 

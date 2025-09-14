@@ -2,6 +2,7 @@
 
 #include "es.h"
 #include "gc.h"
+#include <stdint.h>
 
 #define INIT_DICT_SIZE 2
 #define REMAIN(n) (((n) * 2) / 3)
@@ -11,9 +12,51 @@
  * hashing
  */
 
+#define FNV1A_HashStart 0x811c9dc5
+#define FNV1A_HashIncr 0x01000193
+
+HashFunction hashfunction = HaahrHash;
+
+uint32_t
+fnv1a_strhash2_len(const char *s1, size_t s1len, const char *s2, size_t s2len)
+{
+	size_t i;
+	uint32_t hash = FNV1A_HashStart;
+
+	for(i = 0; i < s1len; i++){
+		hash ^= (uint8_t)s1[i];
+		hash *= FNV1A_HashIncr;
+	}
+	for(i = 0; i < s2len; i++){
+		hash ^= (uint8_t)s2[i];
+		hash *= FNV1A_HashIncr;
+	}
+
+	return hash;
+}
+
+uint32_t
+fnv1a_strhash2(const char *s1, const char *s2)
+{
+	size_t len1 = 0, len2 = 0;
+
+	if(s1 != nil)
+		len1 = strlen(s1);
+	if(s2 != nil)
+		len2 = strlen(s2);
+
+	return fnv1a_strhash2_len(s1, len1, s2, len2);
+}
+
+uint32_t
+fnv1a_strhash(const char *str)
+{
+	return fnv1a_strhash2(str, nil);
+}
+
 /* strhash2 -- the (probably too slow) haahr hash function */
 static unsigned long
-strhash2(const char *str1, const char *str2)
+haahr_strhash2(const char *str1, const char *str2)
 {
 
 #define ADVANCE()                          \
@@ -49,9 +92,41 @@ strhash2(const char *str1, const char *str2)
 
 /* strhash -- hash a single string */
 static unsigned long
+haahr_strhash(const char *str)
+{
+	return haahr_strhash2(str, NULL);
+}
+
+uint64_t
+strhash2(const char *str1, const char *str2)
+{
+	switch(hashfunction){
+	default:
+		unreachable;
+		break;
+	case HaahrHash:
+		return haahr_strhash2(str1, str2);
+	case FNV1AHash:
+		return fnv1a_strhash2(str1, str2);
+	}
+	unreachable;
+	return 0;
+}
+
+uint64_t
 strhash(const char *str)
 {
-	return strhash2(str, NULL);
+	switch(hashfunction){
+	default:
+		unreachable;
+		break;
+	case HaahrHash:
+		return haahr_strhash(str);
+	case FNV1AHash:
+		return fnv1a_strhash(str);
+	}
+	unreachable;
+	return 0;
 }
 
 /*

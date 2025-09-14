@@ -179,6 +179,8 @@ debug_flag_usage(void)
 			"	M -- verbose_match\n"
 			"	T -- dump_tok_status\n"
 			"	r -- verbose_rangematch\n"
+			"	h -- HaahrHash\n"
+			"	H -- FNV1AHash\n"
 #ifdef DYNAMIC_LIBRARIES
 			"	m -- dynlib_verbose\n"
 #endif
@@ -265,6 +267,12 @@ main(int argc, char *argv[])
 					break;
 				case 'r':
 					verbose_rangematch = TRUE;
+					break;
+				case 'h':
+					hashfunction = HaahrHash;
+					break;
+				case 'H':
+					hashfunction = FNV1AHash;
 					break;
 #ifdef DYNAMIC_LIBRARIES
 				case 'm':

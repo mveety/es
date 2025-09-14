@@ -20,9 +20,17 @@ istrue(List *status)
 {
 	for(; status != NULL; status = status->next) {
 		Term *term = status->term;
-		if(term->closure != NULL)
+		if(term->closure != NULL){
+			if(term->tag == ttError)
+				return TRUE;
+			else
+				return FALSE;
+		}
+
+		if(term->dict != nil)
 			return FALSE;
-		else if(termeq(term, "true"))
+
+		if(termeq(term, "true"))
 			return TRUE;
 		else if(termeq(term, "false"))
 			return FALSE;
