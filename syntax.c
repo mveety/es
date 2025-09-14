@@ -7,6 +7,7 @@
 
 Tree errornode;
 Tree *parsetree;
+Boolean comprehensive_matches = FALSE;
 
 /* initparse -- called at the dawn of time */
 void
@@ -295,39 +296,6 @@ redirappend(Tree *tree, Tree *r)
 	return tree;
 }
 
-/* mkmatch -- rewrite for match */
-Tree *
-mkmatch(Tree *subj, Tree *cases)
-{
-	const char *varname = "matchexpr";
-	Tree *sass, *svar, *matches = NULL;
-	Tree *pattlist, *cmd, *match;
-
-	sass = treecons2(mk(nAssign, mk(nWord, varname), subj), NULL);
-	svar = mk(nVar, mk(nWord, varname));
-
-	for(; cases != NULL; cases = cases->CDR) {
-		pattlist = cases->CAR->CAR;
-		cmd = cases->CAR->CDR;
-
-		if(pattlist != NULL && pattlist->kind == nLambda) {
-			pattlist = treecons(pattlist, NULL);
-			pattlist = treeconsend(pattlist, svar);
-		} else if(pattlist != NULL && pattlist->kind != nList) {
-			pattlist = treecons(pattlist, NULL);
-			pattlist = mk(nMatch, svar, pattlist);
-		} else
-			pattlist = mk(nMatch, svar, pattlist);
-
-		match = treecons(thunkify(pattlist), treecons(cmd, NULL));
-		matches = treeappend(matches, match);
-	}
-
-	matches = thunkify(prefix("if", matches));
-
-	return mk(nLocal, sass, matches);
-}
-
 int
 is_all_patterns(Tree *pattern)
 {
@@ -349,6 +317,65 @@ is_all_patterns(Tree *pattern)
 		return is_all_patterns(p);
 	}
 	return 0;
+}
+
+/* mkmatch -- rewrite for match */
+Tree *
+mkmatch(Tree *subj, Tree *cases)
+{
+	const char *varname = "matchexpr";
+	Tree *sass, *svar, *matches = NULL;
+	Tree *pattlist, *cmd, *match;
+	Tree *wildcard = nil, *wildpattern = nil;
+	int is_wild = 0, has_wild = 0;
+
+	sass = treecons2(mk(nAssign, mk(nWord, varname), subj), NULL);
+	svar = mk(nVar, mk(nWord, varname));
+
+	if(comprehensive_matches){
+		wildcard = treecons(mk(nConcat, mk(nQword, "$matchexpr = "), mk(nVar, mk(nWord, varname))), nil);
+		wildcard = treecons(mk(nWord, "unreachable"), wildcard);
+		wildcard = treecons(mk(nWord, "assert"), wildcard);
+		wildcard = treecons(mk(nWord, "throw"), wildcard);
+		wildcard = treecons(thunkify(wildcard), nil);
+	}
+
+	for(; cases != NULL; cases = cases->CDR) {
+		pattlist = cases->CAR->CAR;
+		cmd = cases->CAR->CDR;
+
+		is_wild = is_all_patterns(pattlist);
+
+		if(pattlist != NULL && pattlist->kind == nLambda) {
+			pattlist = treecons(pattlist, NULL);
+			pattlist = treeconsend(pattlist, svar);
+		} else if(pattlist != NULL && pattlist->kind != nList) {
+			pattlist = treecons(pattlist, NULL);
+			pattlist = mk(nMatch, svar, pattlist);
+		} else
+			pattlist = mk(nMatch, svar, pattlist);
+		if(!is_wild) {
+			match = treecons(thunkify(pattlist), treecons(cmd, NULL));
+			matches = treeappend(matches, match);
+		} else if(is_wild && has_wild) {
+			fail("$&parse", "more than one wildcard in match");
+		} else if(is_wild) {
+			wildpattern = mk(nMatch, svar, treecons(mk(nWord, "*"), nil));
+			wildcard = treecons(thunkify(wildpattern), treecons(cmd, nil));
+			has_wild = 1;
+		} else {
+			unreachable;
+		}
+	}
+	/* it might not be a bad idea to generate an unreachable assert if there's
+	 * no wildcard case. I like the idea of comprehensive matches, but I don't
+	 * know how badly that would screw up everyone's code.
+	 */
+	if(has_wild || comprehensive_matches)
+		matches = treeappend(matches, wildcard);
+	matches = thunkify(prefix("if", matches));
+
+	return mk(nLocal, sass, matches);
 }
 
 Tree *
@@ -399,7 +426,7 @@ mkmatchall(Tree *subj, Tree *cases)
 			match = thunkify(mk(nAssign, mk(nWord, resname), match));
 			ifs = mkseq("%seq", ifs, match);
 		} else if(is_wild && has_wild) {
-			fail("$&parse", "more than one always match case in matchall");
+			fail("$&parse", "more than one wildcard in matchall");
 		} else {
 			wildmatch = treecons(mk(nCall, cmd), NULL);
 			wildmatch = thunkify(mk(nAssign, mk(nWord, resname), wildmatch));

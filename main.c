@@ -30,6 +30,7 @@ extern int gc_oldsweep_after;
 extern Boolean regex_debug;
 extern Boolean dump_tok_status;
 extern Boolean verbose_rangematch;
+extern Boolean comprehensive_matches;
 #ifdef DYNAMIC_LIBRARIES
 extern Boolean dynlib_verbose;
 #endif
@@ -74,6 +75,7 @@ init_internal_vars(void)
 	vardef("__es_esrcfile", nil, mklist(mkstr(different_esrc ? str("%s", altesrc) : ""), nil));
 	vardef("__es_extra_esrc", nil, mklist(mkstr(str("%s", additional_esrc ? "true" : "false")), nil));
 	vardef("__es_extra_esrcfile", nil, mklist(mkstr(additional_esrc ? str("%s", extraesrc) : ""), nil));
+	vardef("__es_comp_match", nil, mklist(mkstr(comprehensive_matches ? "true" : "false"), nil));
 
 	gcderef(&r_list, (void **)&list);
 }
@@ -166,8 +168,12 @@ do_usage(void)
 
 void
 debug_flag_usage(void)
-{
-	dprintf(2, "debug flags: es -D [GIaEPRAMr]\n%s",
+{ /* this is a mess */
+#ifdef DYNAMIC_LIBRARIES
+	dprintf(2, "debug flags: es -D [GIaEPRAMrhHCm]\n%s",
+#else
+	dprintf(2, "debug flags: es -D [GIaEPRAMrhHC]\n%s",
+#endif
 			"	? -- show this message\n"
 			"	G -- gcverbose\n"
 			"	I -- gcinfo\n"
@@ -181,6 +187,7 @@ debug_flag_usage(void)
 			"	r -- verbose_rangematch\n"
 			"	h -- HaahrHash\n"
 			"	H -- FNV1AHash\n"
+			"	C -- comprehensive_matches\n"
 #ifdef DYNAMIC_LIBRARIES
 			"	m -- dynlib_verbose\n"
 #endif
@@ -273,6 +280,9 @@ main(int argc, char *argv[])
 					break;
 				case 'H':
 					hashfunction = FNV1AHash;
+					break;
+				case 'C':
+					comprehensive_matches = TRUE;
 					break;
 #ifdef DYNAMIC_LIBRARIES
 				case 'm':
