@@ -155,6 +155,8 @@ with-dynlibs mod_float {
 			}
 		}
 
+		noexport += is-float
+		noexport += add sub mul div eq gt gte lt lte
 	}
 }
 
