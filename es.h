@@ -627,6 +627,7 @@ extern List *raised(List *e);
 # define fallthrough do {} while (0)  /* fallthrough */
 #endif
 
+#ifndef unreachable
 #define unreachable STMT(assert(UNREACHABLE));
-
+#endif
 
