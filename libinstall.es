@@ -130,10 +130,12 @@ fn copy_dynlib lib libdir {
 					echo 'installing' $dynlibfile.$ext '->' $libdir^'/'^$dynlibfile^'.'^$platform^'.'^$arch^'.'^$ext
 					copyfile $dynlibsrc/$dynlibfile.$ext $libdir/$dynlibfile.$platform.$arch.$ext
 				}
+				return <=true
 			}
 		} {
 			echo 'installing' $dynlibfile.$ext '->' $libdir^'/'^$dynlibfile^'.'^$platform^'.'^$arch^'.'^$ext
 			copyfile $dynlibsrc/$dynlibfile.$ext $libdir/$dynlibfile.$platform.$arch.$ext
+			return <=true
 		}
 		return <=true
 	}

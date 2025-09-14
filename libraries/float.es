@@ -65,6 +65,7 @@ with-dynlibs mod_float {
 				old_add $a $b
 			}
 		}
+		%hidefunction add
 
 		fn sub a b {
 			if {is-float $a || is-float $b} {
@@ -78,6 +79,7 @@ with-dynlibs mod_float {
 				old_sub $a $b
 			}
 		}
+		%hidefunction sub
 
 		fn mul a b {
 			if {is-float $a || is-float $b} {
@@ -91,6 +93,7 @@ with-dynlibs mod_float {
 				old_mul $a $b
 			}
 		}
+		%hidefunction mul
 
 		fn div a b {
 			if {is-float $a || is-float $b} {
@@ -104,6 +107,7 @@ with-dynlibs mod_float {
 				old_div $a $b
 			}
 		}
+		%hidefunction div
 
 		fn eq a b {
 			if {~ $#a 0} { return <=true}
@@ -114,6 +118,7 @@ with-dynlibs mod_float {
 				%numcompfun $&eq $a $b
 			}
 		}
+		%hidefunction eq
 
 		fn gt a b {
 			if {~ $#a 0} { return <=false}
@@ -124,6 +129,7 @@ with-dynlibs mod_float {
 				%numcompfun $&gt $a $b
 			}
 		}
+		%hidefunction gt
 
 		fn gte a b {
 			if {~ $#a 0} { return <=true}
@@ -134,6 +140,7 @@ with-dynlibs mod_float {
 				intgte $a $b
 			}
 		}
+		%hidefunction gte
 
 		fn lt a b {
 			if {~ $#a 0} { return <=false}
@@ -144,6 +151,7 @@ with-dynlibs mod_float {
 				%numcompfun $&lt $a $b
 			}
 		}
+		%hidefunction lt
 
 		fn lte a b {
 			if {~ $#a 0} { return <=true}
@@ -154,6 +162,7 @@ with-dynlibs mod_float {
 				intlte $a $b
 			}
 		}
+		%hidefunction lte
 
 		noexport += is-float
 		noexport += add sub mul div eq gt gte lt lte
