@@ -430,12 +430,13 @@ PRIM(time) {
 
 	if(lp == NULL)
 		fail("$&time", "usage: $&time [-r] body");
-	if(termeq(lp->term, "-r")) {
-		quiet = TRUE;
-		lp = lp->next;
-		if(lp == NULL)
-			fail("$&time", "usage: $&time [-r] body");
-	}
+	else
+		if(termeq(lp->term, "-r")) {
+			quiet = TRUE;
+			lp = lp->next;
+			if(lp == NULL)
+				fail("$&time", "usage: $&time [-r] body");
+		}
 
 	gc(); /* do a garbage collection first to ensure reproducible results */
 	clock_gettime(CLOCK_MONOTONIC, &before);

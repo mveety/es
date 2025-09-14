@@ -21,7 +21,7 @@ pophandler(Handler *handler)
 }
 
 /* throw -- raise an exception */
-extern noreturn
+void
 throw(List *e)
 {
 	Handler *handler = tophandler;
@@ -52,7 +52,7 @@ throw(List *e)
 	NOTREACHED;
 }
 
-extern noreturn
+void
 fail(const char *from, const char *fmt, ...)
 {
 	char *s;

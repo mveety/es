@@ -591,8 +591,8 @@ struct Handler {
 extern Handler *tophandler, *roothandler;
 extern List *exception;
 extern void pophandler(Handler *handler);
-extern noreturn throw(List *exc);
-extern noreturn fail(const char *from, const char *name, ...);
+extern void throw(List *exc) __attribute__((noreturn));
+extern void fail(const char *from, const char *name, ...) __attribute__((noreturn));
 extern void newchildcatcher(void);
 extern List *raised(List *e);
 

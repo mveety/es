@@ -12,7 +12,8 @@ prim(char *s, List *list, Binding *binding, int evalflags)
 	p = (List * (*)(List *, Binding *, int)) dictget(prims, s);
 	if(p == NULL)
 		fail("es:prim", "unknown primitive: %s", s);
-	return (*p)(list, binding, evalflags);
+	else
+		return (*p)(list, binding, evalflags);
 }
 
 PRIM(primitives) {
