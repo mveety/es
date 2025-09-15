@@ -72,7 +72,7 @@ clean	:
 	rm -f es es_static ${OFILES} ${GEN} dump.o system.o version.c ${MODOFILES} ${MODULES}
 
 distclean:	clean
-	rm -f config.cache config.log config.h Makefile cscope.out tags TAGS core cs.out config.status ltmain.sh
+	rm -f config.cache config.log config.h Makefile GNUmakefile cscope.out tags TAGS core cs.out config.status ltmain.sh
 	rm -rf autom4te.cache 
 
 MANIFEST:
