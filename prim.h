@@ -11,7 +11,7 @@
 
 #define LIBNAME(name) char dynlibname[] = STRING(name)
 #define DYNPRIMS() Primitive dynprims[]
-#define DX(name) {STRING(name), CONCAT(&prim_,name)},
+#define DX(name) {STRING(name), CONCAT(&prim_,name)}
 #define DYNPRIMSLEN() size_t dynprimslen = (sizeof(dynprims)/sizeof(Primitive))
 
 typedef struct Primitive Primitive;

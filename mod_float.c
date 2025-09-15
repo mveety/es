@@ -1,26 +1,8 @@
 #include "es.h"
 #include "prim.h"
 #include <stdlib.h>
+#include "float_util.h"
 LIBNAME(mod_float);
-
-double
-termtof(Term *term, char *funname, int arg)
-{
-	char *str = nil;
-	char *endptr = nil;
-	double res;
-
-	errno = 0;
-
-	str = getstr(term);
-	res = strtod(str, &endptr);
-	if(res == 0 && str == endptr)
-		fail(funname, "invalid input: $%d = %s", arg, str);
-	if(res == 0 && errno == ERANGE)
-		fail(funname, "conversion overflow: $%d = %s", arg, str);
-
-	return res;
-}
 
 List *
 prim_addf(List *list, Binding *binding, int evalflags)

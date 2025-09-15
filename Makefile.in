@@ -46,48 +46,16 @@ MKDIR_P = @MKDIR_P@
 
 YACC = @YACC@
 
-CFLAGS	= $(ADDCFLAGS) -I$(srcdir) -W -Wall -Wno-missing-field-initializers -Wno-unused-parameter @CFLAGS@
-LDFLAGS	= $(ADDLDFLAGS) @LDFLAGS@
-LIBS	= $(ADDLIBS) @LIBS@
+AMCFLAGS = @CFLAGS@
+AMLDFLAGS = @LDFLAGS@
+AMLIBS = @LIBS@
 
-VPATH = $(srcdir)
-
-HFILES	= config.h es.h gc.h input.h prim.h print.h sigmsgs.h \
-		  stdenv.h syntax.h esconfig.h eval.h esmodule.h
-
-MAINCFILES	= access.c closure.c conv.c dict.c eval.c except.c fd.c gc.c \
-		  gc_common.c glob.c glom.c input.c heredoc.c list.c main.c \
-		  match.c ms_gc.c open.c opt.c prim-ctl.c prim-dict.c prim-etc.c \
-		  prim-io.c prim-math.c prim-mv.c prim-sys.c prim.c print.c \
-		  proc.c sigmsgs.c signal.c split.c status.c str.c syntax.c \
-		  term.c token.c tree.c util.c var.c vec.c version.c y.tab.c dump.c
-
-DYNCFILES = dynlib.c
-
-MAINOFILES	= access.o closure.o conv.o dict.o eval.o except.o fd.o gc.o \
-		  gc_common.o glob.o glom.o input.o heredoc.o list.o main.o \
-		  match.o ms_gc.o open.o opt.o prim-ctl.o prim-dict.o prim-etc.o \
-		  prim-io.o prim-math.o prim-mv.o prim-sys.o prim.o print.o \
-		  proc.o sigmsgs.o signal.o split.o status.o str.o syntax.o \
-		  term.o token.o tree.o util.o var.o vec.o version.o y.tab.o
-
-DYNOFILES = dynlib.o
-
-MODOFILES = mod_hello.o mod_float.o
-
-MODULES = mod_hello.so mod_float.so
+.include "vars.mk"
 
 CFILES = @CFILEOPTS@
 
 OFILES = @OFILEOPTS@
 
-OTHER	= Makefile parse.y mksignal getsigfiles
-
-SYSLIB = initial.es config.es conf.es macros.es dict.es applymap.es \
-		 libraries.es errmatch.es range.es glob.es complete.es \
-		 gc.es parseargs.es doiterator.es newvars.es suffix.es \
-		 initialize.es
-GEN	= esdump y.tab.c y.tab.h y.output token.h sigmsgs.c system.c config.es
 
 es	: ${OFILES} system.o
 	${CC} -o es ${LDFLAGS} ${OFILES} system.o ${LIBS}
@@ -99,7 +67,7 @@ es_static : ${OFILES} system.o
 	${CC} -static -o es_static ${LDFLAGS} ${OFILES} system.o ${LIBS}
 
 .o.so :
-	${CC} ${LDFLAGS} -shared -o ${.TARGET} ${.ALLSRC}
+	${CC} ${LDFLAGS} ${MODLDFLAGS} -shared -o ${.TARGET} ${.ALLSRC} ${MODLIBS} ${MODEXTRAAGS}
 
 modules : ${MODULES}
 
@@ -189,56 +157,5 @@ etags : ${HFILES} ${CFILES} parse.y
 # extra file rules
 %.es:
 
-
-# --- dependencies ---
-
-ESHFILES = config.h esconfig.h stdenv.h es.h
-
-stdenv.h : esconfig.h
-es.h : config.h stdenv.h
-access.o : access.c ${ESHFILES} prim.h
-closure.o : closure.c ${ESHFILES} gc.h
-conv.o : conv.c ${ESHFILES} print.h
-dict.o : dict.c ${ESHFILES} gc.h
-eval.o : eval.c ${ESHFILES}
-except.o : except.c ${ESHFILES} print.h
-fd.o : fd.c ${ESHFILES}
-gc.o : gc.c ${ESHFILES} gc.h
-glob.o : glob.c ${ESHFILES} gc.h
-glom.o : glom.c ${ESHFILES} gc.h
-input.o : input.c ${ESHFILES} input.h
-heredoc.o : heredoc.c ${ESHFILES} gc.h input.h syntax.h
-list.o : list.c ${ESHFILES} gc.h
-main.o : main.c ${ESHFILES} token.h
-match.o : match.c ${ESHFILES}
-open.o : open.c ${ESHFILES}
-opt.o : opt.c ${ESHFILES}
-prim.o : prim.c ${ESHFILES} prim.h
-prim-ctl.o : prim-ctl.c ${ESHFILES} prim.h
-prim-dict.o : prim-dict.c ${ESHFILES} prim.h
-prim-etc.o : prim-etc.c ${ESHFILES} prim.h
-prim-io.o : prim-io.c ${ESHFILES} gc.h prim.h
-prim-math.o : prim-math.c ${ESHFILES} prim.h
-prim-mv.o : prim-mv.c ${ESHFILES} prim.h
-prim-sys.o : prim-sys.c ${ESHFILES} prim.h
-print.o : print.c ${ESHFILES} print.h
-proc.o : proc.c ${ESHFILES} prim.h
-signal.o : signal.c ${ESHFILES} sigmsgs.h
-split.o : split.c ${ESHFILES} gc.h
-status.o : status.c ${ESHFILES}
-str.o : str.c ${ESHFILES} gc.h print.h
-syntax.o : syntax.c ${ESHFILES} input.h syntax.h token.h
-term.o : term.c ${ESHFILES} gc.h
-token.o : token.c ${ESHFILES} input.h syntax.h token.h
-tree.o : tree.c ${ESHFILES} gc.h
-util.o : util.c ${ESHFILES}
-var.o : var.c ${ESHFILES} gc.h
-vec.o : vec.c ${ESHFILES} gc.h
-version.o : version.c ${ESHFILES}
-dynlib.o : dynlib.c ${ESHFILES} prim.h gc.h
-# modules
-mod_hello.o : mod_hello.c ${ESHFILES} prim.h gc.h
-mod_hello.so : mod_hello.o
-mod_float.o : mod_float.c ${ESHFILES} prim.h gc.h
-mod_float.so : mod_float.o
+.include "dependencies.mk"
 
