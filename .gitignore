@@ -23,6 +23,7 @@ config.cache
 config.log
 config.h
 Makefile
+GNUmakefile
 cscope.out
 tags
 TAGS

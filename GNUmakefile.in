@@ -26,8 +26,6 @@
 # to get definitions of all signals from <sys/signal.h>.
 # _POSIX_SOURCE, _XOPEN_SOURCE are the obvious ones.
 
-.SUFFIXES: .o .c .so
-
 prefix  = @prefix@
 datarootdir = @datarootdir@
 exec_prefix	= @exec_prefix@
@@ -98,8 +96,8 @@ esdump	: ${OFILES} dump.o
 es_static : ${OFILES} system.o
 	${CC} -static -o es_static ${LDFLAGS} ${OFILES} system.o ${LIBS}
 
-.o.so :
-	${CC} ${LDFLAGS} -shared -o ${.TARGET} ${.ALLSRC}
+%.so : %.o
+	${CC} ${LDFLAGS} -shared -o $@ $^
 
 modules : ${MODULES}
 
@@ -178,7 +176,7 @@ sigmsgs.c : mksignal getsigfiles
 config.h  : config.h.in
 	./configure
 
-version.c : .EXEC make_version es.h
+version.c : make_version es.h
 	./make_version $(CC) > version.c
 
 etags : ${HFILES} ${CFILES} parse.y

@@ -130,6 +130,7 @@ if test "$DYNLIBS" = "true"
 then
 	CFILEOPTS='$(MAINCFILES) $(DYNCFILES)'
 	OFILEOPTS='$(MAINOFILES) $(DYNOFILES)'
+	CFLAGS="$CFLAGS -fPIC"
 	LDFLAGS="$LDFLAGS -rdynamic"
 fi
 
@@ -218,6 +219,6 @@ then
 	AC_DEFINE(DYNAMIC_LIBRARIES)
 fi
 
-AC_CONFIG_FILES([Makefile])
+AC_CONFIG_FILES([Makefile GNUmakefile])
 AC_OUTPUT
 
