@@ -31,8 +31,6 @@ with-dynlibs mod_math {
 				if {! ~ <={%count $$fn_name} 0} {
 					$fn_name =
 				}
-				echo 'fn_name =' $fn_name
-				echo 'prim_name =' $prim_name
 				$fn_name = $prim_name
 				if {$prefix} {
 					%hidefunction math_$prim
