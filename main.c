@@ -118,17 +118,12 @@ runinitialize(void)
 void
 usage(void)
 {
-	eprint("usage: es [-c command] [-siIAleVxXnNpodvgSCB] [-D flags] [-r flags] [file [args ...]]\n"
+	eprint("usage: es [-c command] [-sIAlXNpodvgSCB] [-D flags] [-r flags] [file [args ...]]\n"
 		   "	-c	cmd execute argument\n"
 		   "	-s	read commands from standard input; stop option parsing\n"
-		   "	-i	interactive shell\n"
 		   "	-I file	alternative init file\n"
 		   "	-A file	additional init file\n"
 		   "	-l	login shell\n"
-		   "	-e	exit if any command exits with false status\n"
-		   "	-V	print input to standard error\n"
-		   "	-x	print commands to standard error before executing\n"
-		   "	-n	just parse; don't execute\n"
 		   "	-N	ignore the .esrc\n"
 		   "	-p	don't load functions from the environment\n"
 		   "	-o	don't open stdin, stdout, and stderr if they were closed\n"
@@ -240,7 +235,7 @@ main(int argc, char *argv[])
 	/* yydebug = 1; */
 
 	// removed IGAPL
-	while((c = getopt(argc, argv, "+eiI:A:lxXvnpodsVc:?hNg:S:C:B:GD:r:a:w:")) != EOF)
+	while((c = getopt(argc, argv, "+I:A:lXvpodsc:?hNg:S:C:B:GD:r:a:w:")) != EOF)
 		switch(c) {
 		case 'D':
 			for(ds = optarg; *ds != 0; ds++) {
@@ -344,23 +339,8 @@ main(int argc, char *argv[])
 		case 'c':
 			cmd = optarg;
 			break;
-		case 'e':
-			runflags |= eval_exitonfalse;
-			break;
-		case 'i':
-			runflags |= run_interactive;
-			break;
-		case 'n':
-			runflags |= run_noexec;
-			break;
 		case 'N':
 			readesrc = FALSE;
-			break;
-		case 'V':
-			runflags |= run_echoinput;
-			break;
-		case 'x':
-			runflags |= run_printcmds;
 			break;
 		case 'l':
 			loginshell = TRUE;
