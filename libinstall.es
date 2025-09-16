@@ -10,6 +10,7 @@ assert {gte $#* 1}
 
 need_dynlibs = %dict(
 	float.es => mod_float
+	math.es => mod_math
 )
 
 libsrc = <={if {~ $#* 1} {
@@ -121,10 +122,10 @@ fn copy_dynlib lib libdir {
 		if {! access -r $dynlibsrc/$dynlibfile.$ext} {
 			return <=false
 		}
-		if {access -rw $libdir/$dynlibfile.$ext} {
+		if {access -rw $libdir/$dynlibfile.$platform.$arch.$ext} {
 			let (
-				srcfile_md5 = `{md5sum $dynlibsrc/$dynlibfile.$ext}
-				curfile_md5 = `{md5sum $libdir/$dynlibfile.$platform.$arch.$ext}
+				srcfile_md5 = `{md5sum $dynlibsrc/$dynlibfile.$ext | awk '{print $1}' }
+				curfile_md5 = `{md5sum $libdir/$dynlibfile.$platform.$arch.$ext | awk '{print $1}' }
 			) {
 				if {! ~ $srcfile_md5 $curfile_md5} {
 					echo 'installing' $dynlibfile.$ext '->' $libdir^'/'^$dynlibfile^'.'^$platform^'.'^$arch^'.'^$ext
@@ -153,8 +154,8 @@ for (i = $libs) {
 			}
 		} {
 			let (
-				curfile_md5 = `{md5sum $t}
-				srcfile_md5 = `{md5sum $srcfile}
+				curfile_md5 = `{md5sum $t | awk '{print $1}'}
+				srcfile_md5 = `{md5sum $srcfile | awk '{print $1}'}
 			) {
 				if{copy_dynlib $i $libdir} {
 					if {! ~ $curfile_md5 $srcfile_md5} {
