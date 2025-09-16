@@ -1,5 +1,6 @@
 /* access.c -- access testing and path searching ($Revision: 1.2 $) */
 
+#include <string.h>
 #define REQUIRE_STAT 1
 #define REQUIRE_PARAM 1
 
@@ -13,6 +14,9 @@
 #define USER 6
 #define GROUP 3
 #define OTHER 0
+
+char *access_usage = nil;
+char *access_opts = nil;
 
 /* ingroupset -- determine whether gid lies in the user's set of groups */
 static Boolean
@@ -71,13 +75,12 @@ testfile(char *path, int perm, unsigned int type)
 	return testperm(&st, perm);
 }
 
-static char *
+char *
 pathcat(char *prefix, char *suffix)
 {
 	char *s;
 	size_t plen, slen, len;
-	static char *pathbuf = NULL;
-	static size_t pathlen = 0;
+	char *pathbuf = NULL;
 
 	if(*prefix == '\0')
 		return suffix;
@@ -87,10 +90,7 @@ pathcat(char *prefix, char *suffix)
 	plen = strlen(prefix);
 	slen = strlen(suffix);
 	len = plen + slen + 2; /* one for '/', one for '\0' */
-	if(pathlen < len) {
-		pathlen = len;
-		pathbuf = erealloc(pathbuf, pathlen);
-	}
+	pathbuf = ealloc(len);
 
 	memcpy(pathbuf, prefix, plen);
 	s = pathbuf + plen;
@@ -100,18 +100,80 @@ pathcat(char *prefix, char *suffix)
 	return pathbuf;
 }
 
+int
+access_gen_usage_opts(void)
+{
+	char usage[256];
+	char opts[32];
+	size_t usagei = 0;
+	size_t optsi = 0;
+	const char usage_start[] = "access [-n name] [-1e] [-rwx] [-fdcb";
+	const char usage_end[] = "] path ...";
+	const char opts_start[] = "bcdefn:rwx1h";
+
+	if(access_usage == nil){
+		memset(&usage[0], 0, sizeof(usage));
+		strcpy(&usage[0], usage_start);
+		usagei = sizeof(usage_start) - 1;
+#ifdef S_IFLNK
+		usage[usagei++] = 'l';
+#endif
+#ifdef S_IFSOCK
+		usage[usagei++] = 's';
+#endif
+#ifdef S_IFIFO
+		usage[usagei++] = 'p';
+#endif
+		strcpy(&usage[usagei], usage_end);
+		access_usage = strdup(usage);
+		if(access_usage == nil){
+			uerror("strdup");
+			exit(-1);
+		}
+	}
+	if(access_opts == nil){
+		memset(&opts[0], 0, sizeof(opts));
+		strcpy(&opts[0], opts_start);
+		optsi = sizeof(opts_start) - 1;
+#ifdef S_IFLNK
+		opts[optsi++] = 'l';
+#endif
+#ifdef S_IFSOCK
+		opts[optsi++] = 's';
+#endif
+#ifdef S_IFIFO
+		opts[optsi++] = 'p';
+#endif
+		access_opts = strdup(opts);
+		if(access_opts == nil){
+			uerror("strdup");
+			exit(-1);
+		}
+	}
+	return 0;
+}
+
 PRIM(access) {
 	int c, perm = 0, type = 0, estatus = ENOENT;
 	Boolean first = FALSE, exception = FALSE;
 	char *suffix = NULL;
 	List *lp;
 	List *result = NULL; Root r_result;
-	const char *const usage = "access [-n name] [-1e] [-rwx] [-fdcblsp] path ...";
+
+	access_gen_usage_opts();
 
 	gcdisable();
-	esoptbegin(list, "$&access", usage);
-	while((c = esopt("bcdefln:prswx1")) != EOF)
+	esoptbegin(list, "$&access", access_usage);
+	while((c = esopt(access_opts)) != EOF)
 		switch(c) {
+		default:
+			esoptend();
+			fail("$&access", "access -%c is not supported on this system", c);
+		case 'h':
+			esoptend();
+			gcenable();
+			eprint("usage: %s\n", access_usage);
+			return nil;
 		case 'n':
 			suffix = getstr(esoptarg());
 			break;
@@ -157,24 +219,25 @@ PRIM(access) {
 			type = S_IFIFO;
 			break;
 #endif
-		default:
-			esoptend();
-			fail("$&access", "access -%c is not supported on this system", c);
 		}
 	list = esoptend();
 
 	for(lp = NULL; list != NULL; list = list->next) {
 		int error;
 		char *name;
+		char *listname;
 
-		name = getstr(list->term);
+		listname = getstr(list->term);
 		if(suffix != NULL)
-			name = pathcat(name, suffix);
+			name = pathcat(listname, suffix);
+		else
+		 	name = strdup(listname);
 		error = testfile(name, perm, type);
 
 		if(first) {
 			if(error == 0) {
-				result = mklist(mkstr(suffix == NULL ? name : gcdup(name)), NULL);
+				result = mklist(mkstr(gcdup(name)), NULL);
+				efree(name);
 				gcref(&r_result, (void **)&result);
 				gcenable();
 				gcderef(&r_result, (void **)&result);
@@ -183,6 +246,7 @@ PRIM(access) {
 				estatus = error;
 		} else
 			lp = mklist(mkstr(error == 0 ? "0" : esstrerror(error)), lp);
+		efree(name);
 	}
 
 	if(first && exception) {
