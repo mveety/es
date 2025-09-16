@@ -146,7 +146,7 @@ sigmsgs.c : mksignal getsigfiles
 config.h  : config.h.in
 	./configure
 
-version.c : .EXEC make_version es.h
+version.c : make_version es.h
 	./make_version $(CC) > version.c
 
 etags : ${HFILES} ${CFILES} parse.y
