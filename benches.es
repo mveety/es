@@ -210,14 +210,14 @@ fn power x y {
 
 fn qdbench1_work {
 	benchcmd = {. benches.es ; bench go 2500 ; %gcinfo -v}
-	escmd = ./es -X -S 25 -C 25 -B
+	escmd = ./es -Xgc:new -Xsortafter:25 -Xcoalesceafter:25
 
 	for (i = <={%range 1 4 |> iterator |> do @{power 2 $1}}) {
-		echo '>>>' $escmd $i -c $benchcmd
-		time $escmd $i -c $benchcmd
+		echo '>>>' $escmd -Xblocksize:^$i -c $benchcmd
+		time $escmd -Xblocksize:^$i -c $benchcmd
 	}
-	echo '>>> ./es -c' $benchcmd
-	time ./es -c $benchcmd
+	echo '>>> ./es -Xgc:old -c' $benchcmd
+	time ./es -Xgc:old -c $benchcmd
 }
 
 fn qdbench1 file {
@@ -234,12 +234,12 @@ fn qdbench2_work {
 	escmd = '%range 1 100000 |> reverse ; %gcinfo -v'
 
 	for (i = <={%range 1 4 |> iterator |> do @{power 2 $1}}) {
-		cmd = ./es -X -B $i -c $escmd
+		cmd = ./es -Xgc:new -Xblocksize:$i -c $escmd
 		echo '>>> running:' $cmd
 		time $cmd
 	}
 
-	cmd = ./es -c $escmd
+	cmd = ./es -Xgc:old -c $escmd
 	echo '>>> running:' $cmd
 	time $cmd
 }

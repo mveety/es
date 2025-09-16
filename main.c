@@ -118,27 +118,20 @@ runinitialize(void)
 void
 usage(void)
 {
-	eprint("usage: es [-c command] [-sIAlXNpodvgSCB] [-D flags] [-r flags] [file [args ...]]\n"
-		   "	-c	cmd execute argument\n"
-		   "	-s	read commands from standard input; stop option parsing\n"
-		   "	-I file	alternative init file\n"
-		   "	-A file	additional init file\n"
-		   "	-l	login shell\n"
-		   "	-N	ignore the .esrc\n"
-		   "	-p	don't load functions from the environment\n"
-		   "	-o	don't open stdin, stdout, and stderr if they were closed\n"
-		   "	-d	don't ignore SIGQUIT or SIGTERM\n"
-		   "	-X	use experimental gc\n"
-		   "	-v	print version\n"
-		   "	-g n	(new gc) collection frequency\n"
-		   "	-S n	(new gc) freelist sort frequency\n"
-		   "	-C n	(new gc) freelist coalesce frequency\n"
-		   "	-B n	(new gc) block size in megabytes\n"
-		   "	-G	(new gc) make gc generational\n"
-		   "	-a n	(gen gc) set object age to move to old list\n"
-		   "	-w n	(gen gc) set how often to sweep the old list\n"
-		   "	-D flags	debug flags (? for more info)\n"
-		   "	-r flags	run flags (? for more info)\n");
+	eprint("usage: es [-c command] [-sIAlNpodv] [-X gcopt] [-D flags] [-r flags] [file [args ...]]\n"
+		   "	-c        cmd execute argument\n"
+		   "	-s        read commands from standard input; stop option parsing\n"
+		   "	-I file   alternative init file\n"
+		   "	-A file   additional init file\n"
+		   "	-l        login shell\n"
+		   "	-N        ignore the .esrc\n"
+		   "	-p        don't load functions from the environment\n"
+		   "	-o        don't open stdin, stdout, and stderr if they were closed\n"
+		   "	-d        don't ignore SIGQUIT or SIGTERM\n"
+		   "	-X gcopt  gc options (can be repeated)\n"
+		   "	-v        print version\n"
+		   "	-D flags  debug flags (? for more info)\n"
+		   "	-r flags  run flags (? for more info)\n");
 	exit(1);
 }
 
@@ -205,6 +198,78 @@ run_flag_usage(void)
 	exit(1);
 }
 
+int
+parse_gcopt(char *optarg)
+{
+	char *orig_work = nil;
+	char *work = nil;
+	char *parameter = nil;
+	char *arg = nil;
+	int help = -1;
+
+	orig_work = strdup(optarg);
+	work = orig_work;
+	parameter = strsep(&work, ":");
+
+	if(streq(parameter, "help") || streq(parameter, "?")){
+		help = 1;
+		goto fail;
+	}
+
+	if((arg = strsep(&work, ":")) == nil)
+		goto fail;
+
+	if(streq(parameter, "gc")){
+		if(streq(arg, "old")){
+			gctype = OldGc;
+			generational = TRUE;
+		} else if(streq(arg, "new")){
+			gctype = NewGc;
+			generational = FALSE;
+		} else if(streq(arg, "generational")){
+			gctype = NewGc;
+			generational = TRUE;
+		} else {
+			goto fail;
+		}
+	} else if(streq(parameter, "gcafter")){
+		gc_after = atoi(arg);
+	} else if(streq(parameter, "sortafter")){
+		gc_sort_after_n = atoi(arg);
+	} else if(streq(parameter, "coalesceafter")){
+		gc_coalesce_after_n = atoi(arg);
+	} else if(streq(parameter, "blocksize")){
+		blocksize = strtoul(arg, NULL, 10);
+		if(blocksize == 0)
+			goto fail;
+		blocksize *= 1024 * 1024;
+		if(blocksize < MIN_minspace) {
+			dprintf(2, "error: blocksize < %d\n", (MIN_minspace / 1024));
+			goto fail;
+		}
+	} else if(streq(parameter, "oldage")){
+		gc_oldage = atoi(arg);
+	} else if(streq(parameter, "oldsweep")){
+		gc_oldsweep_after = atoi(arg);
+	} else {
+		goto fail;
+	}
+	free(orig_work);
+	return 0;
+fail:
+	free(orig_work);
+	dprintf(2, "gc parameters: es -X [help|[parameter]:[value]]\n%s",
+			"	gc:[old|new|generational] -- which gc to use (was -X and -G)\n"
+			"	gcafter:[int] -- collection frequency (was -g)\n"
+			"	sortafter:[int] -- sorting frequency (was -S)\n"
+			"	coalesceafter:[int] -- coalescing frequency (was -C)\n"
+			"	blocksize:[megabytes] -- memory block size (was -B)\n"
+			"	oldage:[int] -- age to age out blocks (was -a)\n"
+			"	oldsweep:[int] -- oldlist sweeping frequency (was -w)\n"
+	);
+	return help;
+}
+
 /* main -- initialize, parse command arguments, and start running */
 int
 main(int argc, char *argv[])
@@ -235,7 +300,7 @@ main(int argc, char *argv[])
 	/* yydebug = 1; */
 
 	// removed IGAPL
-	while((c = getopt(argc, argv, "+I:A:lXvpodsc:?hNg:S:C:B:GD:r:a:w:")) != EOF)
+	while((c = getopt(argc, argv, "+I:A:lX:vpodsc:?hND:r:")) != EOF)
 		switch(c) {
 		case 'D':
 			for(ds = optarg; *ds != 0; ds++) {
@@ -358,35 +423,16 @@ main(int argc, char *argv[])
 			cmd_stdin = TRUE;
 			goto getopt_done;
 		case 'X':
-			gctype = NewGc;
-			break;
-		case 'g':
-			gc_after = atoi(optarg);
-			break;
-		case 'S':
-			gc_sort_after_n = atoi(optarg);
-			break;
-		case 'C':
-			gc_coalesce_after_n = atoi(optarg);
-			break;
-		case 'B':
-			blocksize = strtoul(optarg, NULL, 10);
-			if(blocksize == 0)
-				do_usage();
-			blocksize *= 1024 * 1024;
-			if(blocksize < MIN_minspace) {
-				dprintf(2, "error: blocksize < %d\n", (MIN_minspace / 1024));
-				do_usage();
+			switch(parse_gcopt(optarg)){
+			default:
+				unreachable();
+			case 0:
+				break;
+			case -1:
+				exit(-1);
+			case 1:
+				exit(0);
 			}
-			break;
-		case 'G':
-			generational = TRUE;
-			break;
-		case 'a':
-			gc_oldage = atoi(optarg);
-			break;
-		case 'w':
-			gc_oldsweep_after = atoi(optarg);
 			break;
 		case 'v':
 			initgc();
