@@ -207,7 +207,7 @@ top:
 		goto top;
 	}
 	fail("es:ewait", "wait: %d is not a child of this shell", pid);
-	NOTREACHED;
+	unreachable();
 	return s;
 }
 
@@ -269,13 +269,13 @@ PRIM(wait) {
 		print = FALSE;
 		if(pid < 0) {
 			fail("$&wait", "wait: %d: bad pid", pid);
-			NOTREACHED;
+			unreachable();
 		}
 		if(pid != 0)
 			onlystatus = TRUE;
 	} else {
 		fail("$&wait", "usage: wait [pid]");
-		NOTREACHED;
+		unreachable();
 	}
 	s = ewait1(pid, TRUE, NULL, print);
 	if(onlystatus)

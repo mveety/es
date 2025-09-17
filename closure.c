@@ -106,12 +106,12 @@ extract(Tree *tree, Binding *bindings)
 						if((defn = defn->u[1].p) == NULL || defn->u[0].p->kind != nWord ||
 						   (count = (atoi(defn->u[0].p->u[0].s))) < 0) {
 							fail("$&parse", "improper use of $&nestedbinding");
-							NOTREACHED;
+							unreachable();
 						}
 						for(cp = chain, i = 0;; cp = cp->next, i++) {
 							if(cp == NULL) {
 								fail("$&parse", "bad count in $&nestedbinding: %d", count);
-								NOTREACHED;
+								unreachable();
 							}
 							if(i == count)
 								break;
@@ -119,7 +119,7 @@ extract(Tree *tree, Binding *bindings)
 						term = mkterm(NULL, cp->closure);
 					} else {
 						fail("$&parse", "bad unquoted primitive in %%closure: $&%s", prim);
-						NOTREACHED;
+						unreachable();
 					}
 				} else
 					term = mkstr(word->u[0].s);
