@@ -739,7 +739,7 @@ restart:
 	RefEnd(name);
 
 	fn = pathsearch(list->term);
-	if(fn != NULL && fn->next == NULL && (cp = getclosure(fn->term)) == NULL) {
+	if(fn != NULL && fn->next == NULL && getclosure(fn->term) == nil) {
 		binname = getstr(fn->term);
 		list = forkexec(binname, list, flags & eval_inchild);
 		goto done;

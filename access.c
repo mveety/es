@@ -111,7 +111,7 @@ access_gen_usage_opts(void)
 	const char usage_end[] = "] path ...";
 	const char opts_start[] = "bcdefn:rwx1h";
 
-	if(access_usage == nil){
+	if(access_usage == nil) {
 		memset(&usage[0], 0, sizeof(usage));
 		strcpy(&usage[0], usage_start);
 		usagei = sizeof(usage_start) - 1;
@@ -126,12 +126,12 @@ access_gen_usage_opts(void)
 #endif
 		strcpy(&usage[usagei], usage_end);
 		access_usage = strdup(usage);
-		if(access_usage == nil){
+		if(access_usage == nil) {
 			uerror("strdup");
 			exit(-1);
 		}
 	}
-	if(access_opts == nil){
+	if(access_opts == nil) {
 		memset(&opts[0], 0, sizeof(opts));
 		strcpy(&opts[0], opts_start);
 		optsi = sizeof(opts_start) - 1;
@@ -145,7 +145,7 @@ access_gen_usage_opts(void)
 		opts[optsi++] = 'p';
 #endif
 		access_opts = strdup(opts);
-		if(access_opts == nil){
+		if(access_opts == nil) {
 			uerror("strdup");
 			exit(-1);
 		}
@@ -231,7 +231,7 @@ PRIM(access) {
 		if(suffix != NULL)
 			name = pathcat(listname, suffix);
 		else
-		 	name = strdup(listname);
+			name = strdup(listname);
 		error = testfile(name, perm, type);
 
 		if(first) {

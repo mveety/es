@@ -264,9 +264,9 @@ mid_range:
 			current = list;
 			counter = 1;
 		}
-		for(; counter < lo; counter++, current = current->next)
+		for(; counter < lo && current != nil; counter++, current = current->next)
 			;
-		for(; counter <= hi; counter++, current = current->next) {
+		for(; counter <= hi && current != nil; counter++, current = current->next) {
 			*prevp = mklist(current->term, NULL);
 			prevp = &(*prevp)->next;
 		}

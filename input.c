@@ -5,8 +5,8 @@
 #include "stdenv.h"
 #include <stdio.h>
 #include <string.h>
-#include <threads.h>
-#include <input.h>
+// #include <threads.h>
+#include "input.h"
 
 /*
  * constants

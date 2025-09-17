@@ -326,7 +326,6 @@ forward(void *p)
 
 	if(h->forward) {
 		np = h->forward;
-		nh = header(np);
 		VERBOSE(("%s	-> %8ux (followed)\n", tag->typename, np));
 	} else {
 		np = (tag->copy)(p);
@@ -488,7 +487,7 @@ old_gc(void)
 			minspace /= 2;
 
 		--gcblocked;
-	} while(new->next != NULL);
+	} while(new != nil && new->next != nil);
 	old_allocations = 0;
 	old_ngcs++;
 }

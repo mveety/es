@@ -167,7 +167,7 @@ pipefork(const char *caller, int p[2], int *extra)
 }
 
 REDIR(here) {
-	int pid, p[2];
+	int p[2];
 	List *doc, *tail, **tailp;
 
 	assert(list != NULL);
@@ -176,7 +176,7 @@ REDIR(here) {
 	doc = (list == tail) ? NULL : list;
 	*tailp = NULL;
 
-	if((pid = pipefork(caller, p, NULL)) == 0) { /* child that writes to pipe */
+	if(pipefork(caller, p, NULL) == 0) { /* child that writes to pipe */
 		close(p[0]);
 		fprint(p[1], "%L", doc, "");
 		exit(0);
@@ -228,7 +228,8 @@ PRIM(pipe) {
 			}
 			exit(exitstatus(eval1(list->term, evalflags | eval_inchild)));
 		}
-		pids[n++] = pid;
+		if(n < pidmax)
+			pids[n++] = pid;
 		close(inpipe);
 		if(list->next == NULL)
 			break;

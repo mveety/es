@@ -356,7 +356,7 @@ PRIM(limit) {
 	const Limit *lim = limits;
 	Boolean hard = FALSE;
 	Boolean returnlimit = FALSE;
-	Limret limit;
+	Limret limit = {FALSE, 0};
 	Ref(List *, lp, list);
 
 	if(lp != NULL && streq(getstr(lp->term), "-h")) {
@@ -404,8 +404,8 @@ PRIM(limit) {
 		}
 	}
 	RefEnd(lp);
-	if(returnlimit == TRUE) {
-		if(limit.unlimited == TRUE)
+	if(returnlimit) {
+		if(limit.unlimited)
 			return mklist(mkstr("unlimited"), NULL);
 		else
 			return mklist(mkstr(str("%uld", limit.size)), NULL);
