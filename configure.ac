@@ -184,7 +184,7 @@ AC_TYPE_GETGROUPS
 AC_FUNC_MMAP
 
 AC_CHECK_FUNCS(strerror strtol lstat setrlimit sigrelse sighold sigaction \
-sysconf setsid sigsetjmp)
+sysconf sigsetjmp setpgid)
 
 dnl Check to see if you can assign to a va_list
 AC_CACHE_CHECK(whether assignment to va_list ok?, es_cv_assign_va_list,

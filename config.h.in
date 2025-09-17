@@ -116,6 +116,9 @@
 /* Do you have sigaction? */
 #undef HAVE_SIGACTION
 
+/* Do you have setpgid */
+#undef HAVE_SETPGID
+
 /* Does your kernel support #!? */
 #undef KERNEL_POUNDBANG
 

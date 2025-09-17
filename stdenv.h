@@ -155,30 +155,6 @@ typedef void Sigresult;
 
 typedef GETGROUPS_T gidset_t;
 
-
-/*
- * variable argument lists
- */
-
-/* we only support systems that have stdarg.h */
-/*
-#if HAVE_STDARG_H
-
-#define	VARARGS				, ...
-#define	VARARGS1(t1, v1)		(t1 v1, ...)
-#define	VARARGS2(t1, v1, t2, v2)	(t1 v1, t2 v2, ...)
-#define	VA_START(ap, v)			va_start(ap, v)
-
-#else	* !HAVE_STDARG_H *
-
-#define	VARARGS
-#define	VARARGS1(t1, v1)		(v1, va_alist) t1 v1; va_dcl
-#define	VARARGS2(t1, v1, t2, v2)	(v1, v2, va_alist) t1 v1; t2 v2; va_dcl
-#define	VA_START(ap, var)		va_start(ap)
-
-#endif
-*/
-
 /*
  * assertion checking
  */
@@ -205,7 +181,9 @@ enum { UNREACHABLE = 0 };
  * system calls -- can we get these from some standard header uniformly?
  */
 
-#if !HAVE_UNISTD_H
+#ifndef HAVE_UNISTD_H
+#error es-mveety requires unistd.h
+/*
 extern int chdir(const char *dirname);
 extern int close(int fd);
 extern int dup(int fd);
@@ -233,40 +211,13 @@ extern int stat(const char *, struct stat *);
 #ifdef NGROUPS
 extern int getgroups(int, int *);
 #endif
+*/
 #endif	/* !HAVE_UNISTD_H */
 
 
 /*
  * hacks to present a standard system call interface
  */
-
-/* basically all platforms I want to support have the appropriate
- * interface, so this logic isn't really needed.
-#ifdef HAVE_SETSID
-# define setpgrp(a, b)	setsid()
-#else
-#if defined(linux) || defined(__GLIBC__)
-#include "unistd.h"
-#define setpgrp(a, b)	setpgid(a, b)
-#endif
-
-#if sgi
-#define	setpgrp(a, b)	BSDsetpgrp(a,b)
-#endif
-
-#if HPUX
-#define	setpgrp(a, b)	setpgrp()
-#endif
-#endif
-
-#if !HAVE_LSTAT
-#define	lstat	stat
-#endif
-*/
-
-#if defined(linux) || defined(__GLIBC__)
-#define setpgrp(a, b) setpgid(a, b)
-#endif
 
 /*
  * macros for picking apart statuses
@@ -289,6 +240,10 @@ extern int getgroups(int, int *);
 #define	SCOREDUMP(status)	WCOREDUMP(status)
 #define	SIFEXITED(status)	WIFEXITED(status)
 #define	SEXITSTATUS(status)	WEXITSTATUS(status)
+#endif
+
+#ifndef HAVE_SETPGID
+#error es-mveety requires setpgid
 #endif
 
 #endif
