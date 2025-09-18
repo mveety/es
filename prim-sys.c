@@ -122,6 +122,14 @@ PRIM(setsignals) {
 			effect = sig_special;
 			s++;
 			break;
+		case '+':
+			effect = sig_catch;
+			s++;
+			break;
+		case 's': // all the signals start with s. unprefixed is default
+			effect = sig_default;
+			s++;
+			break;
 		}
 		sig = signumber(s);
 		if(sig < 0)

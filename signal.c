@@ -2,6 +2,7 @@
 
 #include "es.h"
 #include "sigmsgs.h"
+#include <sys/signal.h>
 
 typedef Sigresult (*Sighandler)(int);
 
@@ -208,6 +209,9 @@ initsignals(Boolean interactive, Boolean allowdumps)
 		if(interactive || sigeffect[SIGQUIT] == sig_default)
 			esignal(SIGQUIT, sig_noop);
 		esignal(SIGPROF, sig_noop);
+		esignal(SIGTTIN, sig_noop);
+		esignal(SIGTTOU, sig_noop);
+		esignal(SIGTSTP, sig_default);
 	}
 
 	/* here's the end-run around set-signals */
@@ -250,9 +254,10 @@ mksiglist(void)
 		default:
 			panic("mksiglist: bad sigeffects for %s: %d", signame(sig), effects[sig]);
 		case sig_default:
-			continue;
-		case sig_catch:
 			prefix = '\0';
+			break;
+		case sig_catch:
+			prefix = '+';
 			break;
 		case sig_ignore:
 			prefix = '-';
@@ -327,7 +332,7 @@ sigchk(void)
 		while(gcisblocked())
 			gcenable();
 		throw(e);
-		NOTREACHED;
+		unreachable();
 		break;
 	case sig_special:
 		assert(sig == SIGINT);
@@ -338,7 +343,7 @@ sigchk(void)
 		while(gcisblocked())
 			gcenable();
 		throw(e);
-		NOTREACHED;
+		unreachable();
 		break;
 	case sig_noop:
 		break;
