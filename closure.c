@@ -92,13 +92,13 @@ extract(Tree *tree0, Binding *bindings0)
 	NodeKind k;
 	char *prim = nil;
 
-	gcref(&r_tree, (void**)&tree);
-	gcref(&r_bindings, (void**)&bindings);
-	gcref(&r_defn, (void**)&defn);
-	gcref(&r_list, (void**)&list);
-	gcref(&r_name, (void**)&name);
-	gcref(&r_term, (void**)&term);
-	gcref(&r_word, (void**)&word);
+	gcref(&r_tree, (void **)&tree);
+	gcref(&r_bindings, (void **)&bindings);
+	gcref(&r_defn, (void **)&defn);
+	gcref(&r_list, (void **)&list);
+	gcref(&r_name, (void **)&name);
+	gcref(&r_term, (void **)&term);
+	gcref(&r_word, (void **)&word);
 
 	assert(gcisblocked());
 	tree = tree0;
@@ -119,7 +119,7 @@ extract(Tree *tree0, Binding *bindings0)
 				prim = nil;
 				assert(defn->kind == nList);
 				assert(k == nWord || k == nQword || k == nPrim || k == nThunk || k == nDict);
-				switch(k){
+				switch(k) {
 				case nPrim:
 					prim = word->u[0].s;
 					if(streq(prim, "nestedbinding")) {

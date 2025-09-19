@@ -23,11 +23,11 @@ fnv1a_strhash2_len(const char *s1, size_t s1len, const char *s2, size_t s2len)
 	size_t i;
 	uint32_t hash = FNV1A_HashStart;
 
-	for(i = 0; i < s1len; i++){
+	for(i = 0; i < s1len; i++) {
 		hash ^= (uint8_t)s1[i];
 		hash *= FNV1A_HashIncr;
 	}
-	for(i = 0; i < s2len; i++){
+	for(i = 0; i < s2len; i++) {
 		hash ^= (uint8_t)s2[i];
 		hash *= FNV1A_HashIncr;
 	}
@@ -100,7 +100,7 @@ haahr_strhash(const char *str)
 uint64_t
 strhash2(const char *str1, const char *str2)
 {
-	switch(hashfunction){
+	switch(hashfunction) {
 	default:
 		unreachable();
 		break;
@@ -116,7 +116,7 @@ strhash2(const char *str1, const char *str2)
 uint64_t
 strhash(const char *str)
 {
-	switch(hashfunction){
+	switch(hashfunction) {
 	default:
 		unreachable();
 		break;
@@ -394,7 +394,7 @@ dictappend(Dict *desta, Dict *srca, Boolean overwrite)
 	return dest;
 }
 
-Dict*
+Dict *
 parsedict(Tree *tree0, Binding *binding0)
 {
 	Tree *tree = nil; Root r_tree;
@@ -406,8 +406,8 @@ parsedict(Tree *tree0, Binding *binding0)
 	List *value = nil; Root r_value;
 	char *namestr = nil; Root r_namestr;
 
-	gcref(&r_tree, (void**)&tree);
-	gcref(&r_binding, (void**)&binding);
+	gcref(&r_tree, (void **)&tree);
+	gcref(&r_binding, (void **)&binding);
 	gcref(&r_inner, (void **)&inner);
 	gcref(&r_dict, (void **)&dict);
 	gcref(&r_assoc, (void **)&assoc);
@@ -440,4 +440,3 @@ parsedict(Tree *tree0, Binding *binding0)
 
 	return dict;
 }
-
