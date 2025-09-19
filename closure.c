@@ -97,7 +97,7 @@ extract(Tree *tree, Binding *bindings)
 				Tree *word = defn->u[0].p;
 				NodeKind k = word->kind;
 				assert(defn->kind == nList);
-				assert(k == nWord || k == nQword || k == nPrim);
+				assert(k == nWord || k == nQword || k == nPrim || k == nThunk);
 				if(k == nPrim) {
 					char *prim = word->u[0].s;
 					if(streq(prim, "nestedbinding")) {
@@ -121,6 +121,8 @@ extract(Tree *tree, Binding *bindings)
 						fail("$&parse", "bad unquoted primitive in %%closure: $&%s", prim);
 						unreachable();
 					}
+				} else if (k == nThunk) {
+						term = mkterm(nil, mkclosure(word, nil));
 				} else
 					term = mkstr(word->u[0].s);
 				list = mklist(term, list);
