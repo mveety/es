@@ -393,3 +393,51 @@ dictappend(Dict *desta, Dict *srca, Boolean overwrite)
 
 	return dest;
 }
+
+Dict*
+parsedict(Tree *tree0, Binding *binding0)
+{
+	Tree *tree = nil; Root r_tree;
+	Binding *binding = nil; Root r_binding;
+	Tree *inner = nil; Root r_inner;
+	Dict *dict = nil; Root r_dict;
+	Tree *assoc = nil; Root r_assoc;
+	List *name = nil; Root r_name;
+	List *value = nil; Root r_value;
+	char *namestr = nil; Root r_namestr;
+
+	gcref(&r_tree, (void**)&tree);
+	gcref(&r_binding, (void**)&binding);
+	gcref(&r_inner, (void **)&inner);
+	gcref(&r_dict, (void **)&dict);
+	gcref(&r_assoc, (void **)&assoc);
+	gcref(&r_name, (void **)&name);
+	gcref(&r_value, (void **)&value);
+	gcref(&r_namestr, (void **)&namestr);
+
+	tree = tree0;
+	binding = binding0;
+	dict = mkdict();
+	for(inner = tree->u[0].p; inner != nil; inner = inner->u[1].p) {
+		assoc = inner->u[0].p;
+		assert(assoc->kind = nAssoc);
+		name = glom1(assoc->u[0].p, binding);
+		value = glom(assoc->u[1].p, binding, TRUE);
+		if(name == nil)
+			continue;
+		namestr = getstr(name->term);
+		dict = dictput(dict, namestr, value);
+	}
+
+	gcrderef(&r_namestr);
+	gcrderef(&r_value);
+	gcrderef(&r_name);
+	gcrderef(&r_assoc);
+	gcrderef(&r_dict);
+	gcrderef(&r_inner);
+	gcrderef(&r_binding);
+	gcrderef(&r_tree);
+
+	return dict;
+}
+

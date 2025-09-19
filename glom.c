@@ -278,7 +278,7 @@ mid_range:
 }
 
 /* glom1 -- glom when we don't need to produce a quote list */
-static List *
+List *
 glom1(Tree *tree, Binding *binding)
 {
 	Ref(List *, result, NULL);

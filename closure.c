@@ -80,26 +80,48 @@ struct Chain {
 static Chain *chain = NULL;
 
 static Binding *
-extract(Tree *tree, Binding *bindings)
+extract(Tree *tree0, Binding *bindings0)
 {
+	Tree *tree = nil; Root r_tree;
+	Binding *bindings = nil; Root r_bindings;
+	Tree *defn = nil; Root r_defn;
+	List *list = nil; Root r_list;
+	Tree *name = nil; Root r_name;
+	Term *term = nil; Root r_term;
+	Tree *word = nil; Root r_word;
+	NodeKind k;
+	char *prim = nil;
+
+	gcref(&r_tree, (void**)&tree);
+	gcref(&r_bindings, (void**)&bindings);
+	gcref(&r_defn, (void**)&defn);
+	gcref(&r_list, (void**)&list);
+	gcref(&r_name, (void**)&name);
+	gcref(&r_term, (void**)&term);
+	gcref(&r_word, (void**)&word);
+
 	assert(gcisblocked());
+	tree = tree0;
+	bindings = bindings0;
 
 	for(; tree != NULL; tree = tree->u[1].p) {
-		Tree *defn = tree->u[0].p;
+		defn = tree->u[0].p;
 		assert(tree->kind == nList);
 		if(defn != NULL) {
-			List *list = NULL;
-			Tree *name = defn->u[0].p;
+			list = NULL;
+			name = defn->u[0].p;
 			assert(name->kind == nWord || name->kind == nQword);
 			defn = revtree(defn->u[1].p);
 			for(; defn != NULL; defn = defn->u[1].p) {
-				Term *term = NULL;
-				Tree *word = defn->u[0].p;
-				NodeKind k = word->kind;
+				term = NULL;
+				word = defn->u[0].p;
+				k = word->kind;
+				prim = nil;
 				assert(defn->kind == nList);
-				assert(k == nWord || k == nQword || k == nPrim || k == nThunk);
-				if(k == nPrim) {
-					char *prim = word->u[0].s;
+				assert(k == nWord || k == nQword || k == nPrim || k == nThunk || k == nDict);
+				switch(k){
+				case nPrim:
+					prim = word->u[0].s;
 					if(streq(prim, "nestedbinding")) {
 						int i, count = 0;
 						Chain *cp;
@@ -121,15 +143,32 @@ extract(Tree *tree, Binding *bindings)
 						fail("$&parse", "bad unquoted primitive in %%closure: $&%s", prim);
 						unreachable();
 					}
-				} else if (k == nThunk) {
-						term = mkterm(nil, mkclosure(word, nil));
-				} else
+					break;
+				case nThunk:
+					term = mkterm(nil, mkclosure(word, bindings));
+					break;
+				case nDict: // not great.
+					gcenable();
+					term = mkdictterm(parsedict(word, bindings));
+					gcdisable();
+					break;
+				default:
 					term = mkstr(word->u[0].s);
+					break;
+				}
 				list = mklist(term, list);
 			}
 			bindings = mkbinding(name->u[0].s, list, bindings);
 		}
 	}
+
+	gcrderef(&r_word);
+	gcrderef(&r_term);
+	gcrderef(&r_name);
+	gcrderef(&r_list);
+	gcrderef(&r_defn);
+	gcrderef(&r_bindings);
+	gcrderef(&r_tree);
 
 	return bindings;
 }

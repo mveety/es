@@ -257,6 +257,7 @@ extern unsigned long evaldepth, maxevaldepth;
 /* glom.c */
 
 extern List *glom(Tree *tree, Binding *binding, Boolean globit);
+extern List *glom1(Tree* tree, Binding *binding);
 extern List *glom2(Tree *tree, Binding *binding, StrList **quotep);
 
 
@@ -337,6 +338,7 @@ extern Dict *dictput(Dict *dict, char *name, void *value);
 extern void *dictget2(Dict *dict, const char *name1, const char *name2);
 extern Dict *dictcopy(Dict *oda);
 extern Dict *dictappend(Dict *dest, Dict *src, Boolean overwrite);
+extern Dict *parsedict(Tree *tree0, Binding *binding0);
 
 /* conv.c */
 
