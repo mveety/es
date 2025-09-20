@@ -31,11 +31,13 @@ volatile int noldsweep = 30;
 int gc_after = 30000;
 int gc_sort_after_n = 1;
 int gc_coalesce_after_n = 1;
+int reserve_blocks = 1;
 uint32_t gc_oldage = 5;
 int gc_oldsweep_after = 15;
 Boolean generational = FALSE;
 uint64_t nsortsn = 0;
 Boolean use_array_sort = FALSE;
+Boolean use_list_sz = FALSE;
 size_t triedgcs = 0;
 // size_t gen = 0;
 
@@ -151,19 +153,25 @@ list_rating(Block *list)
 }
 
 BlockArray *
-list_arrayify(Block *list)
+list_arrayify_sz(Block *list, size_t len)
 {
 	BlockArray *res;
 	size_t i;
 
-	res = ealloc(sizeof(BlockArray));
-	res->len = nblocks_stats(list);
-	res->blocks = ealloc(sizeof(Block *) * res->len);
+	res = ealloc(sizeof(BlockArray)+(sizeof(Block*)*len));
+	res->len = len;
+	res->blocks = (void*)(((char*)res)+sizeof(BlockArray));
 
 	for(i = 0; list != nil && i < res->len; list = list->next, i++)
 		res->blocks[i] = list;
 
 	return res;
+}
+
+BlockArray*
+list_arrayify(Block *list)
+{
+	return list_arrayify_sz(list, nblocks_stats(list));
 }
 
 Block *
@@ -188,7 +196,6 @@ array_listify(BlockArray *array)
 		}
 	}
 
-	efree(array->blocks);
 	efree(array);
 	return res;
 }
@@ -211,6 +218,19 @@ block_compare(const void *a, const void *b)
 }
 
 Block *
+l2a_sortlist_sz(Block *list, size_t len)
+{
+	BlockArray *array;
+	Block *result;
+
+	array = list_arrayify_sz(list, len);
+	qsort(array->blocks, array->len, sizeof(Block *), &block_compare);
+	result = array_listify(array);
+
+	return result;
+}
+
+Block *
 l2a_sortlist(Block *list)
 {
 	BlockArray *array;
@@ -222,6 +242,7 @@ l2a_sortlist(Block *list)
 
 	return result;
 }
+
 
 Block * /* cheat a little */
 sort_pivot(Block *list, size_t len)
@@ -306,8 +327,12 @@ l_sort_list(Block *list, size_t len)
 Block *
 sort_list(Block *list, size_t len)
 {
-	if(use_array_sort)
-		return l2a_sortlist(list);
+	if(use_array_sort){
+		if(use_list_sz)
+			return l2a_sortlist_sz(list, len);
+		else
+			return l2a_sortlist(list);
+	}
 	return l_sort_list(list, len);
 }
 
@@ -541,6 +566,7 @@ gc_getstats(GcStats *stats)
 	stats->generational = generational;
 	stats->gc_oldsweep_after = gc_oldsweep_after;
 	stats->array_sort = use_array_sort;
+	stats->use_size = use_list_sz;
 	stats->gcblocked = gcblocked;
 }
 
@@ -730,6 +756,7 @@ ms_initgc(void)
 {
 	GcStats stats;
 	Block *b;
+	int i;
 
 	if(gcverbose || gcinfo)
 		dprintf(2, "Starting mark/sweep GC\n");
@@ -737,8 +764,10 @@ ms_initgc(void)
 		dprintf(2, "GC is generational: oldage = %u\n", gc_oldage);
 
 	rangc = 0;
-	b = create_block(blocksize);
-	add_to_freelist(b);
+	for(i = 0; i < reserve_blocks; i++){
+		b = create_block(blocksize);
+		add_to_freelist(b);
+	}
 
 	if(gcverbose || gcinfo) {
 		gc_getstats(&stats);
@@ -843,18 +872,26 @@ ms_gc(Boolean full, Boolean inalloc)
 	gc_markrootlist(exceptionrootlist);
 
 	gcsweep();
-	freelist = sort_list(freelist, nfrees);
-	freelist = coalesce_list(freelist);
+
+	if(nsortgc > gc_sort_after_n){
+		freelist = sort_list(freelist, nfrees);
+		nsortgc = 0;
+	} else
+		nsortgc++;
+
+	if(ncoalescegc > gc_coalesce_after_n){
+		freelist = coalesce_list(freelist);
+		ncoalescegc = 0;
+	} else
+		ncoalescegc++;
 
 	if(noldsweep >= gc_oldsweep_after) {
 		gcoldsweep();
 		noldsweep = 0;
-	}
+	} else
+		noldsweep++;
 
 	ngcs++;
-	nsortgc++;
-	ncoalescegc++;
-	noldsweep++;
 	allocations = 0;
 	rangc = 1;
 	triedgcs = 0;

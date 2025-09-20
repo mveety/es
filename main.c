@@ -13,6 +13,9 @@ Boolean verbose_parser = FALSE;		/* -P */
 Boolean verbose_match = FALSE;		/* -DM */
 Boolean use_initialize_esrc = TRUE; /* -Dr */
 extern Boolean generational;
+extern Boolean use_array_sort;
+extern Boolean use_list_sz;
+extern int reserve_blocks;
 volatile Boolean loginshell = FALSE; /* -l or $0[0] == '-' */
 volatile Boolean readesrc = TRUE;
 Boolean different_esrc = FALSE;	 /* -I */
@@ -251,6 +254,20 @@ parse_gcopt(char *optarg)
 		gc_oldage = atoi(arg);
 	} else if(streq(parameter, "oldsweep")){
 		gc_oldsweep_after = atoi(arg);
+	} else if(streq(parameter, "sorting")){
+		if(streq(arg, "list"))
+			use_array_sort = FALSE;
+		else if(streq(arg, "array")){
+			use_array_sort = TRUE;
+			use_list_sz = FALSE;
+		} else if(streq(arg, "arraysz")){
+			use_array_sort = TRUE;
+			use_list_sz = TRUE;
+		}
+		else
+			goto fail;
+	} else if(streq(parameter, "reserveblocks")){
+		reserve_blocks = atoi(arg);
 	} else {
 		goto fail;
 	}
@@ -264,8 +281,10 @@ fail:
 			"	sortafter:[int] -- sorting frequency (was -S)\n"
 			"	coalesceafter:[int] -- coalescing frequency (was -C)\n"
 			"	blocksize:[megabytes] -- memory block size (was -B)\n"
+			"	reserveblocks:[int] -- blocks to reserve\n"
 			"	oldage:[int] -- age to age out blocks (was -a)\n"
 			"	oldsweep:[int] -- oldlist sweeping frequency (was -w)\n"
+			"	sorting:[list|array|arraysz] -- which sorting function to use\n"
 	);
 	return help;
 }

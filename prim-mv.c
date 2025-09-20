@@ -315,9 +315,12 @@ PRIM(gcstats) {
 	if(gctype == NewGc) {
 		gc_getstats(&stats);
 		res = mklist(mkstr(str("%d", stats.gcblocked)), res);
-		if(stats.array_sort == TRUE)
-			res = mklist(mkstr(str("array_sort")), res);
-		else
+		if(stats.array_sort == TRUE){
+			if(stats.use_size)
+				res = mklist(mkstr(str("array_sort+size")), res);
+			else
+				res = mklist(mkstr(str("array_sort")), res);
+		} else
 			res = mklist(mkstr(str("list_sort")), res);
 		res = mklist(mkstr(str("%d", stats.gc_oldsweep_after)), res);
 		res = mklist(mkstr(str("%lud", stats.oldage)), res);

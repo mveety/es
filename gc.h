@@ -71,6 +71,7 @@ struct GcStats {
 	int gc_oldsweep_after;
 	Boolean generational;
 	Boolean array_sort;
+	Boolean use_size;
 	int gcblocked;
 };
 
