@@ -1,4 +1,5 @@
-with-dynlibs mod_math {
+# mod_math depends on symbols in mod_float.
+with-dynlibs mod_float mod_math {
 	library math (init libraries float)
 
 	let (

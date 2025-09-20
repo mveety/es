@@ -51,5 +51,5 @@ mod_float.o : mod_float.c ${ESHFILES} prim.h gc.h
 mod_float.so : mod_float.o float_util.o
 mod_math.o : mod_math.c ${ESHFILES} prim.h gc.h
 mod_math.so : MODLIBS=-lm
-mod_math.so : mod_math.o float_util.o
+mod_math.so : mod_math.o
 
