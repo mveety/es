@@ -204,6 +204,11 @@ AC_CACHE_CHECK(for rlimit type ..., es_cv_rlimit_t,
 
 AC_DEFINE_UNQUOTED(LIMIT_T, $es_cv_rlimit_t)
 
+m4_include([m4/pkg.m4])
+PKG_CHECK_MODULES([PCRE2], [libpcre2-posix],
+	[AC_DEFINE([HAVE_PCRE2], [1], [Is pcre2 available])],
+	[AC_MSG_ERROR([PCRE2 is required])])
+
 if test "$sys_wait_w_forms" = "yes"
 then
 	AC_DEFINE(USE_WAIT_W_FORMS)
