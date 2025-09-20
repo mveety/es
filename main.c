@@ -69,7 +69,7 @@ init_internal_vars(void)
 		list = mklist(mkstr((char *)path[i]), list);
 
 	vardef("path", nil, list);
-	vardef("ppid", nil, mklist(mkstr(str("%d", getpid())), nil));
+	vardef("__ppid", nil, mklist(mkstr(str("%d", getpid())), nil));
 	vardef("__es_loginshell", nil, mklist(mkstr(str("%s", loginshell ? "true" : "false")), nil));
 	vardef("__es_initialize_esrc", nil,
 		   mklist(mkstr(str("%s", use_initialize_esrc ? "true" : "false")), nil));
@@ -132,7 +132,7 @@ usage(void)
 		   "	-o        don't open stdin, stdout, and stderr if they were closed\n"
 		   "	-d        don't ignore SIGQUIT or SIGTERM\n"
 		   "	-X gcopt  gc options (can be repeated)\n"
-		   "	-v        print version\n"
+		   "	-v        print $buildstring\n"
 		   "	-D flags  debug flags (? for more info)\n"
 		   "	-r flags  run flags (? for more info)\n");
 	exit(1);

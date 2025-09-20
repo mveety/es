@@ -16,4 +16,5 @@
 noexport += pid signals apid bqstatus fn-%dispatch path home
 noexport += version mveetyrev buildstring corelib
 noexport += apids last eval-depth runflags unixtime options
+noexport += ppid unixtime_ns
 

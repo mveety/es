@@ -14,6 +14,11 @@ fn __es_esrc_check {
 fn %initialize {
 	# run any setup functions that need to be run in es land, but before the
 	# .esrc is run.
+
+	local(set-ppid=){
+		ppid = $__ppid
+	}
+
 	__es_initgc
 	__es_complete_initialize
 	__es_libraries_initialize
