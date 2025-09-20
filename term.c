@@ -119,9 +119,9 @@ assocfmt(void *vargs, char *name, void *vdata)
 	data = vdata;
 
 	if(args->result == nil)
-		args->result = str("%s => %#L", name, data, " ");
+		args->result = str("%s => %V", name, data, " ");
 	else
-		args->result = str("%s; %s => %#L", args->result, name, data, " ");
+		args->result = str("%s; %s => %V", args->result, name, data, " ");
 
 	gcrderef(&r_data);
 	gcrderef(&r_args_result);
