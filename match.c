@@ -1,7 +1,6 @@
 /* match.c -- pattern matching routines ($Revision: 1.1.1.1 $) */
 
 #include "es.h"
-#include <regex.h>
 #include <stdlib.h>
 
 enum { RANGE_FAIL = -1, RANGE_ERROR = -2 };
@@ -391,23 +390,23 @@ regexmatch(RegexStatus *status, Term *subject0, Term *pattern0)
 	patternstr = strdup(getregex(pattern));
 	if(!subjectstr || !patternstr)
 		panic("regex strdup failed!");
-	status->compcode = regcomp(&regex, patternstr, REG_EXTENDED | REG_NOSUB);
+	status->compcode = pcre2_regcomp(&regex, patternstr, REG_EXTENDED | REG_NOSUB);
 	if(status->compcode != 0) {
 		if(status->errstrsz > 0)
-			regerror(status->compcode, &regex, status->errstr, status->errstrsz - 1);
+			pcre2_regerror(status->compcode, &regex, status->errstr, status->errstrsz - 1);
 		goto done;
 	}
 
-	status->matchcode = regexec(&regex, subjectstr, 0, pmatch, 0);
+	status->matchcode = pcre2_regexec(&regex, subjectstr, 0, pmatch, 0);
 	if(status->matchcode == 0)
 		status->matched = TRUE;
 	else {
 		if(status->errstrsz > 0)
-			regerror(status->compcode, &regex, status->errstr, status->errstrsz - 1);
+			pcre2_regerror(status->compcode, &regex, status->errstr, status->errstrsz - 1);
 	}
 
 done:
-	regfree(&regex);
+	pcre2_regfree(&regex);
 	free(subjectstr);
 	free(patternstr);
 	gcrderef(&r_pattern);
@@ -444,19 +443,19 @@ regexextract(RegexStatus *status, Term *subject0, Term *pattern0)
 	copybufsz = strlen(subjectstr);
 	copybuf = ealloc(copybufsz);
 
-	status->compcode = regcomp(&regex, patternstr, REG_EXTENDED);
+	status->compcode = pcre2_regcomp(&regex, patternstr, REG_EXTENDED);
 	if(status->compcode > 0) {
 		if(status->errstrsz > 0)
-			regerror(status->compcode, &regex, status->errstr, status->errstrsz - 1);
+			pcre2_regerror(status->compcode, &regex, status->errstr, status->errstrsz - 1);
 		goto done;
 	}
 	nmatch = regex.re_nsub + 1;
 	pmatch = ealloc(nmatch * sizeof(regmatch_t));
 
-	status->matchcode = regexec(&regex, subjectstr, regex.re_nsub, pmatch, 0);
+	status->matchcode = pcre2_regexec(&regex, subjectstr, regex.re_nsub, pmatch, 0);
 	if(status->matchcode) {
 		if(status->errstrsz > 0)
-			regerror(status->compcode, &regex, status->errstr, status->errstrsz - 1);
+			pcre2_regerror(status->compcode, &regex, status->errstr, status->errstrsz - 1);
 		goto done;
 	}
 	status->matched = TRUE;
@@ -481,7 +480,7 @@ regexextract(RegexStatus *status, Term *subject0, Term *pattern0)
 	status->nsubstr = nmatch;
 
 done:
-	regfree(&regex);
+	pcre2_regfree(&regex);
 	free(copybuf);
 	free(subjectstr);
 	free(patternstr);

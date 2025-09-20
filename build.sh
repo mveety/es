@@ -14,10 +14,10 @@ fi
 # run configure
 case "$PLATFORM" in
 	FreeBSD)
-		CC=clang ./configure --with-dynlibs
+		CC=clang ./configure --with-modules
 		;;
 	Linux)
-		CC=gcc ./configure --prefix=/usr --with-dynlibs
+		CC=gcc ./configure --prefix=/usr --with-modules
 		;;
 	*)
 		echo "warning: es has not been tested on your platform"

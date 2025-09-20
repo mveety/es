@@ -1,7 +1,6 @@
 #include "es.h"
 #include "gc.h"
 #include "prim.h"
-#include <regex.h>
 
 extern Region *regions;
 extern int gc_after;

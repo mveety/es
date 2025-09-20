@@ -26,15 +26,15 @@ CFILEOPTS='$(MAINCFILES)'
 OFILEOPTS='$(MAINOFILES)'
 
 AC_ARG_WITH(readline,
---with-readline		Use GNU Readline, use_readline=yes)
+  --with-readline		Use GNU Readline, use_readline=yes)
 AC_ARG_WITH(loginshell,
---with-loginshell	Only load esrc if a login shell, ENABLE_LOGINSHELL=true)
+  --with-loginshell	Only load esrc if a login shell, ENABLE_LOGINSHELL=true)
 AC_ARG_WITH(internalwaitforms,
---with-internalwaitforms	Do not use W forms of IFSIGNALED and friends from sys/wait.h, sys_wait_w_forms=no)
+  --with-waitforms	Do not use W forms of IFSIGNALED and friends from sys/wait.h, sys_wait_w_forms=no)
 AC_ARG_WITH(noassert,
---with-noassert	Disable asserts, assertions=no)
-AC_ARG_WITH(dynlibs, --with-dynlibs	Allow loading of dynamic libraries,
-			DYNLIBS=true)
+  --with-noassert		Disable asserts, assertions=no)
+AC_ARG_WITH(modules,
+  --with-modules	Allow loading of modules, DYNLIBS=true)
 
 AC_SUBST(ENABLE_LOGINSHELL)
 AC_SUBST(DEVFD_IMPL)
@@ -205,7 +205,7 @@ AC_CACHE_CHECK(for rlimit type ..., es_cv_rlimit_t,
 AC_DEFINE_UNQUOTED(LIMIT_T, $es_cv_rlimit_t)
 
 m4_include([m4/pkg.m4])
-PKG_CHECK_MODULES([PCRE2], [libpcre2-posix],
+PKG_CHECK_MODULES([PCRE2], [libpcre2-posix libpcre2-8],
 	[AC_DEFINE([HAVE_PCRE2], [1], [Is pcre2 available])],
 	[AC_MSG_ERROR([PCRE2 is required])])
 

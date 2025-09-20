@@ -92,7 +92,10 @@ typedef void noreturn;
 #endif
 
 /* for regexes */
-#include <regex.h>
+#define PCRE2_CODE_UNIT_WIDTH 8
+#include <pcre2.h>
+#include <pcre2posix.h>
+
 
 /*
  * things that should be defined by header files but might not have been
