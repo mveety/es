@@ -58,4 +58,5 @@ stacks.*.out
 *.svg
 *.plist
 vgcore.*
+config.mk
 

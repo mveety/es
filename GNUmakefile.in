@@ -26,28 +26,7 @@
 # to get definitions of all signals from <sys/signal.h>.
 # _POSIX_SOURCE, _XOPEN_SOURCE are the obvious ones.
 
-prefix  = @prefix@
-datarootdir = @datarootdir@
-exec_prefix	= @exec_prefix@
-mandir	= @mandir@
-bindir	= @bindir@
-srcdir  = @srcdir@
-ENABLE_LOGINSHELL = @ENABLE_LOGINSHELL@
-DEVFD_IMPL = @DEVFD_IMPL@
-DYNAMIC_LIBRARIES = @DYNLIBS@
-
-
-SHELL	= /bin/sh
-CC	= @CC@
-INSTALL	= @INSTALL@
-MKDIR_P = @MKDIR_P@
-
-YACC = @YACC@
-
-AMCFLAGS = @CFLAGS@ @PCRE2_CFLAGS@
-AMLDFLAGS = @LDFLAGS@
-AMLIBS = @LIBS@ @PCRE2_CFLAGS@
-
+include config.mk
 include vars.mk
 
 CFILES = @CFILEOPTS@
@@ -75,7 +54,7 @@ clean	:
 
 distclean:	clean
 	rm -f config.cache config.log config.h Makefile GNUmakefile cscope.out tags TAGS core cs.out config.status ltmain.sh
-	rm -rf autom4te.cache 
+	rm -rf autom4te.cache config.mk
 
 MANIFEST:
 	find . -type f | sed s/..// > MANIFEST

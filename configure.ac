@@ -24,7 +24,8 @@ DEVFD_IMPL=devfd
 DYNLIBS=false
 CFILEOPTS='$(MAINCFILES)'
 OFILEOPTS='$(MAINOFILES)'
-MODULES='$(BASE_MODULES)'
+MODULES=''
+MODOFILES=''
 
 AC_ARG_WITH(readline,
   --with-readline		Use GNU Readline, use_readline=yes)
@@ -43,6 +44,7 @@ AC_SUBST(CFILEOPTS)
 AC_SUBST(OFILEOPTS)
 AC_SUBST(DYNLIBS)
 AC_SUBST(MODULES)
+AC_SUBST(MODOFILES)
 AC_CANONICAL_HOST
 
 dnl saved_CFLAGS="$CFLAGS"
@@ -130,6 +132,8 @@ dnl CFLAGS="$CFLAGS $saved_CFLAGS"
 
 if test "$DYNLIBS" = "true"
 then
+	MODOFILES='$(MODBASE_OFILES)'
+	MODULES='$(BASE_MODULES)'
 	CFILEOPTS='$(MAINCFILES) $(DYNCFILES)'
 	OFILEOPTS='$(MAINOFILES) $(DYNOFILES)'
 	CFLAGS="$CFLAGS -fPIC"
@@ -211,6 +215,15 @@ PKG_CHECK_MODULES([PCRE2], [libpcre2-posix libpcre2-8],
 	[AC_DEFINE([HAVE_PCRE2], [1], [Is pcre2 available])],
 	[AC_MSG_ERROR([PCRE2 is required])])
 
+dnl if test "$DYNLIBS" = "true"
+dnl then
+dnl 	PKG_CHECK_MODULES([CJSON], [libcjson],
+dnl 		[
+dnl 		 MODOFILES="$MODOFILES \$(MODJSON_OFILES)"
+dnl 		 MODULES="$MODULES \$(MODJSON)"
+dnl 		],[])
+dnl fi
+
 if test "$sys_wait_w_forms" = "yes"
 then
 	AC_DEFINE(USE_WAIT_W_FORMS)
@@ -226,6 +239,6 @@ then
 	AC_DEFINE(DYNAMIC_LIBRARIES)
 fi
 
-AC_CONFIG_FILES([Makefile GNUmakefile])
+AC_CONFIG_FILES([config.mk Makefile GNUmakefile])
 AC_OUTPUT
 

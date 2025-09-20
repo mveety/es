@@ -1,0 +1,27 @@
+prefix  = @prefix@
+datarootdir = @datarootdir@
+exec_prefix	= @exec_prefix@
+mandir	= @mandir@
+bindir	= @bindir@
+srcdir  = @srcdir@
+ENABLE_LOGINSHELL = @ENABLE_LOGINSHELL@
+DEVFD_IMPL = @DEVFD_IMPL@
+DYNAMIC_LIBRARIES = @DYNLIBS@
+
+SHELL	= /bin/sh
+CC	= @CC@
+INSTALL	= @INSTALL@
+MKDIR_P = @MKDIR_P@
+
+YACC = @YACC@
+
+AMCFLAGS = @CFLAGS@ @PCRE2_CFLAGS@
+AMLDFLAGS = @LDFLAGS@ 
+AMLIBS = @LIBS@ @PCRE2_LIBS@
+
+MODJSON_CFLAGS = @CFLAGS@ @CJSON_CFLAGS@
+MODJSON_LIBS = @CJSON_CFLAGS@
+
+MODOFILES = @MODOFILES@
+MODULES = @MODULES@
+

@@ -25,9 +25,11 @@ MAINOFILES	= access.o closure.o conv.o dict.o eval.o except.o fd.o gc.o \
 
 DYNOFILES = dynlib.o
 
-MODOFILES = mod_hello.o float_util.o mod_float.o mod_math.o
-
+MODBASE_OFILES = mod_hello.o float_util.o mod_float.o mod_math.o
 BASE_MODULES = mod_hello.so mod_float.so mod_math.so
+
+MODJSON_OFILES = mod_json.o
+MODJSON = mod_json.so
 
 OTHER	= Makefile parse.y mksignal getsigfiles
 
