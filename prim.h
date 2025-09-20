@@ -15,11 +15,27 @@
 #define DYNPRIMSLEN() size_t dynprimslen = (sizeof(dynprims)/sizeof(Primitive))
 
 typedef struct Primitive Primitive;
+typedef struct DynamicLibrary DynamicLibrary;
+
+/* we need to mirror a bit of dlfcn.h here */
+typedef void (*DynFunction)(void *);
 
 struct Primitive {
 	char *name;
 	List* (*symbol)(List*, Binding*, int);
 };
+
+struct DynamicLibrary {
+	char *fname;
+	char *name;
+	void *handle;
+	Primitive *prims;
+	size_t *primslen;
+	int (*onload)(void);
+	int (*onunload)(void);
+	DynamicLibrary *next;
+};
+
 
 extern Dict *initprims_controlflow(Dict *primdict);	/* prim-ctl.c */
 extern Dict *initprims_io(Dict *primdict);		/* prim-io.c */
@@ -34,7 +50,11 @@ extern Dict *initprims_math(Dict *primdict); /* prim-math.c */
 extern Dict *initprims_dynlib(Dict *primdict); /* dynlib.c */
 #endif
 
-
+/* prim.c */
 extern void add_prim(char *name, List* (*primfn)(List*, Binding*, int));
 extern void remove_prim(char *name);
 
+/* dynlib.c */
+extern DynamicLibrary *dynlib(char *name);
+extern DynamicLibrary *dynlib_file(char *fname);
+extern void *dynsymbol(DynamicLibrary *lib, char *symbol);

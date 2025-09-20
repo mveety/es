@@ -59,13 +59,13 @@ REDIR(openfile) {
 		const char *name;
 		OpenKind kind;
 	} modes[] = {
-		{"r",  oOpen	   },
-		 {"w",  oCreate	  },
-		  {"a",	oAppend	   },
-		  {"r+", oReadWrite },
-		{"w+", oReadCreate},
-		 {"a+", oReadAppend},
-		  {NULL, 0		  }
+		{"r",	oOpen},
+		{"w",	oCreate},
+		{"a",	oAppend},
+		{"r+",	oReadWrite},
+		{"w+",	oReadCreate},
+		{"a+",	oReadAppend},
+		{NULL,	0}
 	   };
 
 	assert(length(list) == 3);

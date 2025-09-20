@@ -2,18 +2,11 @@
 #include "prim.h"
 #include "gc.h"
 #include <dlfcn.h>
-#include <stdio.h>
 
-typedef struct DynamicLibrary DynamicLibrary;
-
-struct DynamicLibrary {
-	char *fname;
-	char *name;
-	void *handle;
-	Primitive *prims;
-	size_t *primslen;
-	DynamicLibrary *next;
-};
+typedef union {
+	void *ptr;
+	int (*fptr)(void);
+} DynCallback;
 
 DynamicLibrary *loaded_libs;
 Boolean dynlib_verbose = FALSE;
@@ -24,6 +17,8 @@ create_library(char *fname, char *errstr, size_t errstrlen)
 {
 	DynamicLibrary *lib;
 	char *dlerrstr;
+	DynCallback onload;
+	DynCallback onunload;
 
 	memset(errstr, 0, errstrlen);
 	lib = ealloc(sizeof(DynamicLibrary));
@@ -53,6 +48,24 @@ create_library(char *fname, char *errstr, size_t errstrlen)
 		return nil;
 	}
 
+	onload.ptr = dlsym(lib->handle, "dyn_onload");
+	onunload.ptr = dlsym(lib->handle, "dyn_onunload");
+	lib->onload = onload.fptr;
+	lib->onunload = onunload.fptr;
+
+	if(lib->onload) {
+		if(lib->onload()) {
+			if(dlclose(lib->handle)) {
+				dlerrstr = dlerror();
+				if(errstr)
+					strncpy(errstr, dlerrstr, errstrlen);
+			}
+			free(lib->fname);
+			free(lib);
+			return nil;
+		}
+	}
+
 	return lib;
 }
 
@@ -62,6 +75,8 @@ destroy_library(DynamicLibrary *lib, char *errstr, size_t errstrlen)
 	char *dlerrstr;
 	int res = 0;
 
+	if(lib->onunload)
+		lib->onunload();
 	res = dlclose(lib->handle);
 	if(res) {
 		dlerrstr = dlerror();
@@ -158,7 +173,7 @@ lib_remove_from_list(char *name)
 	return nil;
 }
 
-DynamicLibrary*
+DynamicLibrary *
 lib_find_fname(char *fname)
 {
 	DynamicLibrary *lib;
@@ -169,7 +184,7 @@ lib_find_fname(char *fname)
 	return nil;
 }
 
-DynamicLibrary*
+DynamicLibrary *
 lib_find_name(char *name)
 {
 	DynamicLibrary *lib;
@@ -178,6 +193,26 @@ lib_find_name(char *name)
 		if(streq(lib->name, name))
 			return lib;
 	return nil;
+}
+
+/* external api */
+
+DynamicLibrary *
+dynlib(char *name)
+{
+	return lib_find_name(name);
+}
+
+DynamicLibrary *
+dynlib_file(char *fname)
+{
+	return lib_find_fname(fname);
+}
+
+void *
+dynsymbol(DynamicLibrary *lib, char *symbol)
+{
+	return dlsym(lib->handle, symbol);
 }
 
 int
@@ -189,7 +224,7 @@ open_library(char *fname, char *errstr, size_t errstrlen)
 	if(!lib)
 		return -1;
 
-	if(lib_find_name(lib->name) != nil){
+	if(lib_find_name(lib->name) != nil) {
 		snprintf(errstr, errstrlen, "library %s already loaded", lib->name);
 		destroy_library(lib, nil, 0);
 		return -1;
@@ -272,8 +307,8 @@ PRIM(dynlibfile) {
 	if(loaded_libs == nil)
 		fail("$&dynlibfile", "library %s not loaded", getstr(list->term));
 
-	gcref(&r_res, (void**)&res);
-	gcref(&r_name, (void**)&name);
+	gcref(&r_res, (void **)&res);
+	gcref(&r_name, (void **)&name);
 
 	name = getstr(list->term);
 	lib = lib_find_name(name);
@@ -322,8 +357,8 @@ PRIM(closedynlib) {
 	if(list == nil)
 		fail("$&openlibrary", "missing arg");
 
-	gcref(&r_name, (void**)&name);
-	gcref(&r_result, (void**)&result);
+	gcref(&r_name, (void **)&name);
+	gcref(&r_result, (void **)&result);
 
 	name = getstr(list->term);
 	lib = lib_find_name(name);
