@@ -4,8 +4,8 @@
 
 LIBNAME(mod_math);
 
-double (*termtof)(Term*, char*, int);
-List* (*floattolist)(double, char*);
+double (*termtof)(Term *, char *, int);
+List *(*floattolist)(double, char *);
 
 int
 dyn_onload(void)
@@ -13,21 +13,21 @@ dyn_onload(void)
 	DynamicLibrary *mod_float;
 	union {
 		void *ptr;
-		double (*fptr)(Term*, char*, int);
+		double (*fptr)(Term *, char *, int);
 	} termtof_union;
 	union {
 		void *ptr;
-		List* (*fptr)(double, char*);
+		List *(*fptr)(double, char *);
 	} floattolist_union;
 
 	mod_float = dynlib("mod_float");
 	if(!mod_float)
-		return -1;
+		return DeNotLoaded;
 
 	if(!(termtof_union.ptr = dynsymbol(mod_float, "termtof")))
-		return -1;
+		return DeMissingSymbol;
 	if(!(floattolist_union.ptr = dynsymbol(mod_float, "floattolist")))
-		return -1;
+		return DeMissingSymbol;
 
 	termtof = termtof_union.fptr;
 	floattolist = floattolist_union.fptr;

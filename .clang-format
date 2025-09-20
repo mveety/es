@@ -32,7 +32,7 @@ SpacesInParensOptions:
   InEmptyParentheses: false
   InConditionalStatements: false
 PointerAlignment: Right
-ColumnLimit: 110
+ColumnLimit: 100
 WhitespaceSensitiveMacros: ['PRIM', 'ExceptionHandler', 'CatchExceptionIf',
                             'CatchException', 'EndExceptionHandler', 'REDIR']
 OneLineFormatOffRegex: "(Root|PRIM|REDIR)"

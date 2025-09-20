@@ -2,6 +2,7 @@
 #include "prim.h"
 #include "gc.h"
 #include <dlfcn.h>
+#include <setjmp.h>
 
 typedef union {
 	void *ptr;
@@ -12,6 +13,14 @@ DynamicLibrary *loaded_libs;
 Boolean dynlib_verbose = FALSE;
 Boolean dynlib_fail_cancel = TRUE;
 
+char *last_sym_or_module = nil;
+char dynlibothererror[] = "unknown error";
+char *dynliberrors[] = {
+	[0] = "ok",
+	[1] = "module not loaded",
+	[2] = "symbol not found",
+};
+
 DynamicLibrary *
 create_library(char *fname, char *errstr, size_t errstrlen)
 {
@@ -19,6 +28,8 @@ create_library(char *fname, char *errstr, size_t errstrlen)
 	char *dlerrstr;
 	DynCallback onload;
 	DynCallback onunload;
+	int status = 0;
+	char errbuf[1024];
 
 	memset(errstr, 0, errstrlen);
 	lib = ealloc(sizeof(DynamicLibrary));
@@ -54,7 +65,17 @@ create_library(char *fname, char *errstr, size_t errstrlen)
 	lib->onunload = onunload.fptr;
 
 	if(lib->onload) {
-		if(lib->onload()) {
+		memset(&errbuf[0], 0, sizeof(errbuf));
+		if((status = lib->onload())) {
+			if(errstr) {
+				if(status > (int)(sizeof(dynliberrors) / sizeof(char *)) || status < 0)
+					snprintf(&errbuf[0], sizeof(errbuf), "%s: %s", dynlibothererror,
+							 last_sym_or_module);
+				else
+					snprintf(&errbuf[0], sizeof(errbuf), "%s: %s", dynliberrors[status],
+							 last_sym_or_module);
+				strncpy(errstr, &errbuf[0], errstrlen);
+			}
 			if(dlclose(lib->handle)) {
 				dlerrstr = dlerror();
 				if(errstr)
@@ -65,7 +86,6 @@ create_library(char *fname, char *errstr, size_t errstrlen)
 			return nil;
 		}
 	}
-
 	return lib;
 }
 
@@ -197,56 +217,68 @@ lib_find_name(char *name)
 
 /* external api */
 
-DynamicLibrary *
-dynlib(char *name)
-{
-	return lib_find_name(name);
-}
-
-DynamicLibrary *
-dynlib_file(char *fname)
-{
-	return lib_find_fname(fname);
-}
-
-void *
-dynsymbol(DynamicLibrary *lib, char *symbol)
-{
-	return dlsym(lib->handle, symbol);
-}
-
-int
+DynamicLibrary*
 open_library(char *fname, char *errstr, size_t errstrlen)
 {
 	DynamicLibrary *lib;
 
 	lib = create_library(fname, errstr, errstrlen);
 	if(!lib)
-		return -1;
+		return nil;
 
 	if(lib_find_name(lib->name) != nil) {
 		snprintf(errstr, errstrlen, "library %s already loaded", lib->name);
 		destroy_library(lib, nil, 0);
-		return -1;
+		return nil;
 	}
 
 	if(dynlib_verbose)
 		dump_prims_lib(lib);
 
 	lib_add_to_list(lib);
-	return load_prims_lib(lib);
+	load_prims_lib(lib);
+
+	return lib;
 }
 
 int
-close_library(char *name, char *errstr, size_t errstrlen)
+close_library(DynamicLibrary *lib, char *errstr, size_t errstrlen)
 {
-	DynamicLibrary *lib = nil;
 
-	lib = lib_remove_from_list(name);
-	if(!lib)
+	if(lib_remove_from_list(lib->name) != lib)
 		return -1;
 	unload_prims_lib(lib);
 	return destroy_library(lib, errstr, errstrlen);
+}
+
+DynamicLibrary *
+dynlib(char *name)
+{
+	DynamicLibrary *res = nil;
+
+	if(!(res = lib_find_name(name)))
+		last_sym_or_module = name;
+	return res;
+}
+
+DynamicLibrary *
+dynlib_file(char *fname)
+{
+	DynamicLibrary *res = nil;
+
+	if(!(res = lib_find_fname(fname)))
+		last_sym_or_module = fname;
+	return res;
+}
+
+void *
+dynsymbol(DynamicLibrary *lib, char *symbol)
+{
+	void *res = nil;
+
+	if(!(res = dlsym(lib->handle, symbol)))
+		last_sym_or_module = symbol;
+	return res;
 }
 
 PRIM(listdynlibs) {
@@ -285,6 +317,7 @@ PRIM(dynlibprims) {
 		if(streq(lib->name, name)) {
 			for(i = 0; i < *lib->primslen; i++)
 				res = mklist(mkstr(str("%s", lib->prims[i])), res);
+			res = reverse(res);
 			goto done;
 		}
 	}
@@ -339,7 +372,7 @@ PRIM(opendynlib) {
 	if(testlib != nil)
 		fail("$&openlibrary", "unable to open library %s: already open", testlib->name);
 
-	if(open_library(fname, &errstr[0], sizeof(errstr)))
+	if(!open_library(fname, &errstr[0], sizeof(errstr)))
 		fail("$&openlibrary", "unable to open library %s: %s", fname, errstr);
 
 	gcrderef(&r_fname);
@@ -361,11 +394,11 @@ PRIM(closedynlib) {
 	gcref(&r_result, (void **)&result);
 
 	name = getstr(list->term);
-	lib = lib_find_name(name);
+	lib = dynlib(name);
 	if(lib == nil)
-		fail("$&openlibrary", "unable to close library %s: already closed", name);
+		fail("$&openlibrary", "unable to close library %s: not open", name);
 
-	res = close_library(name, &errstr[0], sizeof(errstr));
+	res = close_library(lib, &errstr[0], sizeof(errstr));
 
 	result = mklist(mkstr(str("%d", res)), nil);
 

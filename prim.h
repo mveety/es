@@ -14,6 +14,12 @@
 #define DX(name) {STRING(name), CONCAT(&prim_,name)}
 #define DYNPRIMSLEN() size_t dynprimslen = (sizeof(dynprims)/sizeof(Primitive))
 
+enum {
+	DeNotLoaded = 1,
+	DeMissingSymbol = 2,
+	DeOther = -127,
+};
+
 typedef struct Primitive Primitive;
 typedef struct DynamicLibrary DynamicLibrary;
 
@@ -55,6 +61,8 @@ extern void add_prim(char *name, List* (*primfn)(List*, Binding*, int));
 extern void remove_prim(char *name);
 
 /* dynlib.c */
+extern DynamicLibrary *open_library(char *fname, char *errstr, size_t errstrlen);
+extern int close_library(DynamicLibrary *lib, char *errstr, size_t errstrlen);
 extern DynamicLibrary *dynlib(char *name);
 extern DynamicLibrary *dynlib_file(char *fname);
 extern void *dynsymbol(DynamicLibrary *lib, char *symbol);
