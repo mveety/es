@@ -54,6 +54,8 @@ CFILES = @CFILEOPTS@
 
 OFILES = @OFILEOPTS@
 
+MODULES = @MODULES@
+
 es	: ${OFILES} system.o
 	${CC} -o es ${LDFLAGS} ${OFILES} system.o ${LIBS}
 

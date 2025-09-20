@@ -27,7 +27,7 @@ DYNOFILES = dynlib.o
 
 MODOFILES = mod_hello.o float_util.o mod_float.o mod_math.o
 
-MODULES = mod_hello.so mod_float.so mod_math.so
+BASE_MODULES = mod_hello.so mod_float.so mod_math.so
 
 OTHER	= Makefile parse.y mksignal getsigfiles
 
