@@ -354,8 +354,17 @@ fdprint(Format *format, int fd, const char *fmt)
 	format->u.n = fdmap(fd);
 
 	gcdisable();
+
 	printfmt(format, fmt);
 	fprint_flush(format, 0);
+
+	/* make clang-check happy */
+	*format = (Format){
+		.buf = nil,
+		.bufbegin = nil,
+		.bufend = nil,
+	};
+
 	gcenable();
 }
 
