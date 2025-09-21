@@ -1,5 +1,7 @@
 /* prim.h -- definitions for es primitives ($Revision: 1.1.1.1 $) */
 
+#define PRIMSMAX 500
+
 #define	PRIM(name)	static List *CONCAT(prim_,name)( \
 				List *list, Binding *binding, int evalflags \
 			)
@@ -10,15 +12,17 @@
 			))
 
 #define LIBNAME(name) char dynlibname[] = STRING(name)
+#define LIBAPI(n) int64_t dynlibapi = n
+#define LIBRARY(name) char dynlibname[] = STRING(name); int64_t dynlibapi = DynLibApi
 #define LIBRARY_NAME &dynlibname[0]
 #define DYNPRIMS() Primitive dynprims[]
-#define DYNPRIMSLEN() size_t dynprimslen = (sizeof(dynprims)/sizeof(Primitive))
-#define MODULE(name) char dynlibname[] = STRING(name); Primitive dynprims[]
-#define MODULELEN() size_t dynprimslen = (sizeof(dynprims)/sizeof(Primitive))
+#define MODULE(name) char dynlibname[] = STRING(name); int64_t dynlibapi = DynLibApi; Primitive dynprims[]
 
 #define DX(name) {STRING(name), CONCAT(&prim_,name)}
+#define PRIMSEND {0, 0}
 
 enum {
+	DynLibApi = 3,
 	DeNotLoaded = 1,
 	DeMissingSymbol = 2,
 	DeOther = -127,
@@ -40,7 +44,7 @@ struct DynamicLibrary {
 	char *name;
 	void *handle;
 	Primitive *prims;
-	size_t *primslen;
+	size_t primslen;
 	int (*onload)(void);
 	int (*onunload)(void);
 	DynamicLibrary *next;

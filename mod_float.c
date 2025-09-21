@@ -2,7 +2,7 @@
 #include "prim.h"
 #include <stdlib.h>
 #include "float_util.h"
-LIBNAME(mod_float);
+LIBRARY(mod_float);
 
 List *
 prim_addf(List *list, Binding *binding, int evalflags)
@@ -243,5 +243,5 @@ DYNPRIMS() = {
 	{"addf", &prim_addf}, {"subf", &prim_subf}, {"mulf", &prim_mulf},
 	{"divf", &prim_divf}, {"feq", &prim_feq},	{"fgt", &prim_fgt},
 	{"fgte", &prim_fgte}, {"flt", &prim_flt},	{"flte", &prim_flte},
+	{0, 0},
 };
-DYNPRIMSLEN();

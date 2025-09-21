@@ -1,8 +1,7 @@
 #include "es.h"
 #include "prim.h"
 #include <math.h>
-
-LIBNAME(mod_math);
+LIBRARY(mod_math);
 
 int64_t (*listtoint)(List *, char *, int);
 double (*listtof)(List *, char *, int);
@@ -431,5 +430,5 @@ DYNPRIMS() = {
 	DX(cbrt),  DX(sqrt), DX(hypot), DX(sin),   DX(asin), DX(sinh), DX(asinh), DX(cos),
 	DX(acos),  DX(cosh), DX(acosh), DX(tan),   DX(atan), DX(tanh), DX(atanh), DX(ceil),
 	DX(floor), DX(log),	 DX(exp),	DX(log10), DX(log2), DX(exp2), DX(pow),	  DX(intpow),
+	PRIMSEND,
 };
-DYNPRIMSLEN();

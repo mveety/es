@@ -2,7 +2,7 @@
 #include "prim.h"
 #include "gc.h"
 #include <stdio.h>
-LIBNAME(mod_hello);
+LIBRARY(mod_hello);
 
 List *
 hellotest(List *list, Binding *binding, int evalflags)
@@ -32,5 +32,5 @@ dyn_onunload(void)
 
 DYNPRIMS() = {
 	{"hellotest", &hellotest},
+	PRIMSEND,
 };
-DYNPRIMSLEN();
