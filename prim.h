@@ -45,6 +45,7 @@ struct DynamicLibrary {
 	void *handle;
 	Primitive *prims;
 	size_t primslen;
+	int64_t apiversion;
 	int (*onload)(void);
 	int (*onunload)(void);
 	DynamicLibrary *next;

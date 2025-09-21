@@ -64,6 +64,7 @@ create_library(char *fname, char *errstr, size_t errstrlen)
 		return nil;
 	}
 
+	lib->apiversion = *apiversion;
 	lib->name = dlsym(lib->handle, "dynlibname");
 	lib->prims = dlsym(lib->handle, "dynprims");
 
