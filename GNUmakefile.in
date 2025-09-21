@@ -44,6 +44,9 @@ esdump	: ${OFILES} dump.o
 es_static : ${OFILES} system.o
 	${CC} -static -o es_static ${LDFLAGS} ${OFILES} system.o ${LIBS}
 
+%.o : %.c
+	${CC} -c ${CFLAGS} ${MODCFLAGS} -o $@ $<
+
 %.so : %.o
 	${CC} ${LDFLAGS} ${MODLDFLAGS} -shared -o $@ $^ ${MODLIBS} ${MODEXTRAAGS}
 

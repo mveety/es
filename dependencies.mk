@@ -52,7 +52,7 @@ mod_float.so : mod_float.o float_util.o
 mod_math.o : mod_math.c ${ESHFILES} prim.h gc.h
 mod_math.so : MODLIBS=-lm
 mod_math.so : mod_math.o
-mod_json.o : CFLAGS = $(CFLAGS) $(MODJSON_CFLAGS)
+mod_json.o : MODCFLAGS=$(MODJSON_CFLAGS)
 mod_json.o : mod_json.c ${ESHFILES} prim.h gc.h
 mod_json.so : MODLIBS=$(MODJSON_LIBS)
 mod_json.so : mod_json.o
