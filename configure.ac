@@ -254,7 +254,7 @@ PKG_CHECK_MODULES([PCRE2], [libpcre2-posix libpcre2-8],
 
 if test "$DYNLIBS" = "true"
 then
-	PKG_CHECK_MODULES([CJSON], [libcjson],
+	PKG_CHECK_MODULES([CJSON], [libcjson libcjson_utils],
 		[
 		 MODOFILES="$MODOFILES \$(MODJSON_OFILES)"
 dnl		 MODULES="$MODULES \$(MODJSON)"
