@@ -30,14 +30,14 @@ listtof(List *list, char *funname, int arg)
 	return termtof(list->term, funname, arg);
 }
 
-List*
+List *
 floattolist(double num, char *funname)
 {
 	char temp[256];
 	int printlen;
 	List *result = nil; Root r_result;
 
-	gcref(&r_result, (void**)&result);
+	gcref(&r_result, (void **)&result);
 
 	printlen = snprintf(&temp[0], sizeof(temp), "%g", num);
 	if(printlen >= (int)sizeof(temp))
@@ -49,4 +49,32 @@ floattolist(double num, char *funname)
 	return result;
 }
 
+int64_t
+termtoint(Term *term, char *funname, int arg)
+{
+	int64_t res;
 
+	errno = 0;
+	res = strtoll(getstr(term), NULL, 10);
+	if(res == 0) {
+		switch(errno) {
+		case EINVAL:
+			fail(funname, str("invalid input: $%d = '%s'", arg, getstr(term)));
+			break;
+		case ERANGE:
+			fail(funname, str("conversion overflow: $%d = '%s'", arg, getstr(term)));
+			break;
+		}
+	}
+
+	return res;
+}
+
+int64_t
+listtoint(List *list, char *funname, int arg)
+{
+	if(list == nil)
+		fail(funname, "missing argument $%d", arg);
+
+	return termtoint(list->term, funname, arg);
+}

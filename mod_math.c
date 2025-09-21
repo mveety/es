@@ -4,7 +4,8 @@
 
 LIBNAME(mod_math);
 
-double (*termtof)(Term *, char *, int);
+int64_t (*listtoint)(List *, char *, int);
+double (*listtof)(List *, char *, int);
 List *(*floattolist)(double, char *);
 
 int
@@ -13,8 +14,12 @@ dyn_onload(void)
 	DynamicLibrary *mod_float;
 	union {
 		void *ptr;
-		double (*fptr)(Term *, char *, int);
-	} termtof_union;
+		int64_t (*fptr)(List *, char *, int);
+	} listtoint_union;
+	union {
+		void *ptr;
+		double (*fptr)(List *, char *, int);
+	} listtof_union;
 	union {
 		void *ptr;
 		List *(*fptr)(double, char *);
@@ -24,12 +29,15 @@ dyn_onload(void)
 	if(!mod_float)
 		return DeNotLoaded;
 
-	if(!(termtof_union.ptr = dynsymbol(mod_float, "termtof")))
+	if(!(listtoint_union.ptr = dynsymbol(mod_float, "listtoint")))
+		return DeMissingSymbol;
+	if(!(listtof_union.ptr = dynsymbol(mod_float, "listtof")))
 		return DeMissingSymbol;
 	if(!(floattolist_union.ptr = dynsymbol(mod_float, "floattolist")))
 		return DeMissingSymbol;
 
-	termtof = termtof_union.fptr;
+	listtoint = listtoint_union.fptr;
+	listtof = listtof_union.fptr;
 	floattolist = floattolist_union.fptr;
 
 	return 0;
@@ -39,12 +47,9 @@ PRIM(cbrt) {
 	double a, res;
 	List *result = nil; Root r_result;
 
-	if(list == nil)
-		fail("$&cbrt", "missing argument");
-
 	gcref(&r_result, (void **)&result);
 
-	a = termtof(list->term, "$&cbrt", 1);
+	a = listtof(list, "$&cbrt", 1);
 	res = cbrt(a);
 	result = floattolist(res, "$&cbrt");
 
@@ -57,12 +62,9 @@ PRIM(sqrt) {
 	double a, res;
 	List *result = nil; Root r_result;
 
-	if(list == nil)
-		fail("$&sqrt", "missing argument");
-
 	gcref(&r_result, (void **)&result);
 
-	a = termtof(list->term, "$&sqrt", 1);
+	a = listtof(list, "$&sqrt", 1);
 	res = sqrt(a);
 	result = floattolist(res, "$&sqrt");
 
@@ -75,13 +77,10 @@ PRIM(hypot) {
 	double a, b, res;
 	List *result = nil; Root r_result;
 
-	if(list == nil || list->next == nil)
-		fail("$&hypot", "missing arguments");
-
 	gcref(&r_result, (void **)&result);
 
-	a = termtof(list->term, "$&hypot", 1);
-	b = termtof(list->next->term, "$&hypot", 2);
+	a = listtof(list, "$&hypot", 1);
+	b = listtof(list->next, "$&hypot", 2);
 	res = hypot(a, b);
 	result = floattolist(res, "$&hypot");
 
@@ -94,12 +93,9 @@ PRIM(sin) {
 	double a, res;
 	List *result = nil; Root r_result;
 
-	if(list == nil)
-		fail("$&sin", "missing argument");
-
 	gcref(&r_result, (void **)&result);
 
-	a = termtof(list->term, "$&sin", 1);
+	a = listtof(list, "$&sin", 1);
 	res = sin(a);
 	result = floattolist(res, "$&sin");
 
@@ -112,12 +108,9 @@ PRIM(asin) {
 	double a, res;
 	List *result = nil; Root r_result;
 
-	if(list == nil)
-		fail("$&asin", "missing argument");
-
 	gcref(&r_result, (void **)&result);
 
-	a = termtof(list->term, "$&asin", 1);
+	a = listtof(list, "$&asin", 1);
 	res = asin(a);
 	result = floattolist(res, "$&asin");
 
@@ -130,12 +123,9 @@ PRIM(sinh) {
 	double a, res;
 	List *result = nil; Root r_result;
 
-	if(list == nil)
-		fail("$&sinh", "missinhg argument");
-
 	gcref(&r_result, (void **)&result);
 
-	a = termtof(list->term, "$&sinh", 1);
+	a = listtof(list, "$&sinh", 1);
 	res = sinh(a);
 	result = floattolist(res, "$&sinh");
 
@@ -148,12 +138,9 @@ PRIM(asinh) {
 	double a, res;
 	List *result = nil; Root r_result;
 
-	if(list == nil)
-		fail("$&asinh", "missinhg argument");
-
 	gcref(&r_result, (void **)&result);
 
-	a = termtof(list->term, "$&asinh", 1);
+	a = listtof(list, "$&asinh", 1);
 	res = asinh(a);
 	result = floattolist(res, "$&asinh");
 
@@ -167,12 +154,9 @@ PRIM(cos) {
 	double a, res;
 	List *result = nil; Root r_result;
 
-	if(list == nil)
-		fail("$&cos", "missing argument");
-
 	gcref(&r_result, (void **)&result);
 
-	a = termtof(list->term, "$&cos", 1);
+	a = listtof(list, "$&cos", 1);
 	res = cos(a);
 	result = floattolist(res, "$&cos");
 
@@ -185,12 +169,9 @@ PRIM(acos) {
 	double a, res;
 	List *result = nil; Root r_result;
 
-	if(list == nil)
-		fail("$&acos", "missing argument");
-
 	gcref(&r_result, (void **)&result);
 
-	a = termtof(list->term, "$&acos", 1);
+	a = listtof(list, "$&acos", 1);
 	res = acos(a);
 	result = floattolist(res, "$&acos");
 
@@ -203,12 +184,9 @@ PRIM(cosh) {
 	double a, res;
 	List *result = nil; Root r_result;
 
-	if(list == nil)
-		fail("$&cosh", "missing argument");
-
 	gcref(&r_result, (void **)&result);
 
-	a = termtof(list->term, "$&cosh", 1);
+	a = listtof(list, "$&cosh", 1);
 	res = cosh(a);
 	result = floattolist(res, "$&cosh");
 
@@ -221,12 +199,9 @@ PRIM(acosh) {
 	double a, res;
 	List *result = nil; Root r_result;
 
-	if(list == nil)
-		fail("$&acosh", "missing argument");
-
 	gcref(&r_result, (void **)&result);
 
-	a = termtof(list->term, "$&acosh", 1);
+	a = listtof(list, "$&acosh", 1);
 	res = acosh(a);
 	result = floattolist(res, "$&acosh");
 
@@ -239,12 +214,9 @@ PRIM(tan) {
 	double a, res;
 	List *result = nil; Root r_result;
 
-	if(list == nil)
-		fail("$&tan", "missing argument");
-
 	gcref(&r_result, (void **)&result);
 
-	a = termtof(list->term, "$&tan", 1);
+	a = listtof(list, "$&tan", 1);
 	res = tan(a);
 	result = floattolist(res, "$&tan");
 
@@ -257,12 +229,9 @@ PRIM(atan) {
 	double a, res;
 	List *result = nil; Root r_result;
 
-	if(list == nil)
-		fail("$&atan", "missing argument");
-
 	gcref(&r_result, (void **)&result);
 
-	a = termtof(list->term, "$&atan", 1);
+	a = listtof(list, "$&atan", 1);
 	res = atan(a);
 	result = floattolist(res, "$&atan");
 
@@ -275,12 +244,9 @@ PRIM(tanh) {
 	double a, res;
 	List *result = nil; Root r_result;
 
-	if(list == nil)
-		fail("$&tanh", "missing argument");
-
 	gcref(&r_result, (void **)&result);
 
-	a = termtof(list->term, "$&tanh", 1);
+	a = listtof(list, "$&tanh", 1);
 	res = tanh(a);
 	result = floattolist(res, "$&tanh");
 
@@ -293,12 +259,9 @@ PRIM(atanh) {
 	double a, res;
 	List *result = nil; Root r_result;
 
-	if(list == nil)
-		fail("$&atanh", "missing argument");
-
 	gcref(&r_result, (void **)&result);
 
-	a = termtof(list->term, "$&atanh", 1);
+	a = listtof(list, "$&atanh", 1);
 	res = atanh(a);
 	result = floattolist(res, "$&atanh");
 
@@ -311,12 +274,9 @@ PRIM(ceil) {
 	double a, res;
 	List *result = nil; Root r_result;
 
-	if(list == nil)
-		fail("$&ceil", "missing argument");
-
 	gcref(&r_result, (void **)&result);
 
-	a = termtof(list->term, "$&ceil", 1);
+	a = listtof(list, "$&ceil", 1);
 	res = ceil(a);
 	result = floattolist(res, "$&ceil");
 
@@ -329,12 +289,9 @@ PRIM(floor) {
 	double a, res;
 	List *result = nil; Root r_result;
 
-	if(list == nil)
-		fail("$&floor", "missing argument");
-
 	gcref(&r_result, (void **)&result);
 
-	a = termtof(list->term, "$&floor", 1);
+	a = listtof(list, "$&floor", 1);
 	res = floor(a);
 	result = floattolist(res, "$&floor");
 
@@ -347,12 +304,9 @@ PRIM(log) {
 	double a, res;
 	List *result = nil; Root r_result;
 
-	if(list == nil)
-		fail("$&log", "missing argument");
-
 	gcref(&r_result, (void **)&result);
 
-	a = termtof(list->term, "$&log", 1);
+	a = listtof(list, "$&log", 1);
 	res = log(a);
 	result = floattolist(res, "$&log");
 
@@ -365,12 +319,9 @@ PRIM(exp) {
 	double a, res;
 	List *result = nil; Root r_result;
 
-	if(list == nil)
-		fail("$&exp", "missing argument");
-
 	gcref(&r_result, (void **)&result);
 
-	a = termtof(list->term, "$&exp", 1);
+	a = listtof(list, "$&exp", 1);
 	res = exp(a);
 	result = floattolist(res, "$&exp");
 
@@ -383,12 +334,9 @@ PRIM(log10) {
 	double a, res;
 	List *result = nil; Root r_result;
 
-	if(list == nil)
-		fail("$&log10", "missing argument");
-
 	gcref(&r_result, (void **)&result);
 
-	a = termtof(list->term, "$&log10", 1);
+	a = listtof(list, "$&log10", 1);
 	res = log10(a);
 	result = floattolist(res, "$&log10");
 
@@ -401,12 +349,9 @@ PRIM(log2) {
 	double a, res;
 	List *result = nil; Root r_result;
 
-	if(list == nil)
-		fail("$&log2", "missing argument");
-
 	gcref(&r_result, (void **)&result);
 
-	a = termtof(list->term, "$&log2", 1);
+	a = listtof(list, "$&log2", 1);
 	res = log2(a);
 	result = floattolist(res, "$&log2");
 
@@ -419,12 +364,9 @@ PRIM(exp2) {
 	double a, res;
 	List *result = nil; Root r_result;
 
-	if(list == nil)
-		fail("$&exp2", "missing argument");
-
 	gcref(&r_result, (void **)&result);
 
-	a = termtof(list->term, "$&exp2", 1);
+	a = listtof(list, "$&exp2", 1);
 	res = exp2(a);
 	result = floattolist(res, "$&exp2");
 
@@ -437,13 +379,10 @@ PRIM(pow) {
 	double a, b, res;
 	List *result = nil; Root r_result;
 
-	if(list == nil || list->next == nil)
-		fail("$&pow", "missing arguments");
-
 	gcref(&r_result, (void **)&result);
 
-	a = termtof(list->term, "$&pow", 1);
-	b = termtof(list->next->term, "$&pow", 2);
+	a = listtof(list, "$&pow", 1);
+	b = listtof(list->next, "$&pow", 2);
 	res = pow(a, b);
 	result = floattolist(res, "$&pow");
 
@@ -452,43 +391,31 @@ PRIM(pow) {
 	return result;
 }
 
+List *
+next(List *list)
+{
+	if(list != nil)
+		return list->next;
+	return nil;
+}
+
 PRIM(intpow) {
 	int64_t base, exp;
 	int64_t res = 1;
 
-	if(list == nil || list->next == nil)
-		fail("$&intpow", "missing arguments");
-
-	errno = 0;
-
-	exp = strtoll(getstr(list->next->term), NULL, 10);
-	if(exp == 0) {
-		switch(errno) {
-		case EINVAL:
-			fail("$&intpow", str("invalid input: $2 = '%s'", getstr(list->next->term)));
-			break;
-		case ERANGE:
-			fail("$&intpow", str("conversion overflow: $2 = '%s'", getstr(list->next->term)));
-			break;
-		}
-	}
+	exp = listtoint(next(list), "$&intpow", 2);
 
 	if(exp < 0)
 		fail("$&intpow", "only positive exponents are valid");
 	if(exp == 0)
 		return mklist(mkstr(str("1")), nil);
 
-	base = strtoll(getstr(list->term), NULL, 10);
-	if(base == 0) {
-		switch(errno) {
-		case EINVAL:
-			fail("$&intpow", str("invalid input: $1 = '%s'", getstr(list->term)));
-			break;
-		case ERANGE:
-			fail("$&intpow", str("conversion overflow: $1 = '%s'", getstr(list->term)));
-			break;
-		}
-	}
+	base = listtoint(list, "$&intpow", 1);
+
+	if(base == 1)
+		return mklist(mkstr(str("1")), nil);
+	if(base == 0)
+		return mklist(mkstr(str("0")), nil);
 
 	while(exp > 0) {
 		if(exp % 2)
