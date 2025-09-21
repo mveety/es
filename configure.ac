@@ -15,8 +15,7 @@ rm -f conftest*
 ])
 
 
-use_readline=yes
-use_editline=no
+lineeditor=readline
 ENABLE_LOGINSHELL=false
 sys_wait_w_forms=yes
 assertions=yes
@@ -26,17 +25,49 @@ CFILEOPTS='$(MAINCFILES)'
 OFILEOPTS='$(MAINOFILES)'
 MODULES=''
 MODOFILES=''
+development='false'
 
 AC_ARG_WITH(readline,
-  --with-readline		Use GNU Readline, use_readline=yes)
-AC_ARG_WITH(loginshell,
-  --with-loginshell	Only load esrc if a login shell, ENABLE_LOGINSHELL=true)
-AC_ARG_WITH(internalwaitforms,
-  --with-waitforms	Do not use W forms of IFSIGNALED and friends from sys/wait.h, sys_wait_w_forms=no)
-AC_ARG_WITH(noassert,
-  --with-noassert		Disable asserts, assertions=no)
-AC_ARG_WITH(modules,
-  --with-modules	Allow loading of modules, DYNLIBS=true)
+[  --with-readline	Use GNU Readline])
+
+dnl AC_ARG_WITH(libedit,
+dnl [  --with-libedit	Use libedit])
+
+AC_ARG_ENABLE(loginshell,
+[  --enable-loginshell	Only load esrc if a login shell],
+  [if test "x$enableval" = "xyes"; then
+		ENABLE_LOGINSHELL=true
+	else
+		ENABLE_LOGINSHELL=false
+	fi], [ENABLE_LOGINSHELL=false])
+
+AC_ARG_ENABLE(waitforms,
+[  --enable-waitforms	Use W forms of IFSIGNALED and friends from sys/wait.h],
+	[sys_wait_w_forms="$enableval"],[sys_wait_w_forms=yes])
+
+AC_ARG_ENABLE(assert,
+[  --enable-assert	Enable asserts (enabled by default)],
+  [assertions="$enableval"], [assertions=yes])
+
+AC_ARG_ENABLE(modules,
+[  --enable-modules	Allow loading of modules],
+  [ if test "x$enableval" = "xyes"; then
+		DYNLIBS=true
+	else
+		DYNLIBS=false
+	fi], [DYNLIBS=false])
+
+AC_ARG_ENABLE(development,
+[  --enable-development	Extras for development],
+[CFLAGS="-g -O0"])
+
+if test "$readline" = "yes"; then
+	lineeditor=readline
+fi
+
+if test "$libedit" = "yes"; then
+	lineeditor=lineedit
+fi
 
 AC_SUBST(ENABLE_LOGINSHELL)
 AC_SUBST(DEVFD_IMPL)
@@ -158,20 +189,20 @@ fi
 
 dnl Checks for libraries.
 
-if test "$use_readline" = yes || test "$use_editline" = yes
-then
-	AC_CHECK_LIB(terminfo, main)
-	AC_CHECK_LIB(termcap, main)
-	if test "$use_readline" = yes
-	then
-		AC_CHECK_LIB(readline, readline)
-	elif test "$use_editline" = yes
-	then
-		AC_CHECK_LIB(edit, readline)
-	fi
-
-fi
-
+case "$lineeditor" in
+	readline)
+		AC_CHECK_LIB(terminfo, main)
+		AC_CHECK_LIB(termcap, main)
+		AC_CHECK_LIB(readline, readline, [AC_DEFINE(HAVE_READLINE)])
+		;;
+	libedit)
+		AC_CHECK_LIB(terminfo, main)
+		AC_CHECK_LIB(termcap, main)
+		AC_CHECK_LIB(edit, readline, [AC_DEFINE(HAVE_LIBEDIT)])
+		;;
+	*)
+		;;
+esac
 
 dnl Checks for header files.
 AC_CHECK_INCLUDES_DEFAULT
