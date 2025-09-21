@@ -10,9 +10,13 @@
 			))
 
 #define LIBNAME(name) char dynlibname[] = STRING(name)
+#define LIBRARY_NAME &dynlibname[0]
 #define DYNPRIMS() Primitive dynprims[]
-#define DX(name) {STRING(name), CONCAT(&prim_,name)}
 #define DYNPRIMSLEN() size_t dynprimslen = (sizeof(dynprims)/sizeof(Primitive))
+#define MODULE(name) char dynlibname[] = STRING(name); Primitive dynprims[]
+#define MODULELEN() size_t dynprimslen = (sizeof(dynprims)/sizeof(Primitive))
+
+#define DX(name) {STRING(name), CONCAT(&prim_,name)}
 
 enum {
 	DeNotLoaded = 1,
