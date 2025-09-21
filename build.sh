@@ -26,6 +26,5 @@ case "$PLATFORM" in
 		;;
 esac
 
-make es
-make modules
+make all
 

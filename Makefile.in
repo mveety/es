@@ -32,9 +32,8 @@
 .include "vars.mk"
 
 CFILES = @CFILEOPTS@
-
 OFILES = @OFILEOPTS@
-
+MODOFILES = @MODOFILES@
 MODULES = @MODULES@
 
 es	: ${OFILES} system.o

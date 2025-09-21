@@ -28,10 +28,10 @@ MODOFILES=''
 development='false'
 
 AC_ARG_WITH(readline,
-[  --with-readline	Use GNU Readline])
+[  --with-readline	Use GNU Readline (default)],[readline="$withval"],[readline=yes])
 
 dnl AC_ARG_WITH(libedit,
-dnl [  --with-libedit	Use libedit])
+dnl [  --with-libedit	Use libedit],[libedit="$withval"],[libedit=no])
 
 AC_ARG_ENABLE(loginshell,
 [  --enable-loginshell	Only load esrc if a login shell],
@@ -63,11 +63,11 @@ AC_ARG_ENABLE(development,
 
 if test "$readline" = "yes"; then
 	lineeditor=readline
-fi
-
-if test "$libedit" = "yes"; then
+elif test "$libedit" = "yes"; then
 	lineeditor=lineedit
-fi
+else
+	lineeditor=none
+fi 
 
 AC_SUBST(ENABLE_LOGINSHELL)
 AC_SUBST(DEVFD_IMPL)
@@ -193,12 +193,18 @@ case "$lineeditor" in
 	readline)
 		AC_CHECK_LIB(terminfo, main)
 		AC_CHECK_LIB(termcap, main)
-		AC_CHECK_LIB(readline, readline, [AC_DEFINE(HAVE_READLINE)])
+		AC_CHECK_LIB(readline, readline, [
+			AC_DEFINE(HAVE_READLINE)
+			LIBS="$LIBS -lreadline"
+		])
 		;;
 	libedit)
 		AC_CHECK_LIB(terminfo, main)
 		AC_CHECK_LIB(termcap, main)
-		AC_CHECK_LIB(edit, readline, [AC_DEFINE(HAVE_LIBEDIT)])
+		AC_CHECK_LIB(edit, readline, [
+			AC_DEFINE(HAVE_LIBEDIT)
+			LIBS="$LIBS -ledit"
+		])
 		;;
 	*)
 		;;
@@ -246,14 +252,14 @@ PKG_CHECK_MODULES([PCRE2], [libpcre2-posix libpcre2-8],
 	[AC_DEFINE([HAVE_PCRE2], [1], [Is pcre2 available])],
 	[AC_MSG_ERROR([PCRE2 is required])])
 
-dnl if test "$DYNLIBS" = "true"
-dnl then
-dnl 	PKG_CHECK_MODULES([CJSON], [libcjson],
-dnl 		[
-dnl 		 MODOFILES="$MODOFILES \$(MODJSON_OFILES)"
-dnl 		 MODULES="$MODULES \$(MODJSON)"
-dnl 		],[])
-dnl fi
+if test "$DYNLIBS" = "true"
+then
+	PKG_CHECK_MODULES([CJSON], [libcjson],
+		[
+		 MODOFILES="$MODOFILES \$(MODJSON_OFILES)"
+dnl		 MODULES="$MODULES \$(MODJSON)"
+		],[])
+fi
 
 if test "$sys_wait_w_forms" = "yes"
 then
