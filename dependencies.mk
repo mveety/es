@@ -44,6 +44,7 @@ var.o : var.c $(ESHFILES) gc.h
 vec.o : vec.c $(ESHFILES) gc.h
 version.o : version.c $(ESHFILES)
 dynlib.o : dynlib.c $(ESHFILES) prim.h gc.h
+objects.o : objects.c $(ESHFILES) prim.h gc.h
 # modules
 mod_hello.o : mod_hello.c $(ESHFILES) prim.h gc.h
 mod_hello.so : mod_hello.o

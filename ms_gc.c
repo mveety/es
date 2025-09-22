@@ -476,7 +476,7 @@ allocate2(size_t sz)
 			new->size = realsize;
 			break;
 		}
-	}
+}
 
 	if(fl == nil)
 		return nil;
@@ -867,11 +867,13 @@ ms_gc(Boolean full, Boolean inalloc)
 		return;
 	}
 
+	derefallobjects();
 	gc_markrootlist(rootlist);
 	gc_markrootlist(globalrootlist);
 	gc_markrootlist(exceptionrootlist);
 
 	gcsweep();
+	dealloc_unrefed_objects();
 
 	if(nsortgc > gc_sort_after_n){
 		freelist = sort_list(freelist, nfrees);

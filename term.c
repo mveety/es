@@ -7,20 +7,24 @@
 DefineTag(Term, static);
 
 Term *
-mkterm1(char *str, Closure *closure, Dict *dict)
+mkterm1(char *str, Closure *closure, Dict *dict, Object *obj)
 {
 	Term *term = nil; Root r_term;
 
-	assert(str != nil || closure != nil || dict != nil);
+	assert(str != nil || closure != nil || dict != nil || obj != nil);
 	gcdisable();
 	term = gcnew(Term);
 	gcref(&r_term, (void **)&term);
 	if(str != nil)
-		*term = (Term){tkString, ttNone, str, nil, nil};
+		*term = (Term){tkString, ttNone, str, nil, nil, nil};
 	else if(closure != nil)
-		*term = (Term){tkClosure, ttNone, nil, closure, nil};
+		*term = (Term){tkClosure, ttNone, nil, closure, nil, nil};
 	else if(dict != nil)
-		*term = (Term){tkDict, ttNone, nil, nil, dict};
+		*term = (Term){tkDict, ttNone, nil, nil, dict, nil};
+	else if(obj != nil)
+		*term = (Term){tkObject, ttNone, nil, nil, nil, obj};
+	else
+		unreachable();
 	gcenable();
 	gcderef(&r_term, (void **)&term);
 	return term;
@@ -29,7 +33,7 @@ mkterm1(char *str, Closure *closure, Dict *dict)
 Term *
 mkterm(char *str, Closure *closure)
 {
-	return mkterm1(str, closure, nil);
+	return mkterm1(str, closure, nil, nil);
 }
 
 Term *
@@ -46,11 +50,18 @@ mkstr(char *str)
 }
 
 Term *
+mkobject(Object *obj)
+{
+	refobject(obj);
+	return mkterm1(nil, nil, nil, obj);
+}
+
+Term *
 mkdictterm(Dict *d)
 {
 	if(!d)
-		return mkterm1(nil, nil, mkdict());
-	return mkterm1(nil, nil, d);
+		return mkterm1(nil, nil, mkdict(), nil);
+	return mkterm1(nil, nil, d, nil);
 }
 
 int
@@ -190,6 +201,8 @@ getstr(Term *term)
 		gcrderef(&r_tp);
 		gcrderef(&r_args_result);
 		return res;
+	case tkObject:
+		return str("%%obj:%s(%d)", gettypename(term->obj->type), term->obj->id);
 	}
 	unreachable();
 	return nil;
@@ -235,8 +248,28 @@ done:
 		return dict;
 	case tkClosure:
 	case tkRegex:
+	case tkObject:
 		return nil;
 	}
+	return nil;
+}
+
+Object *
+getobject(Term *term)
+{
+	if(!term)
+		return nil;
+	switch(term->kind) {
+	default:
+		unreachable();
+	case tkObject:
+		return term->obj;
+	case tkString:
+	case tkClosure:
+	case tkRegex:
+		return nil;
+	}
+	unreachable();
 	return nil;
 }
 
@@ -285,6 +318,8 @@ TermScan(void *p)
 	term->closure = forward(term->closure);
 	term->str = forward(term->str);
 	term->dict = forward(term->dict);
+	if(term->obj && term->obj->sysflags & ObjectGcManaged)
+		refobject(term->obj);
 	return sizeof(Term);
 }
 
@@ -298,6 +333,8 @@ TermMark(void *p)
 	gcmark(t->closure);
 	gcmark(t->str);
 	gcmark(t->dict);
+	if(t->obj && t->obj->sysflags & ObjectGcManaged)
+		refobject(t->obj);
 }
 
 extern Boolean

@@ -429,6 +429,7 @@ old_gc(void)
 	size_t livedata;
 	Space *space;
 	size_t olddata;
+	Boolean objects_derefed = FALSE;
 
 	old_nallocs = 0;
 	do {
@@ -457,6 +458,10 @@ old_gc(void)
 #endif
 		VERBOSE(("\nGC collection starting\n"));
 		/* gc_markrootlist(rootlist); */
+		if(!objects_derefed){
+			derefallobjects();
+			objects_derefed = TRUE;
+		}
 		if(gcverbose == TRUE) {
 			for(space = old; space != NULL; space = space->next)
 				VERBOSE(("GC old space = %ux ... %ux\n", space->bot, space->current));
@@ -488,6 +493,7 @@ old_gc(void)
 
 		--gcblocked;
 	} while(new != nil && new->next != nil);
+	dealloc_unrefed_objects();
 	old_allocations = 0;
 	old_ngcs++;
 }

@@ -2,7 +2,6 @@
 #include "prim.h"
 #include "gc.h"
 #include <dlfcn.h>
-#include <setjmp.h>
 #include <stdio.h>
 
 typedef union {

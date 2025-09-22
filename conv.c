@@ -41,6 +41,7 @@ Vconv(Format *f)
 			break;
 		case tkClosure:
 		case tkDict:
+		case tkObject:
 			fmtprint(f, "%s", getstr(lp->term));
 			break;
 		}
@@ -59,6 +60,7 @@ Vconv(Format *f)
 			break;
 		case tkClosure:
 		case tkDict:
+		case tkObject:
 			fmtprint(f, "%s%s", getstr(lp->term), next == NULL ? "" : sep);
 			break;
 		}

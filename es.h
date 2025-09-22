@@ -28,12 +28,14 @@ typedef struct Var Var;
 typedef struct RegexStatus RegexStatus;
 typedef struct AppendContext AppendContext;
 typedef struct Root Root;
+typedef struct Object Object;
 
 typedef enum {
 	tkString,
 	tkClosure,
 	tkDict,
 	tkRegex,
+	tkObject,
 } TermKind;
 
 typedef enum {
@@ -54,6 +56,7 @@ struct Term {
 	char *str;
 	Closure *closure;
 	Dict *dict;
+	Object *obj;
 };
 
 struct List {
@@ -159,6 +162,24 @@ struct RegexStatus {
 	size_t errstrsz;
 };
 
+/* objects */
+
+enum {
+	ObjectFreeWhenNoRefs = 1 << 0,
+	ObjectGcManaged = 1 << 1,
+	ObjectInitialized = 1 << 2,
+};
+
+struct Object {
+	int32_t type;		/* index of typedef */
+	int32_t id;	/* index in object array */
+	uint16_t sysflags;	/* system flags if needed */
+	uint16_t flags; /* user flags if needed */
+	size_t size;		/* object payload size */
+	int64_t refcount;
+	void *data;
+};
+
 /*
  * our programming environment
  */
@@ -198,11 +219,13 @@ extern void undefer(int ticket);
 
 extern Term *mkterm(char *str, Closure *closure);
 extern Term *mkstr(char *str);
+extern Term *mkobject(Object *obj);
 extern Term *mkdictterm(Dict *d);
 extern char *getregex(Term *term);
 extern char *getstr(Term *term);
 extern Closure *getclosure(Term *term);
 extern Dict *getdict(Term *term);
+extern Object *getobject(Term *term);
 extern Term *termcat(Term *t1, Term *t2);
 extern Boolean termeq(Term *term, const char *s);
 extern Boolean isclosure(Term *term);
@@ -467,6 +490,29 @@ extern int eopen(char *name, OpenKind k);
 
 extern const char * const version;
 extern const char * const buildstring;
+
+/* objects.c */
+
+extern void init_typedefs(void);
+extern void init_objects(void);
+
+extern char *gettypename(int32_t index);
+extern int define_type(char *name, int (*deallocate)(void *));
+extern void undefine_type(char *name);
+extern Object *allocate_object(char *type, size_t size);
+extern void deallocate_object(Object *obj);
+extern void assert_type(Object *obj, char *name);
+extern int object_is_type(Object *obj, char *name);
+
+/* gc api */
+extern void refobject(Object *obj);
+extern void derefobject(Object *obj);
+extern void gcmanageobj(Object *obj);
+extern void gcunmanageobj(Object *obj);
+extern int64_t object_refs(Object *obj);
+extern void derefallobjects(void);
+extern void dealloc_unrefed_objects(void);
+
 
 /* gc.c, ms_gc.c, gc_common.c -- see gc.h for more */
 

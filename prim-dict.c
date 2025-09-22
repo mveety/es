@@ -2,18 +2,18 @@
 #include "prim.h"
 
 PRIM(dictnew) {
-	return mklist(mkdictterm(NULL), NULL);
+	return mklist(mkdictterm(nil), nil);
 }
 
 PRIM(dictget) {
-	List *res = NULL; Root r_res;
-	Dict *d = NULL; Root r_d;
-	char *name = NULL; Root r_name;
+	List *res = nil; Root r_res;
+	Dict *d = nil; Root r_d;
+	char *name = nil; Root r_name;
 
 	if(!list || !list->next)
 		fail("$&dictget", "missing arguments");
 
-	res = NULL;
+	res = nil;
 	gcref(&r_res, (void **)&res);
 
 	d = getdict(list->term);
@@ -34,9 +34,9 @@ PRIM(dictget) {
 }
 
 PRIM(dictput) {
-	Dict *d = NULL; Root r_d;
-	char *name = NULL; Root r_name;
-	List *v = NULL; Root r_v;
+	Dict *d = nil; Root r_d;
+	char *name = nil; Root r_name;
+	List *v = nil; Root r_v;
 
 	if(!list || !list->next || !list->next->next)
 		fail("$&dictput", "missing arguments");
@@ -56,11 +56,11 @@ PRIM(dictput) {
 	gcrderef(&r_v);
 	gcrderef(&r_name);
 	gcrderef(&r_d);
-	return mklist(mkdictterm(d), NULL);
+	return mklist(mkdictterm(d), nil);
 }
 
 PRIM(dictremove) {
-	Dict *d = NULL; Root r_d;
+	Dict *d = nil; Root r_d;
 	char *name;
 
 	if(!list || !list->next)
@@ -73,10 +73,10 @@ PRIM(dictremove) {
 
 	name = getstr(list->next->term);
 
-	d = dictput(d, name, NULL);
+	d = dictput(d, name, nil);
 
 	gcrderef(&r_d);
-	return mklist(mkdictterm(d), NULL);
+	return mklist(mkdictterm(d), nil);
 }
 
 typedef struct {
@@ -89,9 +89,9 @@ void
 dicteval(void *vdfaargs, char *name, void *vdata)
 {
 	DictForAllArgs *dfaargs;
-	List *data = NULL; Root r_data;
-	List *res = NULL; Root r_res;
-	List *args = NULL; Root r_args;
+	List *data = nil; Root r_data;
+	List *res = nil; Root r_res;
+	List *args = nil; Root r_args;
 
 	gcref(&r_data, (void **)&data);
 	gcref(&r_args, (void **)&args);
@@ -127,9 +127,9 @@ dictsize(void *vsz, char *name, void *vdata)
 }
 
 PRIM(dictforall) {
-	DictForAllArgs args = {NULL, NULL, 0};
-	List *lp = NULL; Root r_lp;
-	Dict *d = NULL; Root r_dict;
+	DictForAllArgs args = {nil, nil, 0};
+	List *lp = nil; Root r_lp;
+	Dict *d = nil; Root r_dict;
 	Root r_function;
 	Root r_binding;
 
@@ -175,8 +175,8 @@ PRIM(dictforall) {
 }
 
 PRIM(dictsize) {
-	List *lp = NULL; Root r_lp;
-	Dict *d = NULL; Root r_d;
+	List *lp = nil; Root r_lp;
+	Dict *d = nil; Root r_d;
 	unsigned int sz = 0;
 
 	if(!list)
@@ -194,7 +194,7 @@ PRIM(dictsize) {
 	gcrderef(&r_d);
 	gcrderef(&r_lp);
 
-	return mklist(mkstr(str("%ud", sz)), NULL);
+	return mklist(mkstr(str("%ud", sz)), nil);
 }
 
 PRIM(termtypeof) {
@@ -207,26 +207,28 @@ PRIM(termtypeof) {
 		unreachable();
 		break;
 	case tkRegex:
-		return mklist(mkstr(str("regex")), NULL);
+		return mklist(mkstr(str("regex")), nil);
 	case tkString:
-		return mklist(mkstr(str("string")), NULL);
+		return mklist(mkstr(str("string")), nil);
 	case tkClosure:
-		return mklist(mkstr(str("closure")), NULL);
+		return mklist(mkstr(str("closure")), nil);
 	case tkDict:
-		return mklist(mkstr(str("dict")), NULL);
+		return mklist(mkstr(str("dict")), nil);
+	case tkObject:
+		return mklist(mkstr(str("object:%s", gettypename(list->term->obj->type))), nil);
 	}
 	unreachable();
 	return list_false;
 }
 
 PRIM(dictcopy) {
-	List *res = NULL; Root r_res;
-	Dict *d = NULL; Root r_d;
+	List *res = nil; Root r_res;
+	Dict *d = nil; Root r_d;
 
 	if(!list)
 		fail("$&dictcopy", "missing arguments");
 
-	res = NULL;
+	res = nil;
 	gcref(&r_res, (void **)&res);
 
 	d = getdict(list->term);
@@ -235,7 +237,7 @@ PRIM(dictcopy) {
 	gcref(&r_d, (void **)&d);
 
 	d = dictcopy(d);
-	res = mklist(mkdictterm(d), NULL);
+	res = mklist(mkdictterm(d), nil);
 
 	gcrderef(&r_d);
 	gcrderef(&r_res);

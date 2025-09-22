@@ -4,11 +4,11 @@
 
 // clang-format off
 static const Term
-	trueterm	= { tkString, ttNone, "0", NULL, NULL },
-	falseterm	= { tkString, ttNone, "1", NULL, NULL };
+	trueterm	= { tkString, ttNone, "0", nil, nil, nil },
+	falseterm	= { tkString, ttNone, "1", nil, nil, nil };
 static const List
-	truelist	= { (Term *) &trueterm, NULL },
-	falselist	= { (Term *) &falseterm, NULL };
+	truelist	= { (Term *) &trueterm, nil },
+	falselist	= { (Term *) &falseterm, nil };
 List
 	*list_true		= (List *) &truelist,
 	*list_false		= (List *) &falselist;
@@ -32,6 +32,7 @@ istrue(List *status)
 				return FALSE;
 		case tkDict:
 		case tkRegex:
+		case tkObject:
 			return FALSE;
 		case tkString:
 			if(termeq(status->term, "true"))

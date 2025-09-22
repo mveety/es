@@ -304,6 +304,8 @@ termtype(Term *term)
 		return "tkClosure";
 	case tkDict:
 		return "tkDict";
+	case tkObject:
+		return "tkObject";
 	default:
 		panic("invalid term kind: %d\n", term->kind);
 		break;
@@ -318,7 +320,7 @@ dumpterm(Term *term)
 		return "NULL";
 	name = str("&E_%ulx", term);
 	if(dictget(cvars, name) == NULL) {
-		print("static const Term %s = {%s, ttNone, (char *) %s, (Closure *) %s, (Dict*) NULL };\n", name + 1,
+		print("static const Term %s = {%s, ttNone, (char *) %s, (Closure *) %s, (Dict*) NULL, (Object*) NULL };\n", name + 1,
 			  termtype(term), dumpstring(term->str), dumpclosure(term->closure));
 		cvars = dictput(cvars, name, term);
 	}

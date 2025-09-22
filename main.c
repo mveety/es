@@ -34,6 +34,7 @@ extern Boolean regex_debug;
 extern Boolean dump_tok_status;
 extern Boolean verbose_rangematch;
 extern Boolean comprehensive_matches;
+extern Boolean object_debugging;
 #ifdef DYNAMIC_LIBRARIES
 extern Boolean dynlib_verbose;
 #endif
@@ -161,9 +162,9 @@ void
 debug_flag_usage(void)
 { /* this is a mess */
 #ifdef DYNAMIC_LIBRARIES
-	dprintf(2, "debug flags: es -D [GIaEPRAMrhHCm]\n%s",
+	dprintf(2, "debug flags: es -D [GIaEPRAMrhHCmo]\n%s",
 #else
-	dprintf(2, "debug flags: es -D [GIaEPRAMrhHC]\n%s",
+	dprintf(2, "debug flags: es -D [GIaEPRAMrhHCo]\n%s",
 #endif
 			"	? -- show this message\n"
 			"	G -- gcverbose\n"
@@ -182,6 +183,7 @@ debug_flag_usage(void)
 #ifdef DYNAMIC_LIBRARIES
 			"	m -- dynlib_verbose\n"
 #endif
+			"	o -- object_debugging\n"
 	);
 	exit(1);
 }
@@ -368,6 +370,9 @@ main(int argc, char *argv[])
 					dynlib_verbose = TRUE;
 					break;
 #endif
+				case 'o':
+					object_debugging = TRUE;
+					break;
 				case '?':
 					debug_flag_usage();
 					break;
@@ -489,6 +494,8 @@ getopt_done:
 	{
 		roothandler = &_localhandler; /* unhygeinic */
 
+		init_typedefs();
+		init_objects();
 		initinput();
 		initprims();
 		initvars();
