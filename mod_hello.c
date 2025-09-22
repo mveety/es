@@ -17,7 +17,7 @@ int
 dyn_onload(void)
 {
 	dprintf(2, "mod_hello's dyn_onload was called!\n");
-	if(define_type("hellotype", &hello_deallocate) < 0){
+	if(define_type("hellotype", &hello_deallocate) < 0) {
 		dprintf(2, "unable to define hellotype!\n");
 		return -1;
 	}
@@ -63,7 +63,7 @@ PRIM(object_gcmanage) {
 	if(list->term->kind != tkObject)
 		fail("$&object_gcmanage", "argument must be an object");
 
-	gcref(&r_result, (void**)&result);
+	gcref(&r_result, (void **)&result);
 	obj = getobject(list->term);
 	refobject(obj);
 	obj->sysflags |= ObjectGcManaged;
@@ -82,7 +82,7 @@ PRIM(object_freeable) {
 	if(list->term->kind != tkObject)
 		fail("$&object_freeable", "argument must be an object");
 
-	gcref(&r_result, (void**)&result);
+	gcref(&r_result, (void **)&result);
 	obj = getobject(list->term);
 	obj->sysflags |= ObjectFreeWhenNoRefs;
 	result = mklist(mkobject(obj), nil);
@@ -90,11 +90,30 @@ PRIM(object_freeable) {
 	return result;
 }
 
+PRIM(object_initialize) {
+	Object *obj;
+	List *result = nil; Root r_result;
+
+	if(list == nil)
+		fail("$&object_gcmanage", "missing argument");
+	if(list->term->kind != tkObject)
+		fail("$&object_gcmanage", "argument must be an object");
+
+	gcref(&r_result, (void **)&result);
+	obj = getobject(list->term);
+	refobject(obj);
+	obj->sysflags |= ObjectInitialized;
+	result = mklist(mkobject(obj), nil);
+	gcrderef(&r_result);
+	derefobject(obj);
+	return result;
+}
 
 DYNPRIMS() = {
 	{"hellotest", &hellotest},
 	DX(make_helloobject),
 	DX(object_gcmanage),
 	DX(object_freeable),
+	DX(object_initialize),
 	PRIMSEND,
 };

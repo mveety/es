@@ -299,9 +299,9 @@ PRIM(objects_dumptypes) {
 	List *result = nil; Root r_result;
 	size_t i = 0;
 
-	gcref(&r_result, (void**)&result);
+	gcref(&r_result, (void **)&result);
 
-	for(i = 0; i < typessz; i++){
+	for(i = 0; i < typessz; i++) {
 		if(typedefs[i] == nil)
 			continue;
 		result = mklist(mkstr(str("type %d: %s", (int32_t)i, typedefs[i]->name)), result);
@@ -316,21 +316,20 @@ PRIM(printobjects) {
 	size_t i;
 	char *typename = nil;
 
-	for(i = 0; i < objectssz; i++){
+	for(i = 0; i < objectssz; i++) {
 		if(objects[i] == nil)
 			continue;
 		typename = gettypename(objects[i]->type);
-		dprintf(2, "object %lu: type=%s(%d), id=%d, sysflags=%x, size=%lu, refs=%lu\n",
-				i, typename, objects[i]->type, objects[i]->id, objects[i]->sysflags, 
-				objects[i]->size, objects[i]->refcount);
+		dprintf(2, "object %lu: type=%s(%d), id=%d, sysflags=%x, size=%lu, refs=%lu\n", i, typename,
+				objects[i]->type, objects[i]->id, objects[i]->sysflags, objects[i]->size,
+				objects[i]->refcount);
 		typename = nil;
 	}
 
 	return nil;
 }
 
-
-Dict*
+Dict *
 initprims_objects(Dict *primdict)
 {
 	X(objects_dumptypes);
@@ -338,4 +337,3 @@ initprims_objects(Dict *primdict)
 
 	return primdict;
 }
-
