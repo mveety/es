@@ -8,6 +8,7 @@
 typedef struct {
 	char *name;
 	int (*deallocate)(Object *); /* called before an object is freed */
+	int (*refdeps)(Object *);
 } Typedef;
 
 size_t typessz = 0;
@@ -95,7 +96,7 @@ gettypename(int32_t index)
 }
 
 int32_t
-define_type(char *name, int (*deallocate)(Object*))
+define_type(char *name, int (*deallocate)(Object*), int (*refdeps)(Object*))
 {
 	Typedef *newtype;
 	int32_t typen;
@@ -108,6 +109,7 @@ define_type(char *name, int (*deallocate)(Object*))
 
 	newtype->name = strdup(name);
 	newtype->deallocate = deallocate;
+	newtype->refdeps = refdeps;
 
 	for(i = 0; i < (int32_t)typessz; i++)
 		if(typedefs[i] == nil) {
@@ -190,7 +192,8 @@ deallocate_object(Object *obj)
 	objtype = typedefs[obj->type];
 
 	if(objtype->deallocate && obj->sysflags & ObjectInitialized)
-		objtype->deallocate(obj);
+		if(objtype->deallocate(obj) != 0)
+			return;
 	objects[obj->id] = nil;
 	free(obj);
 }
@@ -224,8 +227,13 @@ object_is_type(Object *obj, char *name)
 void
 refobject(Object *obj)
 {
+	Typedef *objtype;
+
 	assert(obj);
 	obj->refcount++;
+	objtype = typedefs[obj->type];
+	if(objtype->refdeps)
+		objtype->refdeps(obj);
 }
 
 void

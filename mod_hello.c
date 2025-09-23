@@ -17,7 +17,7 @@ int
 dyn_onload(void)
 {
 	dprintf(2, "mod_hello's dyn_onload was called!\n");
-	if(define_type("hellotype", &hello_deallocate) < 0) {
+	if(define_type("hellotype", &hello_deallocate, nil) < 0) {
 		dprintf(2, "unable to define hellotype!\n");
 		return -1;
 	}
