@@ -5,9 +5,9 @@
 LIBRARY(mod_hello);
 
 int
-hello_deallocate(void *unused)
+hello_deallocate(Object *object)
 {
-	used(unused);
+	used(object);
 
 	dprintf(2, "hellotype's deallocate was called!\n");
 	return 0;

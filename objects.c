@@ -7,7 +7,7 @@
 
 typedef struct {
 	char *name;
-	int (*deallocate)(void *); /* called before an object is freed */
+	int (*deallocate)(Object *); /* called before an object is freed */
 } Typedef;
 
 size_t typessz = 0;
@@ -95,7 +95,7 @@ gettypename(int32_t index)
 }
 
 int32_t
-define_type(char *name, int (*deallocate)(void *))
+define_type(char *name, int (*deallocate)(Object*))
 {
 	Typedef *newtype;
 	int32_t typen;
@@ -191,7 +191,7 @@ deallocate_object(Object *obj)
 	objtype = typedefs[obj->type];
 
 	if(objtype->deallocate && obj->sysflags & ObjectInitialized)
-		objtype->deallocate(obj->data);
+		objtype->deallocate(obj);
 	objects[obj->id] = nil;
 	free(obj);
 }

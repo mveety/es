@@ -257,7 +257,7 @@ then
 	PKG_CHECK_MODULES([CJSON], [libcjson libcjson_utils],
 		[
 		 MODOFILES="$MODOFILES \$(MODJSON_OFILES)"
-dnl		 MODULES="$MODULES \$(MODJSON)"
+		 MODULES="$MODULES \$(MODJSON)"
 		],[])
 fi
 
