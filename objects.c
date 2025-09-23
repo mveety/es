@@ -87,9 +87,9 @@ char *
 gettypename(int32_t index)
 {
 	if(index >= (int32_t)typessz)
-		return nil;
+		unreachable();
 	if(typedefs[index] == nil)
-		return nil;
+		unreachable();
 
 	return typedefs[index]->name;
 }
@@ -123,7 +123,7 @@ define_type(char *name, int (*deallocate)(Object*))
 			return i;
 		}
 
-	return -1;
+	unreachable();
 }
 
 void
@@ -151,7 +151,7 @@ allocate_object(char *type, size_t size)
 	int32_t i;
 
 	if((typeidx = gettypeindex(type)) < 0)
-		return nil;
+		unreachable();
 
 	newobject = ealloc(sizeof(Object) + size);
 	newobject->type = typeidx;
@@ -174,8 +174,7 @@ allocate_object(char *type, size_t size)
 			return newobject;
 		}
 
-	free(newobject);
-	return nil;
+	unreachable();
 }
 
 void
