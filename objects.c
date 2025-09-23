@@ -57,7 +57,7 @@ grow_objects(void)
 	size_t newsize = 0;
 	Object **oldobjects = nil;
 
-	assert(typedefs);
+	assert(objects);
 
 	newsize = objectssz * 2;
 	oldobjects = objects;
