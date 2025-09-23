@@ -217,6 +217,55 @@ typename2int(char *typename)
 	unreachable();
 }
 
+char*
+int2typename(int type)
+{
+	switch(type){
+	default:
+		unreachable();
+		break;
+	case JTString:
+		return "string";
+	case JTNumber:
+		return "number";
+	case JTObject:
+		return "object";
+	case JTArray:
+		return "array";
+	case JTBoolean:
+		return "boolean";
+	case JTNull:
+		return "null";
+	}
+	unreachable();
+	return 0;
+}
+
+Object*
+get_json_object(Object *obj, char *key, int index)
+{
+	Object *child;
+	cJSON *json_object;
+
+	if(cJSON_IsObject(json(obj)->data)){
+		json_object = cJSON_GetObjectItemCaseSensitive(json(obj)->data, key);
+		if(!json_object)
+			return nil;
+	} else if(cJSON_IsArray(json(obj)->data)){
+		json_object = cJSON_GetArrayItem(json(obj)->data, index);
+		if(!json_object)
+			return nil;
+	} else {
+		unreachable();
+	}
+	child = create_json_data();
+	json(child)->data = json_object;
+	child->sysflags |= ObjectInitialized;
+	child->flags |= JsonChild;
+	json(child)->parent = obj;
+	return child;
+}
+
 int
 dyn_onload(void)
 {
@@ -440,6 +489,32 @@ fail:
 	return res;
 }
 
+PRIM(json_gettype){
+	List *lp = nil; Root r_lp;
+	List *res = nil; Root r_res;
+	int type;
+	Object *obj;
+
+	if(list == nil)
+		fail("$&json_gettype", "missing argument");
+	if(!is_json_object(list->term))
+		fail("$&json_gettype", "argument needs to be a json object");
+
+	gcref(&r_lp, (void **)&lp);
+	gcref(&r_res, (void **)&res);
+
+	obj = getobject(list->term);
+	type = get_json_object_type(obj);
+
+	if(type == JTArray)
+		res = mklist(mkstr(str("%d", cJSON_GetArraySize(json(obj)->data))), nil);
+	res = mklist(mkstr(str("%s", int2typename(type))), res);
+
+	gcrderef(&r_res);
+	gcrderef(&r_lp);
+	return res;
+}
+
 DYNPRIMS() = {
 	DX(json_dumpobject),
 	DX(json_decode),
@@ -447,6 +522,7 @@ DYNPRIMS() = {
 	DX(json_encode_formatted),
 	DX(json_create),
 	DX(json_addto),
+	DX(json_gettype),
 
 	PRIMSEND,
 };
