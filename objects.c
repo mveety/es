@@ -28,16 +28,16 @@ init_typedefs(void)
 void
 grow_typedefs(void)
 {
-	size_t newsize;
-	Typedef **newtypedefs;
+	size_t newsize = 0;
+	Typedef **oldtypedefs = nil;
 
 	assert(typedefs);
 
 	newsize = typessz * 2;
-	newtypedefs = ealloc(sizeof(Typedef *) * newsize);
-	memcpy(newtypedefs, typedefs, typessz);
-	free(typedefs);
-	typedefs = newtypedefs;
+	oldtypedefs = typedefs;
+	typedefs = ealloc(sizeof(Typedef *) * newsize);
+	memcpy(typedefs, oldtypedefs, typessz*sizeof(Typedef*));
+	free(oldtypedefs);
 	typessz = newsize;
 }
 
@@ -48,22 +48,22 @@ init_objects(void)
 	assert(objects == nil);
 
 	objectssz = 4;
-	objects = ealloc(sizeof(Object *) * typessz);
+	objects = ealloc(sizeof(Object *) * objectssz);
 }
 
 void
 grow_objects(void)
 {
-	size_t newsize;
-	Object **newobjects;
+	size_t newsize = 0;
+	Object **oldobjects = nil;
 
 	assert(typedefs);
 
 	newsize = objectssz * 2;
-	newobjects = ealloc(sizeof(Object *) * newsize);
-	memcpy(newobjects, objects, objectssz);
-	free(objects);
-	objects = newobjects;
+	oldobjects = objects;
+	objects = ealloc(sizeof(Object *) * newsize);
+	memcpy(objects, oldobjects, objectssz*sizeof(Object*));
+	free(oldobjects);
 	objectssz = newsize;
 }
 
@@ -329,11 +329,39 @@ PRIM(printobjects) {
 	return nil;
 }
 
+PRIM(printobjectstats) {
+	size_t nobjs = 0;
+	size_t nobjssz = 0;
+	size_t nobjssz_total = 0;
+	size_t ntypes = 0;
+	size_t i;
+
+	for(i = 0; i < typessz; i++){
+		if(typedefs[i])
+			ntypes++;
+	}
+
+	for(i = 0; i < objectssz; i++){
+		if(objects[i]){
+			nobjs++;
+			nobjssz += objects[i]->size;
+		}
+	}
+	nobjssz_total = nobjssz + (nobjs*sizeof(Object));
+
+	dprintf(2, "%lu objects in %lu slots using %lu bytes (%lu total)\n",
+			nobjs, objectssz, nobjssz, nobjssz_total);
+	dprintf(2, "%lu types in %lu slots\n", ntypes, typessz);
+
+	return nil;
+}
+
 Dict *
 initprims_objects(Dict *primdict)
 {
 	X(objects_dumptypes);
 	X(printobjects);
+	X(printobjectstats);
 
 	return primdict;
 }
