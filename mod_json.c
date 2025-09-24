@@ -1,6 +1,7 @@
 #include "es.h"
 #include "prim.h"
 #include "stdenv.h"
+#include "float_util.h"
 #include <cjson/cJSON.h>
 #include <cjson/cJSON_Utils.h>
 LIBRARY(mod_json);
@@ -8,6 +9,7 @@ LIBRARY(mod_json);
 enum {
 	JsonChild = 1 << 0,
 
+	JTBadType = -1,
 	JTString = 1,
 	JTNumber = 2,
 	JTObject = 3,
@@ -20,65 +22,6 @@ typedef struct {
 	Object *parent;
 	cJSON *data;
 } json_data;
-
-double
-termtof(Term *term, char *funname, int arg)
-{
-	char *str = nil;
-	char *endptr = nil;
-	double res;
-
-	errno = 0;
-
-	str = getstr(term);
-	res = strtod(str, &endptr);
-	if(res == 0 && str == endptr)
-		fail(funname, "invalid input: $%d = %s", arg, str);
-	if(res == 0 && errno == ERANGE)
-		fail(funname, "conversion overflow: $%d = %s", arg, str);
-
-	return res;
-}
-
-int64_t
-termtoint(Term *term, char *funname, int arg)
-{
-	int64_t res;
-
-	errno = 0;
-	res = strtoll(getstr(term), NULL, 10);
-	if(res == 0) {
-		switch(errno) {
-		case EINVAL:
-			fail(funname, str("invalid input: $%d = '%s'", arg, getstr(term)));
-			break;
-		case ERANGE:
-			fail(funname, str("conversion overflow: $%d = '%s'", arg, getstr(term)));
-			break;
-		}
-	}
-
-	return res;
-}
-
-List *
-floattolist(double num, char *funname)
-{
-	char temp[256];
-	int printlen;
-	List *result = nil; Root r_result;
-
-	gcref(&r_result, (void **)&result);
-
-	printlen = snprintf(&temp[0], sizeof(temp), "%g", num);
-	if(printlen >= (int)sizeof(temp))
-		fail(funname, "result conversion failed (temp string too short)");
-	result = mklist(mkstr(str("%s", temp)), nil);
-
-	gcrderef(&r_result);
-
-	return result;
-}
 
 json_data *
 json(Object *obj)
@@ -254,7 +197,7 @@ typename2int(char *typename)
 		return JTBoolean;
 	if(streq(typename, "null"))
 		return JTNull;
-	unreachable();
+	return JTBadType;
 }
 
 char *
@@ -452,6 +395,8 @@ PRIM(json_create) {
 	default:
 		unreachable();
 		break;
+	case JTBadType:
+		fail("$&json_create", "invalid type: %s", getstr(lp->term));
 	case JTString:
 		if(lp->next == nil)
 			fail("$&json_create", "missing data");

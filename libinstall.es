@@ -8,9 +8,12 @@ if {~ $*(1) -d} {
 
 assert {gte $#* 1}
 
+libmask = (json.es)
+
 need_dynlibs = %dict(
 	float.es => mod_float
 	math.es => mod_math
+	json.es => mod_json
 )
 
 libsrc = <={if {~ $#* 1} {
@@ -147,6 +150,10 @@ for (i = $libs) {
 			t = <={access -n $i -1 -w $libdir}
 			srcfile = $libsrc/^$i
 	) {
+		if {~ $i $libmask} {
+			echo $i^' is masked. skipping.'
+			continue
+		}
 		if {~ $#t 0 } {
 			if {copy_dynlib $i $libdir} {
 				echo 'installing '^$i^' -> '^$libdir^'/'^$i

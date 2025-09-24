@@ -48,13 +48,15 @@ objects.o : objects.c $(ESHFILES) prim.h gc.h
 # modules
 mod_hello.o : mod_hello.c $(ESHFILES) prim.h gc.h
 mod_hello.so : mod_hello.o
-mod_float.o : mod_float.c $(ESHFILES) prim.h gc.h
+mod_objutil.o : mod_objutil.c $(ESHFILES) prim.h gc.h
+mod_objutil.so : mod_objutil.o
+mod_float.o : mod_float.c $(ESHFILES) prim.h gc.h float_util.h
 mod_float.so : mod_float.o float_util.o
 mod_math.o : mod_math.c $(ESHFILES) prim.h gc.h
 mod_math.so : MODLIBS=-lm
 mod_math.so : mod_math.o
 mod_json.o : MODCFLAGS=$(MODJSON_CFLAGS)
-mod_json.o : mod_json.c $(ESHFILES) prim.h gc.h
+mod_json.o : mod_json.c $(ESHFILES) prim.h gc.h float_util.h
 mod_json.so : MODLIBS=$(MODJSON_LIBS)
-mod_json.so : mod_json.o
+mod_json.so : mod_json.o float_util.o
 

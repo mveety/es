@@ -27,8 +27,8 @@ MAINOFILES	= access.o closure.o conv.o dict.o eval.o except.o fd.o gc.o \
 
 DYNOFILES = dynlib.o
 
-MODBASE_OFILES = mod_hello.o float_util.o mod_float.o mod_math.o
-BASE_MODULES = mod_hello.so mod_float.so mod_math.so
+MODBASE_OFILES = mod_hello.o float_util.o mod_float.o mod_math.o mod_objutil.o
+BASE_MODULES = mod_hello.so mod_float.so mod_math.so mod_objutil.so
 
 MODJSON_OFILES = mod_json.o
 MODJSON = mod_json.so

@@ -39,7 +39,7 @@ floattolist(double num, char *funname)
 
 	gcref(&r_result, (void **)&result);
 
-	printlen = snprintf(&temp[0], sizeof(temp), "%g", num);
+	printlen = snprintf(&temp[0], sizeof(temp), "%.8g", num);
 	if(printlen >= (int)sizeof(temp))
 		fail(funname, "result conversion failed (temp string too short)");
 	result = mklist(mkstr(str("%s", temp)), nil);
