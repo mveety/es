@@ -40,6 +40,46 @@ termtof(Term *term, char *funname, int arg)
 	return res;
 }
 
+int64_t
+termtoint(Term *term, char *funname, int arg)
+{
+	int64_t res;
+
+	errno = 0;
+	res = strtoll(getstr(term), NULL, 10);
+	if(res == 0) {
+		switch(errno) {
+		case EINVAL:
+			fail(funname, str("invalid input: $%d = '%s'", arg, getstr(term)));
+			break;
+		case ERANGE:
+			fail(funname, str("conversion overflow: $%d = '%s'", arg, getstr(term)));
+			break;
+		}
+	}
+
+	return res;
+}
+
+List *
+floattolist(double num, char *funname)
+{
+	char temp[256];
+	int printlen;
+	List *result = nil; Root r_result;
+
+	gcref(&r_result, (void **)&result);
+
+	printlen = snprintf(&temp[0], sizeof(temp), "%g", num);
+	if(printlen >= (int)sizeof(temp))
+		fail(funname, "result conversion failed (temp string too short)");
+	result = mklist(mkstr(str("%s", temp)), nil);
+
+	gcrderef(&r_result);
+
+	return result;
+}
+
 json_data *
 json(Object *obj)
 {
@@ -217,10 +257,10 @@ typename2int(char *typename)
 	unreachable();
 }
 
-char*
+char *
 int2typename(int type)
 {
-	switch(type){
+	switch(type) {
 	default:
 		unreachable();
 		break;
@@ -241,17 +281,17 @@ int2typename(int type)
 	return 0;
 }
 
-Object*
+Object *
 get_json_object(Object *obj, char *key, int index)
 {
 	Object *child;
 	cJSON *json_object;
 
-	if(cJSON_IsObject(json(obj)->data)){
+	if(cJSON_IsObject(json(obj)->data)) {
 		json_object = cJSON_GetObjectItemCaseSensitive(json(obj)->data, key);
 		if(!json_object)
 			return nil;
-	} else if(cJSON_IsArray(json(obj)->data)){
+	} else if(cJSON_IsArray(json(obj)->data)) {
 		json_object = cJSON_GetArrayItem(json(obj)->data, index);
 		if(!json_object)
 			return nil;
@@ -515,6 +555,109 @@ PRIM(json_gettype){
 	return res;
 }
 
+PRIM(json_getobject){
+	List *lp = nil; Root r_lp;
+	List *res = nil; Root r_res;
+	Object *parent;
+	Object *child;
+	int type = 0;
+	int index = 0;
+
+	if(list == nil)
+		fail("$&json_getdata", "missing argument");
+	if(!is_json_object(list->term))
+		fail("$&json_getdata", "argument needs to be a json object");
+
+	gcref(&r_lp, (void **)&lp);
+	gcref(&r_res, (void **)&res);
+	lp = list;
+
+	parent = getobject(lp->term);
+
+	type = get_json_object_type(parent);
+	if(type != JTArray && type != JTObject)
+		fail("$&json_getobject", "must be an object or array");
+
+	if(lp->next == nil)
+		switch(type) {
+		default:
+			unreachable();
+		case JTObject:
+			fail("$&json_getobject", "missing key");
+		case JTArray:
+			fail("$&json_getobject", "missing index");
+		}
+
+	switch(type) {
+	default:
+		unreachable();
+	case JTObject:
+		child = get_json_object(parent, getstr(lp->next->term), 0);
+		break;
+	case JTArray:
+		if((index = (int)termtoint(lp->next->term, "$&json_getobject", 2)) < 0)
+			fail("$&json_getobject", "invalid index");
+		child = get_json_object(parent, nil, index);
+		break;
+	}
+
+	if(!child)
+		goto fail;
+
+	res = mklist(mkobject(child), nil);
+
+fail:
+	gcrderef(&r_res);
+	gcrderef(&r_lp);
+	return res;
+}
+
+PRIM(json_getdata){
+	List *lp = nil; Root r_lp;
+	List *res = nil; Root r_res;
+	Object *obj;
+	int type;
+
+	if(list == nil)
+		fail("$&json_getdata", "missing argument");
+	if(!is_json_object(list->term))
+		fail("$&json_getdata", "argument needs to be a json object");
+
+	gcref(&r_lp, (void **)&lp);
+	gcref(&r_res, (void **)&res);
+	lp = list;
+
+	obj = getobject(lp->term);
+	type = get_json_object_type(obj);
+
+	if(type == JTObject || type == JTArray)
+		fail("$&json_getdata", "type must not be object or array");
+
+	switch(type) {
+	default:
+		unreachable();
+	case JTString:
+		res = mklist(mkstr(str("%s", cJSON_GetStringValue(json(obj)->data))), nil);
+		break;
+	case JTNumber:
+		res = floattolist(cJSON_GetNumberValue(json(obj)->data), "$&json_getdata");
+		break;
+	case JTNull:
+		res = nil;
+		break;
+	case JTBoolean:
+		if(cJSON_IsTrue(json(obj)->data))
+			res = list_true;
+		else
+			res = list_false;
+		break;
+	}
+
+	gcrderef(&r_res);
+	gcrderef(&r_lp);
+	return res;
+}
+
 DYNPRIMS() = {
 	DX(json_dumpobject),
 	DX(json_decode),
@@ -523,6 +666,8 @@ DYNPRIMS() = {
 	DX(json_create),
 	DX(json_addto),
 	DX(json_gettype),
+	DX(json_getobject),
+	DX(json_getdata),
 
 	PRIMSEND,
 };
