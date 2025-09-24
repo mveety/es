@@ -4,7 +4,6 @@
 #include "prim.h"
 
 static Dict *prims;
-Boolean object_debugging = FALSE;
 
 extern List *
 prim(char *s, List *list, Binding *binding, int evalflags)
@@ -46,8 +45,6 @@ initprims(void)
 #ifdef DYNAMIC_LIBRARIES
 	prims = initprims_dynlib(prims);
 #endif
-	if(object_debugging)
-		prims = initprims_objects(prims);
 
 #define primdict prims
 	X(primitives);

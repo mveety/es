@@ -37,7 +37,7 @@ grow_typedefs(void)
 	newsize = typessz * 2;
 	oldtypedefs = typedefs;
 	typedefs = ealloc(sizeof(Typedef *) * newsize);
-	memcpy(typedefs, oldtypedefs, typessz*sizeof(Typedef*));
+	memcpy(typedefs, oldtypedefs, typessz * sizeof(Typedef *));
 	free(oldtypedefs);
 	typessz = newsize;
 }
@@ -63,7 +63,7 @@ grow_objects(void)
 	newsize = objectssz * 2;
 	oldobjects = objects;
 	objects = ealloc(sizeof(Object *) * newsize);
-	memcpy(objects, oldobjects, objectssz*sizeof(Object*));
+	memcpy(objects, oldobjects, objectssz * sizeof(Object *));
 	free(oldobjects);
 	objectssz = newsize;
 }
@@ -96,7 +96,7 @@ gettypename(int32_t index)
 }
 
 int32_t
-define_type(char *name, int (*deallocate)(Object*), int (*refdeps)(Object*))
+define_type(char *name, int (*deallocate)(Object *), int (*refdeps)(Object *))
 {
 	Typedef *newtype;
 	int32_t typen;
@@ -300,10 +300,4 @@ gcunmanageobj(Object *obj)
 
 	obj->sysflags &= ~ObjectGcManaged;
 	obj->sysflags &= ~ObjectFreeWhenNoRefs;
-}
-
-Dict *
-initprims_objects(Dict *primdict)
-{
-	return primdict;
 }

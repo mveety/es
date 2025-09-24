@@ -64,7 +64,6 @@ extern Dict *initprims_math(Dict *primdict); /* prim-math.c */
 #ifdef DYNAMIC_LIBRARIES
 extern Dict *initprims_dynlib(Dict *primdict); /* dynlib.c */
 #endif
-extern Dict *initprims_objects(Dict *primdict); /* objects.c */
 
 /* prim.c */
 extern void add_prim(char *name, List* (*primfn)(List*, Binding*, int));

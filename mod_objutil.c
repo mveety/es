@@ -56,21 +56,21 @@ PRIM(printobjectstats) {
 	size_t ntypes = 0;
 	size_t i;
 
-	for(i = 0; i < typessz; i++){
+	for(i = 0; i < typessz; i++) {
 		if(typedefs[i])
 			ntypes++;
 	}
 
-	for(i = 0; i < objectssz; i++){
-		if(objects[i]){
+	for(i = 0; i < objectssz; i++) {
+		if(objects[i]) {
 			nobjs++;
 			nobjssz += objects[i]->size;
 		}
 	}
-	nobjssz_total = nobjssz + (nobjs*sizeof(Object));
+	nobjssz_total = nobjssz + (nobjs * sizeof(Object));
 
-	dprintf(2, "%lu objects in %lu slots using %lu bytes (%lu total)\n",
-			nobjs, objectssz, nobjssz, nobjssz_total);
+	dprintf(2, "%lu objects in %lu slots using %lu bytes (%lu total)\n", nobjs, objectssz, nobjssz,
+			nobjssz_total);
 	dprintf(2, "%lu types in %lu slots\n", ntypes, typessz);
 
 	return nil;
@@ -82,4 +82,3 @@ DYNPRIMS() = {
 	DX(printobjectstats),
 	PRIMSEND,
 };
-
