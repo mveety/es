@@ -108,7 +108,7 @@ encode_json_formatted(Object *obj)
 }
 
 Object *
-create_json_object(int type, char *string, double number, Boolean bool)
+create_json_object(int type, char *string, double number, Boolean b)
 {
 	Object *newobj = nil;
 
@@ -130,7 +130,7 @@ create_json_object(int type, char *string, double number, Boolean bool)
 		json(newobj)->data = cJSON_CreateArray();
 		break;
 	case JTBoolean:
-		if(bool)
+		if(b)
 			json(newobj)->data = cJSON_CreateTrue();
 		else
 			json(newobj)->data = cJSON_CreateFalse();
