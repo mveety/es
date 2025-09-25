@@ -26,14 +26,14 @@ dyn_onload(void)
 
 	mod_float = dynlib("mod_float");
 	if(!mod_float)
-		return DeNotLoaded;
+		return ErrorModuleNotLoaded;
 
 	if(!(listtoint_union.ptr = dynsymbol(mod_float, "listtoint")))
-		return DeMissingSymbol;
+		return ErrorModuleMissingSymbol;
 	if(!(listtof_union.ptr = dynsymbol(mod_float, "listtof")))
-		return DeMissingSymbol;
+		return ErrorModuleMissingSymbol;
 	if(!(floattolist_union.ptr = dynsymbol(mod_float, "floattolist")))
-		return DeMissingSymbol;
+		return ErrorModuleMissingSymbol;
 
 	listtoint = listtoint_union.fptr;
 	listtof = listtof_union.fptr;

@@ -16,9 +16,10 @@ Boolean dynlib_fail_cancel = TRUE;
 char *last_sym_or_module = nil;
 char dynlibothererror[] = "unknown error";
 char *dynliberrors[] = {
-	[0] = "ok",
-	[1] = "module not loaded",
-	[2] = "symbol not found",
+	[ErrorOkay] = "ok",
+	[ErrorModuleNotLoaded] = "required module not loaded",
+	[ErrorModuleMissingSymbol] = "symbol not found",
+	[ErrorModuleInUse] = "module in use",
 };
 
 DynamicLibrary *
@@ -48,11 +49,11 @@ create_library(char *fname, char *errstr, size_t errstrlen)
 
 	apiversion = dlsym(lib->handle, "dynlibapi");
 
-	if(!apiversion || *apiversion < DynLibApi){
+	if(!apiversion || *apiversion < DynLibApi) {
 		if(apiversion) {
 			if(errstr)
 				snprintf(&errstr[0], errstrlen, "module api too old! (is %ld, need %d)",
-						*apiversion, DynLibApi);
+						 *apiversion, DynLibApi);
 		} else {
 			if(errstr)
 				snprintf(&errstr[0], errstrlen, "module api too old!");
@@ -83,7 +84,6 @@ create_library(char *fname, char *errstr, size_t errstrlen)
 		return nil;
 	}
 
-
 	onload.ptr = dlsym(lib->handle, "dyn_onload");
 	onunload.ptr = dlsym(lib->handle, "dyn_onunload");
 	lib->onload = onload.fptr;
@@ -112,25 +112,6 @@ create_library(char *fname, char *errstr, size_t errstrlen)
 		}
 	}
 	return lib;
-}
-
-int
-destroy_library(DynamicLibrary *lib, char *errstr, size_t errstrlen)
-{
-	char *dlerrstr;
-	int res = 0;
-
-	if(lib->onunload)
-		lib->onunload();
-	res = dlclose(lib->handle);
-	if(res) {
-		dlerrstr = dlerror();
-		if(errstr && errstrlen > 0)
-			strncpy(errstr, dlerrstr, errstrlen);
-	}
-	free(lib->fname);
-	free(lib);
-	return res;
 }
 
 void
@@ -183,6 +164,36 @@ unload_prims_lib(DynamicLibrary *lib)
 }
 
 int
+destroy_library(DynamicLibrary *lib, char *errstr, size_t errstrlen)
+{
+	char *dlerrstr;
+	int res = 0;
+
+	if(lib->onunload) {
+		switch(lib->onunload()) {
+		default:
+			unreachable();
+		case 0:
+			break;
+		case ErrorModuleInUse:
+			if(errstr)
+				snprintf(errstr, errstrlen, "%s", dynliberrors[ErrorModuleInUse]);
+			return -1;
+		}
+	}
+	unload_prims_lib(lib);
+	res = dlclose(lib->handle);
+	if(res) {
+		dlerrstr = dlerror();
+		if(errstr && errstrlen > 0)
+			strncpy(errstr, dlerrstr, errstrlen);
+	}
+	free(lib->fname);
+	free(lib);
+	return res;
+}
+
+int
 lib_add_to_list(DynamicLibrary *lib)
 {
 	lib->next = loaded_libs;
@@ -198,11 +209,11 @@ lib_remove_from_list(char *name)
 	DynamicLibrary *new_loaded_libs = nil;
 	DynamicLibrary *l = nil;
 
-	for(cur = loaded_libs; cur != nil; cur = cur->next){
+	for(cur = loaded_libs; cur != nil; cur = cur->next) {
 		if(streq(cur->name, name))
 			result = cur;
 		else {
-			if(new_loaded_libs){
+			if(new_loaded_libs) {
 				l->next = cur;
 				l = l->next;
 			} else {
@@ -243,7 +254,7 @@ lib_find_name(char *name)
 
 /* external api */
 
-DynamicLibrary*
+DynamicLibrary *
 open_library(char *fname, char *errstr, size_t errstrlen)
 {
 	DynamicLibrary *lib;
@@ -270,11 +281,13 @@ open_library(char *fname, char *errstr, size_t errstrlen)
 int
 close_library(DynamicLibrary *lib, char *errstr, size_t errstrlen)
 {
-
 	if(lib_remove_from_list(lib->name) != lib)
+		return -2;
+	if(destroy_library(lib, errstr, errstrlen) < 0) {
+		lib_add_to_list(lib);
 		return -1;
-	unload_prims_lib(lib);
-	return destroy_library(lib, errstr, errstrlen);
+	}
+	return 0;
 }
 
 DynamicLibrary *
@@ -424,7 +437,8 @@ PRIM(closedynlib) {
 	if(lib == nil)
 		fail("$&openlibrary", "unable to close library %s: not open", name);
 
-	res = close_library(lib, &errstr[0], sizeof(errstr));
+	if((res = close_library(lib, &errstr[0], sizeof(errstr))) < 0)
+		fail("$&closedynlib", "unable to close library %s: %s", name, errstr);
 
 	result = mklist(mkstr(str("%d", res)), nil);
 

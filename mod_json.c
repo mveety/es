@@ -4,7 +4,6 @@
 #include "float_util.h"
 #include <cjson/cJSON.h>
 #include <cjson/cJSON_Utils.h>
-LIBRARY(mod_json);
 
 enum {
 	JsonChild = 1 << 0,
@@ -252,17 +251,17 @@ get_json_object(Object *obj, char *key, int index)
 	return child;
 }
 
-Object*
+Object *
 detach_json_object(Object *obj, char *key, int index)
 {
 	Object *child;
 	cJSON *json_object;
 
-	if(cJSON_IsObject(json(obj)->data)){
+	if(cJSON_IsObject(json(obj)->data)) {
 		json_object = cJSON_DetachItemFromObjectCaseSensitive(json(obj)->data, key);
 		if(!json_object)
 			return nil;
-	} else if(cJSON_IsArray(json(obj)->data)){
+	} else if(cJSON_IsArray(json(obj)->data)) {
 		json_object = cJSON_DetachItemFromArray(json(obj)->data, index);
 		if(!json_object)
 			return nil;
@@ -280,14 +279,15 @@ int
 dyn_onload(void)
 {
 	if(define_type("json", &json_deallocate, &json_refdeps) < 0)
-		return -1;
+		return ErrorModuleNotLoaded;
 	return 0;
 }
 
 int
 dyn_onunload(void)
 {
-	undefine_type("json");
+	if(undefine_type("json"))
+		return ErrorModuleInUse;
 	return 0;
 }
 
@@ -532,7 +532,7 @@ PRIM(json_gettype){
 	return res;
 }
 
-List*
+List *
 get_or_detach_object(int op, List *list, Binding *bindings, int evalflags)
 {
 	List *lp = nil; Root r_lp;
@@ -543,7 +543,7 @@ get_or_detach_object(int op, List *list, Binding *bindings, int evalflags)
 	int index = 0;
 	char *fnname = nil;
 
-	switch(op){
+	switch(op) {
 	default:
 		unreachable();
 	case JOpGet:
@@ -667,7 +667,7 @@ PRIM(json_getdata){
 	return res;
 }
 
-DYNPRIMS() = {
+MODULE(mod_json) = {
 	DX(json_dumpobject),
 	DX(json_decode),
 	DX(json_encode),

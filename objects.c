@@ -128,21 +128,31 @@ define_type(char *name, int (*deallocate)(Object *), int (*refdeps)(Object *))
 	unreachable();
 }
 
-void
+int
 undefine_type(char *name)
 {
 	int32_t index;
 	Typedef *oldtype;
+	size_t i = 0;
 
 	if((index = gettypeindex(name)) < 0)
-		return;
+		return 0;
 
 	assert(typedefs[index]);
+
+	for(i = 0; i < objectssz; i++) {
+		if(!objects[i])
+			continue;
+		if(objects[i]->type == index)
+			return ObjectErrorTypeInUse;
+	}
 
 	oldtype = typedefs[index];
 	typedefs[index] = nil;
 	free(oldtype->name);
 	free(oldtype);
+
+	return 0;
 }
 
 Object *
