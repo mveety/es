@@ -128,7 +128,7 @@ access_gen_usage_opts(void)
 		access_usage = strdup(usage);
 		if(access_usage == nil) {
 			uerror("strdup");
-			exit(-1);
+			esexit(-1);
 		}
 	}
 	if(access_opts == nil) {
@@ -147,7 +147,7 @@ access_gen_usage_opts(void)
 		access_opts = strdup(opts);
 		if(access_opts == nil) {
 			uerror("strdup");
-			exit(-1);
+			esexit(-1);
 		}
 	}
 	return 0;

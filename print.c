@@ -335,7 +335,7 @@ fprint_flush(Format *format, size_t more)
 		if(written == -1) {
 			if(format->u.n != 2)
 				uerror("write");
-			exit(1);
+			esexit(1);
 		}
 		n -= written;
 	}

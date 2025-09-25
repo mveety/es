@@ -440,5 +440,5 @@ runinitial(void)
 	print("\t\tvardef((char *) defs[i].name, NULL, (List *) defs[i].value);\n");
 	print("}\n");
 
-	exit(0);
+	esexit(0);
 }

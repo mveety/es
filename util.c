@@ -145,3 +145,13 @@ eread(int fd, char *buf, size_t n)
 	SIGCHK();
 	return r;
 }
+
+/* exit */
+
+void
+esexit(int status)
+{
+	deallocate_all_objects();
+	exit(status);
+}
+

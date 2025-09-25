@@ -41,7 +41,7 @@ PRIM(background) {
 		setpgid(0, getpid());
 #endif
 		mvfd(eopen("/dev/null", oOpen), 0);
-		exit(exitstatus(eval(list, NULL, evalflags | eval_inchild)));
+		esexit(exitstatus(eval(list, NULL, evalflags | eval_inchild)));
 	}
 	return mklist(mkstr(str("%d", pid)), NULL);
 }
@@ -50,7 +50,7 @@ PRIM(fork) {
 	int pid, status;
 	pid = efork(TRUE, FALSE);
 	if(pid == 0)
-		exit(exitstatus(eval(list, NULL, evalflags | eval_inchild)));
+		esexit(exitstatus(eval(list, NULL, evalflags | eval_inchild)));
 	status = ewaitfor(pid);
 	SIGCHK();
 	printstatus(0, status);
@@ -449,7 +449,7 @@ PRIM(time) {
 	clock_gettime(CLOCK_MONOTONIC, &before);
 	pid = efork(TRUE, FALSE);
 	if(pid == 0)
-		exit(exitstatus(eval(lp, NULL, evalflags | eval_inchild)));
+		esexit(exitstatus(eval(lp, NULL, evalflags | eval_inchild)));
 	s = ewait(pid, FALSE, &r);
 	status = s.status;
 	clock_gettime(CLOCK_MONOTONIC, &after);

@@ -76,9 +76,11 @@ extern Dict *initprims_dynlib(Dict *primdict); /* dynlib.c */
 extern void add_prim(char *name, List *(*primfn)(List *, Binding *, int));
 extern void remove_prim(char *name);
 
+#ifdef DYNAMIC_LIBRARIES
 /* dynlib.c */
 extern DynamicLibrary *open_library(char *fname, char *errstr, size_t errstrlen);
 extern int close_library(DynamicLibrary *lib, char *errstr, size_t errstrlen);
 extern DynamicLibrary *dynlib(char *name);
 extern DynamicLibrary *dynlib_file(char *fname);
 extern void *dynsymbol(DynamicLibrary *lib, char *symbol);
+#endif

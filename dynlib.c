@@ -14,6 +14,7 @@ Boolean dynlib_verbose = FALSE;
 Boolean dynlib_fail_cancel = TRUE;
 
 char *last_sym_or_module = nil;
+char dynlibinvaliderror[] = "invalid error";
 char dynlibothererror[] = "unknown error";
 char *dynliberrors[] = {
 	[ErrorOkay] = "ok",

@@ -406,6 +406,7 @@ extern void ewrite(int fd, const char *s, size_t n);
 extern long eread(int fd, char *buf, size_t n);
 extern Boolean isabsolute(char *path);
 extern Boolean streq2(const char *s, const char *t1, const char *t2);
+extern void esexit(int status) __attribute__((noreturn));
 
 /* input.c */
 
@@ -511,6 +512,7 @@ extern void gcunmanageobj(Object *obj);
 extern int64_t object_refs(Object *obj);
 extern void derefallobjects(void);
 extern void dealloc_unrefed_objects(void);
+extern void deallocate_all_objects(void);
 
 /* gc.c, ms_gc.c, gc_common.c -- see gc.h for more */
 

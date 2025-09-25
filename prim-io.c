@@ -179,7 +179,7 @@ REDIR(here) {
 	if(pipefork(caller, p, NULL) == 0) { /* child that writes to pipe */
 		close(p[0]);
 		fprint(p[1], "%L", doc, "");
-		exit(0);
+		esexit(0);
 	}
 
 	close(p[1]);
@@ -226,7 +226,7 @@ PRIM(pipe) {
 				mvfd(p[1], fd);
 				close(p[0]);
 			}
-			exit(exitstatus(eval1(list->term, evalflags | eval_inchild)));
+			esexit(exitstatus(eval1(list->term, evalflags | eval_inchild)));
 		}
 		if(n < pidmax)
 			pids[n++] = pid;
@@ -248,7 +248,7 @@ PRIM(pipe) {
 		result = mklist(t, result);
 	} while(0 < n);
 	if(evalflags & eval_inchild)
-		exit(exitstatus(result));
+		esexit(exitstatus(result));
 	RefReturn(result);
 }
 
@@ -269,7 +269,7 @@ PRIM(readfrom) {
 	if((pid = pipefork("$&readfrom", p, NULL)) == 0) {
 		close(p[0]);
 		mvfd(p[1], 1);
-		exit(exitstatus(eval1(input, evalflags & ~eval_inchild)));
+		esexit(exitstatus(eval1(input, evalflags & ~eval_inchild)));
 	}
 
 	close(p[1]);
@@ -312,7 +312,7 @@ PRIM(writeto) {
 	if((pid = pipefork("$&writeto", p, NULL)) == 0) {
 		close(p[1]);
 		mvfd(p[0], 0);
-		exit(exitstatus(eval1(output, evalflags & ~eval_inchild)));
+		esexit(exitstatus(eval1(output, evalflags & ~eval_inchild)));
 	}
 
 	close(p[0]);
@@ -375,7 +375,7 @@ PRIM(backquote) {
 	if((pid = pipefork("$&backquote", p, NULL)) == 0) {
 		mvfd(p[1], 1);
 		close(p[0]);
-		exit(exitstatus(eval(lp, NULL, evalflags | eval_inchild)));
+		esexit(exitstatus(eval(lp, NULL, evalflags | eval_inchild)));
 	}
 
 	close(p[1]);

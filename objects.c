@@ -346,3 +346,25 @@ gcunmanageobj(Object *obj)
 	obj->sysflags &= ~ObjectGcManaged;
 	obj->sysflags &= ~ObjectFreeWhenNoRefs;
 }
+
+void
+deallocate_all_objects(void)
+{
+	int32_t i;
+	Typedef *objtype;
+
+	if(objects == nil)
+		return;
+	for(i = 0; i < (int32_t)objectssz; i++, objtype = nil){
+		if(!objects[i])
+			continue;
+		assert(objects[i]->type < (int32_t)typessz);
+		assert(objtype = typedefs[objects[i]->type]);
+
+		if(objtype->deallocate && objects[i]->sysflags & ObjectInitialized)
+			objtype->deallocate(objects[i]);
+		free(objects[i]);
+		objects[i] = nil;
+	}
+}
+

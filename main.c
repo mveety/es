@@ -107,10 +107,10 @@ runinitialize(void)
 	CatchException(e)
 	{
 		if(termeq(e->term, "exit"))
-			exit(exitstatus(e->next));
+			esexit(exitstatus(e->next));
 		else if(termeq(e->term, "error")) {
 			eprint("init handler: %L\n", e, " ");
-			exit(-1);
+			esexit(-1);
 		} else if(!issilentsignal(e))
 			eprint("init handler: uncaught exception: %L\n", e, " ");
 	}
@@ -165,9 +165,9 @@ void
 debug_flag_usage(void)
 { /* this is a mess */
 #ifdef DYNAMIC_LIBRARIES
-	dprintf(2, "debug flags: es -D [GIaEPRAMrhHCmo]\n%s",
+	dprintf(2, "debug flags: es -D [GIaEPRAMrhHCm]\n%s",
 #else
-	dprintf(2, "debug flags: es -D [GIaEPRAMrhHCo]\n%s",
+	dprintf(2, "debug flags: es -D [GIaEPRAMrhHC]\n%s",
 #endif
 			"	? -- show this message\n"
 			"	G -- gcverbose\n"
@@ -450,7 +450,7 @@ main(int argc, char *argv[])
 			case 0:
 				break;
 			case -1:
-				exit(-1);
+				exit(1);
 			case 1:
 				exit(0);
 			}
@@ -511,28 +511,28 @@ getopt_done:
 			file = av[optind++];
 			if((fd = eopen(file, oOpen)) == -1) {
 				eprint("%s: %s\n", file, esstrerror(errno));
-				return 1;
+				esexit(1);
 			}
 			vardef("*", NULL, listify(ac - optind, av + optind));
 			vardef("0", NULL, mklist(mkstr(file), NULL));
-			return exitstatus(runfd(fd, file, runflags));
+			esexit(exitstatus(runfd(fd, file, runflags)));
 		}
 
 		vardef("*", NULL, listify(ac - optind, av + optind));
 		vardef("0", NULL, mklist(mkstr(av[0]), NULL));
 		if(cmd != NULL)
-			return exitstatus(runstring(cmd, NULL, runflags));
-		return exitstatus(runfd(0, "stdin", runflags));
+			esexit(exitstatus(runstring(cmd, NULL, runflags)));
+		esexit(exitstatus(runfd(0, "stdin", runflags)));
 	}
 	CatchException (e)
 	{
 		if(termeq(e->term, "exit"))
-			return exitstatus(e->next);
+			esexit(exitstatus(e->next));
 		else if(termeq(e->term, "error")) {
 			eprint("root handler: %L\n", e, " ");
 		} else if(!issilentsignal(e))
 			eprint("root handler: uncaught exception: %L\n", e, " ");
-		return 1;
+		esexit(1);
 	}
 	EndExceptionHandler;
 }

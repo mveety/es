@@ -27,7 +27,7 @@ failexec(char *file, List *args)
 		errno = olderror;
 	}
 	eprint("%s: %s\n", file, esstrerror(errno));
-	exit(1);
+	esexit(1);
 }
 
 /* forkexec -- fork (if necessary) and exec */
@@ -750,7 +750,7 @@ restart:
 done:
 	--evaldepth;
 	if((flags & eval_exitonfalse) && !istrue(list))
-		exit(exitstatus(list));
+		esexit(exitstatus(list));
 	RefEnd2(funcname, binding);
 	RefReturn(list);
 }
