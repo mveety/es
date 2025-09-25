@@ -27,6 +27,24 @@ fn dictvalues dict {
 	}
 }
 
+fn sorted_dictnames dict {
+	let (names=) {
+		dictforall $dict @ n v {
+			names = $n $names
+		}
+		sortlist $names
+	}
+}
+
+fn sorted_dictvalues dict {
+	let (values=) {
+		for (name = <={sorted_dictnames $dict}) {
+			values += $dict($name)
+		}
+		result $values
+	}
+}
+
 fn dictdump_string dict {
 	lets (
 		fn-dictdump_statements = @ varname dict {

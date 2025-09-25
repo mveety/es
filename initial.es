@@ -89,6 +89,7 @@ fn-wait		= $&wait
 fn-%read	= $&read
 
 fn-reverse	= $&reverse
+fn-sortlist = $&sortlist
 
 #	eval runs its arguments by turning them into a code fragment
 #	(in string form) and running that fragment.

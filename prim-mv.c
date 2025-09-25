@@ -613,6 +613,25 @@ PRIM(reextract) {
 	return nil;
 }
 
+PRIM(sortlist) {
+	List *lp = nil; Root r_lp;
+	List *res = nil; Root r_res;
+
+	if(list == nil)
+		fail("$&sortlist", "missing argument");
+
+	gcref(&r_lp, (void**)&lp);
+	gcref(&r_res, (void**)&res);
+	lp = list;
+
+	res = sortlist(lp);
+
+	gcrderef(&r_res);
+	gcrderef(&r_lp);
+
+	return res;
+}
+
 Dict *
 initprims_mv(Dict *primdict)
 {
@@ -649,6 +668,7 @@ initprims_mv(Dict *primdict)
 	X(isalist);
 	X(rematch);
 	X(reextract);
+	X(sortlist);
 
 	return primdict;
 }
