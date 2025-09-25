@@ -41,7 +41,8 @@ uerror(char *s)
 extern Boolean
 isabsolute(char *path)
 {
-	return path[0] == '/' || (path[0] == '.' && (path[1] == '/' || (path[1] == '.' && path[2] == '/')));
+	return path[0] == '/' ||
+		   (path[0] == '.' && (path[1] == '/' || (path[1] == '.' && path[2] == '/')));
 }
 
 /* streq2 -- is a string equal to the concatenation of two strings? */

@@ -232,15 +232,15 @@ dumptree(Tree *tree)
 		case nWord:
 		case nQword:
 		case nPrim:
-			print("static const Tree_s %s = { n%s, { { (char *) %s } } };\n", name + 1, nodename(tree->kind),
-				  dumpstring(tree->u[0].s));
+			print("static const Tree_s %s = { n%s, { { (char *) %s } } };\n", name + 1,
+				  nodename(tree->kind), dumpstring(tree->u[0].s));
 			break;
 		case nCall:
 		case nThunk:
 		case nVar:
 		case nRegex:
-			print("static const Tree_p %s = { n%s, { { (Tree *) %s } } };\n", name + 1, nodename(tree->kind),
-				  dumptree(tree->u[0].p));
+			print("static const Tree_p %s = { n%s, { { (Tree *) %s } } };\n", name + 1,
+				  nodename(tree->kind), dumptree(tree->u[0].p));
 			break;
 		case nAssign:
 		case nConcat:
@@ -254,8 +254,8 @@ dumptree(Tree *tree)
 		case nMatch:
 		case nExtract:
 		case nLets:
-			print("static const Tree_pp %s = { n%s, { { (Tree *) %s }, { (Tree *) %s } } };\n", name + 1,
-				  nodename(tree->kind), dumptree(tree->u[0].p), dumptree(tree->u[1].p));
+			print("static const Tree_pp %s = { n%s, { { (Tree *) %s }, { (Tree *) %s } } };\n",
+				  name + 1, nodename(tree->kind), dumptree(tree->u[0].p), dumptree(tree->u[1].p));
 		}
 		cvars = dictput(cvars, name, tree);
 	}
@@ -320,8 +320,9 @@ dumpterm(Term *term)
 		return "NULL";
 	name = str("&E_%ulx", term);
 	if(dictget(cvars, name) == NULL) {
-		print("static const Term %s = {%s, ttNone, (char *) %s, (Closure *) %s, (Dict*) NULL, (Object*) NULL };\n", name + 1,
-			  termtype(term), dumpstring(term->str), dumpclosure(term->closure));
+		print("static const Term %s = {%s, ttNone, (char *) %s, (Closure *) %s, (Dict*) NULL, "
+			  "(Object*) NULL };\n",
+			  name + 1, termtype(term), dumpstring(term->str), dumpclosure(term->closure));
 		cvars = dictput(cvars, name, term);
 	}
 	return name;
@@ -335,8 +336,8 @@ dumplist(List *list)
 		return "NULL";
 	name = str("&L_%ulx", list);
 	if(dictget(cvars, name) == NULL) {
-		print("static const List %s = { (Term *) %s, (List *) %s };\n", name + 1, dumpterm(list->term),
-			  dumplist(list->next));
+		print("static const List %s = { (Term *) %s, (List *) %s };\n", name + 1,
+			  dumpterm(list->term), dumplist(list->next));
 		cvars = dictput(cvars, name, list);
 	}
 	return name;

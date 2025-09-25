@@ -99,8 +99,8 @@ checklist2(Block *list, int print, void *b)
 				dprintf(2, "%lu: list->prev = %p, list = %p, list->next = %p, p = %p, b = %p\n", i,
 						list->prev, list, list->next, p, b);
 			else
-				dprintf(2, "%lu: list->prev = %p, list = %p, list->next = %p, p = %p\n", i, list->prev, list,
-						list->next, p);
+				dprintf(2, "%lu: list->prev = %p, list = %p, list->next = %p, p = %p\n", i,
+						list->prev, list, list->next, p);
 		}
 		p = list;
 	}
@@ -158,9 +158,9 @@ list_arrayify_sz(Block *list, size_t len)
 	BlockArray *res;
 	size_t i;
 
-	res = ealloc(sizeof(BlockArray)+(sizeof(Block*)*len));
+	res = ealloc(sizeof(BlockArray) + (sizeof(Block *) * len));
 	res->len = len;
-	res->blocks = (void*)(((char*)res)+sizeof(BlockArray));
+	res->blocks = (void *)(((char *)res) + sizeof(BlockArray));
 
 	for(i = 0; list != nil && i < res->len; list = list->next, i++)
 		res->blocks[i] = list;
@@ -168,7 +168,7 @@ list_arrayify_sz(Block *list, size_t len)
 	return res;
 }
 
-BlockArray*
+BlockArray *
 list_arrayify(Block *list)
 {
 	return list_arrayify_sz(list, nblocks_stats(list));
@@ -242,7 +242,6 @@ l2a_sortlist(Block *list)
 
 	return result;
 }
-
 
 Block * /* cheat a little */
 sort_pivot(Block *list, size_t len)
@@ -327,7 +326,7 @@ l_sort_list(Block *list, size_t len)
 Block *
 sort_list(Block *list, size_t len)
 {
-	if(use_array_sort){
+	if(use_array_sort) {
 		if(use_list_sz)
 			return l2a_sortlist_sz(list, len);
 		else
@@ -407,8 +406,8 @@ coalesce1(Block *a, Block *b)
 	if(a->next == nil || b == nil)
 		return -2;
 	if(gcverbose)
-		dprintf(2, "coalesce: a = %p, a->size = %x, a+a->size = %lx, b = %p, b->size = %x\n", a, a->size,
-				(size_t)((char *)a) + a->size, b, b->size);
+		dprintf(2, "coalesce: a = %p, a->size = %x, a+a->size = %lx, b = %p, b->size = %x\n", a,
+				a->size, (size_t)((char *)a) + a->size, b, b->size);
 	if(((char *)a) + a->size != (void *)b)
 		return -3;
 
@@ -476,7 +475,7 @@ allocate2(size_t sz)
 			new->size = realsize;
 			break;
 		}
-}
+	}
 
 	if(fl == nil)
 		return nil;
@@ -743,7 +742,8 @@ gc_print_stats(GcStats *stats)
 	dprintf(2, "allocations since last gc = %lu\n", stats->allocations);
 	dprintf(2, "number of gc = %lu\n", stats->ngcs);
 	dprintf(2, "gc_sort_after_n = %d, nsortgc = %d\n", stats->sort_after_n, stats->nsortgc);
-	dprintf(2, "gc_coalesce_after_n = %d, ncoalescegc = %d\n", stats->coalesce_after, stats->ncoalescegc);
+	dprintf(2, "gc_coalesce_after_n = %d, ncoalescegc = %d\n", stats->coalesce_after,
+			stats->ncoalescegc);
 	dprintf(2, "gc_after = %d\n", stats->gc_after);
 	dprintf(2, "nregions = %lu\n", stats->nregions);
 	dprintf(2, "nsort = %lu\n", stats->nsort);
@@ -764,7 +764,7 @@ ms_initgc(void)
 		dprintf(2, "GC is generational: oldage = %u\n", gc_oldage);
 
 	rangc = 0;
-	for(i = 0; i < reserve_blocks; i++){
+	for(i = 0; i < reserve_blocks; i++) {
 		b = create_block(blocksize);
 		add_to_freelist(b);
 	}
@@ -875,13 +875,13 @@ ms_gc(Boolean full, Boolean inalloc)
 	gcsweep();
 	dealloc_unrefed_objects();
 
-	if(nsortgc > gc_sort_after_n){
+	if(nsortgc > gc_sort_after_n) {
 		freelist = sort_list(freelist, nfrees);
 		nsortgc = 0;
 	} else
 		nsortgc++;
 
-	if(ncoalescegc > gc_coalesce_after_n){
+	if(ncoalescegc > gc_coalesce_after_n) {
 		freelist = coalesce_list(freelist);
 		ncoalescegc = 0;
 	} else

@@ -427,8 +427,8 @@ PRIM(intpow) {
 }
 
 DYNPRIMS() = {
-	DX(cbrt),  DX(sqrt), DX(hypot), DX(sin),   DX(asin), DX(sinh), DX(asinh), DX(cos),
-	DX(acos),  DX(cosh), DX(acosh), DX(tan),   DX(atan), DX(tanh), DX(atanh), DX(ceil),
-	DX(floor), DX(log),	 DX(exp),	DX(log10), DX(log2), DX(exp2), DX(pow),	  DX(intpow),
+	DX(cbrt), DX(sqrt),	 DX(hypot), DX(sin),  DX(asin), DX(sinh),	DX(asinh), DX(cos),	  DX(acos),
+	DX(cosh), DX(acosh), DX(tan),	DX(atan), DX(tanh), DX(atanh),	DX(ceil),  DX(floor), DX(log),
+	DX(exp),  DX(log10), DX(log2),	DX(exp2), DX(pow),	DX(intpow),
 	PRIMSEND,
 };

@@ -17,11 +17,11 @@ with-dynlibs mod_json {
 	fn-%json_detachobject = $&json_detachobject
 	fn-%json_getdata = $&json_getdata
 
-	fn json_decode $json_string {
+	fn json_decode json_string {
 		%json_decode $json_string
 	}
 
-	fn json_encode $jsonobj {
+	fn json_encode jsonobj {
 		if {$json_conf_formatted-output} {
 			%json_encode_formatted $jsonobj
 		} {

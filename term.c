@@ -204,7 +204,7 @@ getstr(Term *term)
 		gcrderef(&r_args_result);
 		return res;
 	case tkObject:
-		if((objstr = stringify(term->obj))){
+		if((objstr = stringify(term->obj))) {
 			tmp = str("%%obj:%s('%s')", gettypename(term->obj->type), objstr);
 			free(objstr);
 			return tmp;

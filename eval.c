@@ -457,7 +457,8 @@ matchpattern(Tree *subjectform0, Tree *patternform0, Binding *binding)
 		if(lp->term->kind == tkRegex) {
 			hasregex = TRUE;
 			for(sp = subject; sp != nil; sp = sp->next) {
-				memset(errstr, 0, sizeof(errstr)); /* I should probably not set errstr on a match fail */
+				memset(errstr, 0,
+					   sizeof(errstr)); /* I should probably not set errstr on a match fail */
 				status = (RegexStatus){ReNil, FALSE, 0, 0, nil, 0, &errstr[0], sizeof(errstr)};
 				regexmatch(&status, sp->term, lp->term);
 				assert(status.type == ReMatch);
@@ -490,8 +491,8 @@ matchpattern(Tree *subjectform0, Tree *patternform0, Binding *binding)
 	pattern1 = reverse(pattern1);
 	if(hasregex) {
 		if(verbose_match)
-			eprint("quote = [%Z], quote1 = [%Z], subject = (%L), pattern1 = (%L)\n", quote, " ", quote1, ", ",
-				   subject, " ", pattern1, " ");
+			eprint("quote = [%Z], quote1 = [%Z], subject = (%L), pattern1 = (%L)\n", quote, " ",
+				   quote1, ", ", subject, " ", pattern1, " ");
 	} else
 		quote1 = quote;
 	result = listmatch(subject, pattern1, quote1);

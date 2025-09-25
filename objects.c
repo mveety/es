@@ -252,7 +252,7 @@ object_is_type(Object *obj, char *name)
 	return 1;
 }
 
-char*
+char *
 stringify(Object *obj)
 {
 	Typedef *objtype;

@@ -73,7 +73,9 @@ Vconv(Format *f)
 static int
 treecount(Tree *tree)
 {
-	return tree == NULL ? 0 : tree->kind == nList ? treecount(tree->u[0].p) + treecount(tree->u[1].p) : 1;
+	return tree == NULL			 ? 0
+		   : tree->kind == nList ? treecount(tree->u[0].p) + treecount(tree->u[1].p)
+								 : 1;
 }
 
 /* binding -- print a binding statement */

@@ -240,8 +240,9 @@ prim_flte(List *list, Binding *binding, int evalflags)
 
 
 DYNPRIMS() = {
-	{"addf", &prim_addf}, {"subf", &prim_subf}, {"mulf", &prim_mulf},
-	{"divf", &prim_divf}, {"feq", &prim_feq},	{"fgt", &prim_fgt},
-	{"fgte", &prim_fgte}, {"flt", &prim_flt},	{"flte", &prim_flte},
-	{0, 0},
+	{"addf", &prim_addf}, {"subf", &prim_subf},
+	{"mulf", &prim_mulf}, {"divf", &prim_divf},
+	{"feq", &prim_feq},	  {"fgt", &prim_fgt},
+	{"fgte", &prim_fgte}, {"flt", &prim_flt},
+	{"flte", &prim_flte}, {0, 0},
 };

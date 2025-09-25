@@ -110,10 +110,7 @@ PRIM(object_initialize) {
 }
 
 DYNPRIMS() = {
-	{"hellotest", &hellotest},
-	DX(make_helloobject),
-	DX(object_gcmanage),
-	DX(object_freeable),
-	DX(object_initialize),
+	{"hellotest", &hellotest}, DX(make_helloobject),  DX(object_gcmanage),
+	DX(object_freeable),	   DX(object_initialize),
 	PRIMSEND,
 };

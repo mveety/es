@@ -19,7 +19,7 @@ prim(char *s, List *list, Binding *binding, int evalflags)
 PRIM(primitives) {
 	List *primlist = nil; Root r_primlist;
 
-	gcref(&r_primlist, (void**)&primlist);
+	gcref(&r_primlist, (void **)&primlist);
 	dictforall(prims, addtolist, &primlist);
 	primlist = sortlist(primlist);
 	gcrderef(&r_primlist);
@@ -51,11 +51,11 @@ initprims(void)
 }
 
 void
-add_prim(char *name, List* (*primfn)(List*, Binding*, int))
+add_prim(char *name, List *(*primfn)(List *, Binding *, int))
 {
 	char *gcname = nil; Root r_gcname;
 
-	gcref(&r_gcname, (void**)&gcname);
+	gcref(&r_gcname, (void **)&gcname);
 	gcdisable();
 
 	gcname = str("%s", name);
@@ -72,4 +72,3 @@ remove_prim(char *name)
 	prims = dictput(prims, name, nil);
 	gcenable();
 }
-

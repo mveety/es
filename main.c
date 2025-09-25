@@ -74,10 +74,13 @@ init_internal_vars(void)
 	vardef("__es_initialize_esrc", nil,
 		   mklist(mkstr(str("%s", use_initialize_esrc ? "true" : "false")), nil));
 	vardef("__es_readesrc", nil, mklist(mkstr(str("%s", readesrc ? "true" : "false")), nil));
-	vardef("__es_different_esrc", nil, mklist(mkstr(str("%s", different_esrc ? "true" : "false")), nil));
+	vardef("__es_different_esrc", nil,
+		   mklist(mkstr(str("%s", different_esrc ? "true" : "false")), nil));
 	vardef("__es_esrcfile", nil, mklist(mkstr(different_esrc ? str("%s", altesrc) : ""), nil));
-	vardef("__es_extra_esrc", nil, mklist(mkstr(str("%s", additional_esrc ? "true" : "false")), nil));
-	vardef("__es_extra_esrcfile", nil, mklist(mkstr(additional_esrc ? str("%s", extraesrc) : ""), nil));
+	vardef("__es_extra_esrc", nil,
+		   mklist(mkstr(str("%s", additional_esrc ? "true" : "false")), nil));
+	vardef("__es_extra_esrcfile", nil,
+		   mklist(mkstr(additional_esrc ? str("%s", extraesrc) : ""), nil));
 	vardef("__es_comp_match", nil, mklist(mkstr(comprehensive_matches ? "true" : "false"), nil));
 
 	gcderef(&r_list, (void **)&list);
@@ -121,20 +124,21 @@ runinitialize(void)
 void
 usage(void)
 {
-	eprint("usage: es [-c command] [-sIAlNpodv] [-X gcopt] [-D flags] [-r flags] [file [args ...]]\n"
-		   "	-c        cmd execute argument\n"
-		   "	-s        read commands from standard input; stop option parsing\n"
-		   "	-I file   alternative init file\n"
-		   "	-A file   additional init file\n"
-		   "	-l        login shell\n"
-		   "	-N        ignore the .esrc\n"
-		   "	-p        don't load functions from the environment\n"
-		   "	-o        don't open stdin, stdout, and stderr if they were closed\n"
-		   "	-d        don't ignore SIGQUIT or SIGTERM\n"
-		   "	-X gcopt  gc options (can be repeated)\n"
-		   "	-v        print $buildstring\n"
-		   "	-D flags  debug flags (? for more info)\n"
-		   "	-r flags  run flags (? for more info)\n");
+	eprint(
+		"usage: es [-c command] [-sIAlNpodv] [-X gcopt] [-D flags] [-r flags] [file [args ...]]\n"
+		"	-c        cmd execute argument\n"
+		"	-s        read commands from standard input; stop option parsing\n"
+		"	-I file   alternative init file\n"
+		"	-A file   additional init file\n"
+		"	-l        login shell\n"
+		"	-N        ignore the .esrc\n"
+		"	-p        don't load functions from the environment\n"
+		"	-o        don't open stdin, stdout, and stderr if they were closed\n"
+		"	-d        don't ignore SIGQUIT or SIGTERM\n"
+		"	-X gcopt  gc options (can be repeated)\n"
+		"	-v        print $buildstring\n"
+		"	-D flags  debug flags (? for more info)\n"
+		"	-r flags  run flags (? for more info)\n");
 	exit(1);
 }
 
@@ -214,7 +218,7 @@ parse_gcopt(char *optarg)
 	work = orig_work;
 	parameter = strsep(&work, ":");
 
-	if(streq(parameter, "help") || streq(parameter, "?")){
+	if(streq(parameter, "help") || streq(parameter, "?")) {
 		help = 1;
 		goto fail;
 	}
@@ -222,26 +226,26 @@ parse_gcopt(char *optarg)
 	if((arg = strsep(&work, ":")) == nil)
 		goto fail;
 
-	if(streq(parameter, "gc")){
-		if(streq(arg, "old")){
+	if(streq(parameter, "gc")) {
+		if(streq(arg, "old")) {
 			gctype = OldGc;
 			generational = TRUE;
-		} else if(streq(arg, "new")){
+		} else if(streq(arg, "new")) {
 			gctype = NewGc;
 			generational = FALSE;
-		} else if(streq(arg, "generational")){
+		} else if(streq(arg, "generational")) {
 			gctype = NewGc;
 			generational = TRUE;
 		} else {
 			goto fail;
 		}
-	} else if(streq(parameter, "gcafter")){
+	} else if(streq(parameter, "gcafter")) {
 		gc_after = atoi(arg);
-	} else if(streq(parameter, "sortafter")){
+	} else if(streq(parameter, "sortafter")) {
 		gc_sort_after_n = atoi(arg);
-	} else if(streq(parameter, "coalesceafter")){
+	} else if(streq(parameter, "coalesceafter")) {
 		gc_coalesce_after_n = atoi(arg);
-	} else if(streq(parameter, "blocksize")){
+	} else if(streq(parameter, "blocksize")) {
 		blocksize = strtoul(arg, NULL, 10);
 		if(blocksize == 0)
 			goto fail;
@@ -250,23 +254,22 @@ parse_gcopt(char *optarg)
 			dprintf(2, "error: blocksize < %d\n", (MIN_minspace / 1024));
 			goto fail;
 		}
-	} else if(streq(parameter, "oldage")){
+	} else if(streq(parameter, "oldage")) {
 		gc_oldage = atoi(arg);
-	} else if(streq(parameter, "oldsweep")){
+	} else if(streq(parameter, "oldsweep")) {
 		gc_oldsweep_after = atoi(arg);
-	} else if(streq(parameter, "sorting")){
+	} else if(streq(parameter, "sorting")) {
 		if(streq(arg, "list"))
 			use_array_sort = FALSE;
-		else if(streq(arg, "array")){
+		else if(streq(arg, "array")) {
 			use_array_sort = TRUE;
 			use_list_sz = FALSE;
-		} else if(streq(arg, "arraysz")){
+		} else if(streq(arg, "arraysz")) {
 			use_array_sort = TRUE;
 			use_list_sz = TRUE;
-		}
-		else
+		} else
 			goto fail;
-	} else if(streq(parameter, "reserveblocks")){
+	} else if(streq(parameter, "reserveblocks")) {
 		reserve_blocks = atoi(arg);
 	} else {
 		goto fail;
@@ -284,8 +287,7 @@ fail:
 			"	reserveblocks:[int] -- blocks to reserve\n"
 			"	oldage:[int] -- age to age out blocks (was -a)\n"
 			"	oldsweep:[int] -- oldlist sweeping frequency (was -w)\n"
-			"	sorting:[list|array|arraysz] -- which sorting function to use\n"
-	);
+			"	sorting:[list|array|arraysz] -- which sorting function to use\n");
 	return help;
 }
 
@@ -442,7 +444,7 @@ main(int argc, char *argv[])
 			cmd_stdin = TRUE;
 			goto getopt_done;
 		case 'X':
-			switch(parse_gcopt(optarg)){
+			switch(parse_gcopt(optarg)) {
 			default:
 				unreachable();
 			case 0:
@@ -479,7 +481,8 @@ getopt_done:
 		checkfd(2, oCreate);
 	}
 
-	if(cmd == NULL && (optind == argc || cmd_stdin) && (runflags & run_interactive) == 0 && isatty(0))
+	if(cmd == NULL && (optind == argc || cmd_stdin) && (runflags & run_interactive) == 0 &&
+	   isatty(0))
 		runflags |= run_interactive;
 
 	ac = argc;

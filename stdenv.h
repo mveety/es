@@ -5,7 +5,7 @@
 
 #include "esconfig.h"
 #ifdef HAVE_SYS_CDEFS_H
-# include <sys/cdefs.h>
+#include <sys/cdefs.h>
 #endif
 
 /*
@@ -13,11 +13,10 @@
  */
 
 #if !USE_VOLATILE
-# ifndef volatile
-#  define volatile
-# endif
+#ifndef volatile
+#define volatile
 #endif
-
+#endif
 
 /*
  * protect the rest of es source from the dance of the includes
@@ -69,7 +68,6 @@
 #include <dirent.h>
 typedef struct dirent Dirent;
 
-
 #if REQUIRE_PWD
 #include <pwd.h>
 #endif
@@ -85,7 +83,6 @@ typedef volatile void noreturn;
 typedef void noreturn;
 #endif
 
-
 #if READLINE
 #include <readline/readline.h>
 #include <readline/history.h>
@@ -96,48 +93,51 @@ typedef void noreturn;
 #include <pcre2.h>
 #include <pcre2posix.h>
 
-
 /*
  * things that should be defined by header files but might not have been
  */
 
-#ifndef	offsetof
-#define	offsetof(t, m)	((size_t) (((char *) &((t *) 0)->m) - (char *)0))
+#ifndef offsetof
+#define offsetof(t, m) ((size_t)(((char *)&((t *)0)->m) - (char *)0))
 #endif
 
-#ifndef	EOF
-#define	EOF	(-1)
+#ifndef EOF
+#define EOF (-1)
 #endif
 
 /* setjmp */
 
 #if defined sigsetjmp || HAVE_SIGSETJMP
-/* under linux, sigsetjmp and setjmp are both macros 
+/* under linux, sigsetjmp and setjmp are both macros
  * -- need to undef setjmp to avoid problems
  */
-# ifdef setjmp
-#  undef setjmp
-# endif
-# define setjmp(buf) sigsetjmp(buf,1)
-# define longjmp(x,y)     siglongjmp(x,y)
-# define jmp_buf     sigjmp_buf
+#ifdef setjmp
+#undef setjmp
 #endif
-
+#define setjmp(buf) sigsetjmp(buf, 1)
+#define longjmp(x, y) siglongjmp(x, y)
+#define jmp_buf sigjmp_buf
+#endif
 
 /*
  * macros
  */
 
-#define STMT(stmt) do { stmt; } while (0)
-#define NOP do {} while (0)
-#define CONCAT(a,b) a ## b
+#define STMT(stmt) \
+	do {           \
+		stmt;      \
+	} while(0)
+#define NOP \
+	do {    \
+	} while(0)
+#define CONCAT(a, b) a##b
 #define STRING(s) #s
-#define	streq(s, t)		(strcmp(s, t) == 0)
-#define	strneq(s, t, n)		(strncmp(s, t, n) == 0)
-#define	hasprefix(s, p)		strneq(s, p, (sizeof p) - 1)
-#define	arraysize(a)		((int) (sizeof (a) / sizeof (*a)))
-#define	memzero(dest, count)	memset(dest, 0, count)
-#define	atoi(s)			strtol(s, NULL, 0)
+#define streq(s, t) (strcmp(s, t) == 0)
+#define strneq(s, t, n) (strncmp(s, t, n) == 0)
+#define hasprefix(s, p) strneq(s, p, (sizeof p) - 1)
+#define arraysize(a) ((int)(sizeof(a) / sizeof(*a)))
+#define memzero(dest, count) memset(dest, 0, count)
+#define atoi(s) strtol(s, NULL, 0)
 
 /*
  * types we use throughout es
@@ -146,7 +146,6 @@ typedef void noreturn;
 #undef FALSE
 #undef TRUE
 typedef enum { FALSE = 0, TRUE = 1 } Boolean;
-
 
 #if USE_SIG_ATOMIC_T
 typedef volatile sig_atomic_t Atomic;
@@ -163,22 +162,18 @@ typedef GETGROUPS_T gidset_t;
  */
 
 #if ASSERTIONS
-#define	assert(expr) \
-	STMT( \
-		if (!(expr)) { \
-			dprintf(2, "%s:%d: assertion failed (%s)\n", \
-				__FILE__, __LINE__, STRING(expr)); \
-			abort(); \
-		} \
-	)
+#define assert(expr)                                                                    \
+	STMT(if(!(expr)) {                                                                  \
+		dprintf(2, "%s:%d: assertion failed (%s)\n", __FILE__, __LINE__, STRING(expr)); \
+		abort();                                                                        \
+	})
 #else
-#define	assert(ignore)	NOP
+#define assert(ignore) NOP
 #endif
 
 enum { UNREACHABLE = 0 };
 
-
-#define	NOTREACHED	STMT(assert(UNREACHABLE))
+#define NOTREACHED STMT(assert(UNREACHABLE))
 
 /*
  * system calls -- can we get these from some standard header uniformly?
@@ -215,8 +210,7 @@ extern int stat(const char *, struct stat *);
 extern int getgroups(int, int *);
 #endif
 */
-#endif	/* !HAVE_UNISTD_H */
-
+#endif /* !HAVE_UNISTD_H */
 
 /*
  * hacks to present a standard system call interface
@@ -232,17 +226,17 @@ extern int getgroups(int, int *);
  */
 
 #ifndef USE_WAIT_W_FORMS
-#define	SIFSIGNALED(status)	(((status) & 0xff) != 0)
-#define	STERMSIG(status)	((status) & 0x7f)
-#define	SCOREDUMP(status)	((status) & 0x80)
-#define	SIFEXITED(status)	(!SIFSIGNALED(status))
-#define	SEXITSTATUS(status)	(((status) >> 8) & 0xff)
+#define SIFSIGNALED(status) (((status) & 0xff) != 0)
+#define STERMSIG(status) ((status) & 0x7f)
+#define SCOREDUMP(status) ((status) & 0x80)
+#define SIFEXITED(status) (!SIFSIGNALED(status))
+#define SEXITSTATUS(status) (((status) >> 8) & 0xff)
 #else
-#define	SIFSIGNALED(status)	WIFSIGNALED(status)
-#define	STERMSIG(status)	WTERMSIG(status)
-#define	SCOREDUMP(status)	WCOREDUMP(status)
-#define	SIFEXITED(status)	WIFEXITED(status)
-#define	SEXITSTATUS(status)	WEXITSTATUS(status)
+#define SIFSIGNALED(status) WIFSIGNALED(status)
+#define STERMSIG(status) WTERMSIG(status)
+#define SCOREDUMP(status) WCOREDUMP(status)
+#define SIFEXITED(status) WIFEXITED(status)
+#define SEXITSTATUS(status) WEXITSTATUS(status)
 #endif
 
 #ifndef HAVE_SETPGID
@@ -250,4 +244,3 @@ extern int getgroups(int, int *);
 #endif
 
 #endif
-

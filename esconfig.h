@@ -173,7 +173,6 @@
  *		define this as true if signal handlers are declared with void
  *		return type; otherwise es uses int for signal returns. */
 
-
 /*
  * platform specific options
  *	please send new configurations to haahr@adobe.com and byron@netapp.com
@@ -182,155 +181,149 @@
 #include "config.h"
 
 #if HAVE_SIGRELSE && HAVE_SIGHOLD
-# define SYSV_SIGNALS 1
+#define SYSV_SIGNALS 1
 #endif
 
 #if HAVE_READLINE || HAVE_LIBEDIT
-# define READLINE 1
+#define READLINE 1
 #endif
 
 /* NeXT defaults */
 
 #if NeXT
-#ifndef	USE_SIG_ATOMIC_T
-#define	USE_SIG_ATOMIC_T	1
+#ifndef USE_SIG_ATOMIC_T
+#define USE_SIG_ATOMIC_T 1
 #endif
-#endif	/* NeXT */
-
+#endif /* NeXT */
 
 /* Irix defaults */
 
 #if sgi
-#ifndef	INITIAL_PATH
-#define	INITIAL_PATH		"/usr/bsd", "/usr/sbin", "/usr/bin", "/bin", ""
+#ifndef INITIAL_PATH
+#define INITIAL_PATH "/usr/bsd", "/usr/sbin", "/usr/bin", "/bin", ""
 #endif
-#endif	/* sgi */
+#endif /* sgi */
 
 /* HP/UX 9.0.1 -- from rsalz@osf.org (Rich $alz) and haahr*/
 
 #if HPUX
-#define _INCLUDE_POSIX_SOURCE	1
-#define _INCLUDE_XOPEN_SOURCE	1
-#define _INCLUDE_HPUX_SOURCE	1
+#define _INCLUDE_POSIX_SOURCE 1
+#define _INCLUDE_XOPEN_SOURCE 1
+#define _INCLUDE_HPUX_SOURCE 1
 #endif
-
 
 /* SCO Xenix -- from steveo@world.std.com (Steven W Orr) for SCO-ODT-1.1 */
 
 #if sco
-#ifndef	USE_SIG_ATOMIC_T
-#define USE_SIG_ATOMIC_T	1
+#ifndef USE_SIG_ATOMIC_T
+#define USE_SIG_ATOMIC_T 1
 #endif
-#endif	/* sco */
-
+#endif /* sco */
 
 /* OSF/1 -- this is taken from the DEC Alpha */
 
 #if OSF1
-#ifndef	INITIAL_PATH
-#define	INITIAL_PATH		"/usr/bin", ""
+#ifndef INITIAL_PATH
+#define INITIAL_PATH "/usr/bin", ""
 #endif
-#endif	/* OSF1 */
+#endif /* OSF1 */
 
 /* OSF/1 on HP snakes -- from John Robert LoVerso <loverso@osf.org> */
 
 #ifdef __hp_osf
-#define __NO_FP_VARARGS		/* avoid bug compiling print.c */
+#define __NO_FP_VARARGS /* avoid bug compiling print.c */
 #endif
-
 
 /* DEC Ultrix 4.2 -- from render@massive.uccs.edu (Hal Render) */
 
 #if ultrix
 #ifndef USE_SIG_ATOMIC_T
-#define USE_SIG_ATOMIC_T	1
+#define USE_SIG_ATOMIC_T 1
 #endif
 #endif /* ultrix */
-
 
 /* 386BSD -- from dbarker@mulga.awadi.com.AU (Dave Barker) */
 
 #if __386BSD__
-#ifndef	INITIAL_PATH
-#define	INITIAL_PATH		"/usr/sbin", "/sbin", "/usr/bin", "/bin", ""
+#ifndef INITIAL_PATH
+#define INITIAL_PATH "/usr/sbin", "/sbin", "/usr/bin", "/bin", ""
 #endif
-#define SIG_ERR			BADSIG
-#ifndef	REQUIRE_STAT
-#define REQUIRE_STAT		1
+#define SIG_ERR BADSIG
+#ifndef REQUIRE_STAT
+#define REQUIRE_STAT 1
 #endif
 #endif
-
 
 /*
  * default defaults -- don't change this section
  */
 
-#ifndef	ASSERTIONS
-#define	ASSERTIONS		0
+#ifndef ASSERTIONS
+#define ASSERTIONS 0
 #endif
 
-#ifndef	BUILTIN_TIME
-#define	BUILTIN_TIME		1
+#ifndef BUILTIN_TIME
+#define BUILTIN_TIME 1
 #endif
 
-#ifndef	DEVFD_PATH
-#define	DEVFD_PATH		"/dev/fd/%d"
+#ifndef DEVFD_PATH
+#define DEVFD_PATH "/dev/fd/%d"
 #endif
 
-#ifndef	GCALWAYS
-#define	GCALWAYS		0
+#ifndef GCALWAYS
+#define GCALWAYS 0
 #endif
 
-#ifndef	GCDEBUG
-#define	GCDEBUG			0
+#ifndef GCDEBUG
+#define GCDEBUG 0
 #endif
 
-#ifndef	GCINFO
-#define	GCINFO			1
+#ifndef GCINFO
+#define GCINFO 1
 #endif
 
-#ifndef	GCPROTECT
-#define	GCPROTECT		0
+#ifndef GCPROTECT
+#define GCPROTECT 0
 #endif
 
-#ifndef	GCVERBOSE
-#define	GCVERBOSE		1
+#ifndef GCVERBOSE
+#define GCVERBOSE 1
 #endif
 
-#ifndef	INITIAL_PATH
-#define	INITIAL_PATH		"/usr/ucb", "/usr/bin", "/bin", ""
+#ifndef INITIAL_PATH
+#define INITIAL_PATH "/usr/ucb", "/usr/bin", "/bin", ""
 #endif
 
-#ifndef	JOB_PROTECT
-#define	JOB_PROTECT		1
+#ifndef JOB_PROTECT
+#define JOB_PROTECT 1
 #endif
 
-#ifndef	PROTECT_ENV
-#define	PROTECT_ENV		1
+#ifndef PROTECT_ENV
+#define PROTECT_ENV 1
 #endif
 
-#ifndef	READLINE
-#define	READLINE		0
+#ifndef READLINE
+#define READLINE 0
 #endif
 
-#ifndef	REF_ASSERTIONS
-#define	REF_ASSERTIONS		0
+#ifndef REF_ASSERTIONS
+#define REF_ASSERTIONS 0
 #endif
 
-#ifndef	SHOW_DOT_FILES
-#define	SHOW_DOT_FILES		0
+#ifndef SHOW_DOT_FILES
+#define SHOW_DOT_FILES 0
 #endif
 
-#ifndef	SYSV_SIGNALS
-#define	SYSV_SIGNALS		0
+#ifndef SYSV_SIGNALS
+#define SYSV_SIGNALS 0
 #endif
 
-#ifndef	HAVE_MEMORY
-#define	HAVE_MEMORY		0
+#ifndef HAVE_MEMORY
+#define HAVE_MEMORY 0
 #endif
 
-#ifndef	USE_SIG_ATOMIC_T
-#define	USE_SIG_ATOMIC_T	0
+#ifndef USE_SIG_ATOMIC_T
+#define USE_SIG_ATOMIC_T 0
 #endif
 
 /*
@@ -338,17 +331,17 @@
  */
 
 #if GCDEBUG
-#undef	GCALWAYS
-#undef	GCINFO
-#undef	GCPROTECT
-#undef	GCVERBOSE
-#define	GCALWAYS		1
-#define	GCINFO			1
-#define	GCPROTECT		1
-#define	GCVERBOSE		1
+#undef GCALWAYS
+#undef GCINFO
+#undef GCPROTECT
+#undef GCVERBOSE
+#define GCALWAYS 1
+#define GCINFO 1
+#define GCPROTECT 1
+#define GCVERBOSE 1
 #endif
 
 #if HAVE_SIGACTION
-#undef	SYSV_SIGNALS
-#define	SYSV_SIGNALS		0
+#undef SYSV_SIGNALS
+#define SYSV_SIGNALS 0
 #endif

@@ -112,7 +112,8 @@ invalidate(void *p, size_t n)
 static void
 revalidate(void *p, size_t n)
 {
-	kern_return_t error = vm_protect(task_self(), (vm_address_t)p, n, FALSE, VM_PROT_READ | VM_PROT_WRITE);
+	kern_return_t error =
+		vm_protect(task_self(), (vm_address_t)p, n, FALSE, VM_PROT_READ | VM_PROT_WRITE);
 	if(error != KERN_SUCCESS) {
 		mach_error("vm_protect VM_PROT_READ|VM_PROT_WRITE", error);
 		exit(1);
@@ -458,7 +459,7 @@ old_gc(void)
 #endif
 		VERBOSE(("\nGC collection starting\n"));
 		/* gc_markrootlist(rootlist); */
-		if(!objects_derefed){
+		if(!objects_derefed) {
 			derefallobjects();
 			objects_derefed = TRUE;
 		}
@@ -484,7 +485,8 @@ old_gc(void)
 			livedata += SPACEUSED(space);
 
 		if(gcinfo)
-			eprint("[GC: old %8d  live %8d  min %8d  (pid %5d)]\n", olddata, livedata, minspace, getpid());
+			eprint("[GC: old %8d  live %8d  min %8d  (pid %5d)]\n", olddata, livedata, minspace,
+				   getpid());
 
 		if(minspace < livedata * 2)
 			minspace = livedata * 4;

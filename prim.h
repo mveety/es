@@ -29,7 +29,7 @@ enum {
 	ErrorModuleMissingSymbol = 2,
 
 	// unloading errors
-	ErrorModuleInUse = 3,		   // if the module is in use
+	ErrorModuleInUse = 3, // if the module is in use
 
 	// other errors
 	ErrorOther = -126,

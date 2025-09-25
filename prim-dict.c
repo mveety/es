@@ -103,7 +103,8 @@ dicteval(void *vdfaargs, char *name, void *vdata)
 
 	ExceptionHandler
 	{
-		res = prim("noreturn", mklist(dfaargs->function, args), dfaargs->binding, dfaargs->evalflags);
+		res =
+			prim("noreturn", mklist(dfaargs->function, args), dfaargs->binding, dfaargs->evalflags);
 	}
 	CatchException (e)
 	{
@@ -203,7 +204,7 @@ PRIM(termtypeof) {
 
 	switch(list->term->kind) {
 	default:
-		//fail("$&termtypeof", "invalid term type!");
+		// fail("$&termtypeof", "invalid term type!");
 		unreachable();
 		break;
 	case tkRegex:

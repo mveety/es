@@ -49,7 +49,7 @@ json_refdeps(Object *obj)
 	return 0;
 }
 
-char*
+char *
 json_stringify(Object *obj)
 {
 	if(!(obj->sysflags & ObjectInitialized))
