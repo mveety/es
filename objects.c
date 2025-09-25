@@ -9,6 +9,7 @@ typedef struct {
 	char *name;
 	int (*deallocate)(Object *); /* called before an object is freed */
 	int (*refdeps)(Object *);
+	char *(*stringify)(Object *);
 } Typedef;
 
 size_t typessz = 0;
@@ -110,6 +111,7 @@ define_type(char *name, int (*deallocate)(Object *), int (*refdeps)(Object *))
 	newtype->name = strdup(name);
 	newtype->deallocate = deallocate;
 	newtype->refdeps = refdeps;
+	newtype->stringify = nil;
 
 	for(i = 0; i < (int32_t)typessz; i++)
 		if(typedefs[i] == nil) {
@@ -126,6 +128,22 @@ define_type(char *name, int (*deallocate)(Object *), int (*refdeps)(Object *))
 		}
 
 	unreachable();
+}
+
+int
+define_stringifier(char *name, char *(*stringify)(Object *))
+{
+	int index;
+	Typedef *type;
+
+	assert(name);
+	assert(stringify);
+
+	assert((index = gettypeindex(name)) >= 0);
+	type = typedefs[index];
+
+	type->stringify = stringify;
+	return 0;
 }
 
 int
@@ -199,7 +217,7 @@ deallocate_object(Object *obj)
 	assert(objects[obj->id] != nil);
 	assert(objects[obj->id] == obj);
 
-	objtype = typedefs[obj->type];
+	assert(objtype = typedefs[obj->type]);
 
 	if(objtype->deallocate && obj->sysflags & ObjectInitialized)
 		if(objtype->deallocate(obj) != 0)
@@ -232,6 +250,23 @@ object_is_type(Object *obj, char *name)
 	if(obj->type != typeindex)
 		return 0;
 	return 1;
+}
+
+char*
+stringify(Object *obj)
+{
+	Typedef *objtype;
+
+	assert(obj);
+	assert(obj->type < (int32_t)typessz);
+	assert(objects[obj->id] != nil);
+	assert(objects[obj->id] == obj);
+
+	assert(objtype = typedefs[obj->type]);
+
+	if(objtype->stringify)
+		return objtype->stringify(obj);
+	return nil;
 }
 
 void

@@ -154,6 +154,8 @@ getstr(Term *term)
 	AssocArgs args; Root r_args_result;
 	Dict *d = nil; Root r_d;
 	char *res = nil; Root r_res;
+	char *objstr = nil;
+	char *tmp;
 
 	if(term->kind == tkString && term->str == nil) {
 		/* TODO: This is wrong, but I still need to hunt down places where
@@ -202,7 +204,12 @@ getstr(Term *term)
 		gcrderef(&r_args_result);
 		return res;
 	case tkObject:
-		return str("%%obj:%s(%d)", gettypename(term->obj->type), term->obj->id);
+		if((objstr = stringify(term->obj))){
+			tmp = str("%%obj:%s('%s')", gettypename(term->obj->type), objstr);
+			free(objstr);
+			return tmp;
+		}
+		return str("%%obj:%s", gettypename(term->obj->type));
 	}
 	unreachable();
 	return nil;

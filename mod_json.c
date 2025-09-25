@@ -49,6 +49,15 @@ json_refdeps(Object *obj)
 	return 0;
 }
 
+char*
+json_stringify(Object *obj)
+{
+	if(!(obj->sysflags & ObjectInitialized))
+		return nil;
+
+	return cJSON_PrintUnformatted(json(obj)->data);
+}
+
 int
 is_json_object(Term *term)
 {
@@ -280,6 +289,7 @@ dyn_onload(void)
 {
 	if(define_type("json", &json_deallocate, &json_refdeps) < 0)
 		return ErrorModuleNotLoaded;
+	define_stringifier("json", &json_stringify);
 	return 0;
 }
 

@@ -495,11 +495,13 @@ extern void init_objects(void);
 
 extern char *gettypename(int32_t index);
 extern int define_type(char *name, int (*deallocate)(Object*), int (*refdeps)(Object*));
+extern int define_stringifier(char *name, char* (*stringify)(Object*));
 extern int undefine_type(char *name);
 extern Object *allocate_object(char *type, size_t size);
 extern void deallocate_object(Object *obj);
 extern void assert_type(Object *obj, char *name);
 extern int object_is_type(Object *obj, char *name);
+extern char *stringify(Object *obj);
 
 /* gc api */
 extern void refobject(Object *obj);
