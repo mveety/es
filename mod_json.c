@@ -16,6 +16,9 @@ enum {
 	JTArray = 4,
 	JTBoolean = 5,
 	JTNull = 6,
+
+	JOpGet = 0,
+	JOpDetach = 1,
 };
 
 typedef struct {
@@ -249,6 +252,30 @@ get_json_object(Object *obj, char *key, int index)
 	return child;
 }
 
+Object*
+detach_json_object(Object *obj, char *key, int index)
+{
+	Object *child;
+	cJSON *json_object;
+
+	if(cJSON_IsObject(json(obj)->data)){
+		json_object = cJSON_DetachItemFromObjectCaseSensitive(json(obj)->data, key);
+		if(!json_object)
+			return nil;
+	} else if(cJSON_IsArray(json(obj)->data)){
+		json_object = cJSON_DetachItemFromArray(json(obj)->data, index);
+		if(!json_object)
+			return nil;
+	} else {
+		unreachable();
+	}
+
+	child = create_json_data();
+	json(child)->data = json_object;
+	child->sysflags |= ObjectInitialized;
+	return child;
+}
+
 int
 dyn_onload(void)
 {
@@ -434,6 +461,7 @@ PRIM(json_addto){
 	List *lp = nil; Root r_lp;
 	List *res = nil; Root r_res;
 	char *name = nil; Root r_name;
+	int type;
 	Object *parent;
 	Object *newparent;
 	Object *child;
@@ -455,7 +483,11 @@ PRIM(json_addto){
 	parent = getobject(list->term);
 	child = getobject(list->next->term);
 
-	if(cJSON_IsObject(json(parent)->data)) {
+	type = get_json_object_type(parent);
+	if(type != JTArray && type != JTObject)
+		fail("$&json_addto", "parent must be an object or array");
+
+	if(type == JTObject) {
 		if(lp->next->next == nil)
 			fail("$&json_addto", "$3 must have an identifier");
 		name = getstr(lp->next->next->term);
@@ -500,18 +532,32 @@ PRIM(json_gettype){
 	return res;
 }
 
-PRIM(json_getobject){
+List*
+get_or_detach_object(int op, List *list, Binding *bindings, int evalflags)
+{
 	List *lp = nil; Root r_lp;
 	List *res = nil; Root r_res;
-	Object *parent;
-	Object *child;
+	Object *parent = nil;
+	Object *child = nil;
 	int type = 0;
 	int index = 0;
+	char *fnname = nil;
+
+	switch(op){
+	default:
+		unreachable();
+	case JOpGet:
+		fnname = "$&json_getobject";
+		break;
+	case JOpDetach:
+		fnname = "$&json_detachdata";
+		break;
+	}
 
 	if(list == nil)
-		fail("$&json_getdata", "missing argument");
+		fail(fnname, "missing argument");
 	if(!is_json_object(list->term))
-		fail("$&json_getdata", "argument needs to be a json object");
+		fail(fnname, "argument needs to be a json object");
 
 	gcref(&r_lp, (void **)&lp);
 	gcref(&r_res, (void **)&res);
@@ -521,28 +567,38 @@ PRIM(json_getobject){
 
 	type = get_json_object_type(parent);
 	if(type != JTArray && type != JTObject)
-		fail("$&json_getobject", "must be an object or array");
+		fail(fnname, "parent must be an object or array");
 
 	if(lp->next == nil)
 		switch(type) {
 		default:
 			unreachable();
 		case JTObject:
-			fail("$&json_getobject", "missing key");
+			fail(fnname, "missing key");
 		case JTArray:
-			fail("$&json_getobject", "missing index");
+			fail(fnname, "missing index");
 		}
 
 	switch(type) {
 	default:
 		unreachable();
 	case JTObject:
-		child = get_json_object(parent, getstr(lp->next->term), 0);
+		if(op == JOpGet)
+			child = get_json_object(parent, getstr(lp->next->term), 0);
+		else if(op == JOpDetach)
+			child = detach_json_object(parent, getstr(lp->next->term), 0);
+		else
+			unreachable();
 		break;
 	case JTArray:
-		if((index = (int)termtoint(lp->next->term, "$&json_getobject", 2)) < 0)
-			fail("$&json_getobject", "invalid index");
-		child = get_json_object(parent, nil, index);
+		if((index = (int)termtoint(lp->next->term, fnname, 2)) < 0)
+			fail(fnname, "invalid index");
+		if(op == JOpGet)
+			child = get_json_object(parent, nil, index);
+		else if(op == JOpDetach)
+			child = detach_json_object(parent, nil, index);
+		else
+			unreachable();
 		break;
 	}
 
@@ -557,10 +613,18 @@ fail:
 	return res;
 }
 
+PRIM(json_getobject){
+	return get_or_detach_object(JOpGet, list, binding, evalflags);
+}
+
+PRIM(json_detachobject){
+	return get_or_detach_object(JOpDetach, list, binding, evalflags);
+}
+
 PRIM(json_getdata){
 	List *lp = nil; Root r_lp;
 	List *res = nil; Root r_res;
-	Object *obj;
+	Object *obj = nil;
 	int type;
 
 	if(list == nil)
@@ -612,6 +676,7 @@ DYNPRIMS() = {
 	DX(json_addto),
 	DX(json_gettype),
 	DX(json_getobject),
+	DX(json_detachobject),
 	DX(json_getdata),
 
 	PRIMSEND,
