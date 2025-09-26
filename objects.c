@@ -11,6 +11,7 @@ typedef struct {
 	int (*deallocate)(Object *); /* called before an object is freed */
 	int (*refdeps)(Object *);
 	char *(*stringify)(Object *);
+	int (*onfork)(Object *);
 } Typedef;
 
 size_t typessz = 0;
@@ -138,7 +139,6 @@ define_stringifier(char *name, char *(*stringify)(Object *))
 	Typedef *type;
 
 	assert(name);
-	assert(stringify);
 
 	assert((index = gettypeindex(name)) >= 0);
 	type = typedefs[index];
@@ -147,6 +147,20 @@ define_stringifier(char *name, char *(*stringify)(Object *))
 	return 0;
 }
 
+int
+define_onfork_callback(char *name, int (*onfork)(Object *))
+{
+	int index;
+	Typedef *type;
+
+	assert(name);
+
+	assert((index = gettypeindex(name)) >= 0);
+	type = typedefs[index];
+
+	type->onfork = onfork;
+	return 0;
+}
 int
 undefine_type(char *name)
 {
@@ -371,7 +385,7 @@ deallocate_all_objects(void)
 }
 
 void
-deallocate_cof_objects(void)
+all_objects_onfork_ops(void)
 {
 	int32_t i = 0;
 	Typedef *objtype = nil;
@@ -385,6 +399,12 @@ deallocate_cof_objects(void)
 
 		assert(objects[i]->type < (int32_t)typessz);
 		assert(objtype = typedefs[objects[i]->type]);
+
+		if(objects[i]->sysflags & (ObjectInitialized | ObjectCallbackOnFork)){
+			if(objtype->onfork)
+				if(objtype->onfork(objects[i]))
+					dprintf(2, "es:objects: %s onfork callback failed", objtype->name);
+		}
 
 		if(objects[i]->sysflags & (ObjectInitialized | ObjectCloseOnFork)) {
 			if(objtype->deallocate)

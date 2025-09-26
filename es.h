@@ -188,6 +188,7 @@ enum {
 	ObjectGcManaged = 1 << 1,
 	ObjectInitialized = 1 << 2,
 	ObjectCloseOnFork = 1 << 3,
+	ObjectCallbackOnFork = 1 << 4,
 
 	ObjectErrorTypeInUse = -1,
 };
@@ -498,6 +499,7 @@ extern void init_objects(void);
 extern char *gettypename(int32_t index);
 extern int define_type(char *name, int (*deallocate)(Object *), int (*refdeps)(Object *));
 extern int define_stringifier(char *name, char *(*stringify)(Object *));
+extern int define_onfork_callback(char *name, int (*onfork)(Object *));
 extern int undefine_type(char *name);
 extern Object *allocate_object(char *type, size_t size);
 extern void deallocate_object(Object *obj);
@@ -514,7 +516,7 @@ extern int64_t object_refs(Object *obj);
 extern void derefallobjects(void);
 extern void dealloc_unrefed_objects(void);
 extern void deallocate_all_objects(void);
-extern void deallocate_cof_objects(void);
+extern void all_objects_onfork_ops(void);
 
 /* gc.c, ms_gc.c, gc_common.c -- see gc.h for more */
 

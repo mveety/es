@@ -8,6 +8,8 @@ typedef struct {
 	char *name;
 	int (*deallocate)(Object *); /* called before an object is freed */
 	int (*refdeps)(Object *);
+	char *(*stringify)(Object *);
+	int (*onfork)(Object *);
 } Typedef;
 
 extern size_t typessz;
@@ -34,16 +36,36 @@ PRIM(objects_dumptypes) {
 
 PRIM(printobjects) {
 	size_t i;
-	char *typename = nil;
+	Typedef *objtype;
+	int nocallbacks = 1;
 
-	for(i = 0; i < objectssz; i++) {
+	for(i = 0; i < objectssz; i++, objtype = nil) {
 		if(objects[i] == nil)
 			continue;
-		typename = gettypename(objects[i]->type);
-		dprintf(2, "object %lu: type=%s(%d), id=%d, sysflags=%x, size=%lu, refs=%lu\n", i, typename,
+		objtype = typedefs[objects[i]->type];
+		dprintf(2, "object %lu: type=%s(%d), id=%d, sysflags=%x, size=%lu, refs=%lu\n", i, objtype->name,
 				objects[i]->type, objects[i]->id, objects[i]->sysflags, objects[i]->size,
 				objects[i]->refcount);
-		typename = nil;
+		dprintf(2, "    ");
+		if(objtype->deallocate){
+			dprintf(2, "deallocate ");
+			nocallbacks = 0;
+		}
+		if(objtype->refdeps){
+			dprintf(2, "refdeps ");
+			nocallbacks = 0;
+		}
+		if(objtype->stringify){
+			dprintf(2, "stringify ");
+			nocallbacks = 0;
+		}
+		if(objtype->onfork){
+			dprintf(2, "onfork ");
+			nocallbacks = 0;
+		}
+		if(nocallbacks)
+			dprintf(2, "no callbacks");
+		dprintf(2, "\n");
 	}
 
 	return nil;

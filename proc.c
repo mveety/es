@@ -61,7 +61,7 @@ efork(Boolean parent, Boolean background)
 			fail("es:efork", "fork: %s", esstrerror(errno));
 		}
 	}
-	deallocate_cof_objects();
+	all_objects_onfork_ops();
 	closefds();
 	setsigdefaults();
 	newchildcatcher();

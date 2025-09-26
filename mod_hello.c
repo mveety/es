@@ -9,7 +9,16 @@ hello_deallocate(Object *object)
 {
 	used(object);
 
-	dprintf(2, "hellotype's deallocate was called!\n");
+	//dprintf(2, "hellotype's deallocate was called!\n");
+	return 0;
+}
+
+int
+hello_onfork(Object *object)
+{
+	used(object);
+
+	//dprintf(2, "hellotype's onfork callback was called!\n");
 	return 0;
 }
 
@@ -21,6 +30,7 @@ dyn_onload(void)
 		dprintf(2, "unable to define hellotype!\n");
 		return -1;
 	}
+	define_onfork_callback("hellotype", &hello_onfork);
 	return 0;
 }
 
@@ -128,8 +138,28 @@ PRIM(object_closeonfork){
 	return result;
 }
 
+PRIM(object_onforkcallback){
+	Object *obj = nil;
+	List *result = nil; Root r_result;
+
+	if(list == nil)
+		fail("$&object_onforkcallback", "missing argument");
+	if(list->term->kind != tkObject)
+		fail("$&object_onforkcallback", "argument must be an object");
+
+	gcref(&r_result, (void **)&result);
+	obj = getobject(list->term);
+	refobject(obj);
+	obj->sysflags |= ObjectCallbackOnFork;
+	result = mklist(mkobject(obj), nil);
+	gcrderef(&r_result);
+	derefobject(obj);
+	return result;
+}
+
 DYNPRIMS() = {
 	{"hellotest", &hellotest}, DX(make_helloobject),  DX(object_gcmanage),
 	DX(object_freeable),	   DX(object_initialize), DX(object_closeonfork),
+	DX(object_onforkcallback),
 	PRIMSEND,
 };
