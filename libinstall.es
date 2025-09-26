@@ -8,7 +8,7 @@ if {~ $*(1) -d} {
 
 assert {gte $#* 1}
 
-libmask = (json.es)
+libmask = ()
 
 need_dynlibs = %dict(
 	float.es => mod_float
