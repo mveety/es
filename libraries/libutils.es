@@ -390,14 +390,10 @@ _libutil_es_system = (
 	'completion'
 )
 
-if {~ $#__libutil_function_data 0} {
-	__libutil_function_data = $_libutil_es_system <=libutil_enumerate_all_libs
-	$&varhide __libutil_function_data
-}
-
 fn libutil_rehash {
 	assert2 libutil {eq <={mod $#_libutil_es_system 2} 0}
 	__libutil_function_data = $_libutil_es_system <=libutil_enumerate_all_libs
+	$&varhide __libutil_function_data
 	if {! ~ $#fn-%libutil_rehash 0} {
 		%libutil_rehash
 	}

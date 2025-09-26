@@ -1,11 +1,18 @@
 library library_autoload (init libraries libutils)
 
+fn %autoload_function_search name {
+	if {~ $#__libutil_function_data 0} {
+		libutil_rehash
+	}
+	libutil_function_search $name $__libutil_function_data
+}
+
 let (old_pathsearch = $fn-%pathsearch) {
 	fn %pathsearch name {
 		catch @ e t m {
 			if {~ $e 'error' && ~ $t '$&access'} {
 				let (
-					lib= <={libutil_function_search $name $__libutil_function_data onerror {
+					lib= <={%autoload_function_search $name onerror {
 						throw $e $t $m
 					}}
 				) {
