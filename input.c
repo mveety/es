@@ -646,30 +646,32 @@ fdfill(Input *in)
 				break;
 			}
 		history_hook = varlookup("fn-%history", NULL);
-		if(history_hook == NULL) {
-#if READLINE
-			if(*line_in != '\0')
-				add_history(line_in);
-#endif
-			loghistory((char *)in->bufbegin, nread);
-		} else {
-			gcenable();
-			gcref(&r_result, (void **)&result);
-			args = mklist(mkstr(str("%s", line_in)), NULL);
-			history_hook = append(history_hook, args);
-			result = eval(history_hook, NULL, 0);
-
-			assert(result != NULL);
-
-			if(strcmp("0", getstr(result->term)) == 0) {
+		if(!disablehistory){
+			if(history_hook == NULL) {
 #if READLINE
 				if(*line_in != '\0')
 					add_history(line_in);
 #endif
 				loghistory((char *)in->bufbegin, nread);
+			} else {
+				gcenable();
+				gcref(&r_result, (void **)&result);
+				args = mklist(mkstr(str("%s", line_in)), NULL);
+				history_hook = append(history_hook, args);
+				result = eval(history_hook, NULL, 0);
+
+				assert(result != NULL);
+
+				if(strcmp("0", getstr(result->term)) == 0) {
+#if READLINE
+					if(*line_in != '\0')
+						add_history(line_in);
+#endif
+					loghistory((char *)in->bufbegin, nread);
+				}
+				gcrderef(&r_result);
+				gcdisable();
 			}
-			gcrderef(&r_result);
-			gcdisable();
 		}
 		free(line_in);
 	}

@@ -191,7 +191,7 @@ destroy_library(DynamicLibrary *lib, char *errstr, size_t errstrlen)
 	}
 	free(lib->fname);
 	free(lib);
-	return res;
+	return 0;
 }
 
 int
@@ -285,6 +285,7 @@ close_library(DynamicLibrary *lib, char *errstr, size_t errstrlen)
 	if(lib_remove_from_list(lib->name) != lib)
 		return -2;
 	if(destroy_library(lib, errstr, errstrlen) < 0) {
+		assert(lib);
 		lib_add_to_list(lib);
 		return -1;
 	}

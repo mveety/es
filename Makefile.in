@@ -59,6 +59,7 @@ clean	:
 distclean:	clean
 	rm -f config.cache config.log config.h Makefile GNUmakefile cscope.out tags TAGS core cs.out config.status ltmain.sh
 	rm -rf autom4te.cache config.mk
+	rm -f ${OFILES:.o=.plist} ${MODOFILES:.o=.plist} system.plist dump.plist
 
 MANIFEST:
 	find . -type f | sed s/..// > MANIFEST

@@ -60,8 +60,10 @@ snarfheredoc(const char *eof, Boolean quoted)
 		if(*s == '\0' && (c == '\n' || c == EOF)) {
 			if(buf->current == 0 && tree != NULL)
 				freebuffer(buf);
-			else
+			else {
+				assert(tailp);
 				*tailp = treecons(mk(nQword, sealcountedbuffer(buf)), NULL);
+			}
 			break;
 		}
 		if(s != (unsigned char *)eof)
