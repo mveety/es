@@ -150,6 +150,13 @@ PRIM(reverse) {
 	return res;
 }
 
+PRIM(reverse_noalloc) {
+	if(list == nil)
+		return nil;
+
+	return reverse(list);
+}
+
 PRIM(unixtime) {
 	unsigned long curtime;
 
@@ -648,6 +655,7 @@ initprims_mv(Dict *primdict)
 	X(getevaldepth);
 	X(range);
 	X(reverse);
+	X(reverse_noalloc);
 	X(unixtime);
 	X(unixtimens);
 	X(getrunflags);

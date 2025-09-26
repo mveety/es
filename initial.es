@@ -88,7 +88,9 @@ fn-wait		= $&wait
 
 fn-%read	= $&read
 
-fn-reverse	= $&reverse
+# fn-reverse = $&reverse  # uncomment if you want to use old reverse
+fn-reverse	= $&reverse_noalloc # comment to use old reverse
+
 fn-sortlist = $&sortlist
 
 #	eval runs its arguments by turning them into a code fragment
