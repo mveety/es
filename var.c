@@ -370,12 +370,16 @@ mkenv0(void *dummy, char *key, void *value)
 	Var *var = value;
 	char *envstr;
 	Vector *newenv;
+	List *lp = nil;
 
 	assert(gcisblocked());
 	if(var == NULL || var->defn == NULL || (var->flags & var_isinternal) || !isexported(key))
 		return;
 
 	if(var->env == NULL || (rebound && (var->flags & var_hasbindings))) {
+		for(lp = var->defn; lp != nil; lp = lp->next)
+			if(lp->term->kind == tkObject)
+				return;
 		envstr = str(ENV_FORMAT, key, var->defn);
 		var->env = envstr;
 	}

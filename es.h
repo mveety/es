@@ -187,6 +187,7 @@ enum {
 	ObjectFreeWhenNoRefs = 1 << 0,
 	ObjectGcManaged = 1 << 1,
 	ObjectInitialized = 1 << 2,
+	ObjectCloseOnFork = 1 << 3,
 
 	ObjectErrorTypeInUse = -1,
 };
@@ -513,6 +514,7 @@ extern int64_t object_refs(Object *obj);
 extern void derefallobjects(void);
 extern void dealloc_unrefed_objects(void);
 extern void deallocate_all_objects(void);
+extern void deallocate_cof_objects(void);
 
 /* gc.c, ms_gc.c, gc_common.c -- see gc.h for more */
 

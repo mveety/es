@@ -139,7 +139,7 @@ usage(void)
 		"	-v        print $buildstring\n"
 		"	-D flags  debug flags (? for more info)\n"
 		"	-r flags  run flags (? for more info)\n");
-	exit(1);
+	exit(2);
 }
 
 void
@@ -187,7 +187,7 @@ debug_flag_usage(void)
 			"	m -- dynlib_verbose\n"
 #endif
 	);
-	exit(1);
+	exit(2);
 }
 
 void
@@ -202,7 +202,7 @@ run_flag_usage(void)
 			"	x -- printcmds\n"
 			"	L -- lisptrees\n"
 			"	a -- assertions\n");
-	exit(1);
+	exit(2);
 }
 
 int
@@ -450,7 +450,7 @@ main(int argc, char *argv[])
 			case 0:
 				break;
 			case -1:
-				exit(1);
+				exit(2);
 			case 1:
 				exit(0);
 			}
@@ -472,7 +472,7 @@ getopt_done:
 
 	if(cmd_stdin && cmd != NULL) {
 		eprint("es: -s and -c are incompatible\n");
-		exit(1);
+		exit(2);
 	}
 
 	if(!keepclosed) {

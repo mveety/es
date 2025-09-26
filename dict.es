@@ -53,7 +53,6 @@ fn dictdump_string dict {
 					let (vfmt = '(') {
 						for (i = $v) { vfmt = $vfmt ''''^$i^'''' }
 						vfmt = $vfmt ')'
-						# stmts = $stmts $varname^' = <={$&dictput $'^$varname^' '''^$n^''' '^$^vfmt^'}'
 						stmts = $stmts $varname^' := '^$n^' => '^$^vfmt
 					}
 				}

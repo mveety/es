@@ -42,17 +42,17 @@ mkproc(int pid, Boolean background)
 extern int
 efork(Boolean parent, Boolean background)
 {
+	Proc *proc = nil;
+	int pid = -1;
+
 	if(parent) {
-		int pid = fork();
-		switch(pid) {
+		switch((pid = fork())) {
 		default:
-			{ /* parent */
-				Proc *proc = mkproc(pid, background);
-				if(proclist != NULL)
-					proclist->prev = proc;
-				proclist = proc;
-				return pid;
-			}
+			proc = mkproc(pid, background);
+			if(proclist != NULL)
+				proclist->prev = proc;
+			proclist = proc;
+			return pid;
 		case 0: /* child */
 			proclist = NULL;
 			hasforked = TRUE;
@@ -61,6 +61,7 @@ efork(Boolean parent, Boolean background)
 			fail("es:efork", "fork: %s", esstrerror(errno));
 		}
 	}
+	deallocate_cof_objects();
 	closefds();
 	setsigdefaults();
 	newchildcatcher();

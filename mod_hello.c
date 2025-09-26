@@ -109,8 +109,27 @@ PRIM(object_initialize) {
 	return result;
 }
 
+PRIM(object_closeonfork){
+	Object *obj = nil;
+	List *result = nil; Root r_result;
+
+	if(list == nil)
+		fail("$&object_closeonfork", "missing argument");
+	if(list->term->kind != tkObject)
+		fail("$&object_closeonfork", "argument must be an object");
+
+	gcref(&r_result, (void **)&result);
+	obj = getobject(list->term);
+	refobject(obj);
+	obj->sysflags |= ObjectCloseOnFork;
+	result = mklist(mkobject(obj), nil);
+	gcrderef(&r_result);
+	derefobject(obj);
+	return result;
+}
+
 DYNPRIMS() = {
 	{"hellotest", &hellotest}, DX(make_helloobject),  DX(object_gcmanage),
-	DX(object_freeable),	   DX(object_initialize),
+	DX(object_freeable),	   DX(object_initialize), DX(object_closeonfork),
 	PRIMSEND,
 };

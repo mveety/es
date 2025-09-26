@@ -3,6 +3,7 @@
 #include "es.h"
 #include "prim.h"
 #include "gc.h"
+#include <stdint.h>
 #include <string.h>
 
 typedef struct {
@@ -350,14 +351,15 @@ gcunmanageobj(Object *obj)
 void
 deallocate_all_objects(void)
 {
-	int32_t i;
-	Typedef *objtype;
+	int32_t i = 0;
+	Typedef *objtype = nil;
 
 	if(objects == nil)
 		return;
-	for(i = 0; i < (int32_t)objectssz; i++, objtype = nil){
+	for(i = 0; i < (int32_t)objectssz; i++, objtype = nil) {
 		if(!objects[i])
 			continue;
+
 		assert(objects[i]->type < (int32_t)typessz);
 		assert(objtype = typedefs[objects[i]->type]);
 
@@ -368,3 +370,27 @@ deallocate_all_objects(void)
 	}
 }
 
+void
+deallocate_cof_objects(void)
+{
+	int32_t i = 0;
+	Typedef *objtype = nil;
+
+	if(objects == nil)
+		return;
+
+	for(i = 0; i < (int32_t)objectssz; i++, objtype = nil) {
+		if(!objects[i])
+			continue;
+
+		assert(objects[i]->type < (int32_t)typessz);
+		assert(objtype = typedefs[objects[i]->type]);
+
+		if(objects[i]->sysflags & (ObjectInitialized | ObjectCloseOnFork)) {
+			if(objtype->deallocate)
+				objtype->deallocate(objects[i]);
+			free(objects[i]);
+			objects[i] = nil;
+		}
+	}
+}
