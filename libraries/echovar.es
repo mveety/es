@@ -6,7 +6,7 @@ fn fmtvar v d {
 	result $v^'='^<={format $d}
 }
 
-fn echovar v {
+fn-echovar = $&withbindings @ v {
 	if {~ $v(1) -n} {
 		v = $v(2)
 		echo -n <={fmtvar $v $$v}

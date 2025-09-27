@@ -129,7 +129,7 @@ fn template_vars string {
 	}
 }
 
-fn template_dict_from_env string {
+fn-template_dict_from_env = $&withbindings @ string {
 	local(vars = <={template_vars $string};resdict = %dict()) {
 		for	(v = $vars) {
 			if {lt <={%count $$v} 1} {
@@ -141,11 +141,11 @@ fn template_dict_from_env string {
 	}
 }
 
-fn template_replace_env string {
+fn-template_replace_env = $&withbindings @ string {
 	template_replace_dict <={template_dict_from_env $string} $string
 }
 
-fn template maybedict_and_strings {
+fn-template = $&withbindings @ maybedict_and_strings {
 	if {~ <={$&termtypeof $maybedict_and_strings($#maybedict_and_strings)} dict} {
 		if {lt $#maybedict_and_strings 2} {
 			throw error 'missing string'
