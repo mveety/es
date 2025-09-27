@@ -133,7 +133,7 @@ fn-template_dict_from_env = $&withbindings @ string {
 	local(vars = <={template_vars $string};resdict = %dict()) {
 		for	(v = $vars) {
 			if {lt <={%count $$v} 1} {
-				throw error $0 'var $'^$v^' is not defined'
+				throw error template_dict_from_env 'var $'^$v^' is not defined'
 			}
 			resdict := $v => <={%flatten ' ' $$v}
 		}
@@ -148,7 +148,7 @@ fn-template_replace_env = $&withbindings @ string {
 fn-template = $&withbindings @ maybedict_and_strings {
 	if {~ <={$&termtypeof $maybedict_and_strings($#maybedict_and_strings)} dict} {
 		if {lt $#maybedict_and_strings 2} {
-			throw error 'missing string'
+			throw error template 'missing string'
 		}
 		local(
 			rdict = $maybedict_and_strings($#maybedict_and_strings)
