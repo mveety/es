@@ -428,22 +428,43 @@ PRIM(time) {
 	struct timespec before, after;
 	WaitStatus s;
 	Boolean quiet = FALSE;
+	Boolean highprecision = FALSE;
 	List *lp = nil; Root r_lp;
 	List *result = nil; Root r_result;
 	char *fmt = "%ld.%03ld";
+	char *hpfmt = "%ld.%06ld";
+	char *argstr = nil;
+	int i = 0;
 
 	gcref(&r_lp, (void **)&lp);
 	lp = list;
 
 	if(lp == NULL)
-		fail("$&time", "usage: $&time [-r] body");
-	else
-		if(termeq(lp->term, "-r")) {
-			quiet = TRUE;
+		fail("$&time", "usage: $&time [-pr] body");
+
+	gcdisable();
+	do {
+		argstr = getstr(lp->term);
+		if(argstr[0] == '-') {
+			for(i = 1; argstr[i] != 0; i++){
+				switch(argstr[i]){
+				default:
+					fail("$&time", "usage: $&time [-pr] body");
+					break;
+				case 'r':
+					quiet = TRUE;
+					break;
+				case 'p':
+					highprecision = TRUE;
+					break;
+				}
+			}
 			lp = lp->next;
-			if(lp == NULL)
-				fail("$&time", "usage: $&time [-r] body");
+		} else {
+			break;
 		}
+	} while (lp->next != nil);
+	gcenable();
 
 	gc(); /* do a garbage collection first to ensure reproducible results */
 	clock_gettime(CLOCK_MONOTONIC, &before);
@@ -460,20 +481,38 @@ PRIM(time) {
 	if(after.tv_nsec < 0)
 		after.tv_sec--, after.tv_nsec += 1000000000;
 
-	if(!quiet)
-		eprint("    %5ld.%03ld real %5ld.%03ld user %5ld.%03ld sys\t%L\n", after.tv_sec,
-			   after.tv_nsec / 1000000, r.ru_utime.tv_sec, (long)(r.ru_utime.tv_usec / 1000),
-			   r.ru_stime.tv_sec, (long)(r.ru_stime.tv_usec / 1000), lp, " ");
+	if(highprecision) {
+		if(!quiet)
+			eprint("    %5ld.%06ld real %5ld.%06ld user %5ld.%06ld sys\t%L\n", after.tv_sec,
+				   after.tv_nsec / 1000, r.ru_utime.tv_sec, (long)(r.ru_utime.tv_usec),
+				   r.ru_stime.tv_sec, (long)(r.ru_stime.tv_usec), lp, " ");
 
-	gcrderef(&r_lp);
-	if(quiet) {
-		gcref(&r_result, (void **)&result);
-		result = mklist(mkstr(str(fmt, r.ru_stime.tv_sec, (long)(r.ru_stime.tv_usec / 1000))), result);
-		result = mklist(mkstr(str(fmt, r.ru_utime.tv_sec, (long)(r.ru_utime.tv_usec / 1000))), result);
-		result = mklist(mkstr(str(fmt, after.tv_sec, after.tv_nsec / 1000000)), result);
-		result = mklist(mkstr(mkstatus(status)), result);
-		gcrderef(&r_result);
-		return result;
+		gcrderef(&r_lp);
+		if(quiet) {
+			gcref(&r_result, (void **)&result);
+			result = mklist(mkstr(str(hpfmt, r.ru_stime.tv_sec, (long)(r.ru_stime.tv_usec))), result);
+			result = mklist(mkstr(str(hpfmt, r.ru_utime.tv_sec, (long)(r.ru_utime.tv_usec))), result);
+			result = mklist(mkstr(str(hpfmt, after.tv_sec, after.tv_nsec / 1000)), result);
+			result = mklist(mkstr(mkstatus(status)), result);
+			gcrderef(&r_result);
+			return result;
+		}
+	} else {
+		if(!quiet)
+			eprint("    %5ld.%03ld real %5ld.%03ld user %5ld.%03ld sys\t%L\n", after.tv_sec,
+				   after.tv_nsec / 1000000, r.ru_utime.tv_sec, (long)(r.ru_utime.tv_usec / 1000),
+				   r.ru_stime.tv_sec, (long)(r.ru_stime.tv_usec / 1000), lp, " ");
+
+		gcrderef(&r_lp);
+		if(quiet) {
+			gcref(&r_result, (void **)&result);
+			result = mklist(mkstr(str(fmt, r.ru_stime.tv_sec, (long)(r.ru_stime.tv_usec / 1000))), result);
+			result = mklist(mkstr(str(fmt, r.ru_utime.tv_sec, (long)(r.ru_utime.tv_usec / 1000))), result);
+			result = mklist(mkstr(str(fmt, after.tv_sec, after.tv_nsec / 1000000)), result);
+			result = mklist(mkstr(mkstatus(status)), result);
+			gcrderef(&r_result);
+			return result;
+		}
 	}
 	return mklist(mkstr(mkstatus(status)), NULL);
 }
