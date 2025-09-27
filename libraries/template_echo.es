@@ -1,6 +1,6 @@
 library template_echo (init libraries template)
 
-fn-echo = $&withbindings @ args {
+fn-tempecho = $&withbindings @ args {
 	template $^args |> $&echo
 }
 

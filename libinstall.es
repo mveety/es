@@ -8,7 +8,7 @@ if {~ $*(1) -d} {
 
 assert {gte $#* 1}
 
-libmask = ()
+libmask = (template_echo)
 
 need_dynlibs = %dict(
 	float.es => mod_float
