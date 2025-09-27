@@ -190,8 +190,7 @@ extractbindings(Tree *tree0)
 	me.next = chain;
 	chain = &me;
 
-	ExceptionHandler
-	{
+	ExceptionHandler {
 		while(tree->kind == nClosure) {
 			bindings = extract(tree->u[0].p, bindings);
 			tree = tree->u[1].p;
@@ -202,13 +201,10 @@ extractbindings(Tree *tree0)
 			if(tree->kind == nList && tree->u[1].p == NULL)
 				tree = tree->u[0].p;
 		}
-	}
-	CatchException (e)
-	{
+	} CatchException (e) {
 		chain = chain->next;
 		throw(e);
-	}
-	EndExceptionHandler;
+	} EndExceptionHandler;
 
 	chain = chain->next;
 

@@ -188,8 +188,7 @@ PRIM(batchloop) {
 
 	SIGCHK();
 
-	ExceptionHandler
-	{
+	ExceptionHandler {
 		for(;;) {
 			List *parser, *cmd;
 			parser = varlookup("fn-%parse", NULL);
@@ -203,17 +202,14 @@ PRIM(batchloop) {
 				SIGCHK();
 			}
 		}
-	}
-	CatchException (e)
-	{
+	} CatchException (e) {
 		if(!termeq(e->term, "eof"))
 			throw(e);
 		RefEnd(dispatch);
 		if(result == list_true)
 			result = list_true;
 		RefReturn(result);
-	}
-	EndExceptionHandler;
+	} EndExceptionHandler;
 }
 
 PRIM(collect) {
@@ -298,18 +294,14 @@ PRIM(withbindings) {
 
 	ctx = bindargs(funbody->u[0].p, lp->next, ctx);
 
-	ExceptionHandler
-	{
+	ExceptionHandler {
 		lp = walk(funbody->u[1].p, ctx, evalflags);
-	}
-	CatchException (e)
-	{
+	} CatchException (e) {
 		if(termeq(e->term, "return"))
 			lp = e->next;
 		else
 			throw(e);
-	}
-	EndExceptionHandler;
+	} EndExceptionHandler;
 
 	gcrderef(&r_funbody);
 	gcrderef(&r_fun);

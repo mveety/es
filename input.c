@@ -419,9 +419,9 @@ run_new_completer(List *completer0, const char *text, int start, int end)
 	gcenable();
 	assert(!gcisblocked());
 
-	args = mklist(
-		mkstr(str("%s", rl_line_buffer)),
-		mklist(mkstr(str("%s", text)), mklist(mkstr(str("%d", start)), mklist(mkstr(str("%d", end)), nil))));
+	args = mklist(mkstr(str("%s", rl_line_buffer)),
+				  mklist(mkstr(str("%s", text)),
+						 mklist(mkstr(str("%d", start)), mklist(mkstr(str("%d", end)), nil))));
 	completer = append(completer, args);
 	result = eval(completer, nil, 0);
 
@@ -646,7 +646,7 @@ fdfill(Input *in)
 				break;
 			}
 		history_hook = varlookup("fn-%history", NULL);
-		if(!disablehistory){
+		if(!disablehistory) {
 			if(history_hook == NULL) {
 #if READLINE
 				if(*line_in != '\0')
@@ -752,26 +752,23 @@ runinput(Input *in, int runflags)
 	in->prev = input;
 	input = in;
 
-	ExceptionHandler
-	{
-		dispatch =
-			varlookup(dispatcher[((flags & run_printcmds) ? 1 : 0) + ((flags & run_noexec) ? 2 : 0)], NULL);
+	ExceptionHandler {
+		dispatch = varlookup(
+			dispatcher[((flags & run_printcmds) ? 1 : 0) + ((flags & run_noexec) ? 2 : 0)], NULL);
 		if(flags & eval_exitonfalse)
 			dispatch = mklist(mkstr("%exit-on-false"), dispatch);
 		varpush(&push, "fn-%dispatch", dispatch);
 
-		repl = varlookup((flags & run_interactive) ? "fn-%interactive-loop" : "fn-%batch-loop", NULL);
+		repl =
+			varlookup((flags & run_interactive) ? "fn-%interactive-loop" : "fn-%batch-loop", NULL);
 		result = (repl == NULL) ? prim("batchloop", NULL, NULL, flags) : eval(repl, NULL, flags);
 
 		varpop(&push);
-	}
-	CatchException (e)
-	{
+	} CatchException (e) {
 		(*input->cleanup)(input);
 		input = input->prev;
 		throw(e);
-	}
-	EndExceptionHandler;
+	} EndExceptionHandler;
 
 	input = in->prev;
 	(*in->cleanup)(in);
@@ -871,19 +868,15 @@ parseinput(Input *in)
 	in->get = get;
 	input = in;
 
-	ExceptionHandler
-	{
+	ExceptionHandler {
 		result = parse(NULL, NULL);
 		if(get(in) != EOF)
 			fail("$&parse", "more than one value in term");
-	}
-	CatchException (e)
-	{
+	} CatchException (e) {
 		(*input->cleanup)(input);
 		input = input->prev;
 		throw(e);
-	}
-	EndExceptionHandler;
+	} EndExceptionHandler;
 
 	input = in->prev;
 	(*in->cleanup)(in);

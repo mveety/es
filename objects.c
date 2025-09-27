@@ -400,7 +400,7 @@ all_objects_onfork_ops(void)
 		assert(objects[i]->type < (int32_t)typessz);
 		assert(objtype = typedefs[objects[i]->type]);
 
-		if(objects[i]->sysflags & (ObjectInitialized | ObjectCallbackOnFork)){
+		if(objects[i]->sysflags & (ObjectInitialized | ObjectCallbackOnFork)) {
 			if(objtype->onfork)
 				if(objtype->onfork(objects[i]))
 					dprintf(2, "es:objects: %s onfork callback failed", objtype->name);

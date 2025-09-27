@@ -672,7 +672,7 @@ extern void fail(const char *from, const char *name, ...) __attribute__((noretur
 extern void newchildcatcher(void);
 extern List *raised(List *e);
 
-#define ExceptionHandler                     \
+#define ExceptionHandler                \
 	{                                        \
 		Handler _localhandler;               \
 		_localhandler.rootlist = rootlist;   \
@@ -682,23 +682,23 @@ extern List *raised(List *e);
 		tophandler = &_localhandler;         \
 		if(!setjmp(_localhandler.label)) {
 
-#define CatchException(e)       \
-	pophandler(&_localhandler); \
-	}                           \
-	else                        \
-	{                           \
+#define CatchException(e)   \
+	pophandler(&_localhandler);              \
+	}                                        \
+	else                                     \
+	{                                        \
 		List *e = raised(exception);
 
-#define CatchExceptionIf(condition, e) \
-	if(condition)                      \
-		pophandler(&_localhandler);    \
-	}                                  \
-	else                               \
-	{                                  \
+#define CatchExceptionIf(condition, e)         \
+	if(condition)                            \
+		pophandler(&_localhandler);          \
+	}                                        \
+	else                                     \
+	{                                        \
 		List *e = raised(exception);
 
-#define EndExceptionHandler \
-	}                       \
+#define EndExceptionHandler         \
+	}                                        \
 	}
 
 #if __has_attribute(__fallthrough__)

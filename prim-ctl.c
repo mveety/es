@@ -61,22 +61,16 @@ PRIM(catch) {
 	do {
 		retry = FALSE;
 
-		ExceptionHandler
-		{
+		ExceptionHandler {
 
 			result = eval(lp->next, NULL, evalflags);
-		}
-		CatchException (frombody)
-		{
+		} CatchException (frombody) {
 
 			blocksignals();
-			ExceptionHandler
-			{
+			ExceptionHandler {
 				result = prim("catch_noreturn", mklist(lp->term, frombody), NULL, evalflags);
 				unblocksignals();
-			}
-			CatchException (fromcatcher)
-			{
+			} CatchException (fromcatcher) {
 				if(termeq(fromcatcher->term, "retry")) {
 					retry = TRUE;
 					unblocksignals();
@@ -84,10 +78,8 @@ PRIM(catch) {
 					unblocksignals();
 					throw(fromcatcher);
 				}
-			}
-			EndExceptionHandler;
-		}
-		EndExceptionHandler;
+			} EndExceptionHandler;
+		} EndExceptionHandler;
 	} while(retry);
 	RefEnd(lp);
 	RefReturn(result);

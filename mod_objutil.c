@@ -43,23 +43,23 @@ PRIM(printobjects) {
 		if(objects[i] == nil)
 			continue;
 		objtype = typedefs[objects[i]->type];
-		dprintf(2, "object %lu: type=%s(%d), id=%d, sysflags=%x, size=%lu, refs=%lu\n", i, objtype->name,
-				objects[i]->type, objects[i]->id, objects[i]->sysflags, objects[i]->size,
-				objects[i]->refcount);
+		dprintf(2, "object %lu: type=%s(%d), id=%d, sysflags=%x, size=%lu, refs=%lu\n", i,
+				objtype->name, objects[i]->type, objects[i]->id, objects[i]->sysflags,
+				objects[i]->size, objects[i]->refcount);
 		dprintf(2, "    ");
-		if(objtype->deallocate){
+		if(objtype->deallocate) {
 			dprintf(2, "deallocate ");
 			nocallbacks = 0;
 		}
-		if(objtype->refdeps){
+		if(objtype->refdeps) {
 			dprintf(2, "refdeps ");
 			nocallbacks = 0;
 		}
-		if(objtype->stringify){
+		if(objtype->stringify) {
 			dprintf(2, "stringify ");
 			nocallbacks = 0;
 		}
-		if(objtype->onfork){
+		if(objtype->onfork) {
 			dprintf(2, "onfork ");
 			nocallbacks = 0;
 		}

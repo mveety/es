@@ -321,7 +321,7 @@ PRIM(gcstats) {
 	if(gctype == NewGc) {
 		gc_getstats(&stats);
 		res = mklist(mkstr(str("%d", stats.gcblocked)), res);
-		if(stats.array_sort == TRUE){
+		if(stats.array_sort == TRUE) {
 			if(stats.use_size)
 				res = mklist(mkstr(str("array_sort+size")), res);
 			else
@@ -627,8 +627,8 @@ PRIM(sortlist) {
 	if(list == nil)
 		fail("$&sortlist", "missing argument");
 
-	gcref(&r_lp, (void**)&lp);
-	gcref(&r_res, (void**)&res);
+	gcref(&r_lp, (void **)&lp);
+	gcref(&r_res, (void **)&res);
 	lp = list;
 
 	res = sortlist(lp);

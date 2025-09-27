@@ -28,17 +28,13 @@ redir(const char *caller, List *(*rop)(const char *c, int *fd, List *l), List *l
 	lp = (*rop)(caller, &srcfd, lp->next);
 
 	ticket = (srcfd == -1) ? defer_close(inparent, destfd) : defer_mvfd(inparent, srcfd, destfd);
-	ExceptionHandler
-	{
+	ExceptionHandler {
 		lp = eval(lp, NULL, evalflags);
 		undefer(ticket);
-	}
-	CatchException (e)
-	{
+	} CatchException (e) {
 		undefer(ticket);
 		throw(e);
-	}
-	EndExceptionHandler;
+	} EndExceptionHandler;
 
 	RefReturn(lp);
 }
@@ -59,14 +55,15 @@ REDIR(openfile) {
 		const char *name;
 		OpenKind kind;
 	} modes[] = {
-		{"r",	oOpen},
-		{"w",	oCreate},
-		{"a",	oAppend},
-		{"r+",	oReadWrite},
-		{"w+",	oReadCreate},
-		{"a+",	oReadAppend},
-		{NULL,	0}
-	   };
+		// clang-format off
+		{"r", oOpen},
+		{"w", oCreate},
+		{"a", oAppend},
+		{"r+", oReadWrite},
+		{"w+", oReadCreate},
+		{"a+", oReadAppend},
+		{NULL, 0}  // clang-format on
+	};
 
 	assert(length(list) == 3);
 	Ref(List *, lp, list);
@@ -145,19 +142,15 @@ pipefork(const char *caller, int p[2], int *extra)
 	if(extra != NULL)
 		registerfd(extra, FALSE);
 
-	ExceptionHandler
-	{
+	ExceptionHandler {
 		pid = efork(TRUE, FALSE);
-	}
-	CatchExceptionIf (pid != 0, e)
-	{
+	} CatchExceptionIf (pid != 0, e) {
 		unregisterfd(&p[0]);
 		unregisterfd(&p[1]);
 		if(extra != NULL)
 			unregisterfd(extra);
 		throw(e);
-	}
-	EndExceptionHandler;
+	} EndExceptionHandler;
 
 	unregisterfd(&p[0]);
 	unregisterfd(&p[1]);
@@ -276,17 +269,13 @@ PRIM(readfrom) {
 	lp = mklist(mkstr(str(DEVFD_PATH, p[0])), NULL);
 	varpush(&push, var, lp);
 
-	ExceptionHandler
-	{
+	ExceptionHandler {
 		lp = eval1(cmd, evalflags);
-	}
-	CatchException (e)
-	{
+	} CatchException (e) {
 		close(p[0]);
 		ewaitfor(pid);
 		throw(e);
-	}
-	EndExceptionHandler;
+	} EndExceptionHandler;
 
 	close(p[0]);
 	status = ewaitfor(pid);
@@ -319,17 +308,13 @@ PRIM(writeto) {
 	lp = mklist(mkstr(str(DEVFD_PATH, p[1])), NULL);
 	varpush(&push, var, lp);
 
-	ExceptionHandler
-	{
+	ExceptionHandler {
 		lp = eval1(cmd, evalflags);
-	}
-	CatchException (e)
-	{
+	} CatchException (e) {
 		close(p[1]);
 		ewaitfor(pid);
 		throw(e);
-	}
-	EndExceptionHandler;
+	} EndExceptionHandler;
 
 	close(p[1]);
 	status = ewaitfor(pid);

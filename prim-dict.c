@@ -101,17 +101,13 @@ dicteval(void *vdfaargs, char *name, void *vdata)
 	data = vdata;
 	args = mklist(mkstr(name), data);
 
-	ExceptionHandler
-	{
+	ExceptionHandler {
 		res =
 			prim("noreturn", mklist(dfaargs->function, args), dfaargs->binding, dfaargs->evalflags);
-	}
-	CatchException (e)
-	{
+	} CatchException (e) {
 		if(!termeq(e->term, "continue"))
 			throw(e);
-	}
-	EndExceptionHandler;
+	} EndExceptionHandler;
 
 	gcrderef(&r_res);
 	gcrderef(&r_args);
@@ -155,16 +151,12 @@ PRIM(dictforall) {
 	};
 	gcenable();
 
-	ExceptionHandler
-	{
+	ExceptionHandler {
 		dictforall(d, &dicteval, &args);
-	}
-	CatchException (e)
-	{
+	} CatchException (e) {
 		if(!termeq(e->term, "break"))
 			throw(e);
-	}
-	EndExceptionHandler;
+	} EndExceptionHandler;
 
 	/* varpop(&dfafn); */
 	gcrderef(&r_function);

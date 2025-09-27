@@ -154,4 +154,3 @@ esexit(int status)
 	deallocate_all_objects();
 	exit(status);
 }
-

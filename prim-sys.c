@@ -446,8 +446,8 @@ PRIM(time) {
 	do {
 		argstr = getstr(lp->term);
 		if(argstr[0] == '-') {
-			for(i = 1; argstr[i] != 0; i++){
-				switch(argstr[i]){
+			for(i = 1; argstr[i] != 0; i++) {
+				switch(argstr[i]) {
 				default:
 					fail("$&time", "usage: $&time [-pr] body");
 					break;
@@ -463,7 +463,7 @@ PRIM(time) {
 		} else {
 			break;
 		}
-	} while (lp->next != nil);
+	} while(lp->next != nil);
 	gcenable();
 
 	gc(); /* do a garbage collection first to ensure reproducible results */
@@ -490,8 +490,10 @@ PRIM(time) {
 		gcrderef(&r_lp);
 		if(quiet) {
 			gcref(&r_result, (void **)&result);
-			result = mklist(mkstr(str(hpfmt, r.ru_stime.tv_sec, (long)(r.ru_stime.tv_usec))), result);
-			result = mklist(mkstr(str(hpfmt, r.ru_utime.tv_sec, (long)(r.ru_utime.tv_usec))), result);
+			result =
+				mklist(mkstr(str(hpfmt, r.ru_stime.tv_sec, (long)(r.ru_stime.tv_usec))), result);
+			result =
+				mklist(mkstr(str(hpfmt, r.ru_utime.tv_sec, (long)(r.ru_utime.tv_usec))), result);
 			result = mklist(mkstr(str(hpfmt, after.tv_sec, after.tv_nsec / 1000)), result);
 			result = mklist(mkstr(mkstatus(status)), result);
 			gcrderef(&r_result);
@@ -506,8 +508,10 @@ PRIM(time) {
 		gcrderef(&r_lp);
 		if(quiet) {
 			gcref(&r_result, (void **)&result);
-			result = mklist(mkstr(str(fmt, r.ru_stime.tv_sec, (long)(r.ru_stime.tv_usec / 1000))), result);
-			result = mklist(mkstr(str(fmt, r.ru_utime.tv_sec, (long)(r.ru_utime.tv_usec / 1000))), result);
+			result = mklist(mkstr(str(fmt, r.ru_stime.tv_sec, (long)(r.ru_stime.tv_usec / 1000))),
+							result);
+			result = mklist(mkstr(str(fmt, r.ru_utime.tv_sec, (long)(r.ru_utime.tv_usec / 1000))),
+							result);
 			result = mklist(mkstr(str(fmt, after.tv_sec, after.tv_nsec / 1000000)), result);
 			result = mklist(mkstr(mkstatus(status)), result);
 			gcrderef(&r_result);

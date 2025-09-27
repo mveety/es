@@ -9,7 +9,7 @@ hello_deallocate(Object *object)
 {
 	used(object);
 
-	//dprintf(2, "hellotype's deallocate was called!\n");
+	// dprintf(2, "hellotype's deallocate was called!\n");
 	return 0;
 }
 
@@ -18,7 +18,7 @@ hello_onfork(Object *object)
 {
 	used(object);
 
-	//dprintf(2, "hellotype's onfork callback was called!\n");
+	// dprintf(2, "hellotype's onfork callback was called!\n");
 	return 0;
 }
 
@@ -160,7 +160,7 @@ PRIM(object_onforkcallback){
 PRIM(dump_bindings) {
 	Binding *bp = nil; Root r_bp;
 
-	gcref(&r_bp, (void**)&bp);
+	gcref(&r_bp, (void **)&bp);
 
 	if(binding == nil)
 		eprint("no bindings\n");

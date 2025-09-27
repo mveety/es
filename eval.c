@@ -357,8 +357,7 @@ forloop(Tree *defn0, Tree *body0, Binding *binding, int evalflags)
 	looping = reversebindings(looping);
 	RefEnd(defn);
 
-	ExceptionHandler
-	{
+	ExceptionHandler {
 		for(;;) {
 			Boolean allnull = TRUE;
 			Boolean underscore = FALSE;
@@ -389,28 +388,21 @@ forloop(Tree *defn0, Tree *body0, Binding *binding, int evalflags)
 				break;
 			}
 
-			ExceptionHandler
-			{
+			ExceptionHandler {
 				result = walk(body, bp, evalflags & eval_exitonfalse);
-			}
-			CatchException (e)
-			{
+			} CatchException (e) {
 				if(!termeq(e->term, "continue"))
 					throw(e);
-			}
-			EndExceptionHandler;
+			} EndExceptionHandler;
 
 			RefEnd(bp);
 			SIGCHK();
 		}
-	}
-	CatchException (e)
-	{
+	} CatchException (e) {
 		if(!termeq(e->term, "break"))
 			throw(e);
 		result = e->next;
-	}
-	EndExceptionHandler;
+	} EndExceptionHandler;
 
 	RefEnd3(body, looping, outer);
 	RefReturn(result);
@@ -677,8 +669,7 @@ restart:
 			list = walk(cp->tree->u[0].p, cp->binding, flags);
 			break;
 		case nLambda:
-			ExceptionHandler
-			{
+			ExceptionHandler {
 				Push p;
 				Ref(Tree *, tree, cp->tree);
 				Ref(Binding *, context, bindargs(tree->u[0].p, list->next, cp->binding));
@@ -688,16 +679,13 @@ restart:
 				if(funcname != NULL)
 					varpop(&p);
 				RefEnd2(context, tree);
-			}
-			CatchException (e)
-			{
+			} CatchException (e) {
 				if(termeq(e->term, "return")) {
 					list = e->next;
 					goto done;
 				}
 				throw(e);
-			}
-			EndExceptionHandler;
+			} EndExceptionHandler;
 			break;
 		case nList:
 			list = glom(cp->tree, cp->binding, TRUE);

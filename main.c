@@ -100,12 +100,9 @@ runinitialize(void)
 
 	gcref(&r_result, (void **)&result);
 
-	ExceptionHandler
-	{
+	ExceptionHandler {
 		result = eval(initialize, NULL, 0);
-	}
-	CatchException(e)
-	{
+	} CatchException(e) {
 		if(termeq(e->term, "exit"))
 			esexit(exitstatus(e->next));
 		else if(termeq(e->term, "error")) {
@@ -113,8 +110,7 @@ runinitialize(void)
 			esexit(-1);
 		} else if(!issilentsignal(e))
 			eprint("init handler: uncaught exception: %L\n", e, " ");
-	}
-	EndExceptionHandler;
+	} EndExceptionHandler;
 
 	gcderef(&r_result, (void **)&result);
 	return 0;
@@ -488,8 +484,7 @@ getopt_done:
 	ac = argc;
 	av = argv;
 
-	ExceptionHandler
-	{
+	ExceptionHandler {
 		roothandler = &_localhandler; /* unhygeinic */
 
 		init_typedefs();
@@ -523,9 +518,7 @@ getopt_done:
 		if(cmd != NULL)
 			esexit(exitstatus(runstring(cmd, NULL, runflags)));
 		esexit(exitstatus(runfd(0, "stdin", runflags)));
-	}
-	CatchException (e)
-	{
+	} CatchException (e) {
 		if(termeq(e->term, "exit"))
 			esexit(exitstatus(e->next));
 		else if(termeq(e->term, "error")) {
@@ -533,6 +526,5 @@ getopt_done:
 		} else if(!issilentsignal(e))
 			eprint("root handler: uncaught exception: %L\n", e, " ");
 		esexit(1);
-	}
-	EndExceptionHandler;
+	} EndExceptionHandler;
 }
