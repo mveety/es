@@ -4,6 +4,10 @@ if {~ $#_es_complete_debug 0} {
 	_es_complete_debug = false
 }
 
+if {~ $#es_conf_completion-prefix-commands 0} {
+	es_conf_completion-prefix-commands = (doas sudo)
+}
+
 fn escomp_echo {
 	if {$_es_complete_debug} {
 		echo $*
@@ -186,7 +190,7 @@ fn es_complete_strip_leading_whitespace str {
 	}
 }
 
-fn es_complete_is_sub_command cmdname curline {
+fn es_complete_is_sub_command1 cmdname curline {
 	local (
 		curlastcmd = <={
 			%fsplit ' ' $curline |>
@@ -255,12 +259,21 @@ fn es_complete_get_last_raw_command cmdline {
 
 fn es_complete_get_last_command cmdline {
 	let (cll = <={es_complete_get_last_cmdline $cmdline |> %fsplit ' '}){
-		if {~ $cll(1) 'doas' || ~ $cll(1) 'sudo'} {
+		if {~ $cll(1) $es_conf_completion-prefix-commands} {
 			result $cll(2)
 		} {
 			result $cll(1)
 		}
 	}
+}
+
+fn es_complete_is_sub_command curline {
+	for (cmd = $es_conf_completion-prefix-commands) {
+		if {es_complete_is_sub_command1 $cmd $curline} {
+			return <=true
+		}
+	}
+	result <=false
 }
 
 fn es_complete_is_command curline {
@@ -290,8 +303,7 @@ fn es_complete_is_command curline {
 					}
 				}
 			}
-			if {es_complete_is_sub_command 'sudo' $curline ||
-				es_complete_is_sub_command 'doas' $curline} {
+			if {es_complete_is_sub_command $curline} {
 				return <=true
 			}
 			if {! ~ $curlinel($i) (' ' \t \n \r)} {

@@ -61,7 +61,7 @@ fn gencomp_ifconfig_freebsd_hook curline partial {
 			}
 		}
 	) {
-		if {~ $cmdline(1) 'doas' || ~ $cmdline(1) 'sudo'} {
+		if {~ $cmdline(1) 'doas' $es_conf_completion-prefix-commands} {
 			cmdline = $cmdline(2 ...)
 		}
 		if {~ <={%last $cmdline} 'ifconfig' && ~ <={%count $cmdline} 1} {

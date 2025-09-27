@@ -21,7 +21,7 @@ fn gencomp_pkg_installed_search partial {
 
 fn gencomp_pkg_hook curline partial {
 	let (cmdline = <={gencomp_split_cmdline $curline}) {
-		if {~ $cmdline(1) 'doas' || ~ $cmdline(1) 'sudo'} {
+		if {~ $cmdline(1) $es_conf_completion-prefix-commands} {
 			cmdline = $cmdline(2 ...)
 		}
 		if {~ <={%last $cmdline} 'pkg'} {

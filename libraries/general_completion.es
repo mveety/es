@@ -43,7 +43,7 @@ fn gencomp_new_general_completer cmdname compfn subcmdcomps {
 		}
 		result @ cmdline partial {
 			let (parsed_line = <={gencomp_split_cmdline $cmdline}) {
-				if {~ $parsed_line(1) 'doas' || ~ $parsed_line(1) 'sudo'} {
+				if {~ $parsed_line(1) $es_conf_completion-prefix-commands} {
 					parsed_line = $parsed_line(2 ...)
 				}
 				if {~ $#parsed_line 1} {
