@@ -157,9 +157,25 @@ PRIM(object_onforkcallback){
 	return result;
 }
 
+PRIM(dump_bindings) {
+	Binding *bp = nil; Root r_bp;
+
+	gcref(&r_bp, (void**)&bp);
+
+	if(binding == nil)
+		eprint("no bindings\n");
+	else
+		for(bp = binding; bp != nil; bp = bp->next)
+			eprint("binding %s = %V\n", bp->name, bp->defn, " ");
+
+	gcrderef(&r_bp);
+
+	return list_true;
+}
+
 DYNPRIMS() = {
 	{"hellotest", &hellotest}, DX(make_helloobject),  DX(object_gcmanage),
 	DX(object_freeable),	   DX(object_initialize), DX(object_closeonfork),
-	DX(object_onforkcallback),
+	DX(object_onforkcallback), DX(dump_bindings),
 	PRIMSEND,
 };

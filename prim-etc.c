@@ -271,6 +271,55 @@ PRIM(catch_noreturn) {
 	RefReturn(lp);
 }
 
+PRIM(withbindings) {
+	Binding *ctx = nil; Root r_ctx;
+	Binding *bp = nil; Root r_bp;
+	List *lp = nil; Root r_lp;
+	Closure *fun = nil; Root r_fun;
+	Tree *funbody = nil; Root r_funbody;
+
+	if(list == nil)
+		fail("$&withbindings", "usage: $&withbindings lambda args...");
+
+	gcref(&r_lp, (void **)&lp);
+	gcref(&r_ctx, (void **)&ctx);
+	gcref(&r_bp, (void **)&bp);
+	gcref(&r_fun, (void **)&fun);
+	gcref(&r_funbody, (void **)&funbody);
+
+	lp = list;
+	if(!(fun = getclosure(lp->term)))
+		fail("$&withbindings", "$&withbindings: %E is not a lambda", lp->term);
+
+	funbody = fun->tree;
+	ctx = binding;
+	for(bp = fun->binding; bp != nil; bp = bp->next)
+		ctx = mkbinding(bp->name, bp->defn, ctx);
+
+	ctx = bindargs(funbody->u[0].p, lp->next, ctx);
+
+	ExceptionHandler
+	{
+		lp = walk(funbody->u[1].p, ctx, evalflags);
+	}
+	CatchException (e)
+	{
+		if(termeq(e->term, "return"))
+			lp = e->next;
+		else
+			throw(e);
+	}
+	EndExceptionHandler;
+
+	gcrderef(&r_funbody);
+	gcrderef(&r_fun);
+	gcrderef(&r_bp);
+	gcrderef(&r_ctx);
+	gcrderef(&r_lp);
+
+	return lp;
+}
+
 
 PRIM(setmaxevaldepth) {
 	char *s;
@@ -326,6 +375,7 @@ initprims_etc(Dict *primdict)
 	X(exitonfalse);
 	X(noreturn);
 	X(catch_noreturn);
+	X(withbindings);
 	X(setmaxevaldepth);
 #if READLINE
 	X(resetterminal);
