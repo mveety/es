@@ -76,7 +76,7 @@ with-dynlibs mod_json {
 				match <={$&termtypeof $obj} (
 					* { newobj = <={json_create %dict(type=>string;value=>$^obj)} }
 					dict { newobj = <={json_create $obj} }
-					object_json { newobj = $obj }
+					object:json { newobj = $obj }
 				)
 				jsonobj = <={%json_addto $jsonobj $newobj}
 			}
@@ -158,6 +158,29 @@ with-dynlibs mod_json {
 			(array) { json_todict_array $jsonobj }
 			(object) { json_todict_object $jsonobj }
 			* { json_todict1 $jsonobj }
+		)
+	}
+
+	fn json_fromdict jdict {
+		match $jdict(type) (
+			* { json_create $jdict }
+			(array) {
+				let (jarray = <={json_create $jdict}) {
+					for (e = $jdict(value)) {
+						jarray = <={%json_addto $jarray <={json_fromdict $e}}
+					}
+					result $jarray
+				}
+			}
+			(object) {
+				let (jobj = <={json_create $jdict};objdict=) {
+					objdict = $jdict(value)
+					dictforall $objdict @ n v {
+						jobj = <={%json_addto $jobj <={json_fromdict $v} $n}
+					}
+					result $jobj
+				}
+			}
 		)
 	}
 }
