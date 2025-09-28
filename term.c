@@ -106,6 +106,7 @@ getclosure(Term *term)
 			}
 			tp->closure = extractbindings(np);
 			tp->str = nil;
+			tp->kind = tkClosure;
 			term = tp;
 			gcrderef(&r_np);
 			gcrderef(&r_tp);
@@ -158,9 +159,20 @@ getstr(Term *term)
 	char *tmp;
 
 	if(term->kind == tkString && term->str == nil) {
+		unreachable();
 		/* TODO: This is wrong, but I still need to hunt down places where
-		 * strings are defined improperly
+		 * strings are defined improperly. this should be unreachable();
 		 */
+
+		/* if(term->closure)
+			term->kind = tkClosure;
+		else if(term->dict)
+			term->kind = tkDict;
+		else if(term->obj)
+			term->kind = tkObject;
+		else
+			unreachable();
+
 		gcref(&r_tp, (void **)&tp);
 		tp = term;
 		if(term->closure != nil) {
@@ -171,7 +183,7 @@ getstr(Term *term)
 			tp->kind = tkDict;
 		}
 		gcrderef(&r_tp);
-		term = tp;
+		term = tp;*/
 	}
 	switch(term->kind) {
 	default:
@@ -322,6 +334,24 @@ TermScan(void *p)
 	Term *term;
 
 	term = p;
+	switch(term->kind){
+	default:
+		unreachable();
+	case tkString:
+	case tkRegex:
+		assert(term->str);
+		break;
+	case tkClosure:
+		assert(term->closure);
+		break;
+	case tkDict:
+		assert(term->dict);
+		break;
+	case tkObject:
+		assert(term->obj);
+		break;
+	}
+
 	term->closure = forward(term->closure);
 	term->str = forward(term->str);
 	term->dict = forward(term->dict);
