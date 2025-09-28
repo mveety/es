@@ -224,6 +224,15 @@ fn run_test_file file {
 		if {~ <={%count $$tsp} 0} {
 			$tsp = $subprocess_default
 		}
+		if {$islibtest} {
+			echo -n 'library test '^$testname^': '
+		} {
+			if {$testlibs} {
+				echo -n 'core test '^$testname^': '
+			} {
+				echo -n 'test '^$testname^': '
+			}
+		}
 		catch @ e {
 			if {~ $e abort} {
 				skipped = true
@@ -261,15 +270,7 @@ fn run_test_file file {
 				passed = true
 			}
 		}
-		if {$islibtest} {
-			echo -n 'library test '^$testname^': '
-		} {
-			if {$testlibs} {
-				echo -n 'core test '^$testname^': '
-			} {
-				echo -n 'test '^$testname^': '
-			}
- 		}
+
 		if {$skipped} {
 			echo 'skipped.'
 		} {$passed} {
