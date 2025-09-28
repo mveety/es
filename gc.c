@@ -16,9 +16,7 @@ struct Space {
 #define SPACEUSED(sp) (((sp)->current - (sp)->bot))
 #define INSPACE(p, sp) ((sp)->bot <= (char *)(p) && (char *)(p) < (sp)->top)
 
-#if GCPROTECT
 #define NSPACES 10
-#endif
 
 #if HAVE_SYSCONF
 #ifndef _SC_PAGESIZE
@@ -29,15 +27,14 @@ struct Space {
 
 /* own variables */
 static Space *new, *old;
-#if GCPROTECT
 static Space *spaces;
-#endif
-static size_t minspace = MIN_minspace; /* minimum number of bytes in a new space */
+volatile size_t minspace = MIN_minspace; /* minimum number of bytes in a new space */
 
 /* accounting */
 size_t old_nallocs = 0;
 size_t old_allocations = 0;
 size_t old_ngcs = 0;
+Boolean gcprotect = FALSE;
 
 /*
  * debugging
@@ -56,7 +53,6 @@ size_t old_ngcs = 0;
  *	for your operating system
  */
 
-#if GCPROTECT
 #if __MACH__
 
 /* mach versions of mmu operations */
@@ -185,13 +181,11 @@ initmmu(void)
 }
 
 #endif /* !__MACH__ */
-#endif /* GCPROTECT */
 
 /*
  * ``half'' space management
  */
 
-#if GCPROTECT
 
 /* mkspace -- create a new ``half'' space in debugging mode */
 static Space *
@@ -235,16 +229,19 @@ mkspace(Space *space, Space *next)
 
 	return space;
 }
-#define newspace(next) mkspace(NULL, next)
-
-#else /* !GCPROTECT */
 
 /* newspace -- create a new ``half'' space */
 static Space *
 newspace(Space *next)
 {
-	size_t n = ALIGN(minspace);
-	Space *space = ealloc(sizeof(Space) + n);
+	size_t n;
+	Space *space = nil;
+
+	if(gcprotect)
+		return mkspace(NULL, next);
+
+	n = ALIGN(minspace);
+	space = ealloc(sizeof(Space) + n);
 	space->bot = (void *)&space[1];
 	space->top = (void *)(((char *)space->bot) + n);
 	space->current = space->bot;
@@ -252,37 +249,38 @@ newspace(Space *next)
 	return space;
 }
 
-#endif /* !GCPROTECT */
 
 /* deprecate -- take a space and invalidate it */
 static void
 deprecate(Space *space)
 {
-#if GCPROTECT
-	Space *base;
-	assert(space != NULL);
-	for(base = space; base->next != NULL; base = base->next)
-		;
-	assert(&spaces[0] <= base && base < &spaces[NSPACES]);
-	for(;;) {
-		invalidate(space->bot, SPACESIZE(space));
-		if(space == base)
-			break;
-		else {
-			Space *next = space->next;
-			space->next = base->next;
-			base->next = space;
-			space = next;
+	Space *base = nil;
+	Space *old = nil;
+	Space *next = nil;
+
+	if(gcprotect){
+		assert(space != NULL);
+		for(base = space; base->next != NULL; base = base->next)
+			;
+		assert(&spaces[0] <= base && base < &spaces[NSPACES]);
+		for(;;) {
+			invalidate(space->bot, SPACESIZE(space));
+			if(space == base)
+				break;
+			else {
+				next = space->next;
+				space->next = base->next;
+				base->next = space;
+				space = next;
+			}
+		}
+	} else {
+		while(space != NULL) {
+			old = space;
+			space = space->next;
+			efree(old);
 		}
 	}
-#else
-	while(space != NULL) {
-		Space *old = space;
-		space = space->next;
-		efree(old);
-	}
-
-#endif
 }
 
 /* isinspace -- does an object lie inside a given Space? */
@@ -448,15 +446,17 @@ old_gc(void)
 		assert(new != NULL);
 		assert(old == NULL);
 		old = new;
-#if GCPROTECT
-		for(; new->next != NULL; new = new->next)
-			;
-		if(++new >= &spaces[NSPACES])
-			new = &spaces[0];
-		new = mkspace(new, NULL);
-#else
-		new = newspace(NULL);
-#endif
+
+		if(gcprotect) {
+			for(; new->next != NULL; new = new->next)
+				;
+			if(++new >= &spaces[NSPACES])
+				new = &spaces[0];
+			new = mkspace(new, NULL);
+		} else {
+			new = newspace(NULL);
+		}
+
 		VERBOSE(("\nGC collection starting\n"));
 		/* gc_markrootlist(rootlist); */
 		if(!objects_derefed) {
@@ -504,14 +504,14 @@ old_gc(void)
 extern void
 old_initgc(void)
 {
-#if GCPROTECT
-	initmmu();
-	spaces = ealloc(NSPACES * sizeof(Space));
-	memzero(spaces, NSPACES * sizeof(Space));
-	new = mkspace(&spaces[0], NULL);
-#else
-	new = newspace(NULL);
-#endif
+	if(gcprotect) {
+		initmmu();
+		spaces = ealloc(NSPACES * sizeof(Space));
+		memzero(spaces, NSPACES * sizeof(Space));
+		new = mkspace(&spaces[0], NULL);
+	} else {
+		new = newspace(NULL);
+	}
 	old = NULL;
 }
 

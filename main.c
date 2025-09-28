@@ -3,6 +3,7 @@
 #include "es.h"
 #include "gc.h"
 #include "stdenv.h"
+#include <stdint.h>
 #include <stdio.h>
 
 Boolean gcverbose = FALSE;			/* -G */
@@ -16,6 +17,8 @@ extern Boolean generational;
 extern Boolean use_array_sort;
 extern Boolean use_list_sz;
 extern int reserve_blocks;
+extern Boolean gcprotect;
+extern size_t minspace;
 volatile Boolean loginshell = FALSE; /* -l or $0[0] == '-' */
 volatile Boolean readesrc = TRUE;
 Boolean different_esrc = FALSE;	 /* -I */
@@ -202,6 +205,17 @@ run_flag_usage(void)
 }
 
 int
+trueargument(char *arg) {
+	if(streq(arg, "true") || streq(arg, "TRUE") || streq(arg, "yes")
+			|| streq(arg, "YES") || streq(arg, "y") || streq(arg, "Y"))
+		return 1;
+	if(streq(arg, "false") || streq(arg, "FALSE") || streq(arg, "no")
+			|| streq(arg, "NO") || streq(arg, "n") || streq(arg, "N"))
+		return -1;
+	return 0;
+}
+
+int
 parse_gcopt(char *optarg)
 {
 	char *orig_work = nil;
@@ -267,6 +281,26 @@ parse_gcopt(char *optarg)
 			goto fail;
 	} else if(streq(parameter, "reserveblocks")) {
 		reserve_blocks = atoi(arg);
+	} else if(streq(parameter, "protect")) {
+		switch(trueargument(arg)){
+		default:
+			goto fail;
+		case 1:
+			gcprotect = TRUE;
+			break;
+		case -1:
+			gcprotect = FALSE;
+			break;
+		}
+	} else if(streq(parameter, "minspace")) {
+		minspace = strtoul(arg, NULL, 10);
+		if(minspace == 0)
+			goto fail;
+		minspace *= 1024 * 1024;
+		if(minspace < MIN_minspace) {
+			dprintf(2, "error: minspace < %d\n", (MIN_minspace / 1024));
+			goto fail;
+		}
 	} else {
 		goto fail;
 	}
@@ -274,8 +308,15 @@ parse_gcopt(char *optarg)
 	return 0;
 fail:
 	free(orig_work);
-	dprintf(2, "gc parameters: es -X [help|[parameter]:[value]]\n%s",
+	dprintf(2, "gc parameters: es -X [help|[parameter]:[value]]\n%s\n",
+			"Global:\n"
 			"	gc:[old|new|generational] -- which gc to use (was -X and -G)\n"
+			"\n"
+			"Old:\n"
+			"	protect:[true|false] -- enable the protect option to memory testing\n"
+			"	minspace:[megabytes] -- minimum space size\n"
+			"\n"
+			"New and Generational:\n"
 			"	gcafter:[int] -- collection frequency (was -g)\n"
 			"	sortafter:[int] -- sorting frequency (was -S)\n"
 			"	coalesceafter:[int] -- coalescing frequency (was -C)\n"
@@ -283,7 +324,8 @@ fail:
 			"	reserveblocks:[int] -- blocks to reserve\n"
 			"	oldage:[int] -- age to age out blocks (was -a)\n"
 			"	oldsweep:[int] -- oldlist sweeping frequency (was -w)\n"
-			"	sorting:[list|array|arraysz] -- which sorting function to use\n");
+			"	sorting:[list|array|arraysz] -- which sorting function to use\n"
+	);
 	return help;
 }
 
