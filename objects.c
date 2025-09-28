@@ -389,6 +389,8 @@ all_objects_onfork_ops(void)
 {
 	int32_t i = 0;
 	Typedef *objtype = nil;
+	int onfork_callback = (ObjectInitialized | ObjectCallbackOnFork);
+	int onfork_free = (ObjectInitialized | ObjectCloseOnFork);
 
 	if(objects == nil)
 		return;
@@ -400,13 +402,13 @@ all_objects_onfork_ops(void)
 		assert(objects[i]->type < (int32_t)typessz);
 		assert(objtype = typedefs[objects[i]->type]);
 
-		if(objects[i]->sysflags & (ObjectInitialized | ObjectCallbackOnFork)) {
+		if((objects[i]->sysflags & onfork_callback) == onfork_callback) {
 			if(objtype->onfork)
 				if(objtype->onfork(objects[i]))
 					dprintf(2, "es:objects: %s onfork callback failed", objtype->name);
 		}
 
-		if(objects[i]->sysflags & (ObjectInitialized | ObjectCloseOnFork)) {
+		if((objects[i]->sysflags & onfork_free) == onfork_free) {
 			if(objtype->deallocate)
 				objtype->deallocate(objects[i]);
 			free(objects[i]);
