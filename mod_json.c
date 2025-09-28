@@ -208,7 +208,7 @@ typename2int(char *typename)
 		return JTBoolean;
 	if(streq(typename, "null"))
 		return JTNull;
-	return JTBadType;
+return JTBadType;
 }
 
 char *
@@ -560,7 +560,7 @@ get_or_detach_object(int op, List *list, Binding *bindings, int evalflags)
 		fnname = "$&json_getobject";
 		break;
 	case JOpDetach:
-		fnname = "$&json_detachdata";
+		fnname = "$&json_detachobject";
 		break;
 	}
 
@@ -634,7 +634,7 @@ PRIM(json_detachobject){
 PRIM(json_getdata){
 	List *lp = nil; Root r_lp;
 	List *res = nil; Root r_res;
-	Object *obj = nil;
+Object *obj = nil;
 	int type;
 
 	if(list == nil)
@@ -677,6 +677,63 @@ PRIM(json_getdata){
 	return res;
 }
 
+List*
+cJSON_WalkObjectForNames(cJSON *children)
+{
+	if(!children)
+		return nil;
+
+	return mklist(mkstr(str("%s", children->string)), cJSON_WalkObjectForNames(children->next));
+}
+
+List*
+cJSON_GetObjectItemNames(cJSON *object)
+{
+	List *res = nil; Root r_res;
+
+	assert(object);
+
+	if(!cJSON_IsObject(object))
+		return nil;
+
+	gcref(&r_res, (void**)&res);
+	gc();
+	gcdisable();
+
+	res = cJSON_WalkObjectForNames(object->child);
+
+	gcenable();
+	gc();
+	gcrderef(&r_res);
+
+	return res;
+}
+
+PRIM(json_getobjectnames) {
+	List *lp = nil; Root r_lp;
+	List *res = nil; Root r_res;
+	Object *obj;
+
+	if(list == nil)
+		fail("$&json_getobjectnames", "missing argument");
+	if(!is_json_object(list->term))
+		fail("$&json_getobjectnames", "argument needs to be a json object");
+	if(get_json_object_type(getobject(list->term)) != JTObject)
+		fail("$&json_getobjectnames", "object must be a json object");
+
+	gcref(&r_lp, (void **)&lp);
+	gcref(&r_res, (void **)&res);
+
+	lp = list;
+	obj = getobject(lp->term);
+
+	res = cJSON_GetObjectItemNames(json(obj)->data);
+
+	gcrderef(&r_res);
+	gcrderef(&r_lp);
+	return res;
+}
+
 MODULE(mod_json) = {
 	DX(json_dumpobject),
 	DX(json_decode),
@@ -688,6 +745,7 @@ MODULE(mod_json) = {
 	DX(json_getobject),
 	DX(json_detachobject),
 	DX(json_getdata),
+	DX(json_getobjectnames),
 
 	PRIMSEND,
 };
