@@ -58,15 +58,38 @@ with-dynlibs mod_json {
 		){
 			for	(name = $names) {
 				value = $dict($name)
-				if {~ <={$&termtypeof $value} dict} {
-					newobjdict = $value
-				} {
-					newobjdict = %dict(type=>string;value=>$^value)
-				}
-				newobj = <={json_create $newobjdict}
+				match <={$&termtypeof $value} (
+					* { newobj = <={json_create %dict(type=>string;value=>$^value)} }
+					dict { newobj = <={json_create $value} }
+					object:json { newobj = $value}
+				)
 				jsonobj = <={%json_addto $jsonobj $newobj $name}
 			}
 			return $jsonobj
+		}
+	}
+
+	fn json_addarray jsonobj objlist {
+		for (obj = $objlist) {
+			let (newobj=) {
+				match <={$&termtypeof $obj} (
+					* { newobj = <={json_create %dict(type=>string;value=>$^obj)} }
+					dict { newobj = <={json_create $obj} }
+					object_json { newobj = $obj }
+				)
+				jsonobj = <={%json_addto $jsonobj $newobj}
+			}
+		}
+		return $jsonobj
+	}
+
+	fn json_add jsonobj args {
+		let ((type _) = <={%json_gettype $jsonobj}) {
+			match $type (
+				* { throw error json_add 'object must be a json array or json object' }
+				object { json_addobject $jsonobj $args }
+				array { json_addarray $jsonobj $args }
+			)
 		}
 	}
 }
