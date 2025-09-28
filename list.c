@@ -180,6 +180,9 @@ append(List *head0, List *tail0)
 	List *tmp = nil; Root r_tmp;
 	Term *term = nil; Root r_term;
 
+	if(head0 == nil)
+		return tail0;
+
 	gcref(&r_head, (void **)&head);
 	gcref(&r_tail, (void **)&tail);
 	gcref(&r_result, (void **)&result);
@@ -195,20 +198,18 @@ append(List *head0, List *tail0)
 	for(lp = head; lp != nil; lp = lp->next) {
 		term = lp->term;
 		tmp = mklist(term, nil);
-		if(!result) {
+		if(result == nil) {
 			result = tmp;
-			rp = tmp;
-		} else {
-			rp->next = tmp;
-			rp = rp->next;
+			rp = result;
+			continue;
 		}
+		rp->next = tmp;
+		rp = rp->next;
 	}
-	gcenable();
 
-	if(!rp)
-		result = tail;
-	else
-		rp->next = tail;
+	rp->next = tail;
+
+	gcenable();
 
 	gcrderef(&r_term);
 	gcrderef(&r_tmp);
