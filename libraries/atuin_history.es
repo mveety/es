@@ -88,7 +88,8 @@ fn __atuin_enable {
 			nelem = $history_conf_reload
 		}
 		%clear-history
-		%add-history ``(\n){atuin history list --cmd-only | tail -n $nelem}
+		# %add-history ``(\n){atuin history list --cmd-only | tail -n $nelem}
+		%add-history ``(\n){atuin search --include-duplicates --cmd-only --limit 100}
 	}
 
 	fn %rl-hook1 {
