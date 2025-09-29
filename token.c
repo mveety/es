@@ -3,6 +3,7 @@
 #include "es.h"
 #include "input.h"
 #include "syntax.h"
+#include <ctype.h>
 #include "token.h"
 
 #define isodigit(c) ('0' <= (c) && (c) < '8')
@@ -205,14 +206,40 @@ top:
 			}
 			input_ungetc(mc);
 		}
-		if(c == '-') {
+		if(c == '-'){
 			mc = input_getc();
-			if(mc == '-') {
+			if(mc == '-'){
 				mc2 = input_getc();
 				if(isalnum(mc2)) {
-					input_ungetc(mc2);
-					w = NW;
-					return LONGARGSTART;
+					i = 0;
+					buf[i++] = c;
+					buf[i++] = mc;
+					buf[i++] = mc2;
+					while(1){
+						c = input_getc();
+						if(c == EOF){
+							w = NW;
+							scanerror("eof in longarg/gnuarg");
+							return ERROR;
+						}
+						if(c == ' ' || c == '\t' || c == '\n') {
+							input_ungetc(c);
+							buf[i] = '\0';
+							y->str = gcdup(buf);
+							return LONGARG;
+						}
+						if(c == '=') {
+							buf[i++] = '=';
+							buf[i] = '\0';
+							y->str = gcdup(buf);
+							return GNUARG;
+						}
+						buf[i++] = c;
+						if((i+3) >= bufsize) {
+							bufsize *= 2;
+							buf = tokenbuf = erealloc(buf, bufsize);
+						}
+					}
 				}
 				input_ungetc(mc2);
 			}
