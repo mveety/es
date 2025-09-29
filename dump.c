@@ -316,13 +316,38 @@ static char *
 dumpterm(Term *term)
 {
 	char *name;
+	char *dstring;
+	char *dclosure;
 	if(term == NULL)
 		return "NULL";
 	name = str("&E_%ulx", term);
 	if(dictget(cvars, name) == NULL) {
-		print("static const Term %s = {%s, ttNone, (char *) %s, (Closure *) %s, (Dict*) NULL, "
-			  "(Object*) NULL };\n",
-			  name + 1, termtype(term), dumpstring(term->str), dumpclosure(term->closure));
+		switch(term->kind) {
+		default:
+			unreachable();
+			break;
+		case tkString:
+			dstring = strdup(dumpstring(term->str));
+			break;
+		case tkClosure:
+			dclosure = strdup(dumpclosure(term->closure));
+			break;
+		}
+		print("static const Term %s = {%s, ttNone, ", name + 1, termtype(term));
+		switch(term->kind){
+		default:
+			unreachable();
+			break;
+		case tkString:
+			print("{.str = (char*) %s}", dstring);
+			free(dstring);
+			break;
+		case tkClosure:
+			print("{.closure = (Closure*) %s}", dclosure);
+			free(dclosure);
+			break;
+		}
+		print("};\n");
 		cvars = dictput(cvars, name, term);
 	}
 	return name;

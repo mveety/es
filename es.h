@@ -52,10 +52,13 @@ typedef enum {
 struct Term {
 	TermKind kind;
 	Termtag tag;
-	char *str;
-	Closure *closure;
-	Dict *dict;
-	Object *obj;
+	union {
+		char *str;
+		Closure *closure;
+		Dict *dict;
+		Object *obj;
+		void *ptr;
+	};
 };
 
 struct List {

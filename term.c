@@ -16,13 +16,13 @@ mkterm1(char *str, Closure *closure, Dict *dict, Object *obj)
 	term = gcnew(Term);
 	gcref(&r_term, (void **)&term);
 	if(str != nil)
-		*term = (Term){tkString, ttNone, str, nil, nil, nil};
+		*term = (Term){tkString, ttNone, {.str = str}};
 	else if(closure != nil)
-		*term = (Term){tkClosure, ttNone, nil, closure, nil, nil};
+		*term = (Term){tkClosure, ttNone, {.closure = closure}};
 	else if(dict != nil)
-		*term = (Term){tkDict, ttNone, nil, nil, dict, nil};
+		*term = (Term){tkDict, ttNone, {.dict = dict}};
 	else if(obj != nil)
-		*term = (Term){tkObject, ttNone, nil, nil, nil, obj};
+		*term = (Term){tkObject, ttNone, {.obj = obj}};
 	else
 		unreachable();
 	gcenable();
@@ -89,30 +89,38 @@ getclosure(Term *term)
 {
 	Term *tp = nil; Root r_tp;
 	Tree *np = nil; Root r_np;
+	char *tmp = nil; Root r_tmp;
 
-	if(term->kind == tkDict)
+	assert(term->ptr);
+	switch(term->kind){
+	default:
+		// should be unreachable();
 		return nil;
-	if(term->closure == nil) {
-		assert(term->str != nil);
+	case tkString:
 		if(isfunction(term->str)) {
 			gcref(&r_tp, (void **)&tp);
 			gcref(&r_np, (void **)&np);
+			gcref(&r_tmp, (void **)&tmp);
 			tp = term;
-			np = parsestring(term->str);
+			tmp = gcdup(tp->str);
+			np = parsestring(tmp);
 			if(np == nil) {
 				gcrderef(&r_np);
 				gcrderef(&r_tp);
 				return nil;
 			}
 			tp->closure = extractbindings(np);
-			tp->str = nil;
 			tp->kind = tkClosure;
 			term = tp;
+			gcrderef(&r_tmp);
 			gcrderef(&r_np);
 			gcrderef(&r_tp);
-		}
+		} else
+			return nil;
+		fallthrough;
+	case tkClosure:
+		return term->closure;
 	}
-	return term->closure;
 }
 
 typedef struct {
@@ -158,33 +166,7 @@ getstr(Term *term)
 	char *objstr = nil;
 	char *tmp;
 
-	if(term->kind == tkString && term->str == nil) {
-		unreachable();
-		/* TODO: This is wrong, but I still need to hunt down places where
-		 * strings are defined improperly. this should be unreachable();
-		 */
-
-		/* if(term->closure)
-			term->kind = tkClosure;
-		else if(term->dict)
-			term->kind = tkDict;
-		else if(term->obj)
-			term->kind = tkObject;
-		else
-			unreachable();
-
-		gcref(&r_tp, (void **)&tp);
-		tp = term;
-		if(term->closure != nil) {
-			tp->str = str("%C", tp->closure);
-			tp->kind = tkClosure;
-		} else if(term->dict != nil) {
-			tp->str = str("%V", tp->dict);
-			tp->kind = tkDict;
-		}
-		gcrderef(&r_tp);
-		term = tp;*/
-	}
+	assert(term->ptr);
 	switch(term->kind) {
 	default:
 		unreachable();
@@ -193,10 +175,8 @@ getstr(Term *term)
 	case tkRegex:
 		return str("%%re(%#S)", term->str);
 	case tkClosure:
-		assert(term->closure != nil);
 		return str("%C", term->closure);
 	case tkDict:
-		assert(term->dict != nil);
 		args.result = nil;
 		gcref(&r_args_result, (void **)&args.result);
 		gcref(&r_tp, (void **)&tp);
@@ -337,26 +317,21 @@ TermScan(void *p)
 	switch(term->kind){
 	default:
 		unreachable();
+	case tkClosure:
+		term->closure = forward(term->closure);
+		break;
 	case tkString:
 	case tkRegex:
-		assert(term->str);
-		break;
-	case tkClosure:
-		assert(term->closure);
+		term->str = forward(term->str);
 		break;
 	case tkDict:
-		assert(term->dict);
+		term->dict = forward(term->dict);
 		break;
 	case tkObject:
-		assert(term->obj);
+		if(term->obj->sysflags & ObjectGcManaged)
+			refobject(term->obj);
 		break;
 	}
-
-	term->closure = forward(term->closure);
-	term->str = forward(term->str);
-	term->dict = forward(term->dict);
-	if(term->obj && term->obj->sysflags & ObjectGcManaged)
-		refobject(term->obj);
 	return sizeof(Term);
 }
 
@@ -367,11 +342,20 @@ TermMark(void *p)
 
 	t = (Term *)p;
 	gc_set_mark(header(p));
-	gcmark(t->closure);
-	gcmark(t->str);
-	gcmark(t->dict);
-	if(t->obj && t->obj->sysflags & ObjectGcManaged)
-		refobject(t->obj);
+	switch(t->kind){
+	default:
+		unreachable();
+	case tkString:
+	case tkRegex:
+	case tkDict:
+	case tkClosure:
+		gcmark(t->ptr);
+		break;
+	case tkObject:
+		if(t->obj->sysflags & ObjectGcManaged)
+			refobject(t->obj);
+		break;
+	}
 }
 
 extern Boolean
@@ -387,7 +371,7 @@ extern Boolean
 isclosure(Term *term)
 {
 	assert(term != nil);
-	return term->closure != nil;
+	return term->kind == tkClosure;
 }
 
 Boolean

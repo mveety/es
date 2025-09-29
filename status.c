@@ -4,8 +4,8 @@
 
 // clang-format off
 static const Term
-	trueterm	= { tkString, ttNone, "0", nil, nil, nil },
-	falseterm	= { tkString, ttNone, "1", nil, nil, nil };
+	trueterm	= { tkString, ttNone, {.str = "0"}},
+	falseterm	= { tkString, ttNone, {.str = "1"}};
 static const List
 	truelist	= { (Term *) &trueterm, nil },
 	falselist	= { (Term *) &falseterm, nil };
