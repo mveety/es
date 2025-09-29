@@ -317,7 +317,7 @@ dumpterm(Term *term)
 {
 	char *name;
 	char *dstring;
-	char *dclosure;
+
 	if(term == NULL)
 		return "NULL";
 	name = str("&E_%ulx", term);
@@ -331,7 +331,7 @@ dumpterm(Term *term)
 			dstring = strdup(dumpstring(term->str));
 			break;
 		case tkClosure:
-			dclosure = strdup(dumpclosure(term->closure));
+			dstring = strdup(dumpclosure(term->closure));
 			break;
 		}
 		print("static const Term %s = {%s, ttNone, ", name + 1, termtype(term));
@@ -342,13 +342,12 @@ dumpterm(Term *term)
 		case tkString:
 		case tkRegex:
 			print("{.str = (char*) %s}", dstring);
-			free(dstring);
 			break;
 		case tkClosure:
-			print("{.closure = (Closure*) %s}", dclosure);
-			free(dclosure);
+			print("{.closure = (Closure*) %s}", dstring);
 			break;
 		}
+		free(dstring);
 		print("};\n");
 		cvars = dictput(cvars, name, term);
 	}
