@@ -37,6 +37,7 @@ extern Tree *mkmatchall(Tree *subj, Tree *cases);
 extern Tree *mkprocess(Tree *subj, Tree *cases);
 extern Tree *mkdictassign(Tree *sub, Tree *assoc);
 extern Tree *mkappendassign(Tree *var, Tree *list);
+extern Tree *mklongarg(char *argname, char *argvalue);
 
 /* heredoc.c */
 

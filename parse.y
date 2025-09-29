@@ -23,7 +23,7 @@
 %token	EXTRACT CALL COUNT FLAT OROR TOSTR PRIM SUB
 %token	NL ENDFILE ERROR MATCH MATCHALL PROCESS TRY
 %token	DICTASSOC DICT DICTASSIGN APPENDASSIGN
-%token	REGEX
+%token	REGEX LONGARGSTART
 
 %left	LOCAL LET LETS FOR CLOSURE ')'
 %left	ANDAND OROR NL MATCH MATCHALL PROCESS
@@ -151,6 +151,10 @@ comword	: param				{ $$ = $1; }
 
 param	: WORD				{ $$ = mk(nWord, $1); }
 	| QWORD				{ $$ = mk(nQword, $1); }
+	| LONGARGSTART WORD { $$ = mklongarg($2, NULL); }
+	| LONGARGSTART QWORD { $$ = mklongarg($2, NULL); }
+	| LONGARGSTART WORD '=' WORD	{ $$ = mklongarg($2, $4); }
+	| LONGARGSTART WORD '=' QWORD	{ $$ = mklongarg($2, $4); }
 
 params	:				{ $$ = NULL; }
 	| params param			{ $$ = treeconsend($1, $2); }

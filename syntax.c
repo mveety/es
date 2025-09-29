@@ -492,3 +492,17 @@ mkappendassign(Tree *var, Tree *list)
 	assignlist = treecons(mk(nVar, var), list);
 	return mk(nAssign, var, assignlist);
 }
+
+Tree *
+mklongarg(char *argname, char *argvalue)
+{
+	char *fullarg = nil;
+
+	if(argvalue)
+		fullarg = str("--%s=%s", argname, argvalue);
+	else
+		fullarg = str("--%s", argname);
+
+	return mk(nQword, fullarg);
+}
+

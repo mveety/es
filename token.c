@@ -157,7 +157,7 @@ extern int
 yylex(void)
 {
 	static Boolean dollar = FALSE;
-	int c, mc;
+	int c, mc, mc2;
 	size_t i;			  /* The purpose of all these local assignments is to	*/
 	const char *meta;	  /* allow optimizing compilers like gcc to load these	*/
 	char *buf = tokenbuf; /* values into registers. On a sparc this is a		*/
@@ -167,6 +167,7 @@ yylex(void)
 	char *cmd;
 	int fd[2];
 	int p[2];
+	char lchar;
 
 	if(goterror) {
 		goterror = FALSE;
@@ -201,6 +202,19 @@ top:
 			if(mc == '=') {
 				w = NW;
 				return APPENDASSIGN;
+			}
+			input_ungetc(mc);
+		}
+		if(c == '-') {
+			mc = input_getc();
+			if(mc == '-') {
+				mc2 = input_getc();
+				if(isalnum(mc2)) {
+					input_ungetc(mc2);
+					w = NW;
+					return LONGARGSTART;
+				}
+				input_ungetc(mc2);
 			}
 			input_ungetc(mc);
 		}
@@ -258,7 +272,16 @@ top:
 	}
 	switch(c) {
 	case '!':
-		return '!';
+		return c;
+	case '=':
+		lchar = input_getc();
+		if(lchar == '>') {
+			w = NW;
+			return DICTASSOC;
+		}
+		input_ungetc(lchar);
+		w = NW;
+		return c;
 	case '`': /* NOTE: backquote is here */
 		c = input_getc();
 		if(c == '`')
@@ -398,18 +421,6 @@ badescape:
 	case ';':
 	case '^':
 	case ')':
-	case '=':
-		if(c != SUB) {
-			char lchar;
-
-			lchar = input_getc();
-			if(lchar == '>') {
-				w = NW;
-				return DICTASSOC;
-			}
-			input_ungetc(lchar);
-		}
-		fallthrough;
 	case '{':
 	case '}':
 		w = NW;

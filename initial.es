@@ -160,7 +160,7 @@ fn-%block = @ rest {
 		} {
 			__es_res = <={$rest}
 		}
-		for(fn = $__es_deferbody) {
+		for (fn = $__es_deferbody) {
 			$fn
 		}
 		if {~ $__es_exception(1) caught} {
