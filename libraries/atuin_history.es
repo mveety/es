@@ -5,6 +5,7 @@ defconf atuin_history update-history-file true
 defconf atuin_history debugging false
 defconf atuin_history load-on-change true
 defconf atuin_history enable-readline-hook true
+defconf atuin_history load-duplicate-entries true
 
 if {~ $#__atuin_started 0 || ~ $__atuin_start false} {
 	old_reload-history = $fn-reload-history
@@ -89,7 +90,12 @@ fn __atuin_enable {
 		}
 		%clear-history
 		# %add-history ``(\n){atuin history list --cmd-only | tail -n $nelem}
-		%add-history ``(\n){atuin search --include-duplicates --cmd-only --limit 100}
+		if {$atuin_history_conf_load-duplicate-entries} {
+			%add-history ``(\n){atuin search --include-duplicates --cmd-only --limit $nelem}
+		} {
+			%add-history ``(\n){atuin search --cmd-only --limit $nelem}
+		}
+
 	}
 
 	fn %rl-hook1 {
