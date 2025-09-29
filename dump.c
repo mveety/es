@@ -327,6 +327,7 @@ dumpterm(Term *term)
 			unreachable();
 			break;
 		case tkString:
+		case tkRegex:
 			dstring = strdup(dumpstring(term->str));
 			break;
 		case tkClosure:
@@ -339,6 +340,7 @@ dumpterm(Term *term)
 			unreachable();
 			break;
 		case tkString:
+		case tkRegex:
 			print("{.str = (char*) %s}", dstring);
 			free(dstring);
 			break;
