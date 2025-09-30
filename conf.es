@@ -129,7 +129,9 @@ let (
 
 	fn esconf_printusage {
 		echo >[1=2] 'usage: conf [-vrX] -p package [var]'
+		echo >[1=2] '       conf [-vrX] package:[var]'
 		echo >[1=2] '       conf [-v] [-A | -P] -p package -s var value'
+		echo >[1=2] '       conf [-v] [-A | -P] -s package:var value'
 		echo >[1=2] '       conf [-vrX] -a'
 		echo >[1=2] '       conf [-X] -p'
 	}
@@ -185,6 +187,12 @@ let (
 				}
 			}
 
+			if {~ $rest(1) -s} { rest = $rest(2 ...)}
+			(varname value) = $rest
+			if {~ $varname *:*} {
+				(package varname) = <={~~ $varname *:*}
+			}
+
 			if {! $all && ~ $package __es_none} {
 				echo >[1=2] 'error: invalid options'
 				esconf_printusage
@@ -200,9 +208,6 @@ let (
 				echo >[1=2] 'error: package '^$package^' not found'
 				return <=false
 			}
-
-			if {~ $rest(1) -s} { rest = $rest(2 ...) }
-			(varname value) = $rest
 
 			match $mode (
 				(print) {
