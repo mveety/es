@@ -117,6 +117,8 @@ fn es_new_vars {
 		printable_vars = ()
 		search = false
 		search_glob = '*'
+		names_only = false
+		format = false
 	) {
 		parseargs @ arg {
 			match $arg (
@@ -158,6 +160,8 @@ fn es_new_vars {
 					config = true
 				}
 				(-S) { search = true ; search_glob = $flagarg ; done}
+				(-n) { names_only = true }
+				(-F) { format = true }
 				(-h) { fullhelp = true ; usage }
 				(-^'?') { usage }
 				* { usage }
@@ -167,6 +171,8 @@ fn es_new_vars {
 			if {$fullhelp} {
 				echo '    -a        -- all objects and modifiers'
 				echo '    -S [glob] -- filter selected objects'
+				echo '    -n        -- names only'
+				echo '    -F        -- format name (names only)'
 				echo ''
 				echo 'selectors'
 				echo '    -v        -- variables (default)'
@@ -207,20 +213,42 @@ fn es_new_vars {
 			fn-printable = @ v { if {~ $v $noexport} $priv $export }
 			fn-allvars = @ { if {$search} { $&vars |> glob $search_glob } { $&vars } }
 			fn-allinternals = @{if {$search} {$&internals |> glob $search_glob} {$&internals}}
+			fn-format = @ v {
+				if {$format} {
+					match $v (
+						(fn-* set-* get-*) { result <={~~ $v fn-* set-* get-*} }
+						(*_conf_*) { let ((p n) = <={~~ $v *_conf_*}) { result $p^':'^$n }}
+						* { result $v }
+					)
+				} {
+					result $v
+				}
+			}
 		) {
 			if {$export || $priv} {
 				for (x = <=allvars) {
 					if {selected $x && printable $x} {
-						%var $x |> echo
+						if {$names_only} {
+							echo -n <={format $x}^' '
+						} {
+							%var $x |> echo
+						}
 					}
 				}
 			}
 			if {$intern} {
 				for (x = <=allinternals) {
 					if {selected $x} {
-						%var $x |> echo
+						if {$names_only} {
+							echo -n <={format $x}^' '
+						} {
+							%var $x |> echo
+						}
 					}
 				}
+			}
+			if {$names_only} {
+				echo ''
 			}
 		}
 	}
