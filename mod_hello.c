@@ -22,6 +22,28 @@ hello_onfork(Object *object)
 	return 0;
 }
 
+char *
+teststring_stringify(Object *obj)
+{
+	return (char *)obj->data;
+}
+
+Result
+teststring_objectify(char *str)
+{
+	Object *newobj;
+	size_t strsize;
+
+	strsize = strlen(str);
+	newobj = allocate_object("teststring", strsize + 5);
+	strcpy(newobj->data, str);
+	newobj->sysflags |= ObjectInitialized;
+	newobj->sysflags |= ObjectGcManaged;
+	newobj->sysflags |= ObjectFreeWhenNoRefs;
+
+	return result_obj(newobj, ObjectifyOk);
+}
+
 int
 dyn_onload(void)
 {
@@ -30,6 +52,12 @@ dyn_onload(void)
 		dprintf(2, "unable to define hellotype!\n");
 		return -1;
 	}
+	if(define_type("teststring", nil, nil) < 0) {
+		dprintf(2, "unable to define teststring");
+		return -1;
+	}
+	define_stringifier("teststring", teststring_stringify);
+	define_objectifier("teststring", teststring_objectify);
 	define_onfork_callback("hellotype", &hello_onfork);
 	return 0;
 }
@@ -89,11 +117,10 @@ PRIM(object_freeable) {
 
 	if(list == nil)
 		fail("$&object_freeable", "missing argument");
-	if(list->term->kind != tkObject)
-		fail("$&object_freeable", "argument must be an object");
 
 	gcref(&r_result, (void **)&result);
-	obj = getobject(list->term);
+	if((obj = getobject(list->term)) == nil)
+		fail("$&object_freeable", "argument must be an object");
 	obj->sysflags |= ObjectFreeWhenNoRefs;
 	result = mklist(mkobject(obj), nil);
 	gcrderef(&r_result);

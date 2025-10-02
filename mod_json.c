@@ -61,11 +61,13 @@ json_stringify(Object *obj)
 int
 is_json_object(Term *term)
 {
+	Object *obj;
+
 	if(term == nil)
 		return 0;
-	if(term->kind != tkObject)
+	if((obj = getobject(term)) == nil)
 		return 0;
-	if(!object_is_type(getobject(term), "json"))
+	if(!object_is_type(obj, "json"))
 		return 0;
 	return 1;
 }
@@ -98,6 +100,17 @@ decode_json(char *str)
 
 	obj->sysflags |= ObjectInitialized;
 	return obj;
+}
+
+Result
+json_objectify(char *str)
+{
+	Object *obj = nil;
+
+	obj = decode_json(str);
+	if(!obj)
+		return result(nil, ObjectifyInvalidObjectFormat);
+	return result(obj, ObjectifyOk);
 }
 
 char *
@@ -208,7 +221,7 @@ typename2int(char *typename)
 		return JTBoolean;
 	if(streq(typename, "null"))
 		return JTNull;
-return JTBadType;
+	return JTBadType;
 }
 
 char *
@@ -290,6 +303,7 @@ dyn_onload(void)
 	if(define_type("json", &json_deallocate, &json_refdeps) < 0)
 		return ErrorModuleNotLoaded;
 	define_stringifier("json", &json_stringify);
+	define_objectifier("json", &json_objectify);
 	return 0;
 }
 
@@ -634,7 +648,7 @@ PRIM(json_detachobject){
 PRIM(json_getdata){
 	List *lp = nil; Root r_lp;
 	List *res = nil; Root r_res;
-Object *obj = nil;
+	Object *obj = nil;
 	int type;
 
 	if(list == nil)
@@ -677,7 +691,7 @@ Object *obj = nil;
 	return res;
 }
 
-List*
+List *
 cJSON_WalkObjectForNames(cJSON *children)
 {
 	if(!children)
@@ -686,7 +700,7 @@ cJSON_WalkObjectForNames(cJSON *children)
 	return mklist(mkstr(str("%s", children->string)), cJSON_WalkObjectForNames(children->next));
 }
 
-List*
+List *
 cJSON_GetObjectItemNames(cJSON *object)
 {
 	List *res = nil; Root r_res;
@@ -696,7 +710,7 @@ cJSON_GetObjectItemNames(cJSON *object)
 	if(!cJSON_IsObject(object))
 		return nil;
 
-	gcref(&r_res, (void**)&res);
+	gcref(&r_res, (void **)&res);
 	gc();
 	gcdisable();
 

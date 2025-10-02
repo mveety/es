@@ -10,6 +10,7 @@ typedef struct {
 	int (*refdeps)(Object *);
 	char *(*stringify)(Object *);
 	int (*onfork)(Object *);
+	Result (*objectify)(char *);
 } Typedef;
 
 extern size_t typessz;
@@ -32,6 +33,42 @@ PRIM(objects_dumptypes) {
 
 	gcrderef(&r_result);
 	return result;
+}
+
+PRIM(printtypes) {
+	size_t i;
+	int nocallbacks = 1;
+
+	for(i = 0; i < typessz; i++, nocallbacks = 1) {
+		if(typedefs[i] == nil)
+			continue;
+		dprintf(2, "type %lu: %s: ", i, typedefs[i]->name);
+		if(typedefs[i]->deallocate) {
+			dprintf(2, "deallocate ");
+			nocallbacks = 0;
+		}
+		if(typedefs[i]->refdeps) {
+			dprintf(2, "refdeps ");
+			nocallbacks = 0;
+		}
+		if(typedefs[i]->stringify) {
+			dprintf(2, "stringify ");
+			nocallbacks = 0;
+		}
+		if(typedefs[i]->onfork) {
+			dprintf(2, "onfork ");
+			nocallbacks = 0;
+		}
+		if(typedefs[i]->objectify) {
+			dprintf(2, "objectify");
+			nocallbacks = 0;
+		}
+		if(nocallbacks)
+			dprintf(2, "no callbacks");
+		dprintf(2, "\n");
+	}
+
+	return nil;
 }
 
 PRIM(printobjects) {
@@ -61,6 +98,10 @@ PRIM(printobjects) {
 		}
 		if(objtype->onfork) {
 			dprintf(2, "onfork ");
+			nocallbacks = 0;
+		}
+		if(objtype->objectify) {
+			dprintf(2, "objectify");
 			nocallbacks = 0;
 		}
 		if(nocallbacks)
@@ -98,9 +139,19 @@ PRIM(printobjectstats) {
 	return nil;
 }
 
+PRIM(objectify) {
+	Object *obj = nil;
+
+	if(list == nil)
+		fail("$&objectify", "missing argument");
+	if((obj = getobject(list->term)) == nil)
+		fail("$&objectify", "not an object");
+
+	return mklist(mkobject(obj), nil);
+}
+
 DYNPRIMS() = {
-	DX(objects_dumptypes),
-	DX(printobjects),
-	DX(printobjectstats),
+	DX(objects_dumptypes), DX(printtypes), DX(printobjects),
+	DX(printobjectstats),  DX(objectify),
 	PRIMSEND,
 };

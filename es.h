@@ -28,6 +28,7 @@ typedef struct RegexStatus RegexStatus;
 typedef struct AppendContext AppendContext;
 typedef struct Root Root;
 typedef struct Object Object;
+typedef struct Result Result;
 
 typedef enum {
 	tkString,
@@ -194,6 +195,13 @@ enum {
 	ObjectCallbackOnFork = 1 << 4,
 
 	ObjectErrorTypeInUse = -1,
+
+	ObjectifyOk = 0,
+	ObjectifyUnknownError = -127,
+	ObjectifyInvalidObjectFormat = -1,
+	ObjectifyInvalidType = -2,
+	ObjectifyInvalidFormat = -3,
+	ObjectifySyntaxError = -4,
 };
 
 struct Object {
@@ -204,6 +212,16 @@ struct Object {
 	size_t size;	   /* object payload size */
 	int64_t refcount;
 	void *data;
+};
+
+struct Result {
+	union {
+		int64_t i;
+		double f;
+		char *str;
+		void *ptr;
+	};
+	int status;
 };
 
 /*
@@ -412,6 +430,16 @@ extern long eread(int fd, char *buf, size_t n);
 extern Boolean isabsolute(char *path);
 extern Boolean streq2(const char *s, const char *t1, const char *t2);
 extern void esexit(int status) __attribute__((noreturn));
+extern int status(Result r);
+extern void *ok(Result r);
+extern int64_t ok_int(Result r);
+extern double ok_float(Result r);
+extern char *ok_str(Result r);
+extern Result result(void *ptr, int status);
+extern Result result_int(int64_t i, int status);
+extern Result result_float(double f, int status);
+extern Result result_str(char *str, int status);
+
 
 /* input.c */
 
@@ -502,6 +530,7 @@ extern void init_objects(void);
 extern char *gettypename(int32_t index);
 extern int define_type(char *name, int (*deallocate)(Object *), int (*refdeps)(Object *));
 extern int define_stringifier(char *name, char *(*stringify)(Object *));
+extern int define_objectifier(char *name, Result (*objectify)(char *));
 extern int define_onfork_callback(char *name, int (*onfork)(Object *));
 extern int undefine_type(char *name);
 extern Object *allocate_object(char *type, size_t size);
@@ -509,6 +538,9 @@ extern void deallocate_object(Object *obj);
 extern void assert_type(Object *obj, char *name);
 extern int object_is_type(Object *obj, char *name);
 extern char *stringify(Object *obj);
+extern Result result_obj(Object *obj, int status);
+extern Object *ok_obj(Result r);
+extern Result objectify(char *str);
 
 /* gc api */
 extern void refobject(Object *obj);

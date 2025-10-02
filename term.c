@@ -256,6 +256,8 @@ done:
 Object *
 getobject(Term *term)
 {
+	Result res;
+
 	if(!term)
 		return nil;
 	switch(term->kind) {
@@ -264,6 +266,24 @@ getobject(Term *term)
 	case tkObject:
 		return term->obj;
 	case tkString:
+		res = objectify(getstr(term));
+		switch(status(res)){
+		default:
+			fail("es:objectify", "other error: %d", res.status);
+			break;
+		case ObjectifyOk:
+			return ok_obj(res);
+		case ObjectifyUnknownError:
+			fail("es:objectify", "unknown error");
+			break;
+		case ObjectifyInvalidType:
+			fail("es:objectify", "invalid type");
+			break;
+		case ObjectifyInvalidFormat:
+			fail("es:objectify", "invalid format");
+			break;
+		}
+		break;
 	case tkClosure:
 	case tkRegex:
 		return nil;

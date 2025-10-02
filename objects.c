@@ -12,6 +12,7 @@ typedef struct {
 	int (*refdeps)(Object *);
 	char *(*stringify)(Object *);
 	int (*onfork)(Object *);
+	Result (*objectify)(char *);
 } Typedef;
 
 size_t typessz = 0;
@@ -144,6 +145,21 @@ define_stringifier(char *name, char *(*stringify)(Object *))
 	type = typedefs[index];
 
 	type->stringify = stringify;
+	return 0;
+}
+
+int
+define_objectifier(char *name, Result (*objectify)(char *))
+{
+	int index;
+	Typedef *type;
+
+	assert(name);
+	assert((index = gettypeindex(name)) >= 0);
+	type = typedefs[index];
+
+	type->objectify = objectify;
+
 	return 0;
 }
 
@@ -282,6 +298,95 @@ stringify(Object *obj)
 	if(objtype->stringify)
 		return objtype->stringify(obj);
 	return nil;
+}
+
+Result
+result_obj(Object *obj, int status)
+{
+	return result(obj, status);
+}
+
+Object *
+ok_obj(Result r)
+{
+	return (Object *)ok(r);
+}
+
+Result
+objectify(char *str)
+{
+	Result res;
+	Typedef *objtype;
+	int32_t typeidx;
+	size_t strsize;
+	size_t i, j;
+	char bufstr[128];
+	char *databuf = nil;
+	char *objstr = nil;
+	enum { StateNormal, StateInQuote } state = StateNormal;
+
+	strsize = strlen(str);
+	if(strsize < 9)
+		return result(nil, ObjectifyInvalidObjectFormat);
+
+	memset(&bufstr[0], 0, sizeof(bufstr));
+	for(i = 5; i < strsize && i < sizeof(bufstr); i++) {
+		if(str[i] == '(')
+			break;
+		bufstr[i - 5] = str[i];
+	}
+
+	if((typeidx = gettypeindex(bufstr)) < 0)
+		return result(nil, ObjectifyInvalidType);
+
+	assert(objtype = typedefs[typeidx]);
+
+	if(objtype->objectify == nil)
+		return result(nil, ObjectifyOk);
+
+	i++;
+	if(str[i] != '\'')
+		return result(nil, ObjectifyInvalidFormat);
+	i++;
+
+	if(str[strsize - 1] != ')')
+		return result(nil, ObjectifyInvalidFormat);
+	if(str[strsize - 2] != '\'')
+		return result(nil, ObjectifyInvalidFormat);
+
+	databuf = ealloc(strsize);
+
+	for(j = 0; i < (strsize - 2); i++) {
+		switch(state) {
+		default:
+			unreachable();
+			break;
+		case StateNormal:
+			if(str[i] == '\'') {
+				state = StateInQuote;
+				j++;
+				continue;
+			}
+			databuf[j] = str[i];
+			j++;
+			break;
+		case StateInQuote:
+			if(str[i] != '\'') {
+				free(databuf);
+				return result(nil, ObjectifyInvalidFormat);
+			}
+			databuf[j] = '\'';
+			state = StateNormal;
+			j++;
+			break;
+		}
+	}
+
+	objstr = strdup(databuf);
+	free(databuf);
+	res = objtype->objectify(objstr);
+	free(objstr);
+	return res;
 }
 
 void

@@ -1,6 +1,7 @@
 /* util.c -- the kitchen sink ($Revision: 1.2 $) */
 
 #include "es.h"
+#include <stdint.h>
 
 #if !HAVE_STRERROR
 /* strerror -- turn an error code into a string */
@@ -154,3 +155,72 @@ esexit(int status)
 	deallocate_all_objects();
 	exit(status);
 }
+
+/* results */
+
+int
+status(Result r)
+{
+	return r.status;
+}
+
+void*
+ok(Result r)
+{
+	if(r.status == 0)
+		return r.ptr;
+	uerror("result");
+	esexit(r.status);
+}
+
+int64_t
+ok_int(Result r)
+{
+	if(r.status == 0)
+		return r.i;
+	uerror("result");
+	esexit(r.status);
+}
+
+double
+ok_float(Result r)
+{
+	if(r.status == 0)
+		return r.f;
+	uerror("result");
+	esexit(r.status);
+}
+
+char*
+ok_str(Result r)
+{
+	if(r.status == 0)
+		return r.str;
+	uerror("result");
+	esexit(r.status);
+}
+
+Result
+result(void *ptr, int status)
+{
+	return (Result){{.ptr = ptr}, status};
+}
+
+Result
+result_int(int64_t i, int status)
+{
+	return (Result){{.i = i}, status};
+}
+
+Result
+result_float(double f, int status)
+{
+	return (Result){{.f = f}, status};
+}
+
+Result
+result_str(char *str, int status)
+{
+	return (Result){{.str = str}, status};
+}
+
