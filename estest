@@ -353,10 +353,9 @@ if {$runbin} {
 	if {! $testcore} {
 		info 'only running library tests'
 	}
-	if {$testlibs} {
-		libraries = $libdir
-		info 'using libraries in '^$libraries^'/'
-	}
+	libraries = $libdir
+	es_conf_dynlib-local-search = true
+	info 'using libraries in '^$libraries^'/'
 	info 'running tests in '^$testpath^'/'
 
 	inside_estest = true
