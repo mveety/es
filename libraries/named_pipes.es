@@ -54,6 +54,16 @@ fn make-named-pipe label {
 	}
 }
 
+fn register-named-pipe name file {
+	if {dicthaskey $_es_named_pipes $name} {
+		throw error register-named-pipe 'pipe '^$name^' already exists'
+	}
+	if {! access -rwp $file} {
+		throw error register-named-pipe 'file '^$file^' can not be used/does not exist'
+	}
+	_es_named_pipes := $name => $file
+}
+
 fn all-named-pipes {
 	let (pipes = ()) {
 		for (n = <={dictnames $_es_named_pipes}) {
@@ -117,6 +127,6 @@ fn pipe-read name {
 	if {! dicthaskey $_es_named_pipes $name} {
 		throw error pipe-read 'pipe '^$name^' does not exist'
 	}
-	result <={%read <={named-pipe $name}}
+	result <={%read < <={named-pipe $name}}
 }
 
