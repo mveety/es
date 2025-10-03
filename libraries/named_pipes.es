@@ -116,6 +116,13 @@ fn delete-unnamed-pipes {
 	}
 }
 
+fn unregister-named-pipe name {
+	if {! dicthaskey $_es_named_pipes $name} {
+		throw error unregister-named-pipe 'pipe '^$name^' does not exist'
+	}
+	_es_named_pipes := $name =>
+}
+
 fn pipe-echo name rest {
 	if {! dicthaskey $_es_named_pipes $name} {
 		throw error pipe-echo 'pipe '^$name^' does not exist'
