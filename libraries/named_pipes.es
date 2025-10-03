@@ -54,7 +54,20 @@ fn make-named-pipe label {
 	}
 }
 
+fn find-named-pipe name {
+	let ( pipes = <={conf -X named_pipes:tempdir}^/es_named_pipe_*.*.$name.fifo) {
+		if {~ $pipes *^'*'^* } { return () }
+		result $pipes
+	}
+}
+
 fn register-named-pipe name file {
+	if {~ $#file 0} {
+		file = <={find-named-pipe $name |> %first}
+		if {~ $#file 0} {
+			throw error register-named-pipe 'pipe '^$name^' not found'
+		}
+	}
 	if {dicthaskey $_es_named_pipes $name} {
 		throw error register-named-pipe 'pipe '^$name^' already exists'
 	}
@@ -135,5 +148,12 @@ fn pipe-read name {
 		throw error pipe-read 'pipe '^$name^' does not exist'
 	}
 	result <={%read < <={named-pipe $name}}
+}
+
+fn pipe-cat name {
+	if {! dicthaskey $_es_named_pipes $name} {
+		throw error pipe-cat 'pipe '^$name^' does not exist'
+	}
+	result `{cat <={named-pipe $name}}
 }
 
