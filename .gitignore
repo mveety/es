@@ -59,4 +59,5 @@ stacks.*.out
 *.plist
 vgcore.*
 config.mk
+test_editor
 
