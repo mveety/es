@@ -217,12 +217,7 @@ top:
 					buf[i++] = mc2;
 					while(1){
 						c = input_getc();
-						if(c == EOF){
-							w = NW;
-							scanerror("eof in longarg/gnuarg");
-							return ERROR;
-						}
-						if(c == ' ' || c == '\t' || c == '\n') {
+						if(c == ' ' || c == '\t' || c == '\n' || c == EOF) {
 							input_ungetc(c);
 							buf[i] = '\0';
 							y->str = gcdup(buf);
@@ -233,6 +228,12 @@ top:
 							buf[i] = '\0';
 							y->str = gcdup(buf);
 							return GNUARG;
+						}
+						if(!isalnum(c) && c != '-' && c != '_' && c != '~'){
+							input_ungetc(c);
+							buf[i] = '\0';
+							y->str = gcdup(buf);
+							return LONGARG;
 						}
 						buf[i++] = c;
 						if((i+3) >= bufsize) {
