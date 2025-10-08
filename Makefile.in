@@ -42,6 +42,9 @@ es	: ${OFILES} system.o
 esdump	: ${OFILES} dump.o
 	${CC} -o esdump ${LDFLAGS} ${OFILES} dump.o ${LIBS}
 
+test_editor : test_editor.o editor.o
+	${CC} -o test_editor ${LDFLAGS} test_editor.o editor.o
+
 es_static : ${OFILES} system.o
 	${CC} -static -o es_static ${LDFLAGS} ${OFILES} system.o ${LIBS}
 
@@ -55,6 +58,7 @@ modules : ${MODULES}
 
 clean	:
 	rm -f es es_static ${OFILES} ${GEN} dump.o system.o version.c ${MODOFILES} ${MODULES}
+	rm -f test_editor test_editor.o editor.o
 
 distclean:	clean
 	rm -f config.cache config.log config.h Makefile GNUmakefile cscope.out tags TAGS core cs.out config.status ltmain.sh

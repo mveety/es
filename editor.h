@@ -119,6 +119,7 @@ extern void refresh(EditorState *state);
 extern void set_prompt1(EditorState *state, char *str);
 extern void set_prompt2(EditorState *state, char *str);
 extern void set_complete_hook(EditorState *state, char** (*hook)(char*, int, int));
+
 /* motions and editing */
 extern void refresh(EditorState *state);
 extern int insert_char(EditorState *state, char c);
