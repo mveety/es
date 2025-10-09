@@ -200,6 +200,7 @@ initialize_editor(EditorState *state, int ifd, int ofd)
 	*state = (EditorState){
 		.ifd = ifd,
 		.ofd = ofd,
+		.dfd = -1,
 		.buffer = ealloc(EDITINITIALBUFSZ),
 		.bufsz = EDITINITIALBUFSZ,
 		.bufpos = 0,
@@ -218,6 +219,8 @@ initialize_editor(EditorState *state, int ifd, int ofd)
 		.completebuf = nil,
 		.lastcomplen = 0,
 		.wordbreaks = " \t\n",
+		.in_completion = 0,
+		.pos = (Wordpos){0, 0},
 	};
 	rawmode_on(state);
 	state->size = gettermsize(state);
@@ -296,6 +299,8 @@ reset_editor(EditorState *state)
 	state->completebuf = nil;
 	state->completionsi = 0;
 	state->lastcomplen = 0;
+	state->in_completion = 0;
+	state->pos = (Wordpos){0,0};
 	return 0;
 }
 
@@ -316,6 +321,7 @@ refresh(EditorState *state)
 	Position rel_cur_pos;
 	Position rel_next_pos;
 
+	assert(state->bufpos <= state->bufend);
 	/* we need to work out where the line originally started */
 	real_position = getposition(state);
 	rel_end = state->last_end;
@@ -655,16 +661,12 @@ history_cancel(EditorState *state)
 	}
 }
 
-typedef struct {
-	size_t start;
-	size_t end;
-} Wordpos;
-
 int
 isawordbreak(EditorState *state, size_t wordbreakssz, char c)
 {
 	size_t i = 0;
 
+	assert(state->wordbreaks);
 	for(i = 0; i < wordbreakssz; i++)
 		if(c == state->wordbreaks[i])
 			return 1;
@@ -680,6 +682,8 @@ get_completion_position(EditorState *state)
 
 	assert(state->wordbreaks);
 	wordbreakssz = strlen(state->wordbreaks);
+	if(state->bufend == 0)
+		return res;
 	res.end = state->bufpos;
 	if(state->bufpos < state->bufend){
 		for(i = state->bufpos; i < state->bufend; i++)
@@ -724,21 +728,6 @@ call_completions_hook(EditorState *state, Wordpos pos)
 }
 
 char *
-format_completion(char *comp)
-{
-	size_t compsz = 0;
-	char *res = nil;
-
-	assert(comp != nil);
-	compsz = strlen(comp);
-	res = ealloc(compsz + 2);
-	memcpy(res, comp, compsz);
-	res[compsz] = ' ';
-	free(comp);
-	return res;
-}
-
-char *
 get_next_completion(EditorState *state, Wordpos pos)
 {
 	char *comp = nil;
@@ -754,17 +743,7 @@ get_next_completion(EditorState *state, Wordpos pos)
 		return nil;
 	}
 
-	for(i = 0; state->completions[i] != nil; i++){
-		if(state->dfd > 0){
-			if(state->completions[i] != nil)
-				dprintf(state->dfd, "state->completions[%lu] = %p\n", i, state->completions[i]);
-			else
-				dprintf(state->dfd, "state->completions[%lu] = nil\n", i);
-		}
-	}
-
-	comp = strdup(state->completions[state->completionsi++]);
-	return format_completion(comp);
+	return state->completions[state->completionsi++];
 }
 
 char *
@@ -794,69 +773,82 @@ get_prev_completion(EditorState *state, Wordpos pos)
 		}
 	}
 
-	comp = state->completions[state->completionsi--];
-	return format_completion(comp);
+	return state->completions[state->completionsi--];
 }
 
 void /* maybe I should use a rope? */
 do_completion(EditorState *state, char *comp, Wordpos pos)
 {
-	int compbufsz = 0;
-	size_t old_bufend = 0;
-	size_t curcomplen = 0;
+	size_t complen = 0;
+	size_t i = 0;
+	size_t prefixlen = 0;
+	size_t suffixlen = 0;
 
-	old_bufend = state->bufend;
 	assert(pos.end <= state->bufend);
-	if(comp == nil) {
-		if(state->lastcomplen == 0)
+
+	if(!state->in_completion){
+		if(state->dfd > 0)
+			dprintf(state->dfd, "state->in_completion = %d -> 1\n", state->in_completion);
+		if(comp == nil)
 			return;
-		if(state->completebuf == nil)
-			return;
-		memset(state->buffer, 0, state->bufend);
-		memcpy(state->buffer, state->completebuf, strlen(state->completebuf));
-		free(state->completebuf);
-		state->bufend = strlen(state->completebuf);
-		state->lastcomplen = 0;
-		return;
-	}
-	if(state->completebuf == nil) {
+		state->pos = pos;
+		state->in_completion = 1;
 		state->completebuf = strdup(state->buffer);
-	}
-	curcomplen = strlen(comp);
-	if(pos.end - pos.start == 0 && state->lastcomplen == 0) {
-		memmove(&state->buffer[pos.start + curcomplen], &state->buffer[pos.start],
-				state->bufend - pos.start);
-	} else {
-		if(state->lastcomplen != 0) {
-			if(curcomplen > state->lastcomplen) {
-				memmove(&state->buffer[pos.end + (curcomplen - state->lastcomplen)],
-						&state->buffer[pos.end], state->bufend - pos.end);
-			} else if(curcomplen < state->lastcomplen) {
-				memmove(&state->buffer[pos.end - (state->lastcomplen - curcomplen)],
-						&state->buffer[pos.end], state->bufend - pos.end);
-			}
+		dprint("state->completebuf = \"%s\"\n", state->completebuf);
+		if(pos.start > 0){
+			state->comp_prefix = ealloc(pos.start+1);
+			memcpy(state->comp_prefix, state->buffer, pos.start);
+			dprint("state->comp_prefix = \"%s\"\n", state->comp_prefix);
 		} else {
-			if((pos.end - pos.start) < curcomplen) {
-				memmove(&state->buffer[pos.end + (curcomplen - (pos.end - pos.start))],
-						&state->buffer[pos.end], state->bufend - pos.end);
-			} else if((pos.end - pos.start) > curcomplen) {
-				memmove(&state->buffer[pos.end - ((pos.end - pos.start) - curcomplen)],
-						&state->buffer[pos.end], state->bufend - pos.end);
-			}
+			state->comp_prefix = nil;
+			dprint("state->comp_prefix = nil\n");
+		}
+		if(state->bufend - pos.end > 0){
+			state->comp_suffix = ealloc((state->bufend - pos.end)+1);
+			memcpy(state->comp_suffix, &state->buffer[pos.end], (state->bufend - pos.end));
+			dprint("state->comp_suffix = \"%s\"\n", state->comp_suffix);
+		} else {
+			state->comp_suffix = nil;
+			dprint("state->comp_suffix = nil\n");
 		}
 	}
-	/* there should be a hole curcomplen in size where we want the completion */
-	memcpy(&state->buffer[pos.start], comp, curcomplen);
 
-	if(state->lastcomplen == 0)
-		state->bufend -= (pos.end - pos.start);
-	else
-		state->bufend -= state->lastcomplen;
-	state->bufend += curcomplen;
+	if(comp == nil){
+		dprint("state->in_completion = %d -> 0\n", state->in_completion);
+		memset(state->buffer, 0, state->bufend+1);
+		memcpy(state->buffer, state->completebuf, strlen(state->completebuf));
+		state->bufend = strlen(state->completebuf);
+		state->bufpos = pos.end;
+		if(state->bufpos > state->bufend)
+			state->bufpos = state->bufend;
+		free(state->completebuf);
+		if(state->comp_prefix)
+			free(state->comp_prefix);
+		if(state->comp_suffix)
+			free(state->comp_suffix);
+		state->in_completion = 0;
+		return;
+	}
+
+	complen = strlen(comp);
+	if(state->comp_prefix){
+		prefixlen = strlen(state->comp_prefix);
+		memcpy(state->buffer, state->comp_prefix, prefixlen);
+		i += prefixlen;
+	}
+	memcpy(&state->buffer[i], comp, complen);
+	i += complen;
+	if(state->comp_suffix){
+		suffixlen = strlen(state->comp_suffix);
+		memcpy(&state->buffer[i], state->comp_suffix, suffixlen);
+		i += suffixlen;
+	}
+
+	state->bufpos = prefixlen + complen;
+	state->bufend = i;
 	if(state->bufpos > state->bufend)
 		state->bufpos = state->bufend;
-
-	state->lastcomplen = curcomplen;
+	state->lastcomplen = complen;
 }
 
 void
@@ -877,42 +869,57 @@ completion_reset(EditorState *state)
 	}
 	state->completionsi = 0;
 	state->lastcomplen = 0;
+	if(state->comp_prefix)
+		free(state->comp_prefix);
+	state->comp_prefix = nil;
+	if(state->comp_suffix)
+		free(state->comp_suffix);
+	state->comp_suffix = nil;
+	state->in_completion = 0;
+}
+
+void
+completion_maybe_reset(EditorState *state)
+{
+	if(state->bufpos < state->pos.start
+		|| state->bufpos > (state->pos.start + state->lastcomplen))
+		completion_reset(state);
 }
 
 void
 completion_next(EditorState *state)
 {
 	char *comp = nil;
-	Wordpos pos;
 
-	pos = get_completion_position(state);
-	comp = get_next_completion(state, pos);
+	if(!state->in_completion)
+		state->pos = get_completion_position(state);
+	comp = get_next_completion(state, state->pos);
 	if(state->dfd > 0){
-		dprintf(state->dfd, "complete start = %lu, end = %lu\n", pos.start, pos.end);
+		dprintf(state->dfd, "complete start = %lu, end = %lu\n", state->pos.start, state->pos.end);
 		if(comp != nil)
 			dprintf(state->dfd, "completion string = \"%s\"\n", comp);
 		else
 			dprintf(state->dfd, "completion string = nil\n");
 	}
-	do_completion(state, comp, pos);
+	do_completion(state, comp, state->pos);
 }
 
 void
 completion_prev(EditorState *state)
 {
 	char *comp = nil;
-	Wordpos pos;
 
-	pos = get_completion_position(state);
-	comp = get_prev_completion(state, pos);
+	if(!state->in_completion)
+		state->pos = get_completion_position(state);
+	comp = get_prev_completion(state, state->pos);
 	if(state->dfd > 0){
-		dprintf(state->dfd, "complete start = %lu, end = %lu\n", pos.start, pos.end);
+		dprintf(state->dfd, "complete start = %lu, end = %lu\n", state->pos.start, state->pos.end);
 		if(comp != nil)
 			dprintf(state->dfd, "completion string = \"%s\"\n", comp);
 		else
 			dprintf(state->dfd, "completion string = nil\n");
 	}
-	do_completion(state, comp, pos);
+	do_completion(state, comp, state->pos);
 }
 
 char *
@@ -951,10 +958,19 @@ top:
 		case KeyTab:
 			completion_next(state);
 			break;
+		case KeyCtrlA:
+			cursor_home(state);
+			completion_maybe_reset(state);
+			break;
+		case KeyCtrlE:
+			cursor_end(state);
+			completion_maybe_reset(state);
+			break;
 		case KeyEscape:
 			if(read(state->ifd, &seq[0], 1) < 0)
 				break;
 			if(seq[0] == '[') {
+				completion_maybe_reset(state);
 				if(read(state->ifd, &seq[1], 1) < 0)
 					break;
 				switch(seq[1]) {

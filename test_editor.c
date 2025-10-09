@@ -10,7 +10,7 @@
 
 extern void *ealloc(size_t);
 
-int dfd = 0;
+int dfd = -1;
 
 const char *stuff[] = {
 	"hello_world",
@@ -45,15 +45,18 @@ main(int argc, char *argv[])
 	EditorState state;
 	char *line;
 
-	if((dfd = open("/tmp/editor_debug.fifo", O_WRONLY)) < 0){
-		dprintf(2, "unable to open /tmp/editor_debug.fifo\n");
-		return -1;
+	if(argc == 2){
+		if((dfd = open(argv[1], O_WRONLY)) < 0){
+			dprintf(2, "unable to open %s\n", argv[1]);
+			return -1;
+		}
 	}
 	initialize_editor(&state, 0, 1);
 	editor_debugging(&state, dfd);
 	set_prompt1(&state, "prompt1> ");
 	set_prompt2(&state, "prompt2> ");
 	set_complete_hook(&state, &completions_hook);
+	dprintf(state.ofd, "type \"exit\" or \"quit\" to quit or exit\n");
 	for(;;){
 		line = basic_editor(&state);
 		if(line == nil){

@@ -62,10 +62,16 @@ enum {
 typedef struct Position Position;
 typedef struct EditorState EditorState;
 typedef struct HistoryEntry HistoryEntry;
+typedef struct Wordpos Wordpos;
 
 struct Position{
 	int cols;
 	int lines;
+};
+
+struct Wordpos {
+	size_t start;
+	size_t end;
 };
 
 struct EditorState {
@@ -92,13 +98,19 @@ struct EditorState {
 	int inhistory;
 	HistoryEntry *history;
 	HistoryEntry *cur;
+	// completions list and generator
 	char **completions;
 	size_t completionsi;
 	size_t completionssz;
 	char** (*completions_hook)(char*,int, int);
+	// completer state
 	char *completebuf;
 	size_t lastcomplen;
 	char *wordbreaks;
+	int in_completion;
+	Wordpos pos;
+	char *comp_prefix;
+	char *comp_suffix;
 };
 
 struct HistoryEntry {
