@@ -116,7 +116,7 @@ getposition(EditorState *state)
 {
 	char buf[32];
 	int cols, rows;
-	int i = 0;
+	size_t i = 0;
 
 	if(write(state->ofd, "\x1b[6n", 4) != 4)
 		return ErrPos;
@@ -175,7 +175,6 @@ gettermsize(EditorState *state)
 	struct winsize ws;
 	Position saved_pos;
 	Position res;
-	char buf[32];
 
 	if(ioctl(state->ofd, TIOCGWINSZ, &ws) == -1 || ws.ws_col == 0) {
 		saved_pos = getposition(state);
@@ -313,7 +312,6 @@ refresh(EditorState *state)
 	int promptn = state->which_prompt;
 	size_t promptsz = promptn == 0 ? state->prompt1sz : state->prompt2sz;
 	char *prompt = promptn == 0 ? state->prompt1 : state->prompt2;
-	size_t lastbufsz = 0;
 	size_t i;
 	Position real_position;
 	Position rel_end;
@@ -362,7 +360,7 @@ refresh(EditorState *state)
 
 	if(state->dfd > 0)
 		dprintf(state->dfd, "clear lines...");
-	for(i = 0; i < rel_end.lines - 1; i++) {
+	for(i = 0; i < (size_t)(rel_end.lines - 1); i++) {
 		if(state->dfd > 0)
 			dprintf(state->dfd, "clearing and moving up 1 line...");
 		snsz = snprintf(&snbuf[0], sizeof(snbuf), "\r\x1b[0K\x1b[1A");
@@ -413,8 +411,6 @@ refresh(EditorState *state)
 int
 insert_char(EditorState *state, char c)
 {
-	size_t i;
-
 	assert(state->bufpos <= state->bufend);
 	if(state->bufend == (state->bufsz - 2)) {
 		state->bufsz = state->bufsz * 2;
@@ -437,8 +433,6 @@ insert_char(EditorState *state, char c)
 int
 backspace_char(EditorState *state)
 {
-	size_t i;
-
 	if(state->bufpos == 0)
 		return 0;
 	if(state->bufpos == state->bufend) {
@@ -458,8 +452,6 @@ backspace_char(EditorState *state)
 int
 delete_char(EditorState *state)
 {
-	size_t i;
-
 	if(state->bufpos == state->bufend)
 		return 0;
 	state->bufend--;
@@ -677,8 +669,8 @@ Wordpos
 get_completion_position(EditorState *state)
 {
 	Wordpos res = {0, 0};
-	int i, j;
-	int wordbreakssz;
+	size_t i;
+	size_t wordbreakssz;
 
 	assert(state->wordbreaks);
 	wordbreakssz = strlen(state->wordbreaks);
@@ -730,9 +722,6 @@ call_completions_hook(EditorState *state, Wordpos pos)
 char *
 get_next_completion(EditorState *state, Wordpos pos)
 {
-	char *comp = nil;
-	size_t i;
-
 	if(state->completions == nil)
 		call_completions_hook(state, pos);
 	if(state->completions == nil)
@@ -749,9 +738,6 @@ get_next_completion(EditorState *state, Wordpos pos)
 char *
 get_prev_completion(EditorState *state, Wordpos pos)
 {
-	char *comp;
-	size_t i;
-
 	if(state->completions == nil)
 		call_completions_hook(state, pos);
 	if(state->completions == nil)
@@ -763,15 +749,6 @@ get_prev_completion(EditorState *state, Wordpos pos)
 	}
 	if(state->completionsi == 0 || state->completionsi > state->completionssz)
 		state->completionsi = state->completionssz - 1;
-
-	for(i = 0; state->completions[i] != nil; i++){
-		if(state->dfd > 0){
-			if(state->completions[i] != nil)
-				dprintf(state->dfd, "state->completions[%lu] = %p\n", i, state->completions[i]);
-			else
-				dprintf(state->dfd, "state->completions[%lu] = nil\n", i);
-		}
-	}
 
 	return state->completions[state->completionsi--];
 }
