@@ -6,36 +6,32 @@
 #include <fcntl.h>
 #include "editor.h"
 
-#define nil ((void*)0)
+#define nil ((void *)0)
 
 extern void *ealloc(size_t);
 
 int dfd = -1;
 
 const char *stuff[] = {
-	"hello_world",
-	"this_is_a_test",
-	"yoyoyoyoy",
-	"wow_man_cool",
-	0,
+	"hello_world", "this_is_a_test", "yoyoyoyoy", "wow_man_cool", 0,
 };
 
-char**
+char **
 completions_hook(char *line, int start, int end)
 {
 	char **comps;
 	size_t i = 0;
-	size_t compssz = (sizeof(stuff)/sizeof(char*));
+	size_t compssz = (sizeof(stuff) / sizeof(char *));
 
 	dprintf(dfd, "te completions_hook: line = \"%s\"\n", line);
 	dprintf(dfd, "te completions_hook: start = %d, end = %d\n", start, end);
 
-	comps = ealloc(compssz*sizeof(char*));
-	for(i = 0; i < compssz-1; i++){
+	comps = ealloc(compssz * sizeof(char *));
+	for(i = 0; i < compssz - 1; i++) {
 		comps[i] = strdup(stuff[i]);
 		dprintf(dfd, "te completions_hook: comps[%lu](%p) = \"%s\"\n", i, comps[i], comps[i]);
 	}
-	comps[i] = nil; 
+	comps[i] = nil;
 	return comps;
 }
 
@@ -45,8 +41,8 @@ main(int argc, char *argv[])
 	EditorState state;
 	char *line;
 
-	if(argc == 2){
-		if((dfd = open(argv[1], O_WRONLY)) < 0){
+	if(argc == 2) {
+		if((dfd = open(argv[1], O_WRONLY)) < 0) {
 			dprintf(2, "unable to open %s\n", argv[1]);
 			return -1;
 		}
@@ -57,9 +53,9 @@ main(int argc, char *argv[])
 	set_prompt2(&state, "prompt2> ");
 	set_complete_hook(&state, &completions_hook);
 	dprintf(state.ofd, "type \"exit\" or \"quit\" to quit or exit\n");
-	for(;;){
-		line = basic_editor(&state);
-		if(line == nil){
+	for(;;) {
+		line = line_editor(&state);
+		if(line == nil) {
 			dprintf(2, "\ngot not input\n");
 			continue;
 		} else {
@@ -74,4 +70,3 @@ main(int argc, char *argv[])
 		close(dfd);
 	return 0;
 }
-

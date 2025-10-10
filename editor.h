@@ -5,6 +5,7 @@
 
 enum {
 	/* base keys */
+	KeyMax = 128,
 	KeyNull = 0,
 	KeyCtrlA = 1,
 	KeyCtrlB = 2,
@@ -41,30 +42,43 @@ enum {
 
 	/* extended keys */
 	ExtKeyOffset = 1000,
-	KeyArrowLeft = 1000,
-	KeyArrowRight = 1001,
-	KeyArrowUp = 1002,
-	KeyArrowDown = 1003,
-	KeyPageUp = 1004,
-	KeyPageDown = 1005,
-	KeyHome = 1006,
-	KeyEnd = 1007,
-	KeyInsert = 1008,
-	KeyExtDelete = 1009,
+	ExtKeyMax = 1023,
+#define ExtendedKeys 23
+	KeyArrowLeft = 1000,  // x
+	KeyArrowRight = 1001, // x
+	KeyArrowUp = 1002,	  // x
+	KeyArrowDown = 1003,  // x
+	KeyPageUp = 1004,	  // x
+	KeyPageDown = 1005,	  // x
+	KeyHome = 1006,		  // x
+	KeyEnd = 1007,		  // x
+	KeyInsert = 1008,	  // x
+	KeyExtDelete = 1009,  // x
 	ExtPFOffset = 1010,
-	KeyPF1 = 1010,
-	KeyPF2 = 1011,
-	KeyPF3 = 1012,
-	KeyPF4 = 1013,
-	
+	KeyPF1 = 1010,		// x
+	KeyPF2 = 1011,		// x
+	KeyPF3 = 1012,		// x
+	KeyPF4 = 1013,		// x
+	KeyPF5 = 1014,		// x
+	KeyPF6 = 1015,		// x
+	KeyPF7 = 1016,		// x
+	KeyPF8 = 1017,		// x
+	KeyPF9 = 1018,		// x
+	KeyPF10 = 1019,		// x
+	KeyPF11 = 1020,		// x
+	KeyPF12 = 1021,		// x
+	KeyShiftTab = 1022, // x
+
 };
 
 typedef struct Position Position;
 typedef struct EditorState EditorState;
 typedef struct HistoryEntry HistoryEntry;
 typedef struct Wordpos Wordpos;
+typedef struct Mapping Mapping;
+typedef struct Keymap Keymap;
 
-struct Position{
+struct Position {
 	int cols;
 	int lines;
 };
@@ -102,7 +116,7 @@ struct EditorState {
 	char **completions;
 	size_t completionsi;
 	size_t completionssz;
-	char** (*completions_hook)(char*,int, int);
+	char **(*completions_hook)(char *, int, int);
 	// completer state
 	char *completebuf;
 	size_t lastcomplen;
@@ -111,6 +125,8 @@ struct EditorState {
 	Wordpos pos;
 	char *comp_prefix;
 	char *comp_suffix;
+	// keymapping
+	Keymap *keymap;
 };
 
 struct HistoryEntry {
@@ -118,6 +134,19 @@ struct HistoryEntry {
 	size_t len;
 	HistoryEntry *next;
 	HistoryEntry *prev;
+};
+
+struct Mapping {
+	char *(*hook)(EditorState *, int, void *);
+	void (*base_hook)(EditorState *);
+	void *aux;
+	int breakkey;
+	int reset_completion;
+};
+
+struct Keymap {
+	Mapping base_keys[128];
+	Mapping ext_keys[ExtendedKeys];
 };
 
 /* basics */
@@ -130,13 +159,13 @@ extern int reset_editor(EditorState *state);
 extern void refresh(EditorState *state);
 extern void set_prompt1(EditorState *state, char *str);
 extern void set_prompt2(EditorState *state, char *str);
-extern void set_complete_hook(EditorState *state, char** (*hook)(char*, int, int));
+extern void set_complete_hook(EditorState *state, char **(*hook)(char *, int, int));
 
 /* motions and editing */
 extern void refresh(EditorState *state);
-extern int insert_char(EditorState *state, char c);
-extern int backspace_char(EditorState *state);
-extern int delete_char(EditorState *state);
+extern void insert_char(EditorState *state, char c);
+extern void backspace_char(EditorState *state);
+extern void delete_char(EditorState *state);
 extern void cursor_move_left(EditorState *state);
 extern void cursor_move_right(EditorState *state);
 extern void cursor_move_home(EditorState *state);
@@ -154,6 +183,11 @@ extern void completion_reset(EditorState *state);
 extern void completion_next(EditorState *state);
 extern void completion_prev(EditorState *state);
 
+/* keymapping */
+extern int bindmapping(EditorState *state, int key, Mapping mapping);
+extern char *key2name(int key);
+extern int name2key(char *name);
+
 /* editors */
 extern char *basic_editor(EditorState *state);
-
+extern char *line_editor(EditorState *state);

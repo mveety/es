@@ -39,6 +39,13 @@ const Position ErrPos = (Position){-1, -1};
 
 #define nil ((void *)0)
 
+#ifndef unreachable
+#define unreachable() \
+	do {              \
+		assert(0);    \
+	} while(0)
+#endif
+
 void *
 ealloc(size_t n)
 {
@@ -62,10 +69,38 @@ erealloc(void *p, size_t n)
 	return ptr;
 }
 
+typedef struct {
+	void *ptr;
+	int status;
+} Result;
+
+Result
+result(void *ptr, int status)
+{
+	return (Result){
+		.ptr = ptr,
+		.status = status,
+	};
+}
+
+void *
+ok(Result r)
+{
+	assert(r.status == 0);
+	return r.ptr;
+}
+
+int
+status(Result r)
+{
+	return r.status;
+}
+
 #endif
 
 HistoryEntry *get_history_next(EditorState *state);
 HistoryEntry *get_history_last(EditorState *state);
+void create_default_mapping(Keymap *map);
 
 void
 outbuf_append(OutBuf *obuf, char *str, int len)
@@ -219,11 +254,13 @@ initialize_editor(EditorState *state, int ifd, int ofd)
 		.lastcomplen = 0,
 		.wordbreaks = " \t\n",
 		.in_completion = 0,
-		.pos = (Wordpos){0, 0},
+		.pos = (Wordpos){.start = 0, .end = 0 },
 	};
 	rawmode_on(state);
 	state->size = gettermsize(state);
 	rawmode_off(state);
+	state->keymap = ealloc(sizeof(Keymap));
+	create_default_mapping(state->keymap);
 	return 0;
 }
 
@@ -266,6 +303,7 @@ free_editor(EditorState *state)
 		free(cur->str);
 		free(cur);
 	}
+	free(state->keymap);
 }
 
 int
@@ -299,11 +337,72 @@ reset_editor(EditorState *state)
 	state->completionsi = 0;
 	state->lastcomplen = 0;
 	state->in_completion = 0;
-	state->pos = (Wordpos){0,0};
+	state->pos = (Wordpos){0, 0};
 	return 0;
 }
 
+size_t
+marked_strlen(char *str)
+{
+	size_t i = 0;
+	size_t len = 0;
+	enum { Count, DontCount } state = Count;
+
+	for(i = 0, len = 0; str[i] != 0; i++) {
+		switch(state) {
+		default:
+			unreachable();
+			break;
+		case Count:
+			if(str[i] == '\x01')
+				state = DontCount;
+			else
+				len++;
+			break;
+		case DontCount:
+			if(str[i] == '\x02')
+				state = Count;
+			break;
+		}
+	}
+
+	return len;
+}
+
 void
+set_prompt1(EditorState *state, char *str)
+{
+	if(state->prompt1) {
+		free(state->prompt1);
+		state->prompt1sz = 0;
+	}
+	if(str == nil)
+		return;
+	state->prompt1 = strdup(str);
+	state->prompt1sz = marked_strlen(str);
+}
+
+void
+set_prompt2(EditorState *state, char *str)
+{
+	if(state->prompt2) {
+		free(state->prompt2);
+		state->prompt2sz = 0;
+	}
+	if(str == nil)
+		return;
+	state->prompt2 = strdup(str);
+	state->prompt2sz = marked_strlen(str);
+}
+
+void
+set_complete_hook(EditorState *state, char **(*hook)(char *, int, int))
+{
+	completion_reset(state);
+	state->completions_hook = hook;
+}
+
+void /* I really think this could use work */
 refresh(EditorState *state)
 {
 	OutBuf buf = (OutBuf){nil, 0};
@@ -408,7 +507,9 @@ refresh(EditorState *state)
 	free(buf.str);
 }
 
-int
+/* motions and editing */
+
+void
 insert_char(EditorState *state, char c)
 {
 	assert(state->bufpos <= state->bufend);
@@ -420,45 +521,45 @@ insert_char(EditorState *state, char c)
 		state->buffer[state->bufpos] = c;
 		state->bufpos++;
 		state->bufend++;
-		return 0;
+		return;
 	}
 	memmove(&state->buffer[state->bufpos + 1], &state->buffer[state->bufpos],
 			state->bufend - state->bufpos);
 	state->buffer[state->bufpos] = c;
 	state->bufpos++;
 	state->bufend++;
-	return 0;
+	return;
 }
 
-int
+void
 backspace_char(EditorState *state)
 {
 	if(state->bufpos == 0)
-		return 0;
+		return;
 	if(state->bufpos == state->bufend) {
 		state->bufpos--;
 		state->bufend--;
 		state->buffer[state->bufpos] = 0;
-		return 0;
+		return;
 	}
 	state->bufpos--;
 	state->bufend--;
 	memmove(&state->buffer[state->bufpos], &state->buffer[state->bufpos + 1],
 			state->bufend - state->bufpos);
 	state->buffer[state->bufend] = 0;
-	return 0;
+	return;
 }
 
-int
+void
 delete_char(EditorState *state)
 {
 	if(state->bufpos == state->bufend)
-		return 0;
+		return;
 	state->bufend--;
 	memmove(&state->buffer[state->bufpos], &state->buffer[state->bufpos + 1],
 			state->bufend - state->bufpos);
 	state->buffer[state->bufend] = 0;
-	return 0;
+	return;
 }
 
 void
@@ -487,39 +588,6 @@ cursor_end(EditorState *state)
 {
 	if(state->bufpos < state->bufend)
 		state->bufpos = state->bufend;
-}
-
-void
-set_prompt1(EditorState *state, char *str)
-{
-	if(state->prompt1) {
-		free(state->prompt1);
-		state->prompt1sz = 0;
-	}
-	if(str == nil)
-		return;
-	state->prompt1 = strdup(str);
-	state->prompt1sz = strlen(str);
-}
-
-void
-set_prompt2(EditorState *state, char *str)
-{
-	if(state->prompt2) {
-		free(state->prompt2);
-		state->prompt2sz = 0;
-	}
-	if(str == nil)
-		return;
-	state->prompt2 = strdup(str);
-	state->prompt2sz = strlen(str);
-}
-
-void
-set_complete_hook(EditorState *state, char **(*hook)(char *, int, int))
-{
-	completion_reset(state);
-	state->completions_hook = hook;
 }
 
 /* history */
@@ -653,6 +721,8 @@ history_cancel(EditorState *state)
 	}
 }
 
+/* completion */
+
 int
 isawordbreak(EditorState *state, size_t wordbreakssz, char c)
 {
@@ -677,15 +747,15 @@ get_completion_position(EditorState *state)
 	if(state->bufend == 0)
 		return res;
 	res.end = state->bufpos;
-	if(state->bufpos < state->bufend){
+	if(state->bufpos < state->bufend) {
 		for(i = state->bufpos; i < state->bufend; i++)
-			if(isawordbreak(state, wordbreakssz, state->buffer[i])){
+			if(isawordbreak(state, wordbreakssz, state->buffer[i])) {
 				res.end = i;
 				break;
 			}
 	}
 	for(i = res.end; i >= 1; i--)
-		if(isawordbreak(state, wordbreakssz, state->buffer[i-1])){
+		if(isawordbreak(state, wordbreakssz, state->buffer[i - 1])) {
 			res.start = i;
 			assert(res.start <= res.end);
 			return res;
@@ -707,8 +777,8 @@ call_completions_hook(EditorState *state, Wordpos pos)
 	state->completions = state->completions_hook(curline, pos.start, pos.end);
 	if(state->completions == nil)
 		return;
-	for(i = 0; state->completions[i] != nil; i++){
-		if(state->dfd > 0){
+	for(i = 0; state->completions[i] != nil; i++) {
+		if(state->dfd > 0) {
 			if(state->completions[i] != nil)
 				dprintf(state->dfd, "state->completions[%lu] = %p\n", i, state->completions[i]);
 			else
@@ -727,7 +797,7 @@ get_next_completion(EditorState *state, Wordpos pos)
 	if(state->completions == nil)
 		return nil;
 
-	if(state->completionsi >= state->completionssz){
+	if(state->completionsi >= state->completionssz) {
 		state->completionsi = 0;
 		return nil;
 	}
@@ -743,7 +813,7 @@ get_prev_completion(EditorState *state, Wordpos pos)
 	if(state->completions == nil)
 		return nil;
 
-	if(state->completionsi > state->completionssz){
+	if(state->completionsi > state->completionssz) {
 		state->completionsi = 0;
 		return nil;
 	}
@@ -763,7 +833,7 @@ do_completion(EditorState *state, char *comp, Wordpos pos)
 
 	assert(pos.end <= state->bufend);
 
-	if(!state->in_completion){
+	if(!state->in_completion) {
 		if(state->dfd > 0)
 			dprintf(state->dfd, "state->in_completion = %d -> 1\n", state->in_completion);
 		if(comp == nil)
@@ -772,16 +842,16 @@ do_completion(EditorState *state, char *comp, Wordpos pos)
 		state->in_completion = 1;
 		state->completebuf = strdup(state->buffer);
 		dprint("state->completebuf = \"%s\"\n", state->completebuf);
-		if(pos.start > 0){
-			state->comp_prefix = ealloc(pos.start+1);
+		if(pos.start > 0) {
+			state->comp_prefix = ealloc(pos.start + 1);
 			memcpy(state->comp_prefix, state->buffer, pos.start);
 			dprint("state->comp_prefix = \"%s\"\n", state->comp_prefix);
 		} else {
 			state->comp_prefix = nil;
 			dprint("state->comp_prefix = nil\n");
 		}
-		if(state->bufend - pos.end > 0){
-			state->comp_suffix = ealloc((state->bufend - pos.end)+1);
+		if(state->bufend - pos.end > 0) {
+			state->comp_suffix = ealloc((state->bufend - pos.end) + 1);
 			memcpy(state->comp_suffix, &state->buffer[pos.end], (state->bufend - pos.end));
 			dprint("state->comp_suffix = \"%s\"\n", state->comp_suffix);
 		} else {
@@ -790,9 +860,9 @@ do_completion(EditorState *state, char *comp, Wordpos pos)
 		}
 	}
 
-	if(comp == nil){
+	if(comp == nil) {
 		dprint("state->in_completion = %d -> 0\n", state->in_completion);
-		memset(state->buffer, 0, state->bufend+1);
+		memset(state->buffer, 0, state->bufend + 1);
 		memcpy(state->buffer, state->completebuf, strlen(state->completebuf));
 		state->bufend = strlen(state->completebuf);
 		state->bufpos = pos.end;
@@ -808,14 +878,14 @@ do_completion(EditorState *state, char *comp, Wordpos pos)
 	}
 
 	complen = strlen(comp);
-	if(state->comp_prefix){
+	if(state->comp_prefix) {
 		prefixlen = strlen(state->comp_prefix);
 		memcpy(state->buffer, state->comp_prefix, prefixlen);
 		i += prefixlen;
 	}
 	memcpy(&state->buffer[i], comp, complen);
 	i += complen;
-	if(state->comp_suffix){
+	if(state->comp_suffix) {
 		suffixlen = strlen(state->comp_suffix);
 		memcpy(&state->buffer[i], state->comp_suffix, suffixlen);
 		i += suffixlen;
@@ -833,14 +903,14 @@ completion_reset(EditorState *state)
 {
 	size_t i;
 
-	if(state->completions){
+	if(state->completions) {
 		for(i = 0; state->completions[i] != nil; i++)
 			free(state->completions[i]);
 		free(state->completions);
 		state->completions = nil;
 		state->completionssz = 0;
 	}
-	if(state->completebuf){
+	if(state->completebuf) {
 		free(state->completebuf);
 		state->completebuf = nil;
 	}
@@ -858,8 +928,7 @@ completion_reset(EditorState *state)
 void
 completion_maybe_reset(EditorState *state)
 {
-	if(state->bufpos < state->pos.start
-		|| state->bufpos > (state->pos.start + state->lastcomplen))
+	if(state->bufpos < state->pos.start || state->bufpos > (state->pos.start + state->lastcomplen))
 		completion_reset(state);
 }
 
@@ -871,7 +940,7 @@ completion_next(EditorState *state)
 	if(!state->in_completion)
 		state->pos = get_completion_position(state);
 	comp = get_next_completion(state, state->pos);
-	if(state->dfd > 0){
+	if(state->dfd > 0) {
 		dprintf(state->dfd, "complete start = %lu, end = %lu\n", state->pos.start, state->pos.end);
 		if(comp != nil)
 			dprintf(state->dfd, "completion string = \"%s\"\n", comp);
@@ -889,7 +958,7 @@ completion_prev(EditorState *state)
 	if(!state->in_completion)
 		state->pos = get_completion_position(state);
 	comp = get_prev_completion(state, state->pos);
-	if(state->dfd > 0){
+	if(state->dfd > 0) {
 		dprintf(state->dfd, "complete start = %lu, end = %lu\n", state->pos.start, state->pos.end);
 		if(comp != nil)
 			dprintf(state->dfd, "completion string = \"%s\"\n", comp);
@@ -899,7 +968,227 @@ completion_prev(EditorState *state)
 	do_completion(state, comp, state->pos);
 }
 
+/* keymapping */
+
+int
+bindmapping(EditorState *state, int key, Mapping mapping)
+{
+	if(key < ExtKeyOffset && key > KeyMax)
+		return -1;
+	if(key >= ExtKeyOffset && key > ExtKeyMax)
+		return -1;
+
+	if(key >= ExtKeyOffset) {
+		state->keymap->ext_keys[key - ExtKeyOffset] = mapping;
+		return 0;
+	}
+
+	if(key < KeyMax) {
+		state->keymap->base_keys[key] = mapping;
+		return 0;
+	}
+	return -1;
+}
+
+Result
+runmapping(EditorState *state, int key)
+{
+	Mapping *map;
+	char *res;
+
+	if(key > KeyNull && key < KeyMax)
+		map = &state->keymap->base_keys[key];
+	else if(key >= ExtKeyOffset && key < ExtKeyMax)
+		map = &state->keymap->ext_keys[key - ExtKeyOffset];
+	else
+		return result(nil, -1);
+
+	switch(map->reset_completion) {
+	case 1:
+		completion_reset(state);
+		break;
+	case 2:
+		completion_maybe_reset(state);
+		break;
+	}
+	if(map->breakkey)
+		return result(nil, -3);
+
+	if(map->base_hook == nil) {
+		if(map->hook == nil)
+			return result(nil, -2);
+
+		res = map->hook(state, key, map->aux);
+		return result(res, 0);
+	} else {
+		map->base_hook(state);
+		return result(nil, 0);
+	}
+}
+
+void
+create_default_mapping(Keymap *map)
+{
+	memset(&map->base_keys[0], 0, sizeof(Mapping) * 128);
+	memset(&map->ext_keys[0], 0, sizeof(Mapping) * ExtendedKeys);
+
+	map->base_keys[KeyCtrlC] = (Mapping){
+		.hook = nil,
+		.base_hook = nil,
+		.breakkey = 1,
+	};
+	map->base_keys[KeyBackspace] = (Mapping){
+		.hook = nil,
+		.base_hook = &backspace_char,
+		.reset_completion = 1,
+	};
+	map->base_keys[KeyTab] = (Mapping){
+		.hook = nil,
+		.base_hook = &completion_next,
+	};
+	map->base_keys[KeyCtrlA] = (Mapping){
+		.hook = nil,
+		.base_hook = &cursor_home,
+		.reset_completion = 2,
+	};
+	map->base_keys[KeyCtrlE] = (Mapping){
+		.hook = nil,
+		.base_hook = &cursor_end,
+		.reset_completion = 2,
+	};
+
+	map->ext_keys[KeyArrowUp - ExtKeyOffset] = (Mapping){
+		.hook = nil,
+		.base_hook = &history_next,
+		.reset_completion = 1,
+	};
+	map->ext_keys[KeyArrowDown - ExtKeyOffset] = (Mapping){
+		.hook = nil,
+		.base_hook = &history_prev,
+		.reset_completion = 1,
+	};
+	map->ext_keys[KeyArrowLeft - ExtKeyOffset] = (Mapping){
+		.hook = nil,
+		.base_hook = &cursor_move_left,
+		.reset_completion = 2,
+	};
+	map->ext_keys[KeyArrowRight - ExtKeyOffset] = (Mapping){
+		.hook = nil,
+		.base_hook = &cursor_move_right,
+		.reset_completion = 2,
+	};
+	map->ext_keys[KeyHome - ExtKeyOffset] = (Mapping){
+		.hook = nil,
+		.base_hook = &cursor_home,
+		.reset_completion = 2,
+	};
+	map->ext_keys[KeyEnd - ExtKeyOffset] = (Mapping){
+		.hook = nil,
+		.base_hook = &cursor_end,
+		.reset_completion = 2,
+	};
+	map->ext_keys[KeyExtDelete - ExtKeyOffset] = (Mapping){
+		.hook = nil,
+		.base_hook = &delete_char,
+		.reset_completion = 1,
+	};
+}
+
+// clang-format off
+char *keynames[] = {
+	[KeyCtrlA]	= "CtrlA",
+	[KeyCtrlB]	= "CtrlB",
+	[KeyCtrlC]	= "CtrlC",
+	[KeyCtrlD]	= "CtrlD",
+	[KeyCtrlE]	= "CtrlE",
+	[KeyCtrlF]	= "CtrlF",
+	[KeyCtrlG]	= "CtrlG",
+	[KeyCtrlH]	= "CtrlH",
+	[KeyTab]	= "Tab",
+	[KeyCtrlJ]	= "CtrlJ",
+	[KeyCtrlK]	= "CtrlK",
+	[KeyCtrlL]	= "CtrlL",
+	[KeyEnter]	= "Enter",
+	[KeyCtrlN]	= "CtrlN",
+	[KeyCtrlO]	= "CtrlO",
+	[KeyCtrlP]	= "CtrlP",
+	[KeyCtrlQ]	= "CtrlQ",
+	[KeyCtrlR]	= "CtrlR",
+	[KeyCtrlS]	= "CtrlS",
+	[KeyCtrlT]	= "CtrlT",
+	[KeyCtrlU]	= "CtrlU",
+	[KeyCtrlV]	= "CtrlV",
+	[KeyCtrlW]	= "CtrlW",
+	[KeyCtrlX]	= "CtrlX",
+	[KeyCtrlY]	= "CtrlY",
+	[KeyCtrlZ]	= "CtrlZ",
+	[KeyEscape]	= "Escape",
+};
+
+char *extkeynames[] = {
+	[0] = "ArrowLeft",
+	[1] = "ArrowRight",
+	[2] = "ArrowUp",
+	[3] = "ArrowDown",
+	[4] = "PageUp",
+	[5] = "PageDown",
+	[6] = "Home",
+	[7] = "End",
+	[8] = "Insert",
+	[9] = "ExtDelete",
+	[10] = "PF1",
+	[11] = "PF2",
+	[12] = "PF3",
+	[13] = "PF4",
+	[14] = "PF5",
+	[15] = "PF6",
+	[16] = "PF7",
+	[17] = "PF8",
+	[18] = "PF9",
+	[19] = "PF10",
+	[20] = "PF11",
+	[21] = "PF12",
+	[22] = "ShiftTab",
+};
+// clang-format on
+
 char *
+key2name(int key)
+{
+	if(key == KeyBackspace)
+		return "Backspace";
+
+	if(key >= KeyNull && key <= KeyEscape)
+		return keynames[key];
+
+	if(key >= ExtKeyOffset && key < ExtKeyMax)
+		return extkeynames[key - ExtKeyOffset];
+
+	return "Unknown";
+}
+
+int
+name2key(char *name)
+{
+	int i;
+
+	if(strcmp(name, "Backspace") == 0)
+		return KeyBackspace;
+
+	for(i = 0; i <= KeyEscape; i++)
+		if(strcmp(name, keynames[i]) == 0)
+			return i;
+
+	for(i = ExtKeyOffset; i < ExtKeyMax; i++)
+		if(strcmp(name, extkeynames[i - ExtKeyOffset]) == 0)
+			return i;
+
+	return -1;
+}
+
+/* the big kahuna */
+
+char * /* budget readline */
 basic_editor(EditorState *state)
 {
 	char c;
@@ -987,66 +1276,259 @@ fail:
 	return nil;
 }
 
+/*
+ * line_editor is the terminal keycode -> internal keycode converter
+ * It will insert everything printable, and passes everything else to the keymap.
+ * I am toying with a 'bring your own read' version of this similar to linenoise
+ * for integration with kqueue/select/etc. I don't think that will be at all
+ * valuable for es, but if this has life outside of here it might be of value.
+ */
 char *
 line_editor(EditorState *state)
 {
 	char c;
 	char *res;
-	char seq[3];
+	char seq[5];
 	enum { StateRead, StateDone } readstate = StateRead;
+	int key = 0;
+	Result r;
+	char *str;
 
 	rawmode_on(state);
 	if(reset_editor(state) < 0)
 		goto fail;
 
 	while(readstate == StateRead) {
+		key = 0;
+		r = (Result){.ptr = nil, .status = 0};
 		refresh(state);
 		if(read(state->ifd, &c, 1) < 0)
 			goto fail;
-top:
-		switch(c) {
-		default:
-			if(c >= ' ' && c <= '~')
-				insert_char(state, c);
-			break;
-		case KeyEnter:
+		if(c >= ' ' && c <= '~') {
+			insert_char(state, c);
+			continue;
+		}
+		if(c == KeyEnter) {
 			readstate = StateDone;
-			break;
-		case KeyCtrlC:
-			goto fail;
-			break;
-		case KeyBackspace:
-			backspace_char(state);
-			break;
-		case KeyEscape:
+			continue;
+		}
+		if(c == KeyEscape) {
 			if(read(state->ifd, &seq[0], 1) < 0)
-				break;
+				continue;
 			if(seq[0] == '[') {
 				if(read(state->ifd, &seq[1], 1) < 0)
-					break;
+					continue;
 				switch(seq[1]) {
 				default:
-					break;
+					if(state->dfd > 0)
+						dprintf(state->dfd, "got unknown code %c%c\n", seq[0], seq[1]);
+					continue;
 				case 'A':
-					history_next(state);
+					key = KeyArrowUp;
 					break;
 				case 'B':
-					history_prev(state);
+					key = KeyArrowDown;
 					break;
 				case 'C':
-					cursor_move_right(state);
+					key = KeyArrowRight;
 					break;
 				case 'D':
-					cursor_move_left(state);
+					key = KeyArrowLeft;
+					break;
+				case 'H':
+					key = KeyHome;
+					break;
+				case 'F':
+					key = KeyEnd;
+					break;
+				case 'M':
+				case 'P':
+					key = KeyExtDelete;
+					break;
+				case '@':
+				case 'L':
+					key = KeyInsert;
+					break;
+				case 'Z':
+					key = KeyShiftTab;
+					break;
+				case '0':
+				case '1':
+				case '2':
+				case '3':
+				case '4':
+				case '5':
+				case '6':
+				case '7':
+				case '8':
+				case '9':
+					if(read(state->ifd, &seq[2], 1) < 0)
+						continue;
+					if(seq[2] == '~') {
+						switch(seq[1]) {
+						default:
+							if(state->dfd > 0)
+								dprintf(state->dfd, "got unknown code %c%c%c\n", seq[0], seq[1],
+										seq[2]);
+							continue;
+						case '5':
+							key = KeyPageUp;
+							break;
+						case '6':
+							key = KeyPageDown;
+							break;
+						case '3':
+							key = KeyExtDelete;
+							break;
+						case '2':
+							key = KeyInsert;
+							break;
+						}
+					} else if(seq[2] >= '0' && seq[2] <= '9') {
+						/* this is like wtf? I found this experimentally. It is at least
+						 * true in konsole 25.08.1 on FreeBSD 14.3. subject to change?
+						 */
+						if(read(state->ifd, &seq[3], 1) < 0)
+							continue;
+						if(seq[3] != '~') {
+							if(state->dfd > 0)
+								dprintf(state->dfd, "got unknown code %c%c%c%c\n", seq[0], seq[1],
+										seq[2], seq[3]);
+							continue;
+						}
+						if(seq[1] == '1') {
+							switch(seq[2]) {
+							default:
+								if(state->dfd > 0)
+									dprintf(state->dfd, "got unknown code %c%c%c%c\n", seq[0],
+											seq[1], seq[2], seq[3]);
+								continue;
+							case '5':
+								key = KeyPF5;
+								break;
+							case '7':
+								key = KeyPF6;
+								break;
+							case '8':
+								key = KeyPF7;
+								break;
+							case '9':
+								key = KeyPF8;
+								break;
+							}
+						} else if(seq[1] == '2') {
+							switch(seq[2]) {
+							default:
+								if(state->dfd > 0)
+									dprintf(state->dfd, "got unknown code %c%c%c%c\n", seq[0],
+											seq[1], seq[2], seq[3]);
+								continue;
+							case '0':
+								key = KeyPF9;
+								break;
+							case '1':
+								key = KeyPF10;
+								break;
+							case '3':
+								key = KeyPF11;
+								break;
+							case '4':
+								key = KeyPF12;
+								break;
+							}
+						} else {
+							if(state->dfd > 0)
+								dprintf(state->dfd, "got unknown code %c%c%c%c\n", seq[0], seq[1],
+										seq[2], seq[3]);
+							continue;
+						}
+					}
+					break;
+				}
+			} else if(seq[0] == 'O') {
+				if(read(state->ifd, &seq[1], 1) < 0)
+					continue;
+				switch(seq[1]) {
+				default:
+					if(seq[1] >= 'A' && seq[1] <= 'L') {
+						key = KeyPF1 + (seq[1] - 'A');
+					} else {
+						if(state->dfd > 0)
+							dprintf(state->dfd, "got unknown code %c%c\n", seq[0], seq[1]);
+						continue;
+					}
+					break;
+				case 'P':
+					key = KeyPF1;
+					break;
+				case 'Q':
+					key = KeyPF2;
+					break;
+				case 'R':
+					key = KeyPF3;
+					break;
+				case 'S':
+					key = KeyPF4;
+					break;
+				case 'H':
+					key = KeyHome;
+					break;
+				case 'F':
+					key = KeyEnd;
+					break;
+				}
+			} else if(seq[0] >= 'A' && seq[0] <= 'D') {
+				switch(seq[0]) {
+				case 'A':
+					key = KeyArrowUp;
+					break;
+				case 'B':
+					key = KeyArrowDown;
+					break;
+				case 'C':
+					key = KeyArrowRight;
+					break;
+				case 'D':
+					key = KeyArrowLeft;
 					break;
 				}
 			} else {
-				c = seq[0];
-				goto top;
+				if(state->dfd > 0)
+					dprintf(state->dfd, "got code %c\n", seq[0]);
+			}
+		} else {
+			key = c;
+		}
+
+		r = runmapping(state, key);
+		switch(status(r)) {
+		default:
+			unreachable();
+			break;
+		case -3:
+			goto fail;
+			break;
+		case -2:
+			if(state->dfd > 0)
+				dprintf(state->dfd, "got unmapped key %s\n", key2name(key));
+			break;
+		case -1:
+			if(state->dfd > 0)
+				dprintf(state->dfd, "got invalid key %d\n", key);
+			break;
+		case 0:
+			if(r.ptr != nil) {
+				str = r.ptr;
+				memset(state->buffer, 0, state->bufend);
+				memcpy(state->buffer, str, strlen(str));
+				state->bufend = strlen(str);
+				if(state->bufpos > state->bufend)
+					state->bufpos = state->bufend;
 			}
 			break;
 		}
 	}
+
 	refresh(state);
 
 	if(state->bufend == 0)
