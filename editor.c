@@ -367,7 +367,6 @@ marked_strlen(char *str)
 			break;
 		}
 	}
-
 	return len;
 }
 
@@ -577,6 +576,15 @@ insert_char(EditorState *state, char c)
 	state->bufpos++;
 	state->bufend++;
 	return;
+}
+
+void
+insert_n_char(EditorState *state, char *str, size_t len)
+{
+	size_t i = 0;
+
+	for(i = 0; i < len; i++)
+		insert_char(state, str[i]);
 }
 
 void
@@ -1401,7 +1409,7 @@ line_editor(EditorState *state)
 {
 	char c;
 	char *res;
-	char seq[5];
+	char seq[6];
 	enum { StateRead, StateDone } readstate = StateRead;
 	int key = 0;
 	Result r;
@@ -1414,6 +1422,7 @@ line_editor(EditorState *state)
 	while(readstate == StateRead) {
 		key = 0;
 		r = (Result){.ptr = nil, .status = 0};
+		memset(&seq[0], 0, sizeof(seq));
 		refresh(state);
 		if(read(state->ifd, &c, 1) < 0)
 			goto fail;
@@ -1421,12 +1430,32 @@ line_editor(EditorState *state)
 			insert_char(state, c);
 			completion_reset(state);
 			continue;
-		}
-		if(c == KeyEnter) {
+		} else if(c & (1 << 7)) {
+			/* utf-8 stuff */
+			if((c & 0b11100000) == 0b11000000){
+				read(state->ifd, &seq[0], 1);
+				insert_char(state, c);
+				insert_char(state, seq[0]);
+				continue;
+			} else if((c & 0b11110000) == 0b11100000){
+				read(state->ifd, &seq[0], 2);
+				insert_char(state, c);
+				insert_n_char(state, &seq[0], 2);
+				continue;
+			} else if((c & 0b11111000) == 0b11110000) {
+				read(state->ifd, &seq[0], 3);
+				insert_char(state, c);
+				insert_n_char(state, &seq[0], 3);
+				continue;
+			} else {
+				unreachable();
+			}
+		} else if(c == KeyEnter) {
 			readstate = StateDone;
 			continue;
-		}
-		if(c == KeyEscape) {
+		} else if(c == KeyBackspace){
+			key = KeyBackspace;
+		} else if(c == KeyEscape) {
 			if(read(state->ifd, &seq[0], 1) < 0)
 				continue;
 			if(seq[0] == '[') {
@@ -1616,7 +1645,7 @@ line_editor(EditorState *state)
 					dprintf(state->dfd, "got code %c\n", seq[0]);
 			}
 		} else {
-			key = c;
+			continue;
 		}
 
 		r = runmapping(state, key);
