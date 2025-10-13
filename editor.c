@@ -28,6 +28,8 @@
 		dprintf(state->dfd, args); \
 	}
 
+#define bufferassert() assert(state->bufpos <= state->bufend)
+
 typedef struct {
 	char *str;
 	size_t len;
@@ -446,6 +448,7 @@ refresh(EditorState *state)
 				rel_next_pos.cols);
 		dprintf(state->dfd, "real_position = {.lines = %d, .cols = %d}\n", real_position.lines,
 				real_position.cols);
+		dprintf(state->dfd, "state->buffer = \"%s\"\n", state->buffer);
 	}
 
 	/* go to end */
@@ -507,16 +510,61 @@ refresh(EditorState *state)
 	free(buf.str);
 }
 
+void
+grow_buffer(EditorState *state, size_t sz)
+{
+	assert(state->bufpos <= state->bufend);
+	state->bufsz += sz;
+	state->buffer = erealloc(state->buffer, state->bufsz);
+}
+
 /* motions and editing */
+int
+isawordbreak(EditorState *state, size_t wordbreakssz, char c)
+{
+	size_t i = 0;
+
+	assert(state->wordbreaks);
+	for(i = 0; i < wordbreakssz; i++)
+		if(c == state->wordbreaks[i])
+			return 1;
+	return 0;
+}
+
+Wordpos
+get_word_position(EditorState *state)
+{
+	Wordpos res = {0, 0};
+	size_t i;
+	size_t wordbreakssz;
+
+	assert(state->wordbreaks);
+	wordbreakssz = strlen(state->wordbreaks);
+	if(state->bufend == 0)
+		return res;
+	res.end = state->bufpos;
+	for(i = state->bufpos; i < state->bufend; i++)
+		if(isawordbreak(state, wordbreakssz, state->buffer[i]))
+			break;
+	res.end = i;
+	for(i = res.end; i >= 1; i--)
+		if(isawordbreak(state, wordbreakssz, state->buffer[i - 1])) {
+			res.start = i;
+			assert(res.start <= res.end);
+			return res;
+		}
+	res.start = 0;
+	assert(res.start <= res.end);
+	return res;
+}
 
 void
 insert_char(EditorState *state, char c)
 {
 	assert(state->bufpos <= state->bufend);
-	if(state->bufend == (state->bufsz - 2)) {
-		state->bufsz = state->bufsz * 2;
-		state->buffer = erealloc(state->buffer, state->bufsz);
-	}
+	if(state->bufend == (state->bufsz - 2))
+		grow_buffer(state, state->bufsz);
+
 	if(state->bufpos == state->bufend) {
 		state->buffer[state->bufpos] = c;
 		state->bufpos++;
@@ -536,6 +584,7 @@ backspace_char(EditorState *state)
 {
 	if(state->bufpos == 0)
 		return;
+	bufferassert();
 	if(state->bufpos == state->bufend) {
 		state->bufpos--;
 		state->bufend--;
@@ -553,6 +602,7 @@ backspace_char(EditorState *state)
 void
 delete_char(EditorState *state)
 {
+	bufferassert();
 	if(state->bufpos == state->bufend)
 		return;
 	state->bufend--;
@@ -560,6 +610,23 @@ delete_char(EditorState *state)
 			state->bufend - state->bufpos);
 	state->buffer[state->bufend] = 0;
 	return;
+}
+
+void
+delete_word(EditorState *state)
+{
+	Wordpos wordpos;
+
+	bufferassert();
+	if(state->bufpos == 0)
+		return;
+
+	wordpos = get_word_position(state);
+	memset(&state->buffer[wordpos.start], 0, wordpos.end - wordpos.start);
+	memmove(&state->buffer[wordpos.start], &state->buffer[wordpos.end],
+			state->bufend - wordpos.end);
+	state->bufend -= wordpos.end - wordpos.start;
+	state->bufpos = wordpos.start;
 }
 
 void
@@ -660,6 +727,8 @@ get_history_prev(EditorState *state)
 void
 do_history_replace(EditorState *state, HistoryEntry *ent)
 {
+	if(ent->len >= state->bufsz)
+		grow_buffer(state, state->bufsz);
 	if(state->inhistory) {
 		assert(state->histbuf);
 		memset(state->buffer, 0, state->bufend);
@@ -722,48 +791,6 @@ history_cancel(EditorState *state)
 }
 
 /* completion */
-
-int
-isawordbreak(EditorState *state, size_t wordbreakssz, char c)
-{
-	size_t i = 0;
-
-	assert(state->wordbreaks);
-	for(i = 0; i < wordbreakssz; i++)
-		if(c == state->wordbreaks[i])
-			return 1;
-	return 0;
-}
-
-Wordpos
-get_completion_position(EditorState *state)
-{
-	Wordpos res = {0, 0};
-	size_t i;
-	size_t wordbreakssz;
-
-	assert(state->wordbreaks);
-	wordbreakssz = strlen(state->wordbreaks);
-	if(state->bufend == 0)
-		return res;
-	res.end = state->bufpos;
-	if(state->bufpos < state->bufend) {
-		for(i = state->bufpos; i < state->bufend; i++)
-			if(isawordbreak(state, wordbreakssz, state->buffer[i])) {
-				res.end = i;
-				break;
-			}
-	}
-	for(i = res.end; i >= 1; i--)
-		if(isawordbreak(state, wordbreakssz, state->buffer[i - 1])) {
-			res.start = i;
-			assert(res.start <= res.end);
-			return res;
-		}
-	res.start = 0;
-	assert(res.start <= res.end);
-	return res;
-}
 
 void
 call_completions_hook(EditorState *state, Wordpos pos)
@@ -834,8 +861,7 @@ do_completion(EditorState *state, char *comp, Wordpos pos)
 	assert(pos.end <= state->bufend);
 
 	if(!state->in_completion) {
-		if(state->dfd > 0)
-			dprintf(state->dfd, "state->in_completion = %d -> 1\n", state->in_completion);
+		dprint("state->in_completion = %d -> 1\n", state->in_completion);
 		if(comp == nil)
 			return;
 		state->pos = pos;
@@ -880,6 +906,8 @@ do_completion(EditorState *state, char *comp, Wordpos pos)
 	complen = strlen(comp);
 	if(state->comp_prefix) {
 		prefixlen = strlen(state->comp_prefix);
+		if((complen+prefixlen)-2 > state->bufsz)
+			grow_buffer(state, state->bufsz);
 		memcpy(state->buffer, state->comp_prefix, prefixlen);
 		i += prefixlen;
 	}
@@ -887,6 +915,8 @@ do_completion(EditorState *state, char *comp, Wordpos pos)
 	i += complen;
 	if(state->comp_suffix) {
 		suffixlen = strlen(state->comp_suffix);
+		if((complen+prefixlen+suffixlen)-2 > state->bufsz)
+			grow_buffer(state, state->bufsz);
 		memcpy(&state->buffer[i], state->comp_suffix, suffixlen);
 		i += suffixlen;
 	}
@@ -938,7 +968,7 @@ completion_next(EditorState *state)
 	char *comp = nil;
 
 	if(!state->in_completion)
-		state->pos = get_completion_position(state);
+		state->pos = get_word_position(state);
 	comp = get_next_completion(state, state->pos);
 	if(state->dfd > 0) {
 		dprintf(state->dfd, "complete start = %lu, end = %lu\n", state->pos.start, state->pos.end);
@@ -956,7 +986,7 @@ completion_prev(EditorState *state)
 	char *comp = nil;
 
 	if(!state->in_completion)
-		state->pos = get_completion_position(state);
+		state->pos = get_word_position(state);
 	comp = get_prev_completion(state, state->pos);
 	if(state->dfd > 0) {
 		dprintf(state->dfd, "complete start = %lu, end = %lu\n", state->pos.start, state->pos.end);
@@ -1055,6 +1085,11 @@ create_default_mapping(Keymap *map)
 		.hook = nil,
 		.base_hook = &cursor_end,
 		.reset_completion = 2,
+	};
+	map->base_keys[KeyCtrlW] = (Mapping){
+		.hook = nil,
+		.base_hook = &delete_word,
+		.reset_completion = 1,
 	};
 
 	map->ext_keys[KeyArrowUp - ExtKeyOffset] = (Mapping){
