@@ -47,6 +47,7 @@ main(int argc, char *argv[])
 			return -1;
 		}
 	}
+
 	initialize_editor(&state, 0, 1);
 	editor_debugging(&state, dfd);
 	set_prompt1(&state, "prompt1> ");

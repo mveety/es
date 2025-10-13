@@ -420,7 +420,7 @@ refresh(EditorState *state)
 	Position rel_cur_pos;
 	Position rel_next_pos;
 
-	assert(state->bufpos <= state->bufend);
+	bufferassert();
 	/* we need to work out where the line originally started */
 	real_position = getposition(state);
 	rel_end = state->last_end;
@@ -513,7 +513,7 @@ refresh(EditorState *state)
 void
 grow_buffer(EditorState *state, size_t sz)
 {
-	assert(state->bufpos <= state->bufend);
+	bufferassert();
 	state->bufsz += sz;
 	state->buffer = erealloc(state->buffer, state->bufsz);
 }
@@ -616,12 +616,25 @@ void
 delete_word(EditorState *state)
 {
 	Wordpos wordpos;
+	size_t first_end = 0;
 
 	bufferassert();
 	if(state->bufpos == 0)
 		return;
 
 	wordpos = get_word_position(state);
+	dprint("start wordpos = {.start = %lu, .end = %lu}\n", wordpos.start, wordpos.end);
+	if(wordpos.end - wordpos.start == 0){
+		first_end = wordpos.end;
+		while(wordpos.end - wordpos.start == 0 && state->bufpos > 0){
+			state->bufpos--;
+			wordpos = get_word_position(state);
+		}
+		wordpos.end = first_end;
+	}
+	dprint("end wordpos = {.start = %lu, .end = %lu}\n", wordpos.start, wordpos.end);
+
+
 	memset(&state->buffer[wordpos.start], 0, wordpos.end - wordpos.start);
 	memmove(&state->buffer[wordpos.start], &state->buffer[wordpos.end],
 			state->bufend - wordpos.end);
@@ -632,6 +645,7 @@ delete_word(EditorState *state)
 void
 cursor_move_left(EditorState *state)
 {
+	bufferassert();
 	if(state->bufpos > 0)
 		state->bufpos--;
 }
@@ -639,6 +653,7 @@ cursor_move_left(EditorState *state)
 void
 cursor_move_right(EditorState *state)
 {
+	bufferassert();
 	if(state->bufpos < state->bufend)
 		state->bufpos++;
 }
@@ -646,6 +661,7 @@ cursor_move_right(EditorState *state)
 void
 cursor_home(EditorState *state)
 {
+	bufferassert();
 	if(state->bufpos != 0)
 		state->bufpos = 0;
 }
@@ -653,6 +669,7 @@ cursor_home(EditorState *state)
 void
 cursor_end(EditorState *state)
 {
+	bufferassert();
 	if(state->bufpos < state->bufend)
 		state->bufpos = state->bufend;
 }
@@ -727,6 +744,7 @@ get_history_prev(EditorState *state)
 void
 do_history_replace(EditorState *state, HistoryEntry *ent)
 {
+	bufferassert();
 	if(ent->len >= state->bufsz)
 		grow_buffer(state, state->bufsz);
 	if(state->inhistory) {
@@ -755,6 +773,7 @@ do_history_replace(EditorState *state, HistoryEntry *ent)
 		if(state->bufpos > state->bufend)
 			state->bufpos = state->bufend;
 	}
+	bufferassert();
 }
 
 void
@@ -788,6 +807,7 @@ history_cancel(EditorState *state)
 			state->bufpos = state->bufend;
 		state->cur = nil;
 	}
+	bufferassert();
 }
 
 /* completion */
@@ -859,6 +879,7 @@ do_completion(EditorState *state, char *comp, Wordpos pos)
 	size_t suffixlen = 0;
 
 	assert(pos.end <= state->bufend);
+	bufferassert();
 
 	if(!state->in_completion) {
 		dprint("state->in_completion = %d -> 1\n", state->in_completion);
@@ -1341,6 +1362,7 @@ line_editor(EditorState *state)
 			goto fail;
 		if(c >= ' ' && c <= '~') {
 			insert_char(state, c);
+			completion_reset(state);
 			continue;
 		}
 		if(c == KeyEnter) {
