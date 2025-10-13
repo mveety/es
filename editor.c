@@ -1240,6 +1240,28 @@ char *extkeynames[] = {
 	[46] = "Altx",
 	[47] = "Alty",
 	[48] = "Altz",
+	[49] = "AltE",
+	[50] = "AltF",
+	[51] = "AltG",
+	[52] = "AltH",
+	[53] = "AltI",
+	[54] = "AltJ",
+	[55] = "AltK",
+	[56] = "AltL",
+	[57] = "AltM",
+	[58] = "AltN",
+	[59] = "AltO",
+	[60] = "AltP",
+	[61] = "AltQ",
+	[62] = "AltR",
+	[63] = "AltS",
+	[64] = "AltT",
+	[65] = "AltU",
+	[66] = "AltV",
+	[67] = "AltW",
+	[68] = "AltX",
+	[69] = "AltY",
+	[70] = "AltZ",
 };
 // clang-format on
 
@@ -1569,7 +1591,7 @@ line_editor(EditorState *state)
 					key = KeyEnd;
 					break;
 				}
-			} else if(seq[0] >= 'A' && seq[0] <= 'D') {
+			} else if(seq[0] >= 'A' && seq[0] <= 'Z') {
 				switch(seq[0]) {
 				case 'A':
 					key = KeyArrowUp;
@@ -1583,88 +1605,12 @@ line_editor(EditorState *state)
 				case 'D':
 					key = KeyArrowLeft;
 					break;
+				default:
+					key = (seq[0] - 'E') + KeyAltE;
+					break;
 				}
 			} else if(seq[0] >= 'a' && seq[0] <= 'z') {
-				switch(seq[0]) {
-				case 'a':
-					key = KeyAlta;
-					break;
-				case 'b':
-					key = KeyAltb;
-					break;
-				case 'c':
-					key = KeyAltc;
-					break;
-				case 'd':
-					key = KeyAltd;
-					break;
-				case 'e':
-					key = KeyAlte;
-					break;
-				case 'f':
-					key = KeyAltf;
-					break;
-				case 'g':
-					key = KeyAltg;
-					break;
-				case 'h':
-					key = KeyAlth;
-					break;
-				case 'i':
-					key = KeyAlti;
-					break;
-				case 'j':
-					key = KeyAltj;
-					break;
-				case 'k':
-					key = KeyAltk;
-					break;
-				case 'l':
-					key = KeyAltl;
-					break;
-				case 'm':
-					key = KeyAltm;
-					break;
-				case 'n':
-					key = KeyAltn;
-					break;
-				case 'o':
-					key = KeyAlto;
-					break;
-				case 'p':
-					key = KeyAltp;
-					break;
-				case 'q':
-					key = KeyAltq;
-					break;
-				case 'r':
-					key = KeyAltr;
-					break;
-				case 's':
-					key = KeyAlts;
-					break;
-				case 't':
-					key = KeyAltt;
-					break;
-				case 'u':
-					key = KeyAltu;
-					break;
-				case 'v':
-					key = KeyAltv;
-					break;
-				case 'w':
-					key = KeyAltw;
-					break;
-				case 'x':
-					key = KeyAltx;
-					break;
-				case 'y':
-					key = KeyAlty;
-					break;
-				case 'z':
-					key = KeyAltz;
-					break;
-				}
+				key = (seq[0] - 'a') + KeyAlta;
 			} else {
 				if(state->dfd > 0)
 					dprintf(state->dfd, "got code %c\n", seq[0]);
