@@ -624,16 +624,15 @@ delete_word(EditorState *state)
 
 	wordpos = get_word_position(state);
 	dprint("start wordpos = {.start = %lu, .end = %lu}\n", wordpos.start, wordpos.end);
-	if(wordpos.end - wordpos.start == 0){
+	if(wordpos.end - wordpos.start == 0) {
 		first_end = wordpos.end;
-		while(wordpos.end - wordpos.start == 0 && state->bufpos > 0){
+		while(wordpos.end - wordpos.start == 0 && state->bufpos > 0) {
 			state->bufpos--;
 			wordpos = get_word_position(state);
 		}
 		wordpos.end = first_end;
 	}
 	dprint("end wordpos = {.start = %lu, .end = %lu}\n", wordpos.start, wordpos.end);
-
 
 	memset(&state->buffer[wordpos.start], 0, wordpos.end - wordpos.start);
 	memmove(&state->buffer[wordpos.start], &state->buffer[wordpos.end],
@@ -745,8 +744,6 @@ void
 do_history_replace(EditorState *state, HistoryEntry *ent)
 {
 	bufferassert();
-	if(ent->len >= state->bufsz)
-		grow_buffer(state, state->bufsz);
 	if(state->inhistory) {
 		assert(state->histbuf);
 		memset(state->buffer, 0, state->bufend);
@@ -756,11 +753,12 @@ do_history_replace(EditorState *state, HistoryEntry *ent)
 			free(state->histbuf);
 			state->inhistory = 0;
 		} else {
+			if(ent->len >= state->bufsz)
+				grow_buffer(state, state->bufsz);
 			memcpy(state->buffer, ent->str, ent->len);
 			state->bufend = ent->len;
 		}
-		if(state->bufpos > state->bufend)
-			state->bufpos = state->bufend;
+		state->bufpos = state->bufend;
 	} else {
 		if(ent == nil)
 			return;
@@ -768,10 +766,11 @@ do_history_replace(EditorState *state, HistoryEntry *ent)
 		state->histbuf = strdup(state->buffer);
 		state->histbufsz = strlen(state->buffer);
 		memset(state->buffer, 0, state->bufend);
+		if(ent->len >= state->bufsz)
+			grow_buffer(state, state->bufsz);
 		memcpy(state->buffer, ent->str, ent->len);
 		state->bufend = ent->len;
-		if(state->bufpos > state->bufend)
-			state->bufpos = state->bufend;
+		state->bufpos = state->bufend;
 	}
 	bufferassert();
 }
@@ -927,7 +926,7 @@ do_completion(EditorState *state, char *comp, Wordpos pos)
 	complen = strlen(comp);
 	if(state->comp_prefix) {
 		prefixlen = strlen(state->comp_prefix);
-		if((complen+prefixlen)-2 > state->bufsz)
+		if((complen + prefixlen) - 2 > state->bufsz)
 			grow_buffer(state, state->bufsz);
 		memcpy(state->buffer, state->comp_prefix, prefixlen);
 		i += prefixlen;
@@ -936,7 +935,7 @@ do_completion(EditorState *state, char *comp, Wordpos pos)
 	i += complen;
 	if(state->comp_suffix) {
 		suffixlen = strlen(state->comp_suffix);
-		if((complen+prefixlen+suffixlen)-2 > state->bufsz)
+		if((complen + prefixlen + suffixlen) - 2 > state->bufsz)
 			grow_buffer(state, state->bufsz);
 		memcpy(&state->buffer[i], state->comp_suffix, suffixlen);
 		i += suffixlen;
@@ -1093,6 +1092,11 @@ create_default_mapping(Keymap *map)
 		.base_hook = &backspace_char,
 		.reset_completion = 1,
 	};
+	map->base_keys[KeyCtrlH] = (Mapping){
+		.hook = nil,
+		.base_hook = &backspace_char,
+		.reset_completion = 1,
+	};
 	map->base_keys[KeyTab] = (Mapping){
 		.hook = nil,
 		.base_hook = &completion_next,
@@ -1147,6 +1151,11 @@ create_default_mapping(Keymap *map)
 		.hook = nil,
 		.base_hook = &delete_char,
 		.reset_completion = 1,
+	};
+	map->ext_keys[KeyShiftTab - ExtKeyOffset] = (Mapping){
+		.hook = nil,
+		.base_hook = &completion_prev,
+		.reset_completion = 0,
 	};
 }
 
@@ -1205,6 +1214,32 @@ char *extkeynames[] = {
 	[20] = "PF11",
 	[21] = "PF12",
 	[22] = "ShiftTab",
+	[23] = "Alta",
+	[24] = "Altb",
+	[25] = "Altc",
+	[26] = "Altd",
+	[27] = "Alte",
+	[28] = "Altf",
+	[29] = "Altg",
+	[30] = "Alth",
+	[31] = "Alti",
+	[32] = "Altj",
+	[33] = "Altk",
+	[34] = "Altl",
+	[35] = "Altm",
+	[36] = "Altn",
+	[37] = "Alto",
+	[38] = "Altp",
+	[39] = "Altq",
+	[40] = "Altr",
+	[41] = "Alts",
+	[42] = "Altt",
+	[43] = "Altu",
+	[44] = "Altv",
+	[45] = "Altw",
+	[46] = "Altx",
+	[47] = "Alty",
+	[48] = "Altz",
 };
 // clang-format on
 
@@ -1547,6 +1582,87 @@ line_editor(EditorState *state)
 					break;
 				case 'D':
 					key = KeyArrowLeft;
+					break;
+				}
+			} else if(seq[0] >= 'a' && seq[0] <= 'z') {
+				switch(seq[0]) {
+				case 'a':
+					key = KeyAlta;
+					break;
+				case 'b':
+					key = KeyAltb;
+					break;
+				case 'c':
+					key = KeyAltc;
+					break;
+				case 'd':
+					key = KeyAltd;
+					break;
+				case 'e':
+					key = KeyAlte;
+					break;
+				case 'f':
+					key = KeyAltf;
+					break;
+				case 'g':
+					key = KeyAltg;
+					break;
+				case 'h':
+					key = KeyAlth;
+					break;
+				case 'i':
+					key = KeyAlti;
+					break;
+				case 'j':
+					key = KeyAltj;
+					break;
+				case 'k':
+					key = KeyAltk;
+					break;
+				case 'l':
+					key = KeyAltl;
+					break;
+				case 'm':
+					key = KeyAltm;
+					break;
+				case 'n':
+					key = KeyAltn;
+					break;
+				case 'o':
+					key = KeyAlto;
+					break;
+				case 'p':
+					key = KeyAltp;
+					break;
+				case 'q':
+					key = KeyAltq;
+					break;
+				case 'r':
+					key = KeyAltr;
+					break;
+				case 's':
+					key = KeyAlts;
+					break;
+				case 't':
+					key = KeyAltt;
+					break;
+				case 'u':
+					key = KeyAltu;
+					break;
+				case 'v':
+					key = KeyAltv;
+					break;
+				case 'w':
+					key = KeyAltw;
+					break;
+				case 'x':
+					key = KeyAltx;
+					break;
+				case 'y':
+					key = KeyAlty;
+					break;
+				case 'z':
+					key = KeyAltz;
 					break;
 				}
 			} else {

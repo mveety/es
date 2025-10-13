@@ -42,8 +42,8 @@ enum {
 
 	/* extended keys */
 	ExtKeyOffset = 1000,
-	ExtKeyMax = 1023,
-#define ExtendedKeys 23
+	ExtKeyMax = 1049,
+#define ExtendedKeys 49
 	KeyArrowLeft = 1000,  // x
 	KeyArrowRight = 1001, // x
 	KeyArrowUp = 1002,	  // x
@@ -68,7 +68,32 @@ enum {
 	KeyPF11 = 1020,		// x
 	KeyPF12 = 1021,		// x
 	KeyShiftTab = 1022, // x
-
+	KeyAlta = 1023,		// x
+	KeyAltb = 1024,		// x
+	KeyAltc = 1025,		// x
+	KeyAltd = 1026,		// x
+	KeyAlte = 1027,		// x
+	KeyAltf = 1028,		// x
+	KeyAltg = 1029,		// x
+	KeyAlth = 1030,		// x
+	KeyAlti = 1031,		// x
+	KeyAltj = 1032,		// x
+	KeyAltk = 1033,		// x
+	KeyAltl = 1034,		// x
+	KeyAltm = 1035,		// x
+	KeyAltn = 1036,		// x
+	KeyAlto = 1037,		// x
+	KeyAltp = 1038,		// x
+	KeyAltq = 1039,		// x
+	KeyAltr = 1040,		// x
+	KeyAlts = 1041,		// x
+	KeyAltt = 1042,		// x
+	KeyAltu = 1043,		// x
+	KeyAltv = 1044,		// x
+	KeyAltw = 1045,		// x
+	KeyAltx = 1046,		// x
+	KeyAlty = 1047,		// x
+	KeyAltz = 1048,		// x
 };
 
 typedef struct Position Position;
