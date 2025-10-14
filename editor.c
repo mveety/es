@@ -595,19 +595,13 @@ refresh(EditorState *state)
 	}
 
 	/* go to end */
-	if(state->dfd > 0)
-		dprintf(state->dfd, "go to end of line...");
 	if(rel_end.lines - rel_cur_pos.lines > 0)
 		snsz = snprintf(&snbuf[0], sizeof(snbuf), "\r\x1b[%dB", rel_end.lines - rel_cur_pos.lines);
 	else
 		snsz = snprintf(&snbuf[0], sizeof(snbuf), "\r");
 	outbuf_append(&buf, &snbuf[0], snsz);
 
-	if(state->dfd > 0)
-		dprintf(state->dfd, "clear lines...");
 	for(i = 0; i < (size_t)(rel_end.lines - 1); i++) {
-		if(state->dfd > 0)
-			dprintf(state->dfd, "clearing and moving up 1 line...");
 		snsz = snprintf(&snbuf[0], sizeof(snbuf), "\r\x1b[0K\x1b[1A");
 		outbuf_append(&buf, &snbuf[0], snsz);
 	}
@@ -615,13 +609,9 @@ refresh(EditorState *state)
 	snsz = snprintf(&snbuf[0], sizeof(snbuf), "\r\x1b[0K");
 	outbuf_append(&buf, &snbuf[0], snsz);
 
-	if(state->dfd > 0)
-		dprintf(state->dfd, "print prompt+buffer...");
 	outbuf_append(&buf, prompt, promptsz);
 	outbuf_append(&buf, state->buffer, state->bufend);
 
-	if(state->dfd > 0)
-		dprintf(state->dfd, "move back to beginning...");
 	if(rel_next_end.lines - 1 > 0) {
 		if(rel_next_end.cols > 0)
 			snsz = snprintf(&snbuf[0], sizeof(snbuf), "\r\x1b[%dA", rel_next_end.lines - 1);
@@ -632,21 +622,15 @@ refresh(EditorState *state)
 	outbuf_append(&buf, &snbuf[0], snsz);
 
 	if(rel_next_pos.lines - 1 > 0) {
-		if(state->dfd > 0)
-			dprintf(state->dfd, "move cursor down...");
 		snsz = snprintf(&snbuf[0], sizeof(snbuf), "\r\x1b[%dB", rel_next_pos.lines - 1);
 		outbuf_append(&buf, &snbuf[0], snsz);
 	}
 
 	if(rel_next_pos.cols > 0) {
-		if(state->dfd > 0)
-			dprintf(state->dfd, "moving to cursor position...");
 		snsz = snprintf(&snbuf[0], sizeof(snbuf), "\r\x1b[%dC", rel_next_pos.cols);
 		outbuf_append(&buf, &snbuf[0], snsz);
 	}
 
-	if(state->dfd > 0)
-		dprintf(state->dfd, "outputting to screen\n");
 	write(state->ofd, buf.str, buf.len);
 	state->position = rel_next_pos;
 	state->last_end = rel_next_end;
@@ -1341,6 +1325,7 @@ create_default_mapping(Keymap *map)
 
 // clang-format off
 char *keynames[] = {
+	[KeyNull]	= "(null)",
 	[KeyCtrlA]	= "CtrlA",
 	[KeyCtrlB]	= "CtrlB",
 	[KeyCtrlC]	= "CtrlC",
@@ -1586,6 +1571,7 @@ line_editor(EditorState *state)
 	int key = 0;
 	Result r;
 	char *str;
+	size_t readn = 0;
 
 	rawmode_on(state);
 	if(reset_editor(state) < 0)
@@ -1604,24 +1590,17 @@ line_editor(EditorState *state)
 			continue;
 		} else if((c & 0b11000000) == 0b11000000) {
 			/* utf-8 stuff */
-			if((c & 0b11100000) == 0b11000000) {
-				read(state->ifd, &seq[0], 1);
-				insert_char(state, c);
-				insert_char(state, seq[0]);
-				continue;
-			} else if((c & 0b11110000) == 0b11100000) {
-				read(state->ifd, &seq[0], 2);
-				insert_char(state, c);
-				insert_n_char(state, &seq[0], 2);
-				continue;
-			} else if((c & 0b11111000) == 0b11110000) {
-				read(state->ifd, &seq[0], 3);
-				insert_char(state, c);
-				insert_n_char(state, &seq[0], 3);
-				continue;
-			} else {
+			seq[0] = c;
+			if((c & 0b11100000) == 0b11000000)
+				readn = 1;
+			else if((c & 0b11110000) == 0b11100000)
+				readn = 2;
+			else if((c & 0b11111000) == 0b11110000)
+				readn = 3;
+			else
 				unreachable();
-			}
+			read(state->ifd, &seq[1], readn);
+			insert_n_char(state, &seq[0], readn+1);
 		} else if((c & 0b11000000) == 0b10000000) {
 			/* something got screwed up with utf-8
 			 * just skip until we get something sensible
@@ -1697,11 +1676,17 @@ line_editor(EditorState *state)
 						case '6':
 							key = KeyPageDown;
 							break;
+						case '4':
+							key = KeyEnd;
+							break;
 						case '3':
 							key = KeyExtDelete;
 							break;
 						case '2':
 							key = KeyInsert;
+							break;
+						case '1':
+							key = KeyHome;
 							break;
 						}
 					} else if(seq[2] >= '0' && seq[2] <= '9') {
