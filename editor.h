@@ -211,6 +211,7 @@ extern void set_complete_hook(EditorState *state, char **(*hook)(char *, int, in
 /* motions and editing */
 extern void refresh(EditorState *state);
 extern void insert_char(EditorState *state, char c);
+extern void insert_n_char(EditorState *state, char *str, size_t n);
 extern void backspace_char(EditorState *state);
 extern void delete_char(EditorState *state);
 extern void cursor_move_left(EditorState *state);

@@ -21,6 +21,8 @@
 #include "es.h"
 #include "gc.h"
 #endif
+#include <locale.h>
+#include <wchar.h>
 #include "editor.h"
 
 #define dprint(args...)            \
@@ -263,6 +265,7 @@ initialize_editor(EditorState *state, int ifd, int ofd)
 	rawmode_off(state);
 	state->keymap = ealloc(sizeof(Keymap));
 	create_default_mapping(state->keymap);
+	setlocale(LC_ALL, "");
 	return 0;
 }
 
@@ -370,6 +373,72 @@ marked_strlen(char *str)
 	return len;
 }
 
+size_t
+utf8_strnlen(EditorState *state, char *str, size_t lim)
+{
+	size_t i = 0;
+	size_t sz = 0;
+	wchar_t buf;
+	int st;
+	int width;
+
+	for(i = 0; i < lim;){
+		width = mbtowc(&buf, &str[i], 4);
+		if(width < 0){
+			i++;
+			continue;
+		}
+		i += width;
+		st = wcwidth(buf);
+		if(st < 0)
+			continue;
+		sz += st;
+	}
+	return sz;
+}
+
+size_t
+utf8_marked_strlen(char *str)
+{
+	size_t i = 0;
+	size_t len = 0;
+	enum { Count, DontCount } state = Count;
+	wchar_t buf;
+	int st;
+	int width;
+
+	for(i = 0, len = 0; str[i] != 0;){
+		switch(state){
+		default:
+			unreachable();
+			break;
+		case Count:
+			if(str[i] == '\x01'){
+				state = DontCount;
+				continue;
+			}
+			width = mbtowc(&buf, &str[i], 4);
+			if(width < 0){
+				i++;
+				continue;
+			}
+			i += width;
+			st = wcwidth(buf);
+			if(st < 0)
+				continue;
+			len += st;
+			break;
+		case DontCount:
+			if(str[i] == '\x02')
+				state = Count;
+			i++;
+			break;
+		}
+	}
+
+	return len;
+}
+
 void
 set_prompt1(EditorState *state, char *str)
 {
@@ -418,19 +487,25 @@ refresh(EditorState *state)
 	Position rel_next_end;
 	Position rel_cur_pos;
 	Position rel_next_pos;
+	size_t utf8_promptsz = 0;
+	size_t utf8_bufpos = 0;
+	size_t utf8_bufend = 0;
 
 	bufferassert();
 	/* we need to work out where the line originally started */
+	utf8_promptsz = utf8_marked_strlen(prompt);
+	utf8_bufpos = utf8_strnlen(state, state->buffer, state->bufpos);
+	utf8_bufend = utf8_strnlen(state, state->buffer, state->bufend);
 	real_position = getposition(state);
 	rel_end = state->last_end;
 	rel_next_end = (Position){
-		.lines = (state->bufend + promptsz + state->size.cols) / state->size.cols,
-		.cols = (state->bufend + promptsz) % state->size.cols,
+		.lines = (utf8_bufend + promptsz + state->size.cols) / state->size.cols,
+		.cols = (utf8_bufend + promptsz) % state->size.cols,
 	};
 	rel_cur_pos = state->position;
 	rel_next_pos = (Position){
-		.lines = (state->bufpos + promptsz + state->size.cols) / state->size.cols,
-		.cols = (state->bufpos + promptsz) % state->size.cols,
+		.lines = (utf8_bufpos + promptsz + state->size.cols) / state->size.cols,
+		.cols = (utf8_bufpos + promptsz) % state->size.cols,
 	};
 	if(state->dfd > 0) {
 		dprintf(state->dfd, "----------\n");
@@ -438,6 +513,8 @@ refresh(EditorState *state)
 				state->size.cols);
 		dprintf(state->dfd, "state->bufend = %lu, state->bufpos = %lu\n", state->bufend,
 				state->bufpos);
+		dprintf(state->dfd, "utf8_bufpos = %lu, utf8_bufend = %lu\n", utf8_bufpos, utf8_bufend);
+		dprintf(state->dfd, "promptsz = %lu, utf8_promptsz = %lu\n", promptsz, utf8_promptsz);
 		dprintf(state->dfd, "rel_end = {.lines = %d, .cols = %d}\n", rel_end.lines, rel_end.cols);
 		dprintf(state->dfd, "rel_next_end = {.lines = %d, .cols = %d}\n", rel_next_end.lines,
 				rel_next_end.cols);
@@ -561,7 +638,7 @@ void
 insert_char(EditorState *state, char c)
 {
 	assert(state->bufpos <= state->bufend);
-	if(state->bufend == (state->bufsz - 2))
+	if(state->bufend == (state->bufsz - 5))
 		grow_buffer(state, state->bufsz);
 
 	if(state->bufpos == state->bufend) {
@@ -587,36 +664,56 @@ insert_n_char(EditorState *state, char *str, size_t len)
 		insert_char(state, str[i]);
 }
 
+size_t
+charsize(EditorState *state)
+{
+	size_t sz = 0;
+
+	do {
+		sz++;
+	} while ((state->buffer[state->bufpos-sz] & 0b11000000) == 0b10000000 && (state->bufpos-sz) > 0);
+	return sz;
+}
+
 void
 backspace_char(EditorState *state)
 {
+	size_t charsz = 0;
+	size_t i = 0;
+
 	if(state->bufpos == 0)
 		return;
 	bufferassert();
+	charsz = charsize(state);
 	if(state->bufpos == state->bufend) {
-		state->bufpos--;
-		state->bufend--;
-		state->buffer[state->bufpos] = 0;
+		for(i = 0; i < charsz; i++){
+			state->bufpos--;
+			state->bufend--;
+			state->buffer[state->bufpos] = 0;
+		}
 		return;
 	}
-	state->bufpos--;
-	state->bufend--;
-	memmove(&state->buffer[state->bufpos], &state->buffer[state->bufpos + 1],
+	state->bufpos -= charsz;
+	state->bufend -= charsz;
+	memmove(&state->buffer[state->bufpos], &state->buffer[state->bufpos + charsz],
 			state->bufend - state->bufpos);
-	state->buffer[state->bufend] = 0;
+	memset(&state->buffer[state->bufend], 0, charsz);
 	return;
 }
 
 void
 delete_char(EditorState *state)
 {
+	size_t charsz = 0;
+
 	bufferassert();
 	if(state->bufpos == state->bufend)
 		return;
-	state->bufend--;
-	memmove(&state->buffer[state->bufpos], &state->buffer[state->bufpos + 1],
+	charsz = charsize(state);
+	state->bufend -= charsz;
+	memmove(&state->buffer[state->bufpos], &state->buffer[state->bufpos + charsz],
 			state->bufend - state->bufpos);
-	state->buffer[state->bufend] = 0;
+	memset(&state->buffer[state->bufend], 0, charsz);
 	return;
 }
 
@@ -653,16 +750,22 @@ void
 cursor_move_left(EditorState *state)
 {
 	bufferassert();
-	if(state->bufpos > 0)
+	if(state->bufpos == 0)
+		return;
+	do {
 		state->bufpos--;
+	} while ((state->buffer[state->bufpos] & 0b11000000) == 0b10000000 && state->bufpos > 0);
 }
 
 void
 cursor_move_right(EditorState *state)
 {
 	bufferassert();
-	if(state->bufpos < state->bufend)
+	if(state->bufpos == state->bufend)
+		return;
+	do {
 		state->bufpos++;
+	} while ((state->buffer[state->bufpos] & 0b11000000) == 0b10000000 && state->bufpos < state->bufend);
 }
 
 void
@@ -1430,7 +1533,7 @@ line_editor(EditorState *state)
 			insert_char(state, c);
 			completion_reset(state);
 			continue;
-		} else if(c & (1 << 7)) {
+		} else if((c & 0b11000000) == 0b11000000) {
 			/* utf-8 stuff */
 			if((c & 0b11100000) == 0b11000000){
 				read(state->ifd, &seq[0], 1);
@@ -1450,6 +1553,11 @@ line_editor(EditorState *state)
 			} else {
 				unreachable();
 			}
+		} else if ((c & 0b11000000) == 0b10000000) {
+			/* something got screwed up with utf-8
+			 * just skip until we get something sensible
+			 */
+			continue;
 		} else if(c == KeyEnter) {
 			readstate = StateDone;
 			continue;
@@ -1645,9 +1753,10 @@ line_editor(EditorState *state)
 					dprintf(state->dfd, "got code %c\n", seq[0]);
 			}
 		} else {
-			continue;
+			key = c;
 		}
 
+		dprint("got key %s\n", key2name(key));
 		r = runmapping(state, key);
 		switch(status(r)) {
 		default:
