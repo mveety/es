@@ -35,6 +35,22 @@ completions_hook(char *line, int start, int end)
 	return comps;
 }
 
+char*
+ctrlx_hook(EditorState *state, int key, void *aux)
+{
+	char *str = "hello world this is a test!";
+
+	return strdup(str);
+}
+
+char*
+ctrls_hook(EditorState *state, int key, void *aux)
+{
+	if(state->dfd > 0)
+		dprintf(state->dfd, "Ctrl-S pressed!\n");
+	return nil;
+}
+
 int
 main(int argc, char *argv[])
 {
@@ -61,6 +77,8 @@ main(int argc, char *argv[])
 	set_prompt1(&state, "prompt1> ");
 	set_prompt2(&state, "prompt2> ");
 	set_complete_hook(&state, &completions_hook);
+	bindmapping(&state, KeyCtrlX, (Mapping){.hook = &ctrlx_hook, .reset_completion = 1});
+	bindmapping(&state, KeyCtrlS, (Mapping){.hook = &ctrls_hook, .reset_completion = 0});
 	dprintf(state.ofd, "running in %s\n", state.term);
 	dprintf(state.ofd, "type \"exit\" or \"quit\" to quit or exit\n");
 	for(;;) {

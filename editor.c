@@ -1848,8 +1848,8 @@ line_editor(EditorState *state)
 				memset(state->buffer, 0, state->bufend);
 				memcpy(state->buffer, str, strlen(str));
 				state->bufend = strlen(str);
-				if(state->bufpos > state->bufend)
-					state->bufpos = state->bufend;
+				state->bufpos = state->bufend;
+				free(str);
 			}
 			break;
 		}
