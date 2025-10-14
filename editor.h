@@ -139,6 +139,7 @@ struct EditorState {
 	int ifd;
 	int ofd;
 	int dfd;
+	char *term;
 	struct termios old_termios;
 	int rawmode;
 	Position size;
@@ -199,6 +200,7 @@ struct Keymap {
 /* basics */
 extern int rawmode_on(EditorState *state);
 extern int rawmode_off(EditorState *state);
+/* NOTE: initialize_editor calls getenv to get $TERM */
 extern int initialize_editor(EditorState *state, int ifd, int ofd);
 extern void editor_debugging(EditorState *state, int dfd);
 extern void free_editor(EditorState *state);

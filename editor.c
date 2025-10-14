@@ -43,6 +43,9 @@ const Position ErrPos = (Position){-1, -1};
 
 #define nil ((void *)0)
 
+#define strneq(s, t, n) (strncmp(s, t, n) == 0)
+#define hasprefix(s, p) strneq(s, p, (sizeof(p) - 1))
+
 #ifndef unreachable
 #define unreachable() \
 	do {              \
@@ -98,6 +101,31 @@ int
 status(Result r)
 {
 	return r.status;
+}
+
+char*
+getterm(void)
+{
+	char *env_term;
+
+	env_term = getenv("TERM");
+	return strdup(env_term);
+}
+
+#else
+
+char*
+getterm(void)
+{
+	List *var = nil;
+	char *term = nil;
+
+	var = varlookup("TERM", nil);
+	if(var == nil)
+		return nil;
+
+	term = getstr(var->term);
+	return strdup(term);
 }
 
 #endif
@@ -230,15 +258,53 @@ gettermsize(EditorState *state)
 }
 
 int
+supported_term(char *term)
+{
+	if(hasprefix(term, "xterm"))
+		return 1;
+	if(hasprefix(term, "screen"))
+		return 1;
+	if(hasprefix(term, "rxvt"))
+		return 1;
+	if(hasprefix(term, "linux"))
+		return 1;
+	if(hasprefix(term, "tmux"))
+		return 1;
+	if(hasprefix(term, "putty"))
+		return 1;
+	if(hasprefix(term, "st"))
+		return 1;
+	if(hasprefix(term, "vt1"))
+		return 1;
+	if(hasprefix(term, "vt2"))
+		return 1;
+	if(hasprefix(term, "vt3"))
+		return 1;
+	if(hasprefix(term, "vt4"))
+		return 1;
+	if(hasprefix(term, "vt5"))
+		return 1;
+	return 0;
+}
+
+int
 initialize_editor(EditorState *state, int ifd, int ofd)
 {
+	char *term = nil;
+
 	if(!isatty(ifd) || !isatty(ofd))
 		return -1;
+	term = getterm();
+	if(!supported_term(term)){
+		free(term);
+		return -2;
+	}
 	memset(state, 0, sizeof(EditorState));
 	*state = (EditorState){
 		.ifd = ifd,
 		.ofd = ofd,
 		.dfd = -1,
+		.term = term,
 		.buffer = ealloc(EDITINITIALBUFSZ),
 		.bufsz = EDITINITIALBUFSZ,
 		.bufpos = 0,
@@ -283,6 +349,7 @@ free_editor(EditorState *state)
 	if(!state->initialized)
 		return;
 
+	free(state->term);
 	free(state->buffer);
 	if(state->prompt1)
 		free(state->prompt1);

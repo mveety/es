@@ -40,6 +40,7 @@ main(int argc, char *argv[])
 {
 	EditorState state;
 	char *line;
+	int st;
 
 	if(argc == 2) {
 		if((dfd = open(argv[1], O_WRONLY)) < 0) {
@@ -47,11 +48,20 @@ main(int argc, char *argv[])
 			return -1;
 		}
 	}
-	initialize_editor(&state, 0, 1);
+	st = initialize_editor(&state, 0, 1);
+	switch(st){
+	case -1:
+		dprintf(2, "not a tty\n");
+		return -1;
+	case -2:
+		dprintf(2, "unsupported terminal: %s\n", getenv("TERM"));
+		return -2;
+	}
 	editor_debugging(&state, dfd);
 	set_prompt1(&state, "prompt1> ");
 	set_prompt2(&state, "prompt2> ");
 	set_complete_hook(&state, &completions_hook);
+	dprintf(state.ofd, "running in %s\n", state.term);
 	dprintf(state.ofd, "type \"exit\" or \"quit\" to quit or exit\n");
 	for(;;) {
 		line = line_editor(&state);
