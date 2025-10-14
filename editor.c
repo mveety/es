@@ -382,9 +382,9 @@ utf8_strnlen(EditorState *state, char *str, size_t lim)
 	int st;
 	int width;
 
-	for(i = 0; i < lim;){
+	for(i = 0; i < lim;) {
 		width = mbtowc(&buf, &str[i], 4);
-		if(width < 0){
+		if(width < 0) {
 			i++;
 			continue;
 		}
@@ -407,18 +407,18 @@ utf8_marked_strlen(char *str)
 	int st;
 	int width;
 
-	for(i = 0, len = 0; str[i] != 0;){
-		switch(state){
+	for(i = 0, len = 0; str[i] != 0;) {
+		switch(state) {
 		default:
 			unreachable();
 			break;
 		case Count:
-			if(str[i] == '\x01'){
+			if(str[i] == '\x01') {
 				state = DontCount;
 				continue;
 			}
 			width = mbtowc(&buf, &str[i], 4);
-			if(width < 0){
+			if(width < 0) {
 				i++;
 				continue;
 			}
@@ -671,7 +671,8 @@ charsize(EditorState *state)
 
 	do {
 		sz++;
-	} while ((state->buffer[state->bufpos-sz] & 0b11000000) == 0b10000000 && (state->bufpos-sz) > 0);
+	} while((state->buffer[state->bufpos - sz] & 0b11000000) == 0b10000000 &&
+			(state->bufpos - sz) > 0);
 	return sz;
 }
 
@@ -686,7 +687,7 @@ backspace_char(EditorState *state)
 	bufferassert();
 	charsz = charsize(state);
 	if(state->bufpos == state->bufend) {
-		for(i = 0; i < charsz; i++){
+		for(i = 0; i < charsz; i++) {
 			state->bufpos--;
 			state->bufend--;
 			state->buffer[state->bufpos] = 0;
@@ -754,7 +755,7 @@ cursor_move_left(EditorState *state)
 		return;
 	do {
 		state->bufpos--;
-	} while ((state->buffer[state->bufpos] & 0b11000000) == 0b10000000 && state->bufpos > 0);
+	} while((state->buffer[state->bufpos] & 0b11000000) == 0b10000000 && state->bufpos > 0);
 }
 
 void
@@ -765,7 +766,8 @@ cursor_move_right(EditorState *state)
 		return;
 	do {
 		state->bufpos++;
-	} while ((state->buffer[state->bufpos] & 0b11000000) == 0b10000000 && state->bufpos < state->bufend);
+	} while((state->buffer[state->bufpos] & 0b11000000) == 0b10000000 &&
+			state->bufpos < state->bufend);
 }
 
 void
@@ -1535,12 +1537,12 @@ line_editor(EditorState *state)
 			continue;
 		} else if((c & 0b11000000) == 0b11000000) {
 			/* utf-8 stuff */
-			if((c & 0b11100000) == 0b11000000){
+			if((c & 0b11100000) == 0b11000000) {
 				read(state->ifd, &seq[0], 1);
 				insert_char(state, c);
 				insert_char(state, seq[0]);
 				continue;
-			} else if((c & 0b11110000) == 0b11100000){
+			} else if((c & 0b11110000) == 0b11100000) {
 				read(state->ifd, &seq[0], 2);
 				insert_char(state, c);
 				insert_n_char(state, &seq[0], 2);
@@ -1553,7 +1555,7 @@ line_editor(EditorState *state)
 			} else {
 				unreachable();
 			}
-		} else if ((c & 0b11000000) == 0b10000000) {
+		} else if((c & 0b11000000) == 0b10000000) {
 			/* something got screwed up with utf-8
 			 * just skip until we get something sensible
 			 */
@@ -1561,7 +1563,7 @@ line_editor(EditorState *state)
 		} else if(c == KeyEnter) {
 			readstate = StateDone;
 			continue;
-		} else if(c == KeyBackspace){
+		} else if(c == KeyBackspace) {
 			key = KeyBackspace;
 		} else if(c == KeyEscape) {
 			if(read(state->ifd, &seq[0], 1) < 0)
