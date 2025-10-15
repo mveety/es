@@ -1262,22 +1262,17 @@ runmapping(EditorState *state, int key)
 	}
 	if(map->breakkey)
 		return result(nil, -3);
+	if(map->end_of_file)
+		return result(nil, -4);
 
 	if(map->base_hook == nil) {
-		if(map->hook == nil){
-			if(map->end_of_file)
-				return result(nil, -4);
+		if(map->hook == nil)
 			return result(nil, -2);
-		}
 
 		res = map->hook(state, key, map->aux);
-		if(map->end_of_file)
-			return result(res, -4);
 		return result(res, 0);
 	} else {
 		map->base_hook(state);
-		if(map->end_of_file)
-			return result(nil, -4);
 		return result(nil, 0);
 	}
 }
@@ -1638,9 +1633,8 @@ char *
 line_editor(EditorState *state)
 {
 	char c;
-	char *res;
 	char seq[6];
-	enum { StateRead, StateDone } readstate = StateRead;
+	enum { StateRead, StateDone, StateCancel } readstate = StateRead;
 	int key = 0;
 	Result r;
 	char *str;
@@ -1889,7 +1883,7 @@ line_editor(EditorState *state)
 		default:
 			unreachable();
 			break;
-		case -3:
+		case -4:
 			goto fail;
 			break;
 		case -2:
@@ -1900,9 +1894,9 @@ line_editor(EditorState *state)
 			if(state->dfd > 0)
 				dprintf(state->dfd, "got invalid key %d\n", key);
 			break;
-		case -4:
-			readstate = StateDone;
-			fallthrough;
+		case -3:
+			readstate = StateCancel;
+			break;
 		case 0:
 			if(r.ptr != nil) {
 				str = r.ptr;
@@ -1917,14 +1911,14 @@ line_editor(EditorState *state)
 	}
 
 	refresh(state);
-
-	if(state->bufend == 0)
-		goto fail;
-
 	write(state->ofd, "\r\n", 2);
 	rawmode_off(state);
-	res = strndup(state->buffer, state->bufend + 1);
-	return res;
+
+	if(readstate == StateCancel)
+		return strdup("");
+	if(state->bufend == 0)
+		return strdup("");
+	return strndup(state->buffer, state->bufend + 1);
 
 fail:
 	write(state->ofd, "\r\n", 2);

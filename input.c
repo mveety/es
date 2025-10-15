@@ -440,12 +440,6 @@ es_complete_hook(char *text, int start, int end)
 {
 	List *new_completer = nil; Root r_new_completer;
 	List *complete_sort_list = nil; Root r_complete_sort_list;
-	char **res = nil;
-	char *saved_prompt1 = nil;
-	char *saved_prompt2 = nil;
-
-	saved_prompt1 = estrdup(editor->prompt1);
-	saved_prompt2 = estrdup(editor->prompt2);
 
 	new_completer = varlookup("fn-%new_completer", nil);
 	if(!new_completer)
@@ -470,12 +464,7 @@ es_complete_hook(char *text, int start, int end)
 	gcrderef(&r_complete_sort_list);
 	gcrderef(&r_new_completer);
 
-	res = run_new_completer(new_completer, text, start, end);
-	set_prompt1(editor, saved_prompt1);
-	set_prompt2(editor, saved_prompt2);
-	free(saved_prompt1);
-	free(saved_prompt2);
-	return res;
+	return run_new_completer(new_completer, text, start, end);
 }
 
 int
@@ -690,8 +679,10 @@ parse(char *pr1, char *pr2)
 		pr2 = pr1;
 
 	prompt = 0;
-	set_prompt1(editor, pr1);
-	set_prompt2(editor, pr2);
+	if(input->runflags & run_interactive){
+		set_prompt1(editor, pr1);
+		set_prompt2(editor, pr2);
+	}
 
 	gcreserve(300 * sizeof(Tree));
 	gcdisable();
