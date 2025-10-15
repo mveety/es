@@ -1,5 +1,10 @@
+#ifndef __EDITOR_H_
+#define __EDITOR_H_
+
 #include <sys/ttycom.h>
 #include <termios.h>
+#include <stddef.h>
+#include <stdint.h>
 
 #define EDITINITIALBUFSZ 4096
 
@@ -169,6 +174,7 @@ struct EditorState {
 	char *completebuf;
 	size_t lastcomplen;
 	char *wordbreaks;
+	char *prefixes;
 	int in_completion;
 	Wordpos pos;
 	char *comp_prefix;
@@ -243,3 +249,5 @@ extern int name2key(char *name);
 /* editors */
 extern char *basic_editor(EditorState *state);
 extern char *line_editor(EditorState *state);
+
+#endif

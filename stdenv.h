@@ -83,10 +83,7 @@ typedef volatile void noreturn;
 typedef void noreturn;
 #endif
 
-#if READLINE
-#include <readline/readline.h>
-#include <readline/history.h>
-#endif
+#include "editor.h"
 
 /* for regexes */
 #define PCRE2_CODE_UNIT_WIDTH 8

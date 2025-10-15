@@ -5,6 +5,7 @@
 #include "stdenv.h"
 #include <stdint.h>
 #include <stdio.h>
+#include <fcntl.h>
 
 Boolean gcverbose = FALSE;			/* -G */
 Boolean gcinfo = FALSE;				/* -I */
@@ -339,6 +340,7 @@ main(int argc, char *argv[])
 	char *ds;
 	char *rs;
 	char *file;
+	char *editor_debug_file = nil;
 
 	volatile int runflags = 0;			/* -[einvxL] */
 	volatile Boolean protected = FALSE; /* -p */
@@ -359,7 +361,7 @@ main(int argc, char *argv[])
 	/* yydebug = 1; */
 
 	// removed IGAPL
-	while((c = getopt(argc, argv, "+I:A:lX:vpodsc:?hND:r:")) != EOF)
+	while((c = getopt(argc, argv, "+I:A:lX:vpodsc:?hND:r:E:")) != EOF)
 		switch(c) {
 		case 'D':
 			for(ds = optarg; *ds != 0; ds++) {
@@ -493,6 +495,9 @@ main(int argc, char *argv[])
 				exit(0);
 			}
 			break;
+		case 'E':
+			editor_debug_file = strdup(optarg);
+			break;
 		case 'v':
 			initgc();
 			initconv();
@@ -505,6 +510,13 @@ main(int argc, char *argv[])
 		}
 
 getopt_done:
+	if(editor_debug_file){
+		if((editor_debugfd = open(editor_debug_file, O_WRONLY)) < 0) {
+			dprintf(2, "unable to open %s\n", argv[1]);
+			return -1;
+		}
+	}
+
 	initgc();
 	initconv();
 

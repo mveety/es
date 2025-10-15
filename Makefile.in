@@ -42,8 +42,8 @@ es	: ${OFILES} system.o
 esdump	: ${OFILES} dump.o
 	${CC} -o esdump ${LDFLAGS} ${OFILES} dump.o ${LIBS}
 
-test_editor : test_editor.o editor.o
-	${CC} -o test_editor ${LDFLAGS} test_editor.o editor.o
+test_editor : test_editor.c editor.c editor.h
+	${CC} -o test_editor ${LDFLAGS} -g -O0 test_editor.c editor.c -DSTANDALONE
 
 es_static : ${OFILES} system.o
 	${CC} -static -o es_static ${LDFLAGS} ${OFILES} system.o ${LIBS}

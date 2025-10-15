@@ -74,12 +74,7 @@ extern void
 print_prompt2(void)
 {
 	input->lineno++;
-#if READLINE
-	prompt = prompt2;
-#else
-	if((input->runflags & run_interactive) && prompt2 != NULL)
-		eprint("%s", prompt2);
-#endif
+	prompt = 1;
 }
 
 /* scanerror -- called for lexical errors */

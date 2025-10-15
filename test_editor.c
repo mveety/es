@@ -79,15 +79,18 @@ main(int argc, char *argv[])
 	set_complete_hook(&state, &completions_hook);
 	bindmapping(&state, KeyCtrlX, (Mapping){.hook = &ctrlx_hook, .reset_completion = 1});
 	bindmapping(&state, KeyCtrlS, (Mapping){.hook = &ctrls_hook, .reset_completion = 0});
+	state.wordbreaks = " \t\n\\'`$><=;|&{()}";
+	state.prefixes = "$";
+
 	dprintf(state.ofd, "running in %s\n", state.term);
 	dprintf(state.ofd, "type \"exit\" or \"quit\" to quit or exit\n");
 	for(;;) {
 		line = line_editor(&state);
 		if(line == nil) {
-			dprintf(2, "\ngot not input\n");
+			dprintf(2, "got not input\n");
 			continue;
 		} else {
-			dprintf(2, "\ngot: \"%s\" (size %lu)\n", line, strlen(line));
+			dprintf(2, "got: \"%s\" (size %lu)\n", line, strlen(line));
 			history_add(&state, line);
 		}
 		if(strcmp(line, "quit") == 0 || strcmp(line, "exit") == 0)

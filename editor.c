@@ -111,6 +111,19 @@ status(Result r)
 	return r.status;
 }
 
+
+void*
+used(void *ptr)
+{
+	return ptr;
+}
+
+#endif
+
+HistoryEntry *get_history_next(EditorState *state);
+HistoryEntry *get_history_last(EditorState *state);
+void create_default_mapping(Keymap *map);
+
 char *
 getterm(void)
 {
@@ -119,34 +132,6 @@ getterm(void)
 	env_term = getenv("TERM");
 	return strdup(env_term);
 }
-
-void*
-used(void *ptr)
-{
-	return ptr;
-}
-
-#else
-
-char *
-getterm(void)
-{
-	List *var = nil;
-	char *term = nil;
-
-	var = varlookup("TERM", nil);
-	if(var == nil)
-		return nil;
-
-	term = getstr(var->term);
-	return strdup(term);
-}
-
-#endif
-
-HistoryEntry *get_history_next(EditorState *state);
-HistoryEntry *get_history_last(EditorState *state);
-void create_default_mapping(Keymap *map);
 
 void
 outbuf_append(OutBuf *obuf, char *str, int len)
@@ -337,6 +322,7 @@ initialize_editor(EditorState *state, int ifd, int ofd)
 		.completebuf = nil,
 		.lastcomplen = 0,
 		.wordbreaks = " \t\n",
+		.prefixes = nil,
 		.in_completion = 0,
 		.pos = (Wordpos){.start = 0, .end = 0 },
 	};
@@ -523,6 +509,7 @@ utf8_marked_strlen(char *str)
 void
 set_prompt1(EditorState *state, char *str)
 {
+	dprint("setting prompt1 to \"%s\"\n", str);
 	if(state->prompt1) {
 		free(state->prompt1);
 		state->prompt1sz = 0;
@@ -536,6 +523,7 @@ set_prompt1(EditorState *state, char *str)
 void
 set_prompt2(EditorState *state, char *str)
 {
+	dprint("setting prompt2 to \"%s\"\n", str);
 	if(state->prompt2) {
 		free(state->prompt2);
 		state->prompt2sz = 0;
@@ -580,13 +568,13 @@ refresh(EditorState *state)
 	real_position = getposition(state);
 	rel_end = state->last_end;
 	rel_next_end = (Position){
-		.lines = (utf8_bufend + promptsz + state->size.cols) / state->size.cols,
-		.cols = (utf8_bufend + promptsz) % state->size.cols,
+		.lines = (utf8_bufend + utf8_promptsz + state->size.cols) / state->size.cols,
+		.cols = (utf8_bufend + utf8_promptsz) % state->size.cols,
 	};
 	rel_cur_pos = state->position;
 	rel_next_pos = (Position){
-		.lines = (utf8_bufpos + promptsz + state->size.cols) / state->size.cols,
-		.cols = (utf8_bufpos + promptsz) % state->size.cols,
+		.lines = (utf8_bufpos + utf8_promptsz + state->size.cols) / state->size.cols,
+		.cols = (utf8_bufpos + utf8_promptsz) % state->size.cols,
 	};
 	if(state->dfd > 0) {
 		dprintf(state->dfd, "----------\n");
@@ -596,6 +584,7 @@ refresh(EditorState *state)
 				state->bufpos);
 		dprintf(state->dfd, "utf8_bufpos = %lu, utf8_bufend = %lu\n", utf8_bufpos, utf8_bufend);
 		dprintf(state->dfd, "promptsz = %lu, utf8_promptsz = %lu\n", promptsz, utf8_promptsz);
+		dprintf(state->dfd, "strlen(prompt) = %lu\n", strlen(prompt));
 		dprintf(state->dfd, "rel_end = {.lines = %d, .cols = %d}\n", rel_end.lines, rel_end.cols);
 		dprintf(state->dfd, "rel_next_end = {.lines = %d, .cols = %d}\n", rel_next_end.lines,
 				rel_next_end.cols);
@@ -623,7 +612,7 @@ refresh(EditorState *state)
 	snsz = snprintf(&snbuf[0], sizeof(snbuf), "\r\x1b[0K");
 	outbuf_append(&buf, &snbuf[0], snsz);
 
-	outbuf_append(&buf, prompt, promptsz);
+	outbuf_append(&buf, prompt, strlen(prompt));
 	outbuf_append(&buf, state->buffer, state->bufend);
 
 	if(rel_next_end.lines - 1 > 0) {
@@ -672,6 +661,21 @@ isawordbreak(EditorState *state, size_t wordbreakssz, char c)
 	return 0;
 }
 
+int
+isaprefix(EditorState *state, char c)
+{
+	size_t i = 0;
+	size_t prefixssz = 0;
+
+	if(!state->prefixes)
+		return 0;
+	prefixssz = strlen(state->prefixes);
+	for(i = 0; i < prefixssz; i++)
+		if(state->prefixes[i] == c)
+			return 1;
+	return 0;
+}
+
 Wordpos
 get_word_position(EditorState *state)
 {
@@ -691,6 +695,8 @@ get_word_position(EditorState *state)
 	for(i = res.end; i >= 1; i--)
 		if(isawordbreak(state, wordbreakssz, state->buffer[i - 1])) {
 			res.start = i;
+			if(i > 0 && isaprefix(state, state->buffer[i-1]))
+				res.start -= 1;
 			assert(res.start <= res.end);
 			return res;
 		}
@@ -993,12 +999,17 @@ void
 call_completions_hook(EditorState *state, Wordpos pos)
 {
 	size_t i;
-	char *curline;
+	char *partial;
+	Wordpos partial_pos;
 
 	if(!state->completions_hook)
 		return;
-	curline = strdup(state->buffer);
-	state->completions = state->completions_hook(curline, pos.start, pos.end);
+
+	partial_pos = get_word_position(state);
+	partial = ealloc(partial_pos.end - partial_pos.start + 2);
+	memcpy(partial, &state->buffer[partial_pos.start], partial_pos.end - partial_pos.start);
+	dprint("partial = %s\n", partial);
+	state->completions = state->completions_hook(partial, pos.start, pos.end);
 	if(state->completions == nil)
 		return;
 	for(i = 0; state->completions[i] != nil; i++) {
@@ -1605,11 +1616,13 @@ top:
 	if(state->bufend == 0)
 		goto fail;
 
+	write(state->ofd, "\r\n", 2);
 	rawmode_off(state);
 	res = strndup(state->buffer, state->bufend + 1);
 	return res;
 
 fail:
+	write(state->ofd, "\r\n", 2);
 	rawmode_off(state);
 	return nil;
 }
@@ -1908,11 +1921,13 @@ line_editor(EditorState *state)
 	if(state->bufend == 0)
 		goto fail;
 
+	write(state->ofd, "\r\n", 2);
 	rawmode_off(state);
 	res = strndup(state->buffer, state->bufend + 1);
 	return res;
 
 fail:
+	write(state->ofd, "\r\n", 2);
 	rawmode_off(state);
 	return nil;
 }

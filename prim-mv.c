@@ -17,12 +17,11 @@ PRIM(buildstring) {
 	return mklist(mkstr((char *)buildstring), NULL);
 }
 
-#if READLINE
 
 PRIM(addhistory) {
 	if(list == NULL)
 		fail("$&addhistory", "usage: $&addhistory [string]");
-	add_history(getstr(list->term));
+	history_add(editor, getstr(list->term));
 	return NULL;
 }
 
@@ -37,7 +36,7 @@ PRIM(addhistorylist) {
 	gcref(&r_lp, (void **)&lp);
 
 	for(lp = list; lp != NULL; lp = lp->next)
-		add_history(getstr(lp->term));
+		history_add(editor, getstr(lp->term));
 
 	gcrderef(&r_lp);
 	gcrderef(&r_list);
@@ -46,26 +45,9 @@ PRIM(addhistorylist) {
 }
 
 PRIM(clearhistory) {
-	clear_history();
+	history_clear(editor);
 	return NULL;
 }
-
-PRIM(rlconf) {
-	char *s;
-	int r = -1;
-
-	if(list == NULL)
-		fail("$&rlconf", "usage: $&rlconf [readline inputrc string]");
-
-	gcdisable();
-	s = getstr(list->term);
-	r = es_rl_parse_and_bind(s);
-	gcenable();
-
-	return mklist(mkstr(str("%d", r)), NULL);
-}
-
-#endif
 
 PRIM(sethistory) {
 	if(list == NULL) {
@@ -644,12 +626,9 @@ initprims_mv(Dict *primdict)
 {
 	X(version);
 	X(buildstring);
-#if READLINE
 	X(addhistory);
 	X(addhistorylist);
 	X(clearhistory);
-	X(rlconf);
-#endif
 	X(sethistory);
 	X(getlast);
 	X(getevaldepth);

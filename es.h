@@ -424,6 +424,7 @@ extern char *esstrerror(int err);
 extern void uerror(char *msg);
 extern void *ealloc(size_t n);
 extern void *erealloc(void *p, size_t n);
+extern char *estrdup(char *str);
 extern void efree(void *p);
 extern void ewrite(int fd, const char *s, size_t n);
 extern long eread(int fd, char *buf, size_t n);
@@ -444,7 +445,11 @@ extern Result result_str(char *str, int status);
 /* input.c */
 
 extern char *lastcmd;
-extern char *prompt, *prompt2;
+extern int editor_debugfd;
+extern int prompt;
+extern char *prompt1, *prompt2;
+extern Boolean resetterminal;
+extern EditorState *editor;
 extern void setnextlastcmd(char *str);
 extern char *getnextlastcmd(void);
 extern Tree *parse(char *esprompt1, char *esprompt2);
@@ -466,10 +471,6 @@ extern List *runstring(const char *str, const char *name, int flags);
 #define run_printcmds 32  /* -x */
 #define run_lisptrees 64  /* -L and defined(LISPTREES) */
 
-#if READLINE
-extern Boolean resetterminal;
-extern int es_rl_parse_and_bind(char *);
-#endif
 
 /* opt.c */
 

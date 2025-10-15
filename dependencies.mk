@@ -1,6 +1,6 @@
 # --- dependencies ---
 
-ESHFILES = config.h esconfig.h stdenv.h es.h
+ESHFILES = config.h esconfig.h stdenv.h es.h editor.h
 
 stdenv.h : esconfig.h
 es.h : config.h stdenv.h
@@ -45,8 +45,7 @@ vec.o : vec.c $(ESHFILES) gc.h
 version.o : version.c $(ESHFILES)
 dynlib.o : dynlib.c $(ESHFILES) prim.h gc.h
 objects.o : objects.c $(ESHFILES) prim.h gc.h
-editor.o : MODCFLAGS=-DSTANDALONE
-editor.o : editor.c $(ESHFILES) gc.h editor.h
+editor.o : editor.c $(ESHFILES) gc.h
 test_editor.o : MODCFLAGS=-DSTANDALONE
 test_editor.o : test_editor.c editor.h
 # modules

@@ -92,6 +92,16 @@ erealloc(void *p, size_t n)
 	return p;
 }
 
+char*
+estrdup(char *str)
+{
+	char *res = nil;
+
+	res = strdup(str);
+	assert(res);
+	return res;
+}
+
 /* efree -- error checked free */
 extern void
 efree(void *p)
@@ -153,6 +163,8 @@ void
 esexit(int status)
 {
 	deallocate_all_objects();
+	if(editor_debugfd > 0)
+		close(editor_debugfd);
 	exit(status);
 }
 

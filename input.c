@@ -1,6 +1,7 @@
 /* input.c -- read input from files or strings ($Revision: 1.2 $) */
 /* stdgetenv is based on the FreeBSD getenv */
 
+#include "editor.h"
 #include "es.h"
 #include "stdenv.h"
 #include <stdio.h>
@@ -26,7 +27,9 @@
  */
 
 Input *input;
-char *prompt, *prompt2;
+int prompt = 0;
+char *prompt1;
+char *prompt2;
 
 Boolean disablehistory = FALSE;
 Boolean resetterminal = FALSE;
@@ -35,24 +38,13 @@ static char *history;
 char *lastcmd, *nextlastcmd;
 static int historyfd = -1;
 extern Boolean verbose_parser;
-
-#if READLINE
-/* int rl_meta_chars;	* for editline; ignored for gnu readline */
-/*extern void add_history(char *);*/
-/*
-extern char *readline(char *);
-extern void rl_reset_terminal(char *);
-extern char *rl_basic_word_break_characters;
-extern char *rl_completer_quote_characters;
-extern char *rl_readline_name;
-extern char *rl_line_buf;
-*/
+EditorState *editor;
+int editor_debugfd = -1;
 
 #if ABUSED_GETENV
 static char *stdgetenv(const char *);
 static char *esgetenv(const char *);
 static char *(*realgetenv)(const char *) = stdgetenv;
-#endif
 #endif
 
 /*
@@ -300,31 +292,29 @@ eoffill(Input *in)
 	return EOF;
 }
 
-#if READLINE
-/* callreadline -- readline wrapper */
 static char *
-callreadline(char *prompt)
+call_editor(int which_prompt)
 {
-	char *r;
+	char *res;
 
-	if(prompt == NULL)
-		prompt = ""; /* bug fix for readline 2.0 */
+	if(which_prompt > 1)
+		which_prompt = 0;
 
 	if(resetterminal) {
-		rl_reset_terminal(NULL);
 		resetterminal = FALSE;
 	}
+	editor->which_prompt = which_prompt;
 	interrupted = FALSE;
 	if(!setjmp(slowlabel)) {
 		slow = TRUE;
-		r = interrupted ? NULL : readline(prompt);
+		res = interrupted ? nil : line_editor(editor);
 	} else
-		r = NULL;
+		res = nil;
 	slow = FALSE;
-	if(r == NULL)
+	if(res == nil)
 		errno = EINTR;
 	SIGCHK();
-	return r;
+	return res;
 }
 
 #if ABUSED_GETENV
@@ -392,10 +382,6 @@ initgetenv(void)
 
 #endif /* ABUSED_GETENV */
 
-#endif /* READLINE */
-
-#if READLINE
-
 char **
 run_new_completer(List *completer0, const char *text, int start, int end)
 {
@@ -419,7 +405,7 @@ run_new_completer(List *completer0, const char *text, int start, int end)
 	gcenable();
 	assert(!gcisblocked());
 
-	args = mklist(mkstr(str("%s", rl_line_buffer)),
+	args = mklist(mkstr(str("%s", editor->buffer)),
 				  mklist(mkstr(str("%s", text)),
 						 mklist(mkstr(str("%d", start)), mklist(mkstr(str("%d", end)), nil))));
 	completer = append(completer, args);
@@ -450,10 +436,16 @@ done:
 }
 
 char **
-es_complete_hook(const char *text, int start, int end)
+es_complete_hook(char *text, int start, int end)
 {
 	List *new_completer = nil; Root r_new_completer;
 	List *complete_sort_list = nil; Root r_complete_sort_list;
+	char **res = nil;
+	char *saved_prompt1 = nil;
+	char *saved_prompt2 = nil;
+
+	saved_prompt1 = estrdup(editor->prompt1);
+	saved_prompt2 = estrdup(editor->prompt2);
 
 	new_completer = varlookup("fn-%new_completer", nil);
 	if(!new_completer)
@@ -464,21 +456,26 @@ es_complete_hook(const char *text, int start, int end)
 
 	complete_sort_list = varlookup("es_conf_sort-completions", nil);
 
-	if(complete_sort_list == nil)
-		rl_sort_completion_matches = 0;
-	else if(termeq(complete_sort_list->term, "true"))
-		rl_sort_completion_matches = 1;
-	else if(termeq(complete_sort_list->term, "false"))
-		rl_sort_completion_matches = 0;
+	/*	if(complete_sort_list == nil)
+			rl_sort_completion_matches = 0;
+		else if(termeq(complete_sort_list->term, "true"))
+			rl_sort_completion_matches = 1;
+		else if(termeq(complete_sort_list->term, "false"))
+			rl_sort_completion_matches = 0;
 
-	rl_attempted_completion_over = 1;
-	rl_ignore_completion_duplicates = 1;
-	rl_filename_completion_desired = 1;
+		rl_attempted_completion_over = 1;
+		rl_ignore_completion_duplicates = 1;
+		rl_filename_completion_desired = 1; */
 
 	gcrderef(&r_complete_sort_list);
 	gcrderef(&r_new_completer);
 
-	return run_new_completer(new_completer, text, start, end);
+	res = run_new_completer(new_completer, text, start, end);
+	set_prompt1(editor, saved_prompt1);
+	set_prompt2(editor, saved_prompt2);
+	free(saved_prompt1);
+	free(saved_prompt2);
+	return res;
 }
 
 int
@@ -593,8 +590,6 @@ copybuffer(Input *in, char *linebuf, long nread)
 	return nwrote;
 }
 
-#endif
-
 /* fdfill -- fill input buffer by reading from a file descriptor */
 static int
 fdfill(Input *in)
@@ -609,20 +604,16 @@ fdfill(Input *in)
 	assert(in->buf == in->bufend);
 	assert(in->fd >= 0);
 
-#if READLINE
 	if(in->runflags & run_interactive && in->fd == 0) {
-		char *rlinebuf = callreadline(prompt);
+		char *rlinebuf = call_editor(prompt);
 		if(rlinebuf == NULL)
 			nread = 0;
 		else {
-			//			if (*rlinebuf != '\0')
-			//				add_history(rlinebuf);
 			nread = copybuffer(in, rlinebuf, strlen(rlinebuf)) + 1;
 			in->bufbegin[nread - 1] = '\n';
 			efree(rlinebuf);
 		}
 	} else
-#endif
 		do {
 			nread = eread(in->fd, (char *)in->bufbegin, in->buflen);
 			SIGCHK();
@@ -648,10 +639,8 @@ fdfill(Input *in)
 		history_hook = varlookup("fn-%history", NULL);
 		if(!disablehistory) {
 			if(history_hook == NULL) {
-#if READLINE
 				if(*line_in != '\0')
-					add_history(line_in);
-#endif
+					history_add(editor, line_in);
 				loghistory((char *)in->bufbegin, nread);
 			} else {
 				gcenable();
@@ -663,10 +652,8 @@ fdfill(Input *in)
 				assert(result != NULL);
 
 				if(strcmp("0", getstr(result->term)) == 0) {
-#if READLINE
 					if(*line_in != '\0')
-						add_history(line_in);
-#endif
+						history_add(editor, line_in);
 					loghistory((char *)in->bufbegin, nread);
 				}
 				gcrderef(&r_result);
@@ -697,13 +684,14 @@ parse(char *pr1, char *pr2)
 	if(ISEOF(input))
 		throw(mklist(mkstr("eof"), NULL));
 
-#if READLINE
-	prompt = (pr1 == NULL) ? "" : pr1;
-#else
-	if(pr1 != NULL)
-		eprint("%s", pr1);
-#endif
-	prompt2 = pr2;
+	if(pr1 == nil)
+		pr1 = "";
+	if(pr2 == nil)
+		pr2 = pr1;
+
+	prompt = 0;
+	set_prompt1(editor, pr1);
+	set_prompt2(editor, pr2);
 
 	gcreserve(300 * sizeof(Tree));
 	gcdisable();
@@ -1012,132 +1000,75 @@ setrunflags(char *s, size_t sz)
 	return 0;
 }
 
-#if READLINE
-/* various readline hooks */
-
-int
-es_readline_hook(char *hookname, int count, int key)
+char *
+line_editor_hook(EditorState *state, int key, void *aux)
 {
-	used(&count);
-	used(&key);
-
+	char *fnname = nil;
 	int gcblocked = 0;
-	List *hook = NULL; Root r_hook;
-	List *res = NULL; Root r_res;
-	char *resstr;
-	struct readline_state state;
+	List *hook = nil; Root r_hook;
+	List *args = nil; Root r_args;
+	List *res = nil; Root r_res;
+	char *resstr = nil;
 
-	hook = varlookup2("fn-%rl-", hookname, NULL);
-	if(hook == NULL)
-		return 0;
+	fnname = aux;
 
 	gcref(&r_hook, (void **)&hook);
+	gcref(&r_args, (void **)&args);
 	gcref(&r_res, (void **)&res);
+
+	if((hook = varlookup2("fn-", fnname, nil)) == nil)
+		goto fail;
 
 	if(gcisblocked()) {
 		gcenable();
 		gcblocked = 1;
 	}
 
-	rl_save_prompt();
-	rl_save_state(&state);
-	hook = append(hook, list_true);
-	res = eval(hook, NULL, 0);
+	args = mklist(mkstr(str("%s", state->buffer)), nil);
+	hook = append(hook, args);
+	rawmode_off(state);
+	res = eval(hook, nil, 0);
+	rawmode_on(state);
 
-	assert(res != NULL);
+	if(res == nil)
+		goto fail;
 
-	rl_restore_state(&state);
-	if(res->next == NULL)
-		goto done;
-	if(termeq(res->term, "0")) {
+	if(res->next == nil)
+		goto fail;
+
+	if(termeq(res->term, "0"))
 		resstr = getstr(res->next->term);
-		rl_insert_text(resstr);
-	}
 
-done:
-	rl_restore_prompt();
-	rl_reset_line_state();
-	gcrderef(&r_res);
-	gcrderef(&r_hook);
-	if(gcblocked) {
+fail:
+	if(gcblocked)
 		gcdisable();
-	}
+	gcrderef(&r_res);
+	gcrderef(&r_args);
+	gcrderef(&r_hook);
+	return resstr;
+}
+
+int
+bind_es_function(char *keyname, char *function)
+{
+	int key = 0;
+
+	if((key = name2key(keyname)) < 0)
+		return -1;
+
+	bindmapping(editor, key,
+				(Mapping){
+					.hook = &line_editor_hook,
+					.base_hook = nil,
+					.aux = estrdup(function),
+					.breakkey = 0,
+					.reset_completion = 1,
+					.end_of_file = 0,
+				});
+
 	return 0;
 }
 
-int
-es_rl_hook0(int count, int key)
-{
-	return es_readline_hook("hook0", count, key);
-}
-
-int
-es_rl_hook1(int count, int key)
-{
-	return es_readline_hook("hook1", count, key);
-}
-
-int
-es_rl_hook2(int count, int key)
-{
-	return es_readline_hook("hook2", count, key);
-}
-
-int
-es_rl_hook3(int count, int key)
-{
-	return es_readline_hook("hook3", count, key);
-}
-
-int
-es_rl_hook4(int count, int key)
-{
-	return es_readline_hook("hook4", count, key);
-}
-
-int
-es_rl_hook5(int count, int key)
-{
-	return es_readline_hook("hook5", count, key);
-}
-
-int
-es_rl_hook6(int count, int key)
-{
-	return es_readline_hook("hook6", count, key);
-}
-
-int
-es_rl_hook7(int count, int key)
-{
-	return es_readline_hook("hook7", count, key);
-}
-
-int
-es_rl_hook8(int count, int key)
-{
-	return es_readline_hook("hook8", count, key);
-}
-
-int
-es_rl_hook9(int count, int key)
-{
-	return es_readline_hook("hook9", count, key);
-}
-
-int
-es_rl_hook10(int count, int key)
-{
-	return es_readline_hook("hook10", count, key);
-}
-
-int
-es_rl_parse_and_bind(char *s)
-{
-	return rl_parse_and_bind(s);
-}
-
-#endif /* READLINE */
 /*
  * initialization
  */
@@ -1151,7 +1082,7 @@ initinput(void)
 	/* declare the global roots */
 	globalroot(&history); /* history file */
 	globalroot(&error);	  /* parse errors */
-	globalroot(&prompt);  /* main prompt */
+	globalroot(&prompt1);  /* main prompt */
 	globalroot(&prompt2); /* secondary prompt */
 
 	/* mark the historyfd as a file descriptor to hold back from forked children */
@@ -1160,24 +1091,12 @@ initinput(void)
 	/* call the parser's initialization */
 	initparse();
 
-#if READLINE
-	/* rl_meta_chars = 0; */
-	rl_basic_word_break_characters = " \t\n\\'`$><=;|&{()}";
-	rl_special_prefixes = "$";
-	rl_completer_quote_characters = "'";
-	rl_readline_name = "es-mveety";
-	rl_add_defun("es-hook0", es_rl_hook0, -1);
-	rl_add_defun("es-hook1", es_rl_hook1, -1);
-	rl_add_defun("es-hook2", es_rl_hook2, -1);
-	rl_add_defun("es-hook3", es_rl_hook3, -1);
-	rl_add_defun("es-hook4", es_rl_hook4, -1);
-	rl_add_defun("es-hook5", es_rl_hook5, -1);
-	rl_add_defun("es-hook6", es_rl_hook6, -1);
-	rl_add_defun("es-hook7", es_rl_hook7, -1);
-	rl_add_defun("es-hook8", es_rl_hook8, -1);
-	rl_add_defun("es-hook9", es_rl_hook9, -1);
-	rl_add_defun("es-hook10", es_rl_hook10, -1);
-
-	rl_attempted_completion_function = es_complete_hook;
-#endif
+	editor = ealloc(sizeof(EditorState));
+	initialize_editor(editor, 0, 1);
+	editor_debugging(editor, editor_debugfd);
+	set_prompt1(editor, "% ");
+	set_prompt2(editor, "_% ");
+	set_complete_hook(editor, &es_complete_hook);
+	editor->wordbreaks = " \t\n\\'`$><=;|&{()}";
+	editor->prefixes = "$";
 }

@@ -332,12 +332,10 @@ PRIM(setmaxevaldepth) {
 	RefReturn(lp);
 }
 
-#if READLINE
 PRIM(resetterminal) {
 	resetterminal = TRUE;
 	return list_true;
 }
-#endif
 
 /*
  * initialization
@@ -369,8 +367,6 @@ initprims_etc(Dict *primdict)
 	X(catch_noreturn);
 	X(withbindings);
 	X(setmaxevaldepth);
-#if READLINE
 	X(resetterminal);
-#endif
 	return primdict;
 }
