@@ -304,6 +304,7 @@ initialize_editor(EditorState *state, int ifd, int ofd)
 	memset(state, 0, sizeof(EditorState));
 	state->ifd = ifd;
 	state->ofd = ofd;
+	state->prompt1 = nil;
 	state->initialized = 0;
 
 	if(!isatty(ifd) || !isatty(ofd))
@@ -523,8 +524,6 @@ utf8_marked_strlen(char *str)
 void
 set_prompt1(EditorState *state, char *str)
 {
-	if(!state->initialized)
-		return;
 	dprint("setting prompt1 to \"%s\"\n", str);
 	if(state->prompt1) {
 		free(state->prompt1);
@@ -1544,6 +1543,8 @@ fallback_editor(EditorState *state)
 
 	buffer = ealloc(EDITINITIALBUFSZ);
 
+	if(state->prompt1)
+		write(state->ofd, state->prompt1, strlen(state->prompt1));
 	read(state->ifd, buffer, EDITINITIALBUFSZ-2);
 	for(i = 0; i < EDITINITIALBUFSZ; i++)
 		if(buffer[i] == '\n'){

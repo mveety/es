@@ -160,6 +160,7 @@ struct EditorState {
 	size_t bufpos;
 	size_t bufend;
 	int initialized;
+	// history
 	char *histbuf;
 	size_t histbufsz;
 	int inhistory;
