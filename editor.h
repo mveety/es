@@ -220,6 +220,8 @@ extern void set_prompt2(EditorState *state, char *str);
 extern void set_complete_hook(EditorState *state, char **(*hook)(char *, int, int));
 
 /* motions and editing */
+extern Position getposition(EditorState *state);
+extern int setposition(EditorState *state, Position pos);
 extern void refresh(EditorState *state);
 extern void insert_char(EditorState *state, char c);
 extern void insert_n_char(EditorState *state, char *str, size_t n);

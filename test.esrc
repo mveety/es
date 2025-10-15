@@ -1,9 +1,57 @@
 #!/usr/bin/env es
 # vi: ft=es
-# testing esrc
-# this esrc is for testing es. it's not really meant to be used, though
-# you could use this as a base for your esrc
+# mveety's ~/.esrc
+#
+# I set most of my environment vars in my .login_conf. I don't know
+# if linux has anything similar, but if it does you should use that
+# instead of your profile or shell dotfiles. It makes life so much easier
+# having everything in one central location instead of being strewn about.
 
-cwd = `{pwd}
-libraries = $cwd/libraries
+# set up libraries support to make sure it works
+# we're going to use the defaults now
+# libraries = $home/eslib
+
+# this is for testing. use local libs
+libraries = `{pwd}^/libraries $libraries
+
+# base libraries. most stuff autoloads, but this stuff is required
+match `{hostname} (
+	(silverfox redfox) { import prompt autoinit library_autoload atuin_history }
+	thefoundry { import prompt autoinit library_autoload history }
+
+)
+
+# completers
+import complete_import complete_git complete_make
+import gencomp_autoinit gencomp_ssh gencomp_libutil
+
+match `{hostname} (
+	(silverfox redfox) { import gencomp_atuin }
+)
+
+match `{uname} (
+	'FreeBSD' {
+		import gencomp_pkg
+		import gencomp_ifconfig_freebsd
+	}
+)
+
+## configuration
+
+autoinit load-all
+
+conf -s history:maxdisplay 10
+conf -s history:reload 100
+conf -s history:load-on-change false
+conf -s history:file '/home/mveety/.history'
+conf -s prompt:name mveety
+conf -s es:dynlib-local-search true
+
+match `{hostname} (
+	(silverfox redfox) {
+		conf -s atuin_history:update-history-file true
+		conf -s history:use-hook atuin
+	}
+	(thefoundry) { conf -s history:use-hook true }
+)
 

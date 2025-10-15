@@ -1,10 +1,9 @@
 library atuin_history (init history)
 
-
 defconf atuin_history update-history-file true
 defconf atuin_history debugging false
 defconf atuin_history load-on-change true
-defconf atuin_history enable-readline-hook true
+defconf atuin_history enable-keymap-hook true
 defconf atuin_history load-duplicate-entries true
 
 if {~ $#__atuin_started 0 || ~ $__atuin_start false} {
@@ -98,7 +97,7 @@ fn __atuin_enable {
 
 	}
 
-	fn %rl-hook1 {
+	fn atuin-ctrlr-hook {
 		let (
 			atuin_tmpfile = /tmp/es_atuin.$pid
 			atuin_data =
@@ -114,8 +113,8 @@ fn __atuin_enable {
 		}
 	}
 
-	if {$atuin_history_conf_enable-readline-hook} {
-		%readline '"\C-r": es-hook1'
+	if {$atuin_history_conf_enable-keymap-hook} {
+		%mapkey 'CtrlR' atuin-ctrlr-hook
 	}
 }
 

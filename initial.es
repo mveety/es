@@ -1189,30 +1189,19 @@ fn waitfor pids {
 	}
 }
 
-if {~ <=$&primitives addhistory} {
-	fn %add-history args {
-		$&addhistorylist $args
-	}
-} {
-	fn %add-history { true }
+fn %add-history args {
+	$&addhistorylist $args
 }
 
-if {~ <=$&primitives clearhistory} {
-	fn %clear-history {
-		$&clearhistory
-	}
-} {
-	fn %clear-history { true }
+fn %clear-history {
+	$&clearhistory
 }
 
-if {~ <=$&primitives rlconf} {
-	fn %readline lines {
-		for (l = $lines) {
-			$&rlconf $l
-		}
-	}
-} {
-	fn %readline { true }
+# we'll keep this around for compatibility
+fn %readline { true }
+
+fn %mapkey keyname funname {
+	$&mapkey $keyname $funname
 }
 
 fn %elem n list {

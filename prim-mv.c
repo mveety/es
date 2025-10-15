@@ -1,3 +1,4 @@
+#include "editor.h"
 #include "es.h"
 #include "gc.h"
 #include "prim.h"
@@ -621,6 +622,28 @@ PRIM(sortlist) {
 	return res;
 }
 
+PRIM(mapkey) {
+	List *lp = nil; Root r_lp;
+
+	if(list == nil)
+		fail("$&mapkey", "missing argument");
+	if(list->next == nil)
+		fail("$&mapkey", "missing argument");
+
+	gcref(&r_lp, (void**)&lp);
+
+	lp = list;
+
+	if(varlookup2("fn-", getstr(lp->next->term), nil) == nil)
+		fail("$&mapkey", "function %s not found", getstr(lp->next->term));
+
+	if(bind_es_function(getstr(lp->term), getstr(lp->next->term)) < 0)
+		fail("$&mapkey", "keyname %s is not valid", getstr(lp->term));
+
+	gcrderef(&r_lp);
+	return nil;
+}
+
 Dict *
 initprims_mv(Dict *primdict)
 {
@@ -656,6 +679,7 @@ initprims_mv(Dict *primdict)
 	X(rematch);
 	X(reextract);
 	X(sortlist);
+	X(mapkey);
 
 	return primdict;
 }
