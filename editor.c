@@ -103,7 +103,7 @@ status(Result r)
 	return r.status;
 }
 
-char*
+char *
 getterm(void)
 {
 	char *env_term;
@@ -114,7 +114,7 @@ getterm(void)
 
 #else
 
-char*
+char *
 getterm(void)
 {
 	List *var = nil;
@@ -295,7 +295,7 @@ initialize_editor(EditorState *state, int ifd, int ofd)
 	if(!isatty(ifd) || !isatty(ofd))
 		return -1;
 	term = getterm();
-	if(!supported_term(term)){
+	if(!supported_term(term)) {
 		free(term);
 		return -2;
 	}
@@ -1471,8 +1471,9 @@ basic_editor(EditorState *state)
 {
 	char c;
 	char *res;
-	char seq[3];
+	char seq[6];
 	enum { StateRead, StateDone } readstate = StateRead;
+	size_t readn = 0;
 
 	rawmode_on(state);
 	if(reset_editor(state) < 0)
@@ -1485,8 +1486,27 @@ basic_editor(EditorState *state)
 top:
 		switch(c) {
 		default:
-			if(c >= ' ' && c <= '~')
+			if(c >= ' ' && c <= '~') {
 				insert_char(state, c);
+			} else if((c & 0b11000000) == 0b11000000) {
+				/* utf-8 stuff */
+				seq[0] = c;
+				if((c & 0b11100000) == 0b11000000)
+					readn = 1;
+				else if((c & 0b11110000) == 0b11100000)
+					readn = 2;
+				else if((c & 0b11111000) == 0b11110000)
+					readn = 3;
+				else
+					unreachable();
+				read(state->ifd, &seq[1], readn);
+				insert_n_char(state, &seq[0], readn + 1);
+			} else if((c & 0b11000000) == 0b10000000) {
+				/* something got screwed up with utf-8
+				 * just skip until we get something sensible
+				 */
+				continue;
+			}
 			completion_reset(state);
 			break;
 		case KeyEnter:
@@ -1495,6 +1515,7 @@ top:
 		case KeyCtrlC:
 			goto fail;
 			break;
+		case KeyCtrlH:
 		case KeyBackspace:
 			backspace_char(state);
 			completion_reset(state);
@@ -1509,6 +1530,10 @@ top:
 		case KeyCtrlE:
 			cursor_end(state);
 			completion_maybe_reset(state);
+			break;
+		case KeyCtrlW:
+			delete_word(state);
+			completion_reset(state);
 			break;
 		case KeyEscape:
 			if(read(state->ifd, &seq[0], 1) < 0)
@@ -1600,7 +1625,7 @@ line_editor(EditorState *state)
 			else
 				unreachable();
 			read(state->ifd, &seq[1], readn);
-			insert_n_char(state, &seq[0], readn+1);
+			insert_n_char(state, &seq[0], readn + 1);
 		} else if((c & 0b11000000) == 0b10000000) {
 			/* something got screwed up with utf-8
 			 * just skip until we get something sensible
