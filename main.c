@@ -26,6 +26,7 @@ Boolean different_esrc = FALSE;	 /* -I */
 char *altesrc = NULL;			 /* for -I */
 Boolean additional_esrc = FALSE; /* -A */
 char *extraesrc = NULL;			 /* for -A */
+char *editor_debug_file = nil;
 
 extern int optind;
 extern char *optarg;
@@ -126,19 +127,19 @@ usage(void)
 {
 	eprint(
 		"usage: es [-c command] [-sIAlNpodv] [-X gcopt] [-D flags] [-r flags] [file [args ...]]\n"
-		"	-c        cmd execute argument\n"
-		"	-s        read commands from standard input; stop option parsing\n"
-		"	-I file   alternative init file\n"
-		"	-A file   additional init file\n"
-		"	-l        login shell\n"
-		"	-N        ignore the .esrc\n"
-		"	-p        don't load functions from the environment\n"
-		"	-o        don't open stdin, stdout, and stderr if they were closed\n"
-		"	-d        don't ignore SIGQUIT or SIGTERM\n"
-		"	-X gcopt  gc options (can be repeated)\n"
-		"	-v        print $buildstring\n"
-		"	-D flags  debug flags (? for more info)\n"
-		"	-r flags  run flags (? for more info)\n");
+		"	-c         cmd execute argument\n"
+		"	-s         read commands from standard input; stop option parsing\n"
+		"	-I file    alternative init file\n"
+		"	-A file    additional init file\n"
+		"	-l         login shell\n"
+		"	-N         ignore the .esrc\n"
+		"	-p         don't load functions from the environment\n"
+		"	-o         don't open stdin, stdout, and stderr if they were closed\n"
+		"	-d         don't ignore SIGQUIT or SIGTERM\n"
+		"	-X extopt  extended options (can be repeated)\n"
+		"	-v         print $buildstring\n"
+		"	-D flags   debug flags (? for more info)\n"
+		"	-r flags   run flags (? for more info)\n");
 	exit(2);
 }
 
@@ -302,6 +303,8 @@ parse_gcopt(char *optarg)
 			dprintf(2, "error: minspace < %d\n", (MIN_minspace / 1024));
 			goto fail;
 		}
+	} else if(streq(parameter, "editordebug")) {
+		editor_debug_file = strdup(arg);
 	} else {
 		goto fail;
 	}
@@ -309,15 +312,16 @@ parse_gcopt(char *optarg)
 	return 0;
 fail:
 	free(orig_work);
-	dprintf(2, "gc parameters: es -X [help|[parameter]:[value]]\n%s\n",
+	dprintf(2, "extended parameters: es -X [help|[parameter]:[value]]\n%s\n",
 			"Global:\n"
 			"	gc:[old|new|generational] -- which gc to use (was -X and -G)\n"
+			"	editordebug:[file] -- file to output line editor debugging info\n"
 			"\n"
-			"Old:\n"
+			"Old GC:\n"
 			"	protect:[true|false] -- enable the protect option to memory testing\n"
 			"	minspace:[megabytes] -- minimum space size\n"
 			"\n"
-			"New and Generational:\n"
+			"New and Generational GC:\n"
 			"	gcafter:[int] -- collection frequency (was -g)\n"
 			"	sortafter:[int] -- sorting frequency (was -S)\n"
 			"	coalesceafter:[int] -- coalescing frequency (was -C)\n"
@@ -340,7 +344,6 @@ main(int argc, char *argv[])
 	char *ds;
 	char *rs;
 	char *file;
-	char *editor_debug_file = nil;
 
 	volatile int runflags = 0;			/* -[einvxL] */
 	volatile Boolean protected = FALSE; /* -p */
@@ -494,9 +497,6 @@ main(int argc, char *argv[])
 			case 1:
 				exit(0);
 			}
-			break;
-		case 'E':
-			editor_debug_file = strdup(optarg);
 			break;
 		case 'v':
 			initgc();
