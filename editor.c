@@ -848,6 +848,44 @@ delete_word(EditorState *state)
 }
 
 void
+delete_to_start(EditorState *state)
+{
+	size_t old_bufpos = 0;
+	size_t old_bufend = 0;
+
+	bufferassert();
+	if(state->bufend == 0)
+		return;
+	if(state->bufpos == 0)
+		return;
+
+	old_bufpos = state->bufpos;
+	old_bufend = state->bufend;
+
+	memmove(&state->buffer[0], &state->buffer[state->bufpos], state->bufend - state->bufpos);
+	state->bufpos = 0;
+	state->bufend = state->bufend - old_bufpos;
+	memset(&state->buffer[state->bufend], 0, old_bufend - state->bufend);
+	bufferassert();
+}
+
+void
+delete_to_end(EditorState *state)
+{
+	bufferassert();
+	if(state->bufend == 0)
+		return;
+	if(state->bufpos == 0){
+		memset(state->buffer, 0, state->bufend);
+		state->bufend = 0;
+		return;
+	}
+
+	memset(&state->buffer[state->bufpos], 0, state->bufend - state->bufpos);
+	state->bufend = state->bufpos;
+}
+
+void
 cursor_move_left(EditorState *state)
 {
 	bufferassert();
@@ -1353,6 +1391,16 @@ create_default_mapping(Keymap *map)
 		.base_hook = &delete_word,
 		.reset_completion = 1,
 	};
+	map->base_keys[KeyCtrlU] = (Mapping){
+		.hook = nil,
+		.base_hook = &delete_to_start,
+		.reset_completion = 1,
+	};
+	map->base_keys[KeyCtrlK] = (Mapping){
+		.hook = nil,
+		.base_hook = &delete_to_end,
+		.reset_completion = 1,
+	};
 
 	map->ext_keys[KeyArrowUp - ExtKeyOffset] = (Mapping){
 		.hook = nil,
@@ -1712,7 +1760,6 @@ line_editor(EditorState *state)
 
 	while(readstate == StateRead) {
 		key = 0;
-		r = (Result){.ptr = nil, .status = 0};
 		memset(&seq[0], 0, sizeof(seq));
 		refresh(state);
 		if(read(state->ifd, &c, 1) < 0)
