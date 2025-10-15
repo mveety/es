@@ -84,6 +84,16 @@ erealloc(void *p, size_t n)
 	return ptr;
 }
 
+char *
+estrdup(char *str)
+{
+	char *res = nil;
+
+	res = strdup(str);
+	assert(res);
+	return res;
+}
+
 typedef struct {
 	void *ptr;
 	int status;
@@ -291,6 +301,11 @@ initialize_editor(EditorState *state, int ifd, int ofd)
 {
 	char *term = nil;
 
+	memset(state, 0, sizeof(EditorState));
+	state->ifd = ifd;
+	state->ofd = ofd;
+	state->initialized = 0;
+
 	if(!isatty(ifd) || !isatty(ofd))
 		return -1;
 	term = getterm();
@@ -298,7 +313,6 @@ initialize_editor(EditorState *state, int ifd, int ofd)
 		free(term);
 		return -2;
 	}
-	memset(state, 0, sizeof(EditorState));
 	*state = (EditorState){
 		.ifd = ifd,
 		.ofd = ofd,
@@ -509,6 +523,8 @@ utf8_marked_strlen(char *str)
 void
 set_prompt1(EditorState *state, char *str)
 {
+	if(!state->initialized)
+		return;
 	dprint("setting prompt1 to \"%s\"\n", str);
 	if(state->prompt1) {
 		free(state->prompt1);
@@ -523,6 +539,8 @@ set_prompt1(EditorState *state, char *str)
 void
 set_prompt2(EditorState *state, char *str)
 {
+	if(!state->initialized)
+		return;
 	dprint("setting prompt2 to \"%s\"\n", str);
 	if(state->prompt2) {
 		free(state->prompt2);
@@ -537,6 +555,8 @@ set_prompt2(EditorState *state, char *str)
 void
 set_complete_hook(EditorState *state, char **(*hook)(char *, int, int))
 {
+	if(!state->initialized)
+		return;
 	completion_reset(state);
 	state->completions_hook = hook;
 }
@@ -1222,6 +1242,9 @@ pass_key(EditorState *state, int key, void *aux)
 int
 bindmapping(EditorState *state, int key, Mapping mapping)
 {
+	if(!state->initialized)
+		return -1;
+
 	if(key < ExtKeyOffset && key > KeyMax)
 		return -1;
 	if(key >= ExtKeyOffset && key > ExtKeyMax)
@@ -1507,6 +1530,31 @@ name2key(char *name)
 
 /* the big kahuna */
 
+char *
+fallback_editor(EditorState *state)
+{
+	/* this at a minimum needs initialize_editor to have been called
+	 * basically you should never call this yourself. let line_editor
+	 * do that for you.
+	 */
+
+	char *buffer = nil;
+	char *res = nil;
+	size_t i = 0;
+
+	buffer = ealloc(EDITINITIALBUFSZ);
+
+	read(state->ifd, buffer, EDITINITIALBUFSZ-2);
+	for(i = 0; i < EDITINITIALBUFSZ; i++)
+		if(buffer[i] == '\n'){
+			buffer[i] = '\0';
+			break;
+		}
+	res = estrdup(buffer);
+	free(buffer);
+	return res;
+}
+
 char * /* budget readline */
 basic_editor(EditorState *state)
 {
@@ -1515,6 +1563,10 @@ basic_editor(EditorState *state)
 	char seq[6];
 	enum { StateRead, StateDone } readstate = StateRead;
 	size_t readn = 0;
+
+
+	if(!state->initialized)
+		return fallback_editor(state);
 
 	rawmode_on(state);
 	if(reset_editor(state) < 0)
@@ -1639,6 +1691,9 @@ line_editor(EditorState *state)
 	Result r;
 	char *str;
 	size_t readn = 0;
+
+	if(!state->initialized)
+		return fallback_editor(state);
 
 	rawmode_on(state);
 	if(reset_editor(state) < 0)

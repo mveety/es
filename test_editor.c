@@ -68,10 +68,10 @@ main(int argc, char *argv[])
 	switch(st){
 	case -1:
 		dprintf(2, "not a tty\n");
-		return -1;
+		break;
 	case -2:
 		dprintf(2, "unsupported terminal: %s\n", getenv("TERM"));
-		return -2;
+		break;
 	}
 	editor_debugging(&state, dfd);
 	set_prompt1(&state, "prompt1> ");
