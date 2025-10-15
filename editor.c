@@ -35,6 +35,7 @@
 typedef struct {
 	char *str;
 	size_t len;
+	size_t size;
 } OutBuf;
 
 const Position ErrPos = (Position){-1, -1};
@@ -158,10 +159,22 @@ outbuf_append(OutBuf *obuf, char *str, int len)
 {
 	char *new;
 
-	new = erealloc(obuf->str, obuf->len + len);
-	memcpy(&new[obuf->len], str, len);
-	obuf->str = new;
+	if(obuf->str == nil)
+		obuf->str = ealloc(len+2);
+	if(obuf->len + len + 1 > obuf->size){
+		new = erealloc(obuf->str, obuf->size + len + 1);
+		obuf->str = new;
+		obuf->size += len + 1;
+	}
+	memcpy(&obuf->str[obuf->len], str, len);
 	obuf->len += len;
+}
+
+void
+outbuf_free(OutBuf *obuf)
+{
+	memset(obuf->str, 0, obuf->len);
+	obuf->len = 0;
 }
 
 int
@@ -350,7 +363,9 @@ initialize_editor(EditorState *state, int ifd, int ofd)
 		.prefixes = nil,
 		.in_completion = 0,
 		.pos = (Wordpos){.start = 0, .end = 0 },
+		.outbuf = ealloc(sizeof(OutBuf)),
 	};
+	memset(state->outbuf, 0, sizeof(OutBuf));
 	rawmode_on(state);
 	state->size = gettermsize(state);
 	rawmode_off(state);
@@ -370,6 +385,7 @@ void
 free_editor(EditorState *state)
 {
 	HistoryEntry *cur;
+	OutBuf *buf;
 
 	if(!state->initialized)
 		return;
@@ -383,6 +399,10 @@ free_editor(EditorState *state)
 	state->prompt1sz = 0;
 	state->prompt2sz = 0;
 	state->initialized = 0;
+	buf = state->outbuf;
+	if(buf->str)
+		free(buf->str);
+	free(state->outbuf);
 
 	cur = state->history;
 	if(cur) {
@@ -573,7 +593,7 @@ set_complete_hook(EditorState *state, char **(*hook)(char *, int, int))
 void /* I really think this could use work */
 refresh(EditorState *state)
 {
-	OutBuf buf = (OutBuf){nil, 0};
+	OutBuf *buf = nil;
 	char snbuf[64];
 	size_t snsz;
 	int promptn = state->which_prompt;
@@ -590,6 +610,7 @@ refresh(EditorState *state)
 	size_t utf8_bufend = 0;
 
 	bufferassert();
+	buf = state->outbuf;
 	/* we need to work out where the line originally started */
 	utf8_promptsz = utf8_marked_strlen(prompt);
 	utf8_bufpos = utf8_strnlen(state, state->buffer, state->bufpos);
@@ -607,6 +628,7 @@ refresh(EditorState *state)
 	};
 	if(state->dfd > 0) {
 		dprintf(state->dfd, "----------\n");
+		dprintf(state->dfd, "buf->size = %lu, buf->len = %lu\n", buf->size, buf->len);
 		dprintf(state->dfd, "state->size = {.lines = %d, .cols = %d}\n", state->size.lines,
 				state->size.cols);
 		dprintf(state->dfd, "state->bufend = %lu, state->bufpos = %lu\n", state->bufend,
@@ -631,18 +653,18 @@ refresh(EditorState *state)
 		snsz = snprintf(&snbuf[0], sizeof(snbuf), "\r\x1b[%dB", rel_end.lines - rel_cur_pos.lines);
 	else
 		snsz = snprintf(&snbuf[0], sizeof(snbuf), "\r");
-	outbuf_append(&buf, &snbuf[0], snsz);
+	outbuf_append(buf, &snbuf[0], snsz);
 
 	for(i = 0; i < (size_t)(rel_end.lines - 1); i++) {
 		snsz = snprintf(&snbuf[0], sizeof(snbuf), "\r\x1b[0K\x1b[1A");
-		outbuf_append(&buf, &snbuf[0], snsz);
+		outbuf_append(buf, &snbuf[0], snsz);
 	}
 
 	snsz = snprintf(&snbuf[0], sizeof(snbuf), "\r\x1b[0K");
-	outbuf_append(&buf, &snbuf[0], snsz);
+	outbuf_append(buf, &snbuf[0], snsz);
 
-	outbuf_append(&buf, prompt, strlen(prompt));
-	outbuf_append(&buf, state->buffer, state->bufend);
+	outbuf_append(buf, prompt, strlen(prompt));
+	outbuf_append(buf, state->buffer, state->bufend);
 
 	if(rel_next_end.lines - 1 > 0) {
 		if(rel_next_end.cols > 0)
@@ -651,22 +673,25 @@ refresh(EditorState *state)
 			snsz = snprintf(&snbuf[0], sizeof(snbuf), "\r\n\x1b[%dA", rel_next_end.lines - 1);
 	} else
 		snsz = snprintf(&snbuf[0], sizeof(snbuf), "\r");
-	outbuf_append(&buf, &snbuf[0], snsz);
+	outbuf_append(buf, &snbuf[0], snsz);
 
 	if(rel_next_pos.lines - 1 > 0) {
 		snsz = snprintf(&snbuf[0], sizeof(snbuf), "\r\x1b[%dB", rel_next_pos.lines - 1);
-		outbuf_append(&buf, &snbuf[0], snsz);
+		outbuf_append(buf, &snbuf[0], snsz);
 	}
 
 	if(rel_next_pos.cols > 0) {
 		snsz = snprintf(&snbuf[0], sizeof(snbuf), "\r\x1b[%dC", rel_next_pos.cols);
-		outbuf_append(&buf, &snbuf[0], snsz);
+		outbuf_append(buf, &snbuf[0], snsz);
 	}
 
-	write(state->ofd, buf.str, buf.len);
+	write(state->ofd, buf->str, buf->len);
 	state->position = rel_next_pos;
 	state->last_end = rel_next_end;
-	free(buf.str);
+
+	if(state->dfd > 0)
+		dprintf(state->dfd, "buf->size = %lu, buf->len = %lu\n", buf->size, buf->len);
+	outbuf_free(buf);
 }
 
 void
