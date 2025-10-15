@@ -188,8 +188,9 @@ struct Mapping {
 	char *(*hook)(EditorState *, int, void *);
 	void (*base_hook)(EditorState *);
 	void *aux;
-	int breakkey;
-	int reset_completion;
+	int8_t breakkey;
+	int8_t reset_completion;
+	int8_t end_of_file;
 };
 
 struct Keymap {
@@ -234,6 +235,7 @@ extern void completion_next(EditorState *state);
 extern void completion_prev(EditorState *state);
 
 /* keymapping */
+extern char *pass_key(EditorState *state, int key, void *aux);
 extern int bindmapping(EditorState *state, int key, Mapping mapping);
 extern char *key2name(int key);
 extern int name2key(char *name);

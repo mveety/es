@@ -53,6 +53,14 @@ const Position ErrPos = (Position){-1, -1};
 	} while(0)
 #endif
 
+#if __has_attribute(__fallthrough__)
+#define fallthrough __attribute__((__fallthrough__))
+#else
+#define fallthrough \
+	do {            \
+	} while(0) /* fallthrough */
+#endif
+
 void *
 ealloc(size_t n)
 {
@@ -110,6 +118,12 @@ getterm(void)
 
 	env_term = getenv("TERM");
 	return strdup(env_term);
+}
+
+void*
+used(void *ptr)
+{
+	return ptr;
 }
 
 #else
@@ -1184,6 +1198,16 @@ completion_prev(EditorState *state)
 
 /* keymapping */
 
+char*
+pass_key(EditorState *state, int key, void *aux)
+{
+	used(aux);
+
+	if(key <= KeyDelete)
+		insert_char(state, (char)key);
+	return nil;
+}
+
 int
 bindmapping(EditorState *state, int key, Mapping mapping)
 {
@@ -1229,13 +1253,20 @@ runmapping(EditorState *state, int key)
 		return result(nil, -3);
 
 	if(map->base_hook == nil) {
-		if(map->hook == nil)
+		if(map->hook == nil){
+			if(map->end_of_file)
+				return result(nil, -4);
 			return result(nil, -2);
+		}
 
 		res = map->hook(state, key, map->aux);
+		if(map->end_of_file)
+			return result(res, -4);
 		return result(res, 0);
 	} else {
 		map->base_hook(state);
+		if(map->end_of_file)
+			return result(nil, -4);
 		return result(nil, 0);
 	}
 }
@@ -1250,6 +1281,10 @@ create_default_mapping(Keymap *map)
 		.hook = nil,
 		.base_hook = nil,
 		.breakkey = 1,
+	};
+	map->base_keys[KeyCtrlD] = (Mapping){
+		.hook = &pass_key,
+		.end_of_file = 1,
 	};
 	map->base_keys[KeyBackspace] = (Mapping){
 		.hook = nil,
@@ -1852,6 +1887,9 @@ line_editor(EditorState *state)
 			if(state->dfd > 0)
 				dprintf(state->dfd, "got invalid key %d\n", key);
 			break;
+		case -4:
+			readstate = StateDone;
+			fallthrough;
 		case 0:
 			if(r.ptr != nil) {
 				str = r.ptr;
