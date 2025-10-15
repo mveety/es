@@ -1090,4 +1090,6 @@ initinput(void)
 	set_complete_hook(editor, &es_complete_hook);
 	editor->wordbreaks = " \t\n\\'`$><=;|&{()}";
 	editor->prefixes = "$";
+	editor->sort_completions = 1;
+	editor->remove_duplicates = 1;
 }

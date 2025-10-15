@@ -364,6 +364,8 @@ initialize_editor(EditorState *state, int ifd, int ofd)
 		.in_completion = 0,
 		.pos = (Wordpos){.start = 0, .end = 0 },
 		.outbuf = ealloc(sizeof(OutBuf)),
+		.sort_completions = 0,
+		.remove_duplicates = 0,
 	};
 	memset(state->outbuf, 0, sizeof(OutBuf));
 	rawmode_on(state);
@@ -442,7 +444,7 @@ reset_editor(EditorState *state)
 		free(state->histbuf);
 	state->histbufsz = 0;
 	if(state->completions) {
-		for(i = 0; state->completions[i] != nil; i++)
+		for(i = 0; state->completions[i] != nil && i < state->completionssz; i++)
 			free(state->completions[i]);
 		free(state->completions);
 		state->completions = nil;
@@ -1087,12 +1089,25 @@ history_cancel(EditorState *state)
 
 /* completion */
 
+int
+complete_compstr(const void *a, const void *b)
+{
+	const char *astr = *(const char**)a;
+	const char *bstr = *(const char**)b;
+
+	return strcmp(astr, bstr);
+}
+
 void
 call_completions_hook(EditorState *state, Wordpos pos)
 {
-	size_t i;
-	char *partial;
+	size_t i = 0;
+	char *partial = nil;
 	Wordpos partial_pos;
+	char **completions = nil;
+	size_t completionssz = 0;
+	char **completions2 = nil;
+	size_t completions2sz = 0;
 
 	if(!state->completions_hook)
 		return;
@@ -1101,19 +1116,48 @@ call_completions_hook(EditorState *state, Wordpos pos)
 	partial = ealloc(partial_pos.end - partial_pos.start + 2);
 	memcpy(partial, &state->buffer[partial_pos.start], partial_pos.end - partial_pos.start);
 	dprint("partial = %s\n", partial);
-	state->completions = state->completions_hook(partial, pos.start, pos.end);
-	if(state->completions == nil)
+	completions = state->completions_hook(partial, pos.start, pos.end);
+	if(completions == nil)
 		return;
-	for(i = 0; state->completions[i] != nil; i++) {
-		if(state->dfd > 0) {
-			if(state->completions[i] != nil)
-				dprintf(state->dfd, "state->completions[%lu] = %p\n", i, state->completions[i]);
-			else
-				dprintf(state->dfd, "state->completions[%lu] = nil\n", i);
-		}
+	for(i = 0; completions[i] != nil; i++) {
+		if(state->dfd > 0)
+			dprintf(state->dfd, "completions[%lu] = %p\n", i, completions[i]);
 	}
+	completionssz = i;
+	dprint("completionssz = %lu\n", completionssz);
 
-	state->completionssz = i;
+	if(state->sort_completions){
+		qsort(completions, completionssz, sizeof(char*), &complete_compstr);
+		if(state->remove_duplicates){
+			dprint("removing duplicate completions\n");
+			completions2 = ealloc(sizeof(char*)*completionssz);
+			completions2[0] = completions[0];
+			completions2sz = 1;
+			for(i = 1; i < completionssz; i++){
+				if(completions[i] == nil)
+					break;
+				if(strcmp(completions[i], completions2[completions2sz-1]) == 0){
+					free(completions[i]);
+					completions[i] = nil;
+					continue;
+				}
+				completions2[completions2sz] = completions[i];
+				completions2sz++;
+			}
+			dprint("completions2sz = %lu\n", completionssz);
+			free(completions);
+			completions = completions2;
+			completionssz = completions2sz;
+		}
+		for(i = 0; completions[i] != nil && i < completionssz; i++) {
+			if(state->dfd > 0)
+				dprintf(state->dfd, "sorted completions[%lu] = %s\n", i, completions[i]);
+		}
+		dprint("completionssz = %lu\n", completionssz);
+
+	}
+	state->completions = completions;
+	state->completionssz = completionssz;
 }
 
 char *
@@ -1236,7 +1280,7 @@ completion_reset(EditorState *state)
 	size_t i;
 
 	if(state->completions) {
-		for(i = 0; state->completions[i] != nil; i++)
+		for(i = 0; state->completions[i] != nil && i < state->completionssz; i++)
 			free(state->completions[i]);
 		free(state->completions);
 		state->completions = nil;

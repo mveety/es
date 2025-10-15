@@ -168,6 +168,8 @@ struct EditorState {
 	HistoryEntry *history;
 	HistoryEntry *cur;
 	// completions list and generator
+	int sort_completions;
+	int remove_duplicates;
 	char **completions;
 	size_t completionsi;
 	size_t completionssz;

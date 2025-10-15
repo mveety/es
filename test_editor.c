@@ -13,7 +13,7 @@ extern void *ealloc(size_t);
 int dfd = -1;
 
 const char *stuff[] = {
-	"hello_world", "this_is_a_test", "yoyoyoyoy", "wow_man_cool", 0,
+	"hello_world", "this_is_a_test", "aaa", "yoyoyoyoy", "wow_man_cool", "bbb", "aaa", 0,
 };
 
 char **
