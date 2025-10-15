@@ -1205,6 +1205,7 @@ do_completion(EditorState *state, char *comp, Wordpos pos)
 	}
 
 	complen = strlen(comp);
+	memset(state->buffer, 0, state->bufend);
 	if(state->comp_prefix) {
 		prefixlen = strlen(state->comp_prefix);
 		if((complen + prefixlen) - 2 > state->bufsz)
