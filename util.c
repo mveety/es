@@ -102,6 +102,16 @@ estrdup(char *str)
 	return res;
 }
 
+char *
+estrndup(char *str, size_t len)
+{
+	char *res = nil;
+
+	res = strndup(str, len);
+	assert(res);
+	return res;
+}
+
 /* efree -- error checked free */
 extern void
 efree(void *p)

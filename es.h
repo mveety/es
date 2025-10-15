@@ -425,6 +425,7 @@ extern void uerror(char *msg);
 extern void *ealloc(size_t n);
 extern void *erealloc(void *p, size_t n);
 extern char *estrdup(char *str);
+extern char *estrndup(char *str, size_t len);
 extern void efree(void *p);
 extern void ewrite(int fd, const char *s, size_t n);
 extern long eread(int fd, char *buf, size_t n);

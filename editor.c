@@ -94,6 +94,16 @@ estrdup(char *str)
 	return res;
 }
 
+char *
+estrndup(char *str, size_t len)
+{
+	char *res = nil;
+
+	res = strndup(str, len);
+	assert(res);
+	return res;
+}
+
 typedef struct {
 	void *ptr;
 	int status;
@@ -140,7 +150,7 @@ getterm(void)
 	char *env_term;
 
 	env_term = getenv("TERM");
-	return strdup(env_term);
+	return estrdup(env_term);
 }
 
 void
@@ -531,7 +541,7 @@ set_prompt1(EditorState *state, char *str)
 	}
 	if(str == nil)
 		return;
-	state->prompt1 = strdup(str);
+	state->prompt1 = estrdup(str);
 	state->prompt1sz = marked_strlen(str);
 }
 
@@ -547,7 +557,7 @@ set_prompt2(EditorState *state, char *str)
 	}
 	if(str == nil)
 		return;
-	state->prompt2 = strdup(str);
+	state->prompt2 = estrdup(str);
 	state->prompt2sz = marked_strlen(str);
 }
 
@@ -885,7 +895,7 @@ history_add(EditorState *state, char *str)
 
 	new_entry = ealloc(sizeof(HistoryEntry));
 
-	new_entry->str = strdup(str);
+	new_entry->str = estrdup(str);
 	new_entry->len = strlen(str);
 	new_entry->next = state->history;
 	if(new_entry->next)
@@ -966,7 +976,7 @@ do_history_replace(EditorState *state, HistoryEntry *ent)
 		if(ent == nil)
 			return;
 		state->inhistory = 1;
-		state->histbuf = strdup(state->buffer);
+		state->histbuf = estrdup(state->buffer);
 		state->histbufsz = strlen(state->buffer);
 		memset(state->buffer, 0, state->bufend);
 		if(ent->len >= state->bufsz)
@@ -1094,7 +1104,7 @@ do_completion(EditorState *state, char *comp, Wordpos pos)
 			return;
 		state->pos = pos;
 		state->in_completion = 1;
-		state->completebuf = strdup(state->buffer);
+		state->completebuf = estrdup(state->buffer);
 		dprint("state->completebuf = \"%s\"\n", state->completebuf);
 		if(pos.start > 0) {
 			state->comp_prefix = ealloc(pos.start + 1);
@@ -1666,7 +1676,7 @@ top:
 
 	write(state->ofd, "\r\n", 2);
 	rawmode_off(state);
-	res = strndup(state->buffer, state->bufend + 1);
+	res = estrndup(state->buffer, state->bufend + 1);
 	return res;
 
 fail:
@@ -1971,10 +1981,10 @@ line_editor(EditorState *state)
 	rawmode_off(state);
 
 	if(readstate == StateCancel)
-		return strdup("");
+		return estrdup("");
 	if(state->bufend == 0)
-		return strdup("");
-	return strndup(state->buffer, state->bufend + 1);
+		return estrdup("");
+	return estrndup(state->buffer, state->bufend + 1);
 
 fail:
 	write(state->ofd, "\r\n", 2);
