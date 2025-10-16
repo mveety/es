@@ -411,6 +411,8 @@ run_new_completer(List *completer0, const char *text, int start, int end)
 	completer = append(completer, args);
 	result = eval(completer, nil, 0);
 
+	gcdisable();
+
 	if(result == nil) {
 		free(matches);
 		matches = nil;
@@ -418,7 +420,7 @@ run_new_completer(List *completer0, const char *text, int start, int end)
 	}
 
 	for(lp = result, matchi = 0; lp != nil; lp = lp->next) {
-		matches[matchi++] = strdup(getstr(lp->term));
+		matches[matchi++] = estrdup(getstr(lp->term));
 		if(matchi >= matchsz - 2) {
 			matchsz += 10;
 			matches = erealloc(matches, (matchsz * sizeof(char *)));
@@ -428,6 +430,7 @@ run_new_completer(List *completer0, const char *text, int start, int end)
 		matches[matchi++] = nil;
 
 done:
+	gcenable();
 	gcrderef(&r_lp);
 	gcrderef(&r_result);
 	gcrderef(&r_args);

@@ -426,8 +426,6 @@ free_editor(EditorState *state)
 int
 reset_editor(EditorState *state)
 {
-	size_t i;
-
 	if(!state->initialized)
 		return -1;
 	memset(state->buffer, 0, state->bufsz);
@@ -441,19 +439,7 @@ reset_editor(EditorState *state)
 	if(state->histbuf)
 		free(state->histbuf);
 	state->histbufsz = 0;
-	if(state->completions) {
-		for(i = 0; i < state->completionssz; i++)
-			free(state->completions[i]);
-		free(state->completions);
-		state->completions = nil;
-		state->completionssz = 0;
-	}
-	if(state->completebuf)
-		free(state->completebuf);
-	state->completebuf = nil;
-	state->completionsi = 0;
-	state->lastcomplen = 0;
-	state->in_completion = 0;
+	completion_reset(state);
 	state->pos = (Wordpos){0, 0};
 	return 0;
 }
