@@ -89,12 +89,6 @@
 /* Define if you have the <unistd.h> header file.  */
 #undef HAVE_UNISTD_H
 
-/* Define if you have the editline library (-leditline).  */
-#undef HAVE_LIBEDIT
-
-/* Define if you have the readline library (-lreadline).  */
-#undef HAVE_READLINE
-
 /* Define if you have the sun library (-lsun).  */
 #undef HAVE_LIBSUN
 

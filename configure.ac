@@ -15,7 +15,6 @@ rm -f conftest*
 ])
 
 
-lineeditor=readline
 ENABLE_LOGINSHELL=false
 sys_wait_w_forms=yes
 assertions=yes
@@ -26,12 +25,6 @@ OFILEOPTS='$(MAINOFILES)'
 MODULES=''
 MODOFILES=''
 development='false'
-
-AC_ARG_WITH(readline,
-[  --with-readline	Use GNU Readline (default)],[readline="$withval"],[readline=yes])
-
-dnl AC_ARG_WITH(libedit,
-dnl [  --with-libedit	Use libedit],[libedit="$withval"],[libedit=no])
 
 AC_ARG_ENABLE(loginshell,
 [  --enable-loginshell	Only load esrc if a login shell],
@@ -60,14 +53,6 @@ AC_ARG_ENABLE(modules,
 AC_ARG_ENABLE(development,
 [  --enable-development	Extras for development],
 [CFLAGS="-g -O0"])
-
-if test "$readline" = "yes"; then
-	lineeditor=readline
-elif test "$libedit" = "yes"; then
-	lineeditor=lineedit
-else
-	lineeditor=none
-fi 
 
 AC_SUBST(ENABLE_LOGINSHELL)
 AC_SUBST(DEVFD_IMPL)
@@ -188,27 +173,6 @@ fi
 
 
 dnl Checks for libraries.
-
-case "$lineeditor" in
-	readline)
-		AC_CHECK_LIB(terminfo, main)
-		AC_CHECK_LIB(termcap, main)
-		AC_CHECK_LIB(readline, readline, [
-			AC_DEFINE(HAVE_READLINE)
-			LIBS="$LIBS -lreadline"
-		])
-		;;
-	libedit)
-		AC_CHECK_LIB(terminfo, main)
-		AC_CHECK_LIB(termcap, main)
-		AC_CHECK_LIB(edit, readline, [
-			AC_DEFINE(HAVE_LIBEDIT)
-			LIBS="$LIBS -ledit"
-		])
-		;;
-	*)
-		;;
-esac
 
 dnl Checks for header files.
 AC_CHECK_INCLUDES_DEFAULT
