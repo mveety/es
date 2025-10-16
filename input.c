@@ -412,7 +412,8 @@ run_new_completer(List *completer0, const char *text, int start, int end)
 	result = eval(completer, nil, 0);
 
 	if(result == nil) {
-		matches[0] = strdup(text);
+		free(matches);
+		matches = nil;
 		goto done;
 	}
 

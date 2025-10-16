@@ -157,13 +157,10 @@ getterm(void)
 void
 outbuf_append(OutBuf *obuf, char *str, int len)
 {
-	char *new;
-
 	if(obuf->str == nil)
 		obuf->str = ealloc(len+2);
 	if(obuf->len + len + 1 > obuf->size){
-		new = erealloc(obuf->str, obuf->size + len + 1);
-		obuf->str = new;
+		obuf->str = erealloc(obuf->str, obuf->size + len + 1);
 		obuf->size += len + 1;
 	}
 	memcpy(&obuf->str[obuf->len], str, len);
@@ -1279,6 +1276,8 @@ completion_reset(EditorState *state)
 {
 	size_t i;
 
+	if(!state->in_completion)
+		return;
 	if(state->completions) {
 		for(i = 0; state->completions[i] != nil && i < state->completionssz; i++)
 			free(state->completions[i]);
@@ -1299,6 +1298,7 @@ completion_reset(EditorState *state)
 		free(state->comp_suffix);
 	state->comp_suffix = nil;
 	state->in_completion = 0;
+	dprint("state->in_completion = 1 -> 0\n");
 }
 
 void
