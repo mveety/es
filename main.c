@@ -6,6 +6,7 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <fcntl.h>
+#include <string.h>
 
 Boolean gcverbose = FALSE;			/* -G */
 Boolean gcinfo = FALSE;				/* -I */
