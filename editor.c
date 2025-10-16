@@ -600,7 +600,7 @@ refresh(EditorState *state)
 	size_t promptsz = promptn == 0 ? state->prompt1sz : state->prompt2sz;
 	char *prompt = promptn == 0 ? state->prompt1 : state->prompt2;
 	size_t i;
-	Position real_position;
+	/*Position real_position;*/
 	Position rel_end;
 	Position rel_next_end;
 	Position rel_cur_pos;
@@ -615,7 +615,7 @@ refresh(EditorState *state)
 	utf8_promptsz = utf8_marked_strlen(prompt);
 	utf8_bufpos = utf8_strnlen(state, state->buffer, state->bufpos);
 	utf8_bufend = utf8_strnlen(state, state->buffer, state->bufend);
-	real_position = getposition(state);
+	/* real_position = getposition(state); */
 	rel_end = state->last_end;
 	rel_next_end = (Position){
 		.lines = (utf8_bufend + utf8_promptsz + state->size.cols) / state->size.cols,
@@ -643,8 +643,8 @@ refresh(EditorState *state)
 				rel_cur_pos.cols);
 		dprintf(state->dfd, "rel_next_pos = {.lines = %d, .cols = %d}\n", rel_next_pos.lines,
 				rel_next_pos.cols);
-		dprintf(state->dfd, "real_position = {.lines = %d, .cols = %d}\n", real_position.lines,
-				real_position.cols);
+		/*dprintf(state->dfd, "real_position = {.lines = %d, .cols = %d}\n", real_position.lines,
+				real_position.cols);*/
 		dprintf(state->dfd, "state->buffer = \"%s\"\n", state->buffer);
 	}
 
