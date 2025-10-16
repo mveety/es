@@ -3,6 +3,9 @@
 #ifndef __es_stdenv
 #define __es_stdenv
 
+#define _DEFAULT_SOURCE 1
+#define _XOPEN_SOURCE 800
+
 #include "esconfig.h"
 #ifdef HAVE_SYS_CDEFS_H
 #include <sys/cdefs.h>
@@ -61,9 +64,7 @@
 #include <sys/types.h>
 /* #endif */
 
-#if REQUIRE_IOCTL
 #include <sys/ioctl.h>
-#endif
 
 #include <dirent.h>
 typedef struct dirent Dirent;

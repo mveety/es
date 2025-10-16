@@ -130,7 +130,7 @@ static int pagesize;
 static void *
 take(size_t n)
 {
-	caddr_t addr;
+	void *addr;
 #ifdef MAP_ANONYMOUS
 	addr = mmap(0, n, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
 #else
@@ -139,7 +139,7 @@ take(size_t n)
 		devzero = eopen("/dev/zero", oOpen);
 	addr = mmap(0, n, PROT_READ | PROT_WRITE, MAP_PRIVATE, devzero, 0);
 #endif
-	if(addr == (caddr_t)-1)
+	if(addr == (void*)-1)
 		panic("mmap: %s", esstrerror(errno));
 	memset(addr, 0xA5, n);
 	return addr;

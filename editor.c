@@ -17,6 +17,7 @@
 #include <sys/types.h>
 #include <sys/ioctl.h>
 #include <assert.h>
+#include <unistd.h>
 #else
 #include "es.h"
 #include "gc.h"

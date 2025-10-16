@@ -1029,7 +1029,7 @@ line_editor_hook(EditorState *state, int key, void *aux)
 		goto fail;
 
 	if(termeq(res->term, "0"))
-		resstr = getstr(res->next->term);
+		resstr = estrdup(getstr(res->next->term));
 
 fail:
 	if(gcblocked)
