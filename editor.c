@@ -187,6 +187,29 @@ outbuf_append(OutBuf *obuf, char *str, int len)
 }
 
 void
+outbuf_append_printable(EditorState *state, OutBuf *obuf, char *str, int len)
+{
+	int i = 0;
+
+	if(obuf->str == nil)
+		obuf->str = ealloc(len + 2);
+	if(obuf->len + len + 1 > obuf->size) {
+		obuf->str = erealloc(obuf->str, obuf->size + len + 1);
+		obuf->size += len + 1;
+	}
+
+	for(i = 0; i < len; i++){
+		if(str[i] >= ' ' && str[i] <= '~') {
+			obuf->str[obuf->len++] = str[i];
+		} else if (str[i] & 0b10000000) {
+			obuf->str[obuf->len++] = str[i];
+		} else {
+			dprint("got unprintable char in buffer: %x\n", str[i]);
+		}
+	}
+}
+
+void
 outbuf_free(OutBuf *obuf)
 {
 	memset(obuf->str, 0, obuf->len);
@@ -670,7 +693,7 @@ refresh(EditorState *state)
 	outbuf_append(buf, &snbuf[0], snsz);
 
 	outbuf_append(buf, prompt, strlen(prompt));
-	outbuf_append(buf, state->buffer, state->bufend);
+	outbuf_append_printable(state, buf, state->buffer, state->bufend);
 
 	if(rel_next_end.lines - 1 > 0) {
 		if(rel_next_end.cols > 0)
