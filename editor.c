@@ -441,7 +441,7 @@ reset_editor(EditorState *state)
 		free(state->histbuf);
 	state->histbufsz = 0;
 	if(state->completions) {
-		for(i = 0; state->completions[i] != nil && i < state->completionssz; i++)
+		for(i = 0; i < state->completionssz; i++)
 			free(state->completions[i]);
 		free(state->completions);
 		state->completions = nil;
@@ -1114,6 +1114,7 @@ call_completions_hook(EditorState *state, Wordpos pos)
 	memcpy(partial, &state->buffer[partial_pos.start], partial_pos.end - partial_pos.start);
 	dprint("partial = %s\n", partial);
 	completions = state->completions_hook(partial, pos.start, pos.end);
+	free(partial);
 	if(completions == nil)
 		return;
 	for(i = 0; completions[i] != nil; i++) {
@@ -1146,7 +1147,7 @@ call_completions_hook(EditorState *state, Wordpos pos)
 			completions = completions2;
 			completionssz = completions2sz;
 		}
-		for(i = 0; completions[i] != nil && i < completionssz; i++) {
+		for(i = 0; i < completionssz; i++) {
 			if(state->dfd > 0)
 				dprintf(state->dfd, "sorted completions[%lu] = %s\n", i, completions[i]);
 		}
@@ -1279,7 +1280,7 @@ completion_reset(EditorState *state)
 	if(!state->in_completion)
 		return;
 	if(state->completions) {
-		for(i = 0; state->completions[i] != nil && i < state->completionssz; i++)
+		for(i = 0; i < state->completionssz; i++)
 			free(state->completions[i]);
 		free(state->completions);
 		state->completions = nil;
