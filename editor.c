@@ -452,11 +452,13 @@ reset_editor(EditorState *state)
 	state->position = (Position){.lines = 1, .cols = 0};
 	state->last_end = (Position){.lines = 1, .cols = 0};
 	state->size = gettermsize(state);
-	state->inhistory = 0;
-	state->cur = nil;
-	if(state->histbuf)
+	if(state->inhistory){
+		assert(state->histbuf);
 		free(state->histbuf);
-	state->histbufsz = 0;
+		state->histbufsz = 0;
+		state->cur = nil;
+		state->inhistory = 0;
+	}
 	completion_reset(state);
 	state->pos = (Wordpos){0, 0};
 	return 0;
@@ -1088,6 +1090,7 @@ history_cancel(EditorState *state)
 		if(state->bufpos > state->bufend)
 			state->bufpos = state->bufend;
 		state->cur = nil;
+		state->inhistory = 0;
 	}
 	bufferassert();
 }
@@ -1176,7 +1179,7 @@ get_next_completion(EditorState *state, Wordpos pos)
 		return nil;
 
 	if(state->completionsi < state->completionssz)
-		return state->completions[state->completionsi++];
+		return estrdup(state->completions[state->completionsi++]);
 
 	state->completionsi = 0;
 	return nil;
@@ -1194,7 +1197,7 @@ get_prev_completion(EditorState *state, Wordpos pos)
 		state->completionsi = state->completionssz;
 		return nil;
 	}
-	return state->completions[--state->completionsi];
+	return estrdup(state->completions[--state->completionsi]);
 }
 
 void /* maybe I should use a rope? */
@@ -1286,6 +1289,7 @@ do_completion(EditorState *state, char *comp, Wordpos pos)
 	if(state->bufpos > state->bufend)
 		state->bufpos = state->bufend;
 	state->lastcomplen = complen;
+	free(comp);
 }
 
 void
