@@ -172,6 +172,7 @@ eread(int fd, char *buf, size_t n)
 void
 esexit(int status)
 {
+	exit_rawmode();
 	deallocate_all_objects();
 	if(editor_debugfd > 0)
 		close(editor_debugfd);

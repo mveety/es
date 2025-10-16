@@ -1061,6 +1061,15 @@ bind_es_function(char *keyname, char *function)
 	return 0;
 }
 
+void
+exit_rawmode(void)
+{
+	if(editor->rawmode){
+		write(editor->ofd, "\r\n", 2);
+		rawmode_off(editor);
+	}
+}
+
 /*
  * initialization
  */
