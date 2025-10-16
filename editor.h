@@ -1,7 +1,7 @@
 #ifndef __EDITOR_H_
 #define __EDITOR_H_
 
-#include <sys/ttycom.h>
+#include <sys/types.h>
 #include <termios.h>
 #include <stddef.h>
 #include <stdint.h>
