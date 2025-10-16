@@ -453,17 +453,15 @@ es_complete_hook(char *text, int start, int end)
 	gcref(&r_complete_sort_list, (void **)&complete_sort_list);
 
 	complete_sort_list = varlookup("es_conf_sort-completions", nil);
-
-	/*	if(complete_sort_list == nil)
-			rl_sort_completion_matches = 0;
-		else if(termeq(complete_sort_list->term, "true"))
-			rl_sort_completion_matches = 1;
-		else if(termeq(complete_sort_list->term, "false"))
-			rl_sort_completion_matches = 0;
-
-		rl_attempted_completion_over = 1;
-		rl_ignore_completion_duplicates = 1;
-		rl_filename_completion_desired = 1; */
+	if(complete_sort_list != nil){
+		if(termeq(complete_sort_list->term, "true")){
+			editor->sort_completions = 1;
+			editor->remove_duplicates = 1;
+		} else {
+			editor->sort_completions = 0;
+			editor->remove_duplicates = 0;
+		}
+	}
 
 	gcrderef(&r_complete_sort_list);
 	gcrderef(&r_new_completer);

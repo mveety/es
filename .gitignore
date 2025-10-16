@@ -60,4 +60,5 @@ stacks.*.out
 vgcore.*
 config.mk
 test_editor
+es_work
 

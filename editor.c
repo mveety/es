@@ -26,10 +26,12 @@
 #include <wchar.h>
 #include "editor.h"
 
-#define dprint(args...)            \
-	if(state->dfd > 0) {           \
-		dprintf(state->dfd, args); \
-	}
+#define dprint(args...)                \
+	do {                               \
+		if(state->dfd > 0) {           \
+			dprintf(state->dfd, args); \
+		}                              \
+	} while(0)
 
 #define bufferassert() assert(state->bufpos <= state->bufend)
 
@@ -133,11 +135,27 @@ status(Result r)
 	return r.status;
 }
 
-
-void*
+void *
 used(void *ptr)
 {
 	return ptr;
+}
+
+int
+editor_istracked(void *ptr)
+{
+	used(ptr);
+	return 0;
+}
+
+#else
+
+int
+editor_istracked(void *ptr)
+{
+	if(istracked(ptr) == TRUE)
+		return 1;
+	return 0;
 }
 
 #endif
@@ -159,8 +177,8 @@ void
 outbuf_append(OutBuf *obuf, char *str, int len)
 {
 	if(obuf->str == nil)
-		obuf->str = ealloc(len+2);
-	if(obuf->len + len + 1 > obuf->size){
+		obuf->str = ealloc(len + 2);
+	if(obuf->len + len + 1 > obuf->size) {
 		obuf->str = erealloc(obuf->str, obuf->size + len + 1);
 		obuf->size += len + 1;
 	}
@@ -695,9 +713,12 @@ isawordbreak(EditorState *state, size_t wordbreakssz, char c)
 	size_t i = 0;
 
 	assert(state->wordbreaks);
-	for(i = 0; i < wordbreakssz; i++)
+	for(i = 0; i < wordbreakssz; i++) {
+		if(c == '\0')
+			return 1; /* we'll call nil a wordbreak */
 		if(c == state->wordbreaks[i])
 			return 1;
+	}
 	return 0;
 }
 
@@ -735,7 +756,7 @@ get_word_position(EditorState *state)
 	for(i = res.end; i >= 1; i--)
 		if(isawordbreak(state, wordbreakssz, state->buffer[i - 1])) {
 			res.start = i;
-			if(i > 0 && isaprefix(state, state->buffer[i-1]))
+			if(i > 0 && isaprefix(state, state->buffer[i - 1]))
 				res.start -= 1;
 			assert(res.start <= res.end);
 			return res;
@@ -886,7 +907,7 @@ delete_to_end(EditorState *state)
 	bufferassert();
 	if(state->bufend == 0)
 		return;
-	if(state->bufpos == 0){
+	if(state->bufpos == 0) {
 		memset(state->buffer, 0, state->bufend);
 		state->bufend = 0;
 		return;
@@ -1076,8 +1097,8 @@ history_cancel(EditorState *state)
 int
 complete_compstr(const void *a, const void *b)
 {
-	const char *astr = *(const char**)a;
-	const char *bstr = *(const char**)b;
+	const char *astr = *(const char **)a;
+	const char *bstr = *(const char **)b;
 
 	return strcmp(astr, bstr);
 }
@@ -1096,6 +1117,7 @@ call_completions_hook(EditorState *state, Wordpos pos)
 	if(!state->completions_hook)
 		return;
 
+	completion_reset(state);
 	partial_pos = get_word_position(state);
 	partial = ealloc(partial_pos.end - partial_pos.start + 2);
 	memcpy(partial, &state->buffer[partial_pos.start], partial_pos.end - partial_pos.start);
@@ -1105,23 +1127,24 @@ call_completions_hook(EditorState *state, Wordpos pos)
 	if(completions == nil)
 		return;
 	for(i = 0; completions[i] != nil; i++) {
+		assert(!editor_istracked(completions[i]));
 		if(state->dfd > 0)
 			dprintf(state->dfd, "completions[%lu] = %p\n", i, completions[i]);
 	}
 	completionssz = i;
 	dprint("completionssz = %lu\n", completionssz);
 
-	if(state->sort_completions){
-		qsort(completions, completionssz, sizeof(char*), &complete_compstr);
-		if(state->remove_duplicates){
+	if(state->sort_completions) {
+		qsort(completions, completionssz, sizeof(char *), &complete_compstr);
+		if(state->remove_duplicates) {
 			dprint("removing duplicate completions\n");
-			completions2 = ealloc(sizeof(char*)*completionssz);
+			completions2 = ealloc(sizeof(char *) * completionssz);
 			completions2[0] = completions[0];
 			completions2sz = 1;
-			for(i = 1; i < completionssz; i++){
+			for(i = 1; i < completionssz; i++) {
 				if(completions[i] == nil)
 					break;
-				if(strcmp(completions[i], completions2[completions2sz-1]) == 0){
+				if(strcmp(completions[i], completions2[completions2sz - 1]) == 0) {
 					free(completions[i]);
 					completions[i] = nil;
 					continue;
@@ -1139,7 +1162,6 @@ call_completions_hook(EditorState *state, Wordpos pos)
 				dprintf(state->dfd, "sorted completions[%lu] = %s\n", i, completions[i]);
 		}
 		dprint("completionssz = %lu\n", completionssz);
-
 	}
 	state->completions = completions;
 	state->completionssz = completionssz;
@@ -1153,12 +1175,11 @@ get_next_completion(EditorState *state, Wordpos pos)
 	if(state->completions == nil)
 		return nil;
 
-	if(state->completionsi >= state->completionssz) {
-		state->completionsi = 0;
-		return nil;
-	}
+	if(state->completionsi < state->completionssz)
+		return state->completions[state->completionsi++];
 
-	return state->completions[state->completionsi++];
+	state->completionsi = 0;
+	return nil;
 }
 
 char *
@@ -1169,14 +1190,11 @@ get_prev_completion(EditorState *state, Wordpos pos)
 	if(state->completions == nil)
 		return nil;
 
-	if(state->completionsi > state->completionssz) {
-		state->completionsi = 0;
+	if(state->completionsi == 0){
+		state->completionsi = state->completionssz;
 		return nil;
 	}
-	if(state->completionsi == 0 || state->completionsi > state->completionssz)
-		state->completionsi = state->completionssz - 1;
-
-	return state->completions[state->completionsi--];
+	return state->completions[--state->completionsi];
 }
 
 void /* maybe I should use a rope? */
@@ -1191,28 +1209,23 @@ do_completion(EditorState *state, char *comp, Wordpos pos)
 	bufferassert();
 
 	if(!state->in_completion) {
-		dprint("state->in_completion = %d -> 1\n", state->in_completion);
 		if(comp == nil)
 			return;
+		dprint("state->in_completion = %d -> 1\n", state->in_completion);
 		state->pos = pos;
 		state->in_completion = 1;
 		state->completebuf = estrdup(state->buffer);
-		dprint("state->completebuf = \"%s\"\n", state->completebuf);
 		if(pos.start > 0) {
 			state->comp_prefix = ealloc(pos.start + 1);
 			memcpy(state->comp_prefix, state->buffer, pos.start);
-			dprint("state->comp_prefix = \"%s\"\n", state->comp_prefix);
 		} else {
 			state->comp_prefix = nil;
-			dprint("state->comp_prefix = nil\n");
 		}
 		if(state->bufend - pos.end > 0) {
 			state->comp_suffix = ealloc((state->bufend - pos.end) + 1);
 			memcpy(state->comp_suffix, &state->buffer[pos.end], (state->bufend - pos.end));
-			dprint("state->comp_suffix = \"%s\"\n", state->comp_suffix);
 		} else {
 			state->comp_suffix = nil;
-			dprint("state->comp_suffix = nil\n");
 		}
 	}
 
@@ -1229,9 +1242,25 @@ do_completion(EditorState *state, char *comp, Wordpos pos)
 			free(state->comp_prefix);
 		if(state->comp_suffix)
 			free(state->comp_suffix);
+		state->completebuf = nil;
+		state->comp_prefix = nil;
+		state->comp_suffix = nil;
 		state->in_completion = 0;
 		return;
 	}
+
+	dprint("state->completebuf = \"%s\"\n", state->completebuf);
+	if(state->comp_prefix)
+		dprint("state->comp_prefix = \"%s\"\n", state->comp_prefix);
+	else
+		dprint("state->comp_prefix = nil\n");
+
+	if(state->comp_suffix)
+		dprint("state->comp_suffix = \"%s\"\n", state->comp_suffix);
+	else
+		dprint("state->comp_suffix = nil\n");
+	dprint("state->completionsi = %lu\n", state->completionsi);
+	dprint("state->completionssz = %lu\n", state->completionssz);
 
 	complen = strlen(comp);
 	memset(state->buffer, 0, state->bufend);
@@ -1264,11 +1293,14 @@ completion_reset(EditorState *state)
 {
 	size_t i;
 
-	if(!state->in_completion)
-		return;
-	if(state->completions) {
-		for(i = 0; i < state->completionssz; i++)
+	if(state->completionssz > 0) {
+		for(i = 0; i < state->completionssz; i++) {
+			assert(!editor_istracked(state->completions[i]));
+			if(state->completions[i] == nil)
+				continue;
 			free(state->completions[i]);
+			state->completions[i] = nil;
+		}
 		free(state->completions);
 		state->completions = nil;
 		state->completionssz = 0;
@@ -1279,14 +1311,16 @@ completion_reset(EditorState *state)
 	}
 	state->completionsi = 0;
 	state->lastcomplen = 0;
-	if(state->comp_prefix)
+	if(state->comp_prefix) {
 		free(state->comp_prefix);
-	state->comp_prefix = nil;
-	if(state->comp_suffix)
+		state->comp_prefix = nil;
+	}
+	if(state->comp_suffix) {
 		free(state->comp_suffix);
-	state->comp_suffix = nil;
+		state->comp_suffix = nil;
+	}
+	dprint("state->in_completion = %d -> 0\n", state->in_completion);
 	state->in_completion = 0;
-	dprint("state->in_completion = 1 -> 0\n");
 }
 
 void
@@ -1334,7 +1368,7 @@ completion_prev(EditorState *state)
 
 /* keymapping */
 
-char*
+char *
 pass_key(EditorState *state, int key, void *aux)
 {
 	used(aux);
@@ -1661,9 +1695,9 @@ fallback_editor(EditorState *state)
 
 	if(state->prompt1)
 		write(state->ofd, state->prompt1, strlen(state->prompt1));
-	read(state->ifd, buffer, EDITINITIALBUFSZ-2);
+	read(state->ifd, buffer, EDITINITIALBUFSZ - 2);
 	for(i = 0; i < EDITINITIALBUFSZ; i++)
-		if(buffer[i] == '\n'){
+		if(buffer[i] == '\n') {
 			buffer[i] = '\0';
 			break;
 		}
@@ -1680,7 +1714,6 @@ basic_editor(EditorState *state)
 	char seq[6];
 	enum { StateRead, StateDone } readstate = StateRead;
 	size_t readn = 0;
-
 
 	if(!state->initialized)
 		return fallback_editor(state);
