@@ -442,7 +442,6 @@ extern Result result_int(int64_t i, int status);
 extern Result result_float(double f, int status);
 extern Result result_str(char *str, int status);
 
-
 /* input.c */
 
 extern char *lastcmd;
@@ -472,7 +471,6 @@ extern void exit_rawmode(void);
 #define run_echoinput 16  /* -v */
 #define run_printcmds 32  /* -x */
 #define run_lisptrees 64  /* -L and defined(LISPTREES) */
-
 
 /* opt.c */
 

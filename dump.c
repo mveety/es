@@ -335,7 +335,7 @@ dumpterm(Term *term)
 			break;
 		}
 		print("static const Term %s = {%s, ttNone, ", name + 1, termtype(term));
-		switch(term->kind){
+		switch(term->kind) {
 		default:
 			unreachable();
 			break;

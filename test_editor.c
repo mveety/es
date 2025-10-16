@@ -35,7 +35,7 @@ completions_hook(char *line, int start, int end)
 	return comps;
 }
 
-char*
+char *
 ctrlx_hook(EditorState *state, int key, void *aux)
 {
 	char *str = "hello world this is a test!";
@@ -43,7 +43,7 @@ ctrlx_hook(EditorState *state, int key, void *aux)
 	return strdup(str);
 }
 
-char*
+char *
 ctrls_hook(EditorState *state, int key, void *aux)
 {
 	if(state->dfd > 0)
@@ -65,7 +65,7 @@ main(int argc, char *argv[])
 		}
 	}
 	st = initialize_editor(&state, 0, 1);
-	switch(st){
+	switch(st) {
 	case -1:
 		dprintf(2, "not a tty\n");
 		break;

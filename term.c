@@ -92,7 +92,7 @@ getclosure(Term *term)
 	char *tmp = nil; Root r_tmp;
 
 	assert(term->ptr);
-	switch(term->kind){
+	switch(term->kind) {
 	default:
 		// should be unreachable();
 		return nil;
@@ -267,7 +267,7 @@ getobject(Term *term)
 		return term->obj;
 	case tkString:
 		res = objectify(getstr(term));
-		switch(status(res)){
+		switch(status(res)) {
 		default:
 			fail("es:objectify", "other error: %d", res.status);
 			break;
@@ -334,7 +334,7 @@ TermScan(void *p)
 	Term *term;
 
 	term = p;
-	switch(term->kind){
+	switch(term->kind) {
 	default:
 		unreachable();
 	case tkClosure:
@@ -362,7 +362,7 @@ TermMark(void *p)
 
 	t = (Term *)p;
 	gc_set_mark(header(p));
-	switch(t->kind){
+	switch(t->kind) {
 	default:
 		unreachable();
 	case tkString:

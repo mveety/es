@@ -139,7 +139,7 @@ take(size_t n)
 		devzero = eopen("/dev/zero", oOpen);
 	addr = mmap(0, n, PROT_READ | PROT_WRITE, MAP_PRIVATE, devzero, 0);
 #endif
-	if(addr == (void*)-1)
+	if(addr == (void *)-1)
 		panic("mmap: %s", esstrerror(errno));
 	memset(addr, 0xA5, n);
 	return addr;
@@ -185,7 +185,6 @@ initmmu(void)
 /*
  * ``half'' space management
  */
-
 
 /* mkspace -- create a new ``half'' space in debugging mode */
 static Space *
@@ -249,7 +248,6 @@ newspace(Space *next)
 	return space;
 }
 
-
 /* deprecate -- take a space and invalidate it */
 static void
 deprecate(Space *space)
@@ -258,7 +256,7 @@ deprecate(Space *space)
 	Space *old = nil;
 	Space *next = nil;
 
-	if(gcprotect){
+	if(gcprotect) {
 		assert(space != NULL);
 		for(base = space; base->next != NULL; base = base->next)
 			;

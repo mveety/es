@@ -208,12 +208,13 @@ run_flag_usage(void)
 }
 
 int
-trueargument(char *arg) {
-	if(streq(arg, "true") || streq(arg, "TRUE") || streq(arg, "yes")
-			|| streq(arg, "YES") || streq(arg, "y") || streq(arg, "Y"))
+trueargument(char *arg)
+{
+	if(streq(arg, "true") || streq(arg, "TRUE") || streq(arg, "yes") || streq(arg, "YES") ||
+	   streq(arg, "y") || streq(arg, "Y"))
 		return 1;
-	if(streq(arg, "false") || streq(arg, "FALSE") || streq(arg, "no")
-			|| streq(arg, "NO") || streq(arg, "n") || streq(arg, "N"))
+	if(streq(arg, "false") || streq(arg, "FALSE") || streq(arg, "no") || streq(arg, "NO") ||
+	   streq(arg, "n") || streq(arg, "N"))
 		return -1;
 	return 0;
 }
@@ -285,7 +286,7 @@ parse_gcopt(char *optarg)
 	} else if(streq(parameter, "reserveblocks")) {
 		reserve_blocks = atoi(arg);
 	} else if(streq(parameter, "protect")) {
-		switch(trueargument(arg)){
+		switch(trueargument(arg)) {
 		default:
 			goto fail;
 		case 1:
@@ -330,8 +331,7 @@ fail:
 			"	reserveblocks:[int] -- blocks to reserve\n"
 			"	oldage:[int] -- age to age out blocks (was -a)\n"
 			"	oldsweep:[int] -- oldlist sweeping frequency (was -w)\n"
-			"	sorting:[list|array|arraysz] -- which sorting function to use\n"
-	);
+			"	sorting:[list|array|arraysz] -- which sorting function to use\n");
 	return help;
 }
 
@@ -511,7 +511,7 @@ main(int argc, char *argv[])
 		}
 
 getopt_done:
-	if(editor_debug_file){
+	if(editor_debug_file) {
 		if((editor_debugfd = open(editor_debug_file, O_WRONLY)) < 0) {
 			dprintf(2, "unable to open %s\n", argv[1]);
 			return -1;

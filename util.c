@@ -92,7 +92,7 @@ erealloc(void *p, size_t n)
 	return p;
 }
 
-char*
+char *
 estrdup(char *str)
 {
 	char *res = nil;
@@ -187,7 +187,7 @@ status(Result r)
 	return r.status;
 }
 
-void*
+void *
 ok(Result r)
 {
 	if(r.status == 0)
@@ -214,7 +214,7 @@ ok_float(Result r)
 	esexit(r.status);
 }
 
-char*
+char *
 ok_str(Result r)
 {
 	if(r.status == 0)
@@ -246,4 +246,3 @@ result_str(char *str, int status)
 {
 	return (Result){{.str = str}, status};
 }
-

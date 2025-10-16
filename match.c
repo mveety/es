@@ -345,7 +345,8 @@ extractmatches(List *subjects0, List *patterns0, StrList *quotes0)
 			} else {
 				gcdisable();
 				match = nil;
-				match = extractsinglematch(getstr(subject->term), getstr(pattern->term), quote->str, nil);
+				match = extractsinglematch(getstr(subject->term), getstr(pattern->term), quote->str,
+										   nil);
 				gcenable();
 				if(match != nil) {
 					match = reverse(match);
@@ -467,8 +468,8 @@ regexextract(RegexStatus *status, Term *subject0, Term *pattern0)
 		if(strlen(copybuf) == 0)
 			continue;
 		if(regex_debug == TRUE) {
-			dprintf(2, "pmatch[%d].rm_so = %lu, pmatch[%d].rm_eo = %lu, ", i, (uint64_t)pmatch[i].rm_so, i,
-					(uint64_t)pmatch[i].rm_eo);
+			dprintf(2, "pmatch[%d].rm_so = %lu, pmatch[%d].rm_eo = %lu, ", i,
+					(uint64_t)pmatch[i].rm_so, i, (uint64_t)pmatch[i].rm_eo);
 			dprintf(2, "pmatch[%d].rm_eo - pmatch[%d].rm_so = %lu, ", i, i,
 					(uint64_t)(pmatch[i].rm_eo - pmatch[i].rm_so));
 			dprintf(2, "i = %d, nmatch = %lu, copybuf = %s\n", i, nmatch, copybuf);

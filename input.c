@@ -453,8 +453,8 @@ es_complete_hook(char *text, int start, int end)
 	gcref(&r_complete_sort_list, (void **)&complete_sort_list);
 
 	complete_sort_list = varlookup("es_conf_sort-completions", nil);
-	if(complete_sort_list != nil){
-		if(termeq(complete_sort_list->term, "true")){
+	if(complete_sort_list != nil) {
+		if(termeq(complete_sort_list->term, "true")) {
 			editor->sort_completions = 1;
 			editor->remove_duplicates = 1;
 		} else {
@@ -681,7 +681,7 @@ parse(char *pr1, char *pr2)
 		pr2 = pr1;
 
 	prompt = 0;
-	if(input->runflags & run_interactive){
+	if(input->runflags & run_interactive) {
 		set_prompt1(editor, pr1);
 		set_prompt2(editor, pr2);
 	}
@@ -1065,7 +1065,7 @@ bind_es_function(char *keyname, char *function)
 void
 exit_rawmode(void)
 {
-	if(editor->rawmode){
+	if(editor->rawmode) {
 		write(editor->ofd, "\r\n", 2);
 		rawmode_off(editor);
 	}
@@ -1084,7 +1084,7 @@ initinput(void)
 	/* declare the global roots */
 	globalroot(&history); /* history file */
 	globalroot(&error);	  /* parse errors */
-	globalroot(&prompt1);  /* main prompt */
+	globalroot(&prompt1); /* main prompt */
 	globalroot(&prompt2); /* secondary prompt */
 
 	/* mark the historyfd as a file descriptor to hold back from forked children */

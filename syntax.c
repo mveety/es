@@ -65,8 +65,8 @@ treeconsend2(Tree *head, Tree *tail)
 Tree *
 thunkify(Tree *tree)
 {
-	if(tree != NULL &&
-	   ((tree->kind == nThunk) || (tree->kind == nList && tree->CAR->kind == nThunk && tree->CDR == NULL)))
+	if(tree != NULL && ((tree->kind == nThunk) ||
+						(tree->kind == nList && tree->CAR->kind == nThunk && tree->CDR == NULL)))
 		return tree;
 	return mk(nThunk, tree);
 }
@@ -167,8 +167,8 @@ mkpipe(Tree *t1, int outfd, int infd, Tree *t2)
 	Boolean pipetail;
 
 	pipetail = firstis(t2, "%pipe");
-	tail =
-		prefix(str("%d", outfd), prefix(str("%d", infd), pipetail ? t2->CDR : treecons(thunkify(t2), NULL)));
+	tail = prefix(str("%d", outfd),
+				  prefix(str("%d", infd), pipetail ? t2->CDR : treecons(thunkify(t2), NULL)));
 	if(firstis(t1, "%pipe"))
 		return treeappend(t1, tail);
 	t1 = thunkify(t1);
@@ -278,7 +278,8 @@ mkclose(int fd)
 Tree *
 mkdup(int fd0, int fd1)
 {
-	return prefix("%dup", prefix(str("%d", fd0), prefix(str("%d", fd1), treecons(&placeholder, NULL))));
+	return prefix("%dup",
+				  prefix(str("%d", fd0), prefix(str("%d", fd1), treecons(&placeholder, NULL))));
 }
 
 /* redirappend -- destructively add to the list of redirections, before any other nodes */
@@ -332,8 +333,9 @@ mkmatch(Tree *subj, Tree *cases)
 	sass = treecons2(mk(nAssign, mk(nWord, varname), subj), NULL);
 	svar = mk(nVar, mk(nWord, varname));
 
-	if(comprehensive_matches){
-		wildcard = treecons(mk(nConcat, mk(nQword, "$matchexpr = "), mk(nVar, mk(nWord, varname))), nil);
+	if(comprehensive_matches) {
+		wildcard =
+			treecons(mk(nConcat, mk(nQword, "$matchexpr = "), mk(nVar, mk(nWord, varname))), nil);
 		wildcard = treecons(mk(nWord, "unreachable"), wildcard);
 		wildcard = treecons(mk(nWord, "assert"), wildcard);
 		wildcard = treecons(mk(nWord, "throw"), wildcard);
@@ -417,11 +419,13 @@ mkmatchall(Tree *subj, Tree *cases)
 
 		resultnil = treecons(thunkify(treecons(mk(nWord, result), NULL)), NULL);
 		if(!is_wild) {
-			ifbody = mkseq("%seq", thunkify(mk(nAssign, mk(nWord, hasmatched), mk(nWord, falsestr))), cmd);
+			ifbody = mkseq("%seq",
+						   thunkify(mk(nAssign, mk(nWord, hasmatched), mk(nWord, falsestr))), cmd);
 			ifbody = thunkify(ifbody);
-			match = treecons(
-				mk(nCall, thunkify(prefix("if", treecons(thunkify(pattlist), treecons(ifbody, resultnil))))),
-				NULL);
+			match =
+				treecons(mk(nCall, thunkify(prefix("if", treecons(thunkify(pattlist),
+																  treecons(ifbody, resultnil))))),
+						 NULL);
 			match = mk(nList, resvar, match);
 			match = thunkify(mk(nAssign, mk(nWord, resname), match));
 			ifs = mkseq("%seq", ifs, match);
@@ -477,9 +481,9 @@ mkdictassign(Tree *sub, Tree *assoc)
 	if(assoc_elem->kind == nWord)
 		assoc = mk(nAssoc, mk(nQword, gcdup(assoc_elem->u[0].s)), assoc_value);
 	if(assoc->CDR == NULL || assoc->CDR->CAR == NULL)
-		return mk(
-			nAssign, sub,
-			mk(nCall, thunkify(prefix("%dictremove", treecons(mk(nVar, sub), treecons(assoc->CAR, NULL))))));
+		return mk(nAssign, sub,
+				  mk(nCall, thunkify(prefix("%dictremove",
+											treecons(mk(nVar, sub), treecons(assoc->CAR, NULL))))));
 	args = treeappend(treecons(assoc->CAR, NULL), assoc->CDR);
 	return mk(nAssign, sub, mk(nCall, thunkify(prefix("%dictput", treecons(mk(nVar, sub), args)))));
 }
@@ -505,4 +509,3 @@ mklongarg(char *argname, char *argvalue)
 
 	return mk(nQword, fullarg);
 }
-

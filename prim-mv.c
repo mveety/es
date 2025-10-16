@@ -630,7 +630,7 @@ PRIM(mapkey) {
 	if(list->next == nil)
 		fail("$&mapkey", "missing argument");
 
-	gcref(&r_lp, (void**)&lp);
+	gcref(&r_lp, (void **)&lp);
 
 	lp = list;
 

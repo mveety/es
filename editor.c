@@ -452,7 +452,7 @@ reset_editor(EditorState *state)
 	state->position = (Position){.lines = 1, .cols = 0};
 	state->last_end = (Position){.lines = 1, .cols = 0};
 	state->size = gettermsize(state);
-	if(state->inhistory){
+	if(state->inhistory) {
 		assert(state->histbuf);
 		free(state->histbuf);
 		state->histbufsz = 0;
@@ -1193,7 +1193,7 @@ get_prev_completion(EditorState *state, Wordpos pos)
 	if(state->completions == nil)
 		return nil;
 
-	if(state->completionsi == 0){
+	if(state->completionsi == 0) {
 		state->completionsi = state->completionssz;
 		return nil;
 	}

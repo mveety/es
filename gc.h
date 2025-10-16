@@ -6,19 +6,19 @@
 /* see also es.h for more generally applicable definitions */
 
 #define ALIGN(n) (((n) + sizeof(void *) - 1) & ~(sizeof(void *) - 1))
-#define	MIN_minspace	2*1024*1024
-#define	DefineTag(t, storage) \
-	static void *CONCAT(t,Copy)(void *); \
-	static size_t CONCAT(t,Scan)(void *); \
-	static void CONCAT(t, Mark)(void *); \
-	Tag CONCAT(t,Tag) = { CONCAT(t,Copy), CONCAT(t,Scan), CONCAT(t, Mark), TAGMAGIC, STRING(t) }
+#define MIN_minspace 2 * 1024 * 1024
+#define DefineTag(t, storage)              \
+	static void *CONCAT(t, Copy)(void *);  \
+	static size_t CONCAT(t, Scan)(void *); \
+	static void CONCAT(t, Mark)(void *);   \
+	Tag CONCAT(t, Tag) = {CONCAT(t, Copy), CONCAT(t, Scan), CONCAT(t, Mark), TAGMAGIC, STRING(t)}
 
 enum {
 	TAGMAGIC = 0xdefaced,
-	GcForward = 1<<0,
-	GcUsed = 1<<1,
-	GcDeref = 1<<2,
-	GcFixed = 1<<3,
+	GcForward = 1 << 0,
+	GcUsed = 1 << 1,
+	GcDeref = 1 << 2,
+	GcFixed = 1 << 3,
 	OldGc = 100,
 	NewGc = 101,
 };
@@ -132,7 +132,7 @@ extern Header *header(void *p);
 extern size_t dump(Tag *t, void *p);
 
 /* old collecter */
-extern Boolean old_istracked(void*);
+extern Boolean old_istracked(void *);
 extern void old_initgc(void);
 extern void old_gcenable(void);
 extern void old_gcdisable(void);
@@ -141,10 +141,10 @@ extern Boolean old_gcisblocked(void);
 extern void old_gc(void);
 extern void *old_gcallocate(size_t, int);
 extern void old_memdump(void);
-extern void old_getstats(GcStats*);
+extern void old_getstats(GcStats *);
 
 /* mark sweep */
-extern Boolean gc_istracked(void*);
+extern Boolean gc_istracked(void *);
 extern void gcmark(void *p);
 extern void gc_set_mark(Header *h);
 extern void gc_unset_mark(Header *h);
@@ -158,7 +158,7 @@ extern void ms_gcenable(void);
 extern void ms_gcdisable(void);
 extern Boolean ms_gcisblocked(void);
 extern void gc_memdump(void);
-extern void gc_getstats(GcStats*);
+extern void gc_getstats(GcStats *);
 
 /*
  * allocation
@@ -174,4 +174,3 @@ extern char *sealcountedbuffer(Buffer *buf);
 extern void freebuffer(Buffer *buf);
 extern void *forward(void *p);
 extern Boolean istracked(void *p);
-
