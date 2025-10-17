@@ -256,6 +256,7 @@ extern char *pass_key(EditorState *state, int key, void *aux);
 extern int bindmapping(EditorState *state, int key, Mapping mapping);
 extern char *key2name(int key);
 extern int name2key(char *name);
+extern char *getcurrentline(EditorState *state);
 
 /* editors */
 extern char *basic_editor(EditorState *state);

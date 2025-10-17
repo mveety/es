@@ -1750,6 +1750,12 @@ name2key(char *name)
 	return -1;
 }
 
+char *
+getcurrentline(EditorState *state)
+{
+	return estrndup(state->buffer, state->bufend+1);
+}
+
 /* the big kahuna */
 
 char *

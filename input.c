@@ -1002,6 +1002,7 @@ line_editor_hook(EditorState *state, int key, void *aux)
 	List *args = nil; Root r_args;
 	List *res = nil; Root r_res;
 	char *resstr = nil;
+	char *curline = nil;
 
 	fnname = aux;
 
@@ -1017,7 +1018,8 @@ line_editor_hook(EditorState *state, int key, void *aux)
 		gcblocked = 1;
 	}
 
-	args = mklist(mkstr(str("%s", state->buffer)), nil);
+	curline = getcurrentline(state);
+	args = mklist(mkstr(str("%s", curline)), nil);
 	hook = append(hook, args);
 	rawmode_off(state);
 	res = eval(hook, nil, 0);
@@ -1033,6 +1035,8 @@ line_editor_hook(EditorState *state, int key, void *aux)
 		resstr = estrdup(getstr(res->next->term));
 
 fail:
+	if(curline)
+		free(curline);
 	if(gcblocked)
 		gcdisable();
 	gcrderef(&r_res);
