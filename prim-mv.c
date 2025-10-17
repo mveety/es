@@ -301,6 +301,7 @@ PRIM(gcstats) {
 
 	gcref(&r_res, (void **)&res);
 
+	memset(&stats, 0, sizeof(GcStats));
 	if(gctype == NewGc) {
 		gc_getstats(&stats);
 		res = mklist(mkstr(str("%d", stats.gcblocked)), res);

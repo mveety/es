@@ -161,6 +161,7 @@ struct EditorState {
 	size_t bufend;
 	int initialized;
 	void *outbuf;
+	int clear_screen;
 	// history
 	char *histbuf;
 	size_t histbufsz;
@@ -236,6 +237,7 @@ extern void cursor_move_left(EditorState *state);
 extern void cursor_move_right(EditorState *state);
 extern void cursor_move_home(EditorState *state);
 extern void cursor_move_end(EditorState *state);
+extern void clear_screen(EditorState *state);
 
 /* history */
 extern void history_add(EditorState *state, char *str);

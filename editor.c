@@ -210,19 +210,16 @@ outbuf_append_printable(EditorState *state, OutBuf *obuf, char *str, int len)
 }
 
 void
-outbuf_free(OutBuf *obuf)
+outbuf_clean(OutBuf *obuf)
 {
-	memset(obuf->str, 0, obuf->len);
+	memset(obuf->str, 0, obuf->len+1);
 	obuf->len = 0;
 }
 
 int
-rawmode_on(EditorState *state)
+reconfigure_terminal(EditorState *state)
 {
 	struct termios raw;
-
-	if(tcgetattr(state->ifd, &state->old_termios) < 0)
-		return -1;
 
 	raw = state->old_termios;
 	raw.c_iflag &= ~(BRKINT | ICRNL | INPCK | ISTRIP | IXON);
@@ -241,13 +238,42 @@ rawmode_on(EditorState *state)
 }
 
 int
+rawmode_on(EditorState *state)
+{
+	struct termios raw;
+
+	if(state->rawmode)
+		return 1;
+	if(tcgetattr(state->ifd, &state->old_termios) < 0)
+		return -1;
+
+	raw = state->old_termios;
+	raw.c_iflag &= ~(BRKINT | ICRNL | INPCK | ISTRIP | IXON);
+	raw.c_oflag &= ~OPOST;
+	raw.c_cflag |= CS8;
+	raw.c_lflag &= ~(ECHO | ICANON | IEXTEN | ISIG);
+	raw.c_cc[VMIN] = 1;
+	raw.c_cc[VTIME] = 0;
+
+	if(tcsetattr(state->ifd, TCSAFLUSH, &raw) < 0) {
+		tcsetattr(state->ifd, TCSAFLUSH, &state->old_termios);
+		return -1;
+	}
+	state->rawmode = 1;
+	return 0;
+}
+
+int
 rawmode_off(EditorState *state)
 {
-	if(tcsetattr(state->ifd, TCSANOW, &state->old_termios) < 0)
+	if(!state->rawmode)
+		return -2;
+	if(tcsetattr(state->ifd, TCSAFLUSH, &state->old_termios) < 0)
 		return -1;
 	state->rawmode = 0;
 	return 0;
 }
+
 
 Position
 getposition(EditorState *state)
@@ -405,6 +431,7 @@ initialize_editor(EditorState *state, int ifd, int ofd)
 		.outbuf = ealloc(sizeof(OutBuf)),
 		.sort_completions = 0,
 		.remove_duplicates = 0,
+		.clear_screen = 0,
 	};
 	memset(state->outbuf, 0, sizeof(OutBuf));
 	rawmode_on(state);
@@ -691,6 +718,11 @@ refresh(EditorState *state)
 
 	snsz = snprintf(&snbuf[0], sizeof(snbuf), "\r\x1b[0K");
 	outbuf_append(buf, &snbuf[0], snsz);
+	if(state->clear_screen){
+		snsz = snprintf(&snbuf[0], sizeof(snbuf), "\x1b[H\x1b[2J");
+		outbuf_append(buf, &snbuf[0], snsz);
+		state->clear_screen = 0;
+	}
 
 	outbuf_append(buf, prompt, strlen(prompt));
 	outbuf_append_printable(state, buf, state->buffer, state->bufend);
@@ -720,7 +752,7 @@ refresh(EditorState *state)
 
 	if(state->dfd > 0)
 		dprintf(state->dfd, "buf->size = %lu, buf->len = %lu\n", buf->size, buf->len);
-	outbuf_free(buf);
+	outbuf_clean(buf);
 }
 
 void
@@ -981,6 +1013,13 @@ cursor_end(EditorState *state)
 		state->bufpos = state->bufend;
 }
 
+void
+clear_screen(EditorState *state)
+{
+	bufferassert();
+	state->clear_screen = 1;
+}
+
 /* history */
 
 void
@@ -1185,7 +1224,7 @@ call_completions_hook(EditorState *state, Wordpos pos)
 		}
 		for(i = 0; i < completionssz; i++) {
 			if(state->dfd > 0)
-				dprintf(state->dfd, "sorted completions[%lu] = %s\n", i, completions[i]);
+				dprintf(state->dfd, "sorted completions[%lu](%lu) = \"%s\"\n", i, strlen(completions[i]), completions[i]);
 		}
 		dprint("completionssz = %lu\n", completionssz);
 	}
@@ -1312,7 +1351,6 @@ do_completion(EditorState *state, char *comp, Wordpos pos)
 	if(state->bufpos > state->bufend)
 		state->bufpos = state->bufend;
 	state->lastcomplen = complen;
-	free(comp);
 }
 
 void
@@ -1373,6 +1411,8 @@ completion_next(EditorState *state)
 			dprintf(state->dfd, "completion string = nil\n");
 	}
 	do_completion(state, comp, state->pos);
+	if(comp)
+		free(comp);
 }
 
 void
@@ -1391,6 +1431,8 @@ completion_prev(EditorState *state)
 			dprintf(state->dfd, "completion string = nil\n");
 	}
 	do_completion(state, comp, state->pos);
+	if(comp)
+		free(comp);
 }
 
 /* keymapping */
@@ -1519,6 +1561,10 @@ create_default_mapping(Keymap *map)
 		.hook = nil,
 		.base_hook = &delete_to_end,
 		.reset_completion = 1,
+	};
+	map->base_keys[KeyCtrlL] = (Mapping){
+		.hook = nil,
+		.base_hook = &clear_screen,
 	};
 
 	map->ext_keys[KeyArrowUp - ExtKeyOffset] = (Mapping){
@@ -1751,6 +1797,7 @@ basic_editor(EditorState *state)
 
 	while(readstate == StateRead) {
 		refresh(state);
+		dprint("read1...");
 		if(read(state->ifd, &c, 1) < 0)
 			goto fail;
 top:
@@ -1769,6 +1816,7 @@ top:
 					readn = 3;
 				else
 					unreachable();
+				dprint("utf8 read %lu...", readn);
 				read(state->ifd, &seq[1], readn);
 				insert_n_char(state, &seq[0], readn + 1);
 			} else if((c & 0b11000000) == 0b10000000) {
@@ -1806,10 +1854,12 @@ top:
 			completion_reset(state);
 			break;
 		case KeyEscape:
+			dprint("escape read...");
 			if(read(state->ifd, &seq[0], 1) < 0)
 				break;
 			if(seq[0] == '[') {
 				completion_maybe_reset(state);
+				dprint("escape [ read...");
 				if(read(state->ifd, &seq[1], 1) < 0)
 					break;
 				switch(seq[1]) {
@@ -1880,9 +1930,12 @@ line_editor(EditorState *state)
 		key = 0;
 		memset(&seq[0], 0, sizeof(seq));
 		refresh(state);
+		reconfigure_terminal(state);
+		dprint("read 1...");
 		if(read(state->ifd, &c, 1) < 0)
 			goto fail;
 		if(c >= ' ' && c <= '~') {
+			dprint("\n");
 			insert_char(state, c);
 			completion_reset(state);
 			continue;
@@ -1897,8 +1950,13 @@ line_editor(EditorState *state)
 				readn = 3;
 			else
 				unreachable();
+
+			dprint("utf8 read %lu...", readn);
 			read(state->ifd, &seq[1], readn);
+			dprint("\n");
+			completion_reset(state);
 			insert_n_char(state, &seq[0], readn + 1);
+			continue;
 		} else if((c & 0b11000000) == 0b10000000) {
 			/* something got screwed up with utf-8
 			 * just skip until we get something sensible
@@ -1906,19 +1964,22 @@ line_editor(EditorState *state)
 			continue;
 		} else if(c == KeyEnter) {
 			readstate = StateDone;
+			dprint("\n");
 			continue;
 		} else if(c == KeyBackspace) {
 			key = KeyBackspace;
 		} else if(c == KeyEscape) {
+			dprint("escape read...");
 			if(read(state->ifd, &seq[0], 1) < 0)
 				continue;
 			if(seq[0] == '[') {
+				dprint("[ read...");
 				if(read(state->ifd, &seq[1], 1) < 0)
 					continue;
 				switch(seq[1]) {
 				default:
 					if(state->dfd > 0)
-						dprintf(state->dfd, "got unknown code %c%c\n", seq[0], seq[1]);
+						dprintf(state->dfd, "\ngot unknown code %c%c\n", seq[0], seq[1]);
 					continue;
 				case 'A':
 					key = KeyArrowUp;
@@ -1959,13 +2020,14 @@ line_editor(EditorState *state)
 				case '7':
 				case '8':
 				case '9':
+					dprint("number read...");
 					if(read(state->ifd, &seq[2], 1) < 0)
 						continue;
 					if(seq[2] == '~') {
 						switch(seq[1]) {
 						default:
 							if(state->dfd > 0)
-								dprintf(state->dfd, "got unknown code %c%c%c\n", seq[0], seq[1],
+								dprintf(state->dfd, "\ngot unknown code %c%c%c\n", seq[0], seq[1],
 										seq[2]);
 							continue;
 						case '5':
@@ -1991,11 +2053,12 @@ line_editor(EditorState *state)
 						/* this is like wtf? I found this experimentally. It is at least
 						 * true in konsole 25.08.1 on FreeBSD 14.3. subject to change?
 						 */
+						dprint("PF key read...");
 						if(read(state->ifd, &seq[3], 1) < 0)
 							continue;
 						if(seq[3] != '~') {
 							if(state->dfd > 0)
-								dprintf(state->dfd, "got unknown code %c%c%c%c\n", seq[0], seq[1],
+								dprintf(state->dfd, "\ngot unknown code %c%c%c%c\n", seq[0], seq[1],
 										seq[2], seq[3]);
 							continue;
 						}
@@ -2003,7 +2066,7 @@ line_editor(EditorState *state)
 							switch(seq[2]) {
 							default:
 								if(state->dfd > 0)
-									dprintf(state->dfd, "got unknown code %c%c%c%c\n", seq[0],
+									dprintf(state->dfd, "\ngot unknown code %c%c%c%c\n", seq[0],
 											seq[1], seq[2], seq[3]);
 								continue;
 							case '5':
@@ -2023,7 +2086,7 @@ line_editor(EditorState *state)
 							switch(seq[2]) {
 							default:
 								if(state->dfd > 0)
-									dprintf(state->dfd, "got unknown code %c%c%c%c\n", seq[0],
+									dprintf(state->dfd, "\ngot unknown code %c%c%c%c\n", seq[0],
 											seq[1], seq[2], seq[3]);
 								continue;
 							case '0':
@@ -2041,7 +2104,7 @@ line_editor(EditorState *state)
 							}
 						} else {
 							if(state->dfd > 0)
-								dprintf(state->dfd, "got unknown code %c%c%c%c\n", seq[0], seq[1],
+								dprintf(state->dfd, "\ngot unknown code %c%c%c%c\n", seq[0], seq[1],
 										seq[2], seq[3]);
 							continue;
 						}
@@ -2049,6 +2112,7 @@ line_editor(EditorState *state)
 					break;
 				}
 			} else if(seq[0] == 'O') {
+				dprint("O read...");
 				if(read(state->ifd, &seq[1], 1) < 0)
 					continue;
 				switch(seq[1]) {
@@ -2057,7 +2121,7 @@ line_editor(EditorState *state)
 						key = KeyPF1 + (seq[1] - 'A');
 					} else {
 						if(state->dfd > 0)
-							dprintf(state->dfd, "got unknown code %c%c\n", seq[0], seq[1]);
+							dprintf(state->dfd, "\ngot unknown code %c%c\n", seq[0], seq[1]);
 						continue;
 					}
 					break;
@@ -2102,13 +2166,14 @@ line_editor(EditorState *state)
 				key = (seq[0] - 'a') + KeyAlta;
 			} else {
 				if(state->dfd > 0)
-					dprintf(state->dfd, "got code %c\n", seq[0]);
+					dprintf(state->dfd, "\ngot code %c\n", seq[0]);
+				continue;
 			}
 		} else {
 			key = c;
 		}
 
-		dprint("got key %s\n", key2name(key));
+		dprint("\ngot key %s\n", key2name(key));
 		r = runmapping(state, key);
 		switch(status(r)) {
 		default:
