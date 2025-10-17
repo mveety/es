@@ -238,6 +238,8 @@ extern void cursor_move_right(EditorState *state);
 extern void cursor_move_home(EditorState *state);
 extern void cursor_move_end(EditorState *state);
 extern void clear_screen(EditorState *state);
+extern void cursor_move_word_left(EditorState *state);
+extern void cursor_move_word_right(EditorState *state);
 
 /* history */
 extern void history_add(EditorState *state, char *str);

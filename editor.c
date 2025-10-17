@@ -1020,6 +1020,59 @@ clear_screen(EditorState *state)
 	state->clear_screen = 1;
 }
 
+void
+cursor_move_word_left(EditorState *state)
+{
+	Wordpos nextword;
+	size_t first_end;
+
+	bufferassert();
+	if(state->bufpos == 0)
+		return;
+
+	nextword = get_word_position(state);
+	dprint("start nextword = {.start = %lu, .end = %lu}\n", nextword.start, nextword.end);
+	if(nextword.start == state->bufpos){
+		state->bufpos--;
+		nextword = get_word_position(state);
+		dprint("start nextword = {.start = %lu, .end = %lu}\n", nextword.start, nextword.end);
+	}
+	if(nextword.end - nextword.start == 0) {
+		first_end = nextword.end;
+		while(nextword.end - nextword.start == 0 && state->bufpos > 0) {
+			state->bufpos--;
+			nextword = get_word_position(state);
+		}
+		nextword.end = first_end;
+	}
+	dprint("end nextword = {.start = %lu, .end = %lu}\n", nextword.start, nextword.end);
+
+	state->bufpos = nextword.start;
+}
+
+
+void
+cursor_move_word_right(EditorState *state)
+{
+	size_t i;
+
+	bufferassert();
+	if(state->bufpos == state->bufend)
+		return;
+
+	dprint("finding start of first word...");
+	for(i = state->bufpos; i < state->bufend && isawordbreak(state, strlen(state->wordbreaks), state->buffer[i]); i++)
+		;;
+	dprint("found at %lu\nfinding end of word...", i);
+	for(;i < state->bufend && !isawordbreak(state, strlen(state->wordbreaks), state->buffer[i]); i++)
+		;;
+	dprint("found at %lu\n", i);
+
+	if(i > state->bufend)
+		i = state->bufend;
+	state->bufpos = i;
+}
+
 /* history */
 
 void
@@ -1606,6 +1659,16 @@ create_default_mapping(Keymap *map)
 		.hook = nil,
 		.base_hook = &completion_prev,
 		.reset_completion = 0,
+	};
+	map->ext_keys[KeyAltb - ExtKeyOffset] = (Mapping){
+		.hook = nil,
+		.base_hook = &cursor_move_word_left,
+		.reset_completion = 2,
+	};
+	map->ext_keys[KeyAltf - ExtKeyOffset] = (Mapping){
+		.hook = nil,
+		.base_hook = &cursor_move_word_right,
+		.reset_completion = 2,
 	};
 }
 
