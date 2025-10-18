@@ -1776,6 +1776,10 @@ char *extkeynames[] = {
 	[68] = "AltX",
 	[69] = "AltY",
 	[70] = "AltZ",
+	[71] = "CtrlLeft",
+	[72] = "CtrlRight",
+	[73] = "CtrlUp",
+	[74] = "CtrlDown",
 };
 // clang-format on
 
@@ -2176,6 +2180,36 @@ line_editor(EditorState *state)
 								dprintf(state->dfd, "\ngot unknown code %c%c%c%c\n", seq[0], seq[1],
 										seq[2], seq[3]);
 							continue;
+						}
+					} else if (seq[2] == ';' && seq[1] == '1') { // Ctrl+Arrow
+						dprint("Ctrl+Arrow read 1...");
+						if(read(state->ifd, &seq[3], 1) < 0)
+							continue;
+						if(seq[3] != '5'){
+							if(state->dfd > 0)
+								dprintf(state->dfd, "\ngot unknown code %c%c%c%c\n", seq[0], seq[1],
+										seq[2], seq[3]);
+							continue;
+						}
+						dprint("Ctrl+Arrow read 2...");
+						if(read(state->ifd, &seq[4], 1) < 0)
+							continue;
+						switch(seq[4]){
+						default:
+							dprint("\ngot unknown code %c%c%c%c%c\n", seq[0], seq[1], seq[2], seq[3], seq[4]);
+							continue;
+						case 'A':
+							key = KeyCtrlUp;
+							break;
+						case 'B':
+							key = KeyCtrlDown;
+							break;
+						case 'C':
+							key = KeyCtrlRight;
+							break;
+						case 'D':
+							key = KeyCtrlLeft;
+							break;
 						}
 					}
 					break;

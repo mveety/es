@@ -47,8 +47,8 @@ enum {
 
 	/* extended keys */
 	ExtKeyOffset = 1000,
-	ExtKeyMax = 1071,
-#define ExtendedKeys 71
+	ExtKeyMax = 1075,
+#define ExtendedKeys 75
 	KeyArrowLeft = 1000,  // x
 	KeyArrowRight = 1001, // x
 	KeyArrowUp = 1002,	  // x
@@ -121,6 +121,10 @@ enum {
 	KeyAltX = 1068,
 	KeyAltY = 1069,
 	KeyAltZ = 1070,
+	KeyCtrlLeft = 1071,
+	KeyCtrlRight = 1072,
+	KeyCtrlUp = 1073,
+	KeyCtrlDown = 1074,
 };
 
 typedef struct Position Position;
