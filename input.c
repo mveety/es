@@ -1172,6 +1172,7 @@ initinput(void)
 		editor->prefixes = "$";
 		editor->sort_completions = 1;
 		editor->remove_duplicates = 1;
+		editor->match_braces = 0;
 		default_keymap = ealloc(sizeof(Keymap));
 		memcpy(default_keymap, editor->keymap, sizeof(Keymap));
 	}

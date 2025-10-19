@@ -4,6 +4,7 @@
  * into es.
  */
 
+#include <stdint.h>
 #ifdef STANDALONE
 #include <termios.h>
 #include <unistd.h>
@@ -186,19 +187,123 @@ outbuf_append(OutBuf *obuf, char *str, int len)
 	obuf->len += len;
 }
 
+int64_t
+find_matching_paren(EditorState *state)
+{
+	int64_t i = 0;
+	int reg = 0;
+	char c = 0;
+	char m = 0;
+
+	if(!state->match_braces)
+		return -1;
+	if(state->done_reading)
+		return -1;
+	if(state->bufpos == state->bufend && state->bufpos > 0)
+		c = state->buffer[state->bufpos - 1];
+	else
+		c = state->buffer[state->bufpos];
+	switch(c){
+	default:
+		return -1;
+	case '[':
+		m = ']';
+		break;
+	case ']':
+		m = '[';
+		break;
+	case '{':
+		m = '}';
+		break;
+	case '}':
+		m = '{';
+		break;
+	case '(':
+		m = ')';
+		break;
+	case ')':
+		m = '(';
+		break;
+	case '<':
+		m = '>';
+		break;
+	case '>':
+		m = '<';
+		break;
+	}
+
+	switch(c){
+	default:
+		unreachable();
+		break;
+	case '[':
+	case '{':
+	case '(':
+	case '<':
+		if(state->bufpos == state->bufend)
+			return -1;
+		for(i = state->bufpos; i <= (int64_t)state->bufend; i++){
+			if(reg < 0)
+				return -1;
+			if(state->buffer[i] == c){
+				reg++;
+				continue;
+			}
+			if(state->buffer[i] == m){
+				reg--;
+				if(reg == 0)
+					return i;
+			}
+		}
+		return -1;
+	case ']':
+	case '}':
+	case ')':
+	case '>':
+		for(i = state->bufpos; i >= 0; i--){
+			if(reg < 0)
+				return -1;
+			if(state->buffer[i] == c){
+				reg++;
+				continue;
+			}
+			if(state->buffer[i] == m){
+				reg--;
+				if(reg == 0)
+					return i;
+			}
+		}
+		return -1;
+	}
+	return -1;
+}
+
 void
 outbuf_append_printable(EditorState *state, OutBuf *obuf, char *str, int len)
 {
-	int i = 0;
+	int64_t i = 0;
+	int64_t highlight = -1;
+	int64_t highlightsz = 0;
+
+	highlight = find_matching_paren(state);
+	if(highlight >= 0)
+		highlightsz = 8;
 
 	if(obuf->str == nil)
-		obuf->str = ealloc(len + 2);
-	if(obuf->len + len + 1 > obuf->size) {
-		obuf->str = erealloc(obuf->str, obuf->size + len + 1);
+		obuf->str = ealloc(len + highlightsz + 2);
+	if(obuf->len + highlightsz + len + 1 > obuf->size) {
+		obuf->str = erealloc(obuf->str, obuf->size + highlightsz + len + 1);
 		obuf->size += len + 1;
 	}
 
 	for(i = 0; i < len; i++) {
+		if(i == highlight){
+			dprint("adding highlight at %ld\n", i);
+			obuf->str[obuf->len++] = '\x1b';
+			obuf->str[obuf->len++] = '[';
+			obuf->str[obuf->len++] = '7';
+			obuf->str[obuf->len++] = 'm';
+		}
 		if(str[i] >= ' ' && str[i] <= '~') {
 			obuf->str[obuf->len++] = str[i];
 		} else if(str[i] & 0b10000000) {
@@ -206,6 +311,13 @@ outbuf_append_printable(EditorState *state, OutBuf *obuf, char *str, int len)
 		} else {
 			dprint("got unprintable char in buffer: %x\n", str[i]);
 		}
+		if(i == highlight){
+			obuf->str[obuf->len++] = '\x1b';
+			obuf->str[obuf->len++] = '[';
+			obuf->str[obuf->len++] = '0';
+			obuf->str[obuf->len++] = 'm';
+		}
+
 	}
 }
 
@@ -431,6 +543,8 @@ initialize_editor(EditorState *state, int ifd, int ofd)
 		.sort_completions = 0,
 		.remove_duplicates = 0,
 		.clear_screen = 0,
+		.done_reading = 0,
+		.match_braces = 1,
 	};
 	memset(state->outbuf, 0, sizeof(OutBuf));
 	rawmode_on(state);
@@ -510,6 +624,7 @@ reset_editor(EditorState *state)
 	}
 	completion_reset(state);
 	state->pos = (Wordpos){0, 0};
+	state->done_reading = 0;
 	return 0;
 }
 
@@ -1074,6 +1189,7 @@ cursor_move_word_right(EditorState *state)
 		i = state->bufend;
 	state->bufpos = i;
 }
+
 
 /* history */
 
@@ -2313,6 +2429,7 @@ line_editor(EditorState *state)
 		}
 	}
 
+	state->done_reading = 1;
 	state->bufpos = state->bufend;
 	refresh(state);
 	write(state->ofd, "\r\n", 2);

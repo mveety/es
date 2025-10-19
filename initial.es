@@ -1004,6 +1004,9 @@ ditto = ''
 set-ditto = $&setditto
 get-ditto = $&getditto
 
+es_conf_match-braces = 'false'
+set-es_conf_match-braces = $&editormatchbraces
+
 #
 # Variables
 #

@@ -9,6 +9,7 @@ extern int gc_sort_after_n;
 extern int gc_coalesce_after_n;
 extern uint32_t gc_oldage;
 extern int gc_oldsweep_after;
+extern EditorState *editor;
 
 PRIM(version) {
 	return mklist(mkstr((char *)version), NULL);
@@ -715,6 +716,20 @@ PRIM(clearkey) {
 	return nil;
 }
 
+PRIM(editormatchbraces) {
+	if(list == nil)
+		fail("$&editormatchbraces", "missing argument");
+	if(list->next != nil)
+		fail("$&editormatchbraces", "list too long");
+
+	if(termeq(list->term, "true"))
+		editor->match_braces = 1;
+	else
+		editor->match_braces = 0;
+
+	return list;
+}
+
 Dict *
 initprims_mv(Dict *primdict)
 {
@@ -754,6 +769,7 @@ initprims_mv(Dict *primdict)
 	X(unmapkey);
 	X(mapaskey);
 	X(clearkey);
+	X(editormatchbraces);
 
 	return primdict;
 }

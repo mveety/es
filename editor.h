@@ -166,6 +166,8 @@ struct EditorState {
 	int initialized;
 	void *outbuf;
 	int clear_screen;
+	int done_reading;
+	int match_braces;
 	// history
 	char *histbuf;
 	size_t histbufsz;

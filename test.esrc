@@ -46,6 +46,7 @@ conf -s history:load-on-change false
 conf -s history:file '/home/mveety/.history'
 conf -s prompt:name mveety
 conf -s es:dynlib-local-search true
+conf -s es:match-braces true
 
 match `{hostname} (
 	(silverfox redfox) {
