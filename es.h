@@ -463,6 +463,9 @@ extern void resetparser(void);
 extern List *runfd(int fd, const char *name, int flags);
 extern List *runstring(const char *str, const char *name, int flags);
 extern int bind_es_function(char *keyname, char *function);
+extern int unbind_es_function(char *keyname);
+extern int map_as_key(char *keyname, char *srckeyname);
+extern int clear_key_mapping(char *keyname);
 extern void exit_rawmode(void);
 
 /* eval_* flags are also understood as runflags */

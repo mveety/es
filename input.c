@@ -39,6 +39,7 @@ char *lastcmd, *nextlastcmd;
 static int historyfd = -1;
 extern Boolean verbose_parser;
 EditorState *editor;
+Keymap *default_keymap;
 int editor_debugfd = -1;
 
 #if ABUSED_GETENV
@@ -1066,6 +1067,70 @@ bind_es_function(char *keyname, char *function)
 	return 0;
 }
 
+int
+unbind_es_function(char *keyname)
+{
+	int key = 0;
+	Mapping default_map;
+	Mapping current_map;
+
+	if((key = name2key(keyname)) < 0)
+		return -1;
+
+	if(key > KeyNull && key < KeyMax){
+		default_map = default_keymap->base_keys[key];
+		current_map = editor->keymap->base_keys[key];
+	} else if(key >= ExtKeyOffset && key < ExtKeyMax) {
+		default_map = default_keymap->ext_keys[key - ExtKeyOffset];
+		current_map = editor->keymap->ext_keys[key - ExtKeyOffset];
+	} else
+		return -2;
+
+	if((void*)current_map.hook != (void*)&line_editor_hook)
+		return -3;
+
+	bindmapping(editor, key, default_map);
+	return 0;
+}
+
+int
+map_as_key(char *keyname, char *srckeyname)
+{
+	int key = 0;
+	int srckey = 0;
+	Mapping default_map;
+
+	if((key = name2key(keyname)) < 0)
+		return -1;
+	if((srckey = name2key(srckeyname)) < 0)
+		return -2;
+
+	if(srckey > KeyNull && srckey < KeyMax){
+		default_map = default_keymap->base_keys[srckey];
+	} else if(srckey >= ExtKeyOffset && srckey < ExtKeyMax) {
+		default_map = default_keymap->ext_keys[srckey - ExtKeyOffset];
+	} else
+		return -3;
+
+	bindmapping(editor, key, default_map);
+	return 0;
+}
+
+int
+clear_key_mapping(char *keyname)
+{
+	int key = 0;
+	Mapping clear_mapping;
+
+	if((key = name2key(keyname)) < 0)
+		return -1;
+
+	memset(&clear_mapping, 0, sizeof(Mapping));
+
+	bindmapping(editor, key, clear_mapping);
+	return 0;
+}
+
 void
 exit_rawmode(void)
 {
@@ -1098,13 +1163,16 @@ initinput(void)
 	initparse();
 
 	editor = ealloc(sizeof(EditorState));
-	initialize_editor(editor, 0, 1);
-	editor_debugging(editor, editor_debugfd);
-	set_prompt1(editor, "% ");
-	set_prompt2(editor, "_% ");
-	set_complete_hook(editor, &es_complete_hook);
-	editor->wordbreaks = " \t\n\\'`$><=;|&{()}";
-	editor->prefixes = "$";
-	editor->sort_completions = 1;
-	editor->remove_duplicates = 1;
+	if(initialize_editor(editor, 0, 1) == 0){
+		editor_debugging(editor, editor_debugfd);
+		set_prompt1(editor, "% ");
+		set_prompt2(editor, "_% ");
+		set_complete_hook(editor, &es_complete_hook);
+		editor->wordbreaks = " \t\n\\'`$><=;|&{()}";
+		editor->prefixes = "$";
+		editor->sort_completions = 1;
+		editor->remove_duplicates = 1;
+		default_keymap = ealloc(sizeof(Keymap));
+		memcpy(default_keymap, editor->keymap, sizeof(Keymap));
+	}
 }

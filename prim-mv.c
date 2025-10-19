@@ -632,7 +632,6 @@ PRIM(mapkey) {
 		fail("$&mapkey", "missing argument");
 
 	gcref(&r_lp, (void **)&lp);
-
 	lp = list;
 
 	if(varlookup2("fn-", getstr(lp->next->term), nil) == nil)
@@ -642,6 +641,77 @@ PRIM(mapkey) {
 		fail("$&mapkey", "keyname %s is not valid", getstr(lp->term));
 
 	gcrderef(&r_lp);
+	return nil;
+}
+
+PRIM(unmapkey) {
+	List *lp = nil; Root r_lp;
+
+	if(list == nil)
+		fail("$&unmapkey", "missing argument");
+
+	gcref(&r_lp, (void**)&lp);
+	lp = list;
+
+	switch(unbind_es_function(getstr(lp->term))){
+	default:
+		unreachable();
+		break;
+	case -1:
+		fail("$&unmapkey", "keyname %s is not valid", getstr(lp->term));
+		break;
+	case -2:
+		fail("$&unmapkey", "key value out of range (key = %d)", name2key(getstr(lp->term)));
+		break;
+	case -3:
+		fail("$&unmapkey", "key %s is not bound to a function", getstr(lp->term));
+		break;
+	case 0:
+		break;
+	}
+
+	gcrderef(&r_lp);
+	return nil;
+}
+
+PRIM(mapaskey) {
+	List *lp = nil; Root r_lp;
+
+	if(list == nil)
+		fail("$&mapaskey", "missing argument");
+	if(list->next == nil)
+		fail("$&mapaskey", "missing argument");
+
+	gcref(&r_lp, (void**)&lp);
+	lp = list;
+
+	switch(map_as_key(getstr(lp->term), getstr(lp->next->term))){
+	default:
+		unreachable();
+		break;
+	case -1:
+		fail("$&mapaskey", "keyname %s is not valid", getstr(lp->term));
+		break;
+	case -2:
+		fail("$&mapaskey", "keyname %s is not valid", getstr(lp->term));
+		break;
+	case -3:
+		fail("$&mapaskey", "key value out of range (key = %d)", name2key(getstr(lp->next->term)));
+		break;
+	case 0:
+		break;
+	}
+
+	gcrderef(&r_lp);
+	return nil;
+}
+
+PRIM(clearkey) {
+	if(list == nil)
+		fail("$&clearkey", "missing argument");
+
+	if(clear_key_mapping(getstr(list->term)) < 0)
+		fail("$&clearkey", "keyname %s is not valid", getstr(list->term));
 	return nil;
 }
 
@@ -681,6 +751,9 @@ initprims_mv(Dict *primdict)
 	X(reextract);
 	X(sortlist);
 	X(mapkey);
+	X(unmapkey);
+	X(mapaskey);
+	X(clearkey);
 
 	return primdict;
 }
