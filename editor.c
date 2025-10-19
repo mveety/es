@@ -2313,6 +2313,7 @@ line_editor(EditorState *state)
 		}
 	}
 
+	state->bufpos = state->bufend;
 	refresh(state);
 	write(state->ofd, "\r\n", 2);
 	rawmode_off(state);
