@@ -113,8 +113,25 @@ fn __atuin_enable {
 		}
 	}
 
+	fn atuin-ctrlup-hook cmdline {
+		let (
+			atuin_tmpfile = /tmp/es_atuin.$pid
+			atuin_data =
+		) {
+			atuin search -i $cmdline >[2] $atuin_tmpfile
+			atuin_data = ``(\n){cat $atuin_tmpfile}
+			rm $atuin_tmpfile
+			if {~ $#atuin_data 0} {
+				result <=false
+			} {
+				result <=true $atuin_data
+			}
+		}
+	}
+
 	if {$atuin_history_conf_enable-keymap-hook} {
 		%mapkey 'CtrlR' atuin-ctrlr-hook
+		%mapkey 'CtrlUp' atuin-ctrlup-hook
 	}
 }
 
