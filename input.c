@@ -1077,7 +1077,7 @@ unbind_es_function(char *keyname)
 	if((key = name2key(keyname)) < 0)
 		return -1;
 
-	if(key > KeyNull && key < KeyMax){
+	if(key > KeyNull && key < KeyMax) {
 		default_map = default_keymap->base_keys[key];
 		current_map = editor->keymap->base_keys[key];
 	} else if(key >= ExtKeyOffset && key < ExtKeyMax) {
@@ -1086,7 +1086,7 @@ unbind_es_function(char *keyname)
 	} else
 		return -2;
 
-	if((void*)current_map.hook != (void*)&line_editor_hook)
+	if((void *)current_map.hook != (void *)&line_editor_hook)
 		return -3;
 
 	bindmapping(editor, key, default_map);
@@ -1105,7 +1105,7 @@ map_as_key(char *keyname, char *srckeyname)
 	if((srckey = name2key(srckeyname)) < 0)
 		return -2;
 
-	if(srckey > KeyNull && srckey < KeyMax){
+	if(srckey > KeyNull && srckey < KeyMax) {
 		default_map = default_keymap->base_keys[srckey];
 	} else if(srckey >= ExtKeyOffset && srckey < ExtKeyMax) {
 		default_map = default_keymap->ext_keys[srckey - ExtKeyOffset];
@@ -1163,7 +1163,7 @@ initinput(void)
 	initparse();
 
 	editor = ealloc(sizeof(EditorState));
-	if(initialize_editor(editor, 0, 1) == 0){
+	if(initialize_editor(editor, 0, 1) == 0) {
 		editor_debugging(editor, editor_debugfd);
 		set_prompt1(editor, "% ");
 		set_prompt2(editor, "_% ");

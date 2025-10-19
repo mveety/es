@@ -650,10 +650,10 @@ PRIM(unmapkey) {
 	if(list == nil)
 		fail("$&unmapkey", "missing argument");
 
-	gcref(&r_lp, (void**)&lp);
+	gcref(&r_lp, (void **)&lp);
 	lp = list;
 
-	switch(unbind_es_function(getstr(lp->term))){
+	switch(unbind_es_function(getstr(lp->term))) {
 	default:
 		unreachable();
 		break;
@@ -682,10 +682,10 @@ PRIM(mapaskey) {
 	if(list->next == nil)
 		fail("$&mapaskey", "missing argument");
 
-	gcref(&r_lp, (void**)&lp);
+	gcref(&r_lp, (void **)&lp);
 	lp = list;
 
-	switch(map_as_key(getstr(lp->term), getstr(lp->next->term))){
+	switch(map_as_key(getstr(lp->term), getstr(lp->next->term))) {
 	default:
 		unreachable();
 		break;

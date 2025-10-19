@@ -198,10 +198,10 @@ outbuf_append_printable(EditorState *state, OutBuf *obuf, char *str, int len)
 		obuf->size += len + 1;
 	}
 
-	for(i = 0; i < len; i++){
+	for(i = 0; i < len; i++) {
 		if(str[i] >= ' ' && str[i] <= '~') {
 			obuf->str[obuf->len++] = str[i];
-		} else if (str[i] & 0b10000000) {
+		} else if(str[i] & 0b10000000) {
 			obuf->str[obuf->len++] = str[i];
 		} else {
 			dprint("got unprintable char in buffer: %x\n", str[i]);
@@ -212,7 +212,7 @@ outbuf_append_printable(EditorState *state, OutBuf *obuf, char *str, int len)
 void
 outbuf_clean(OutBuf *obuf)
 {
-	memset(obuf->str, 0, obuf->len+1);
+	memset(obuf->str, 0, obuf->len + 1);
 	obuf->len = 0;
 }
 
@@ -273,7 +273,6 @@ rawmode_off(EditorState *state)
 	state->rawmode = 0;
 	return 0;
 }
-
 
 Position
 getposition(EditorState *state)
@@ -718,7 +717,7 @@ refresh(EditorState *state)
 
 	snsz = snprintf(&snbuf[0], sizeof(snbuf), "\r\x1b[0K");
 	outbuf_append(buf, &snbuf[0], snsz);
-	if(state->clear_screen){
+	if(state->clear_screen) {
 		snsz = snprintf(&snbuf[0], sizeof(snbuf), "\x1b[H\x1b[2J");
 		outbuf_append(buf, &snbuf[0], snsz);
 		state->clear_screen = 0;
@@ -1032,7 +1031,7 @@ cursor_move_word_left(EditorState *state)
 
 	nextword = get_word_position(state);
 	dprint("start nextword = {.start = %lu, .end = %lu}\n", nextword.start, nextword.end);
-	if(nextword.start == state->bufpos){
+	if(nextword.start == state->bufpos) {
 		state->bufpos--;
 		nextword = get_word_position(state);
 		dprint("start nextword = {.start = %lu, .end = %lu}\n", nextword.start, nextword.end);
@@ -1050,7 +1049,6 @@ cursor_move_word_left(EditorState *state)
 	state->bufpos = nextword.start;
 }
 
-
 void
 cursor_move_word_right(EditorState *state)
 {
@@ -1061,11 +1059,15 @@ cursor_move_word_right(EditorState *state)
 		return;
 
 	dprint("finding start of first word...");
-	for(i = state->bufpos; i < state->bufend && isawordbreak(state, strlen(state->wordbreaks), state->buffer[i]); i++)
-		;;
+	for(i = state->bufpos;
+		i < state->bufend && isawordbreak(state, strlen(state->wordbreaks), state->buffer[i]); i++)
+		;
+	;
 	dprint("found at %lu\nfinding end of word...", i);
-	for(;i < state->bufend && !isawordbreak(state, strlen(state->wordbreaks), state->buffer[i]); i++)
-		;;
+	for(; i < state->bufend && !isawordbreak(state, strlen(state->wordbreaks), state->buffer[i]);
+		i++)
+		;
+	;
 	dprint("found at %lu\n", i);
 
 	if(i > state->bufend)
@@ -1277,7 +1279,8 @@ call_completions_hook(EditorState *state, Wordpos pos)
 		}
 		for(i = 0; i < completionssz; i++) {
 			if(state->dfd > 0)
-				dprintf(state->dfd, "sorted completions[%lu](%lu) = \"%s\"\n", i, strlen(completions[i]), completions[i]);
+				dprintf(state->dfd, "sorted completions[%lu](%lu) = \"%s\"\n", i,
+						strlen(completions[i]), completions[i]);
 		}
 		dprint("completionssz = %lu\n", completionssz);
 	}
@@ -1820,7 +1823,7 @@ name2key(char *name)
 char *
 getcurrentline(EditorState *state)
 {
-	return estrndup(state->buffer, state->bufend+1);
+	return estrndup(state->buffer, state->bufend + 1);
 }
 
 /* the big kahuna */
@@ -2181,11 +2184,11 @@ line_editor(EditorState *state)
 										seq[2], seq[3]);
 							continue;
 						}
-					} else if (seq[2] == ';' && seq[1] == '1') { // Ctrl+Arrow
+					} else if(seq[2] == ';' && seq[1] == '1') { // Ctrl+Arrow
 						dprint("Ctrl+Arrow read 1...");
 						if(read(state->ifd, &seq[3], 1) < 0)
 							continue;
-						if(seq[3] != '5'){
+						if(seq[3] != '5') {
 							if(state->dfd > 0)
 								dprintf(state->dfd, "\ngot unknown code %c%c%c%c\n", seq[0], seq[1],
 										seq[2], seq[3]);
@@ -2194,9 +2197,10 @@ line_editor(EditorState *state)
 						dprint("Ctrl+Arrow read 2...");
 						if(read(state->ifd, &seq[4], 1) < 0)
 							continue;
-						switch(seq[4]){
+						switch(seq[4]) {
 						default:
-							dprint("\ngot unknown code %c%c%c%c%c\n", seq[0], seq[1], seq[2], seq[3], seq[4]);
+							dprint("\ngot unknown code %c%c%c%c%c\n", seq[0], seq[1], seq[2],
+								   seq[3], seq[4]);
 							continue;
 						case 'A':
 							key = KeyCtrlUp;
