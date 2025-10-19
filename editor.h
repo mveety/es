@@ -208,6 +208,7 @@ struct Mapping {
 	int8_t breakkey;
 	int8_t reset_completion;
 	int8_t end_of_file;
+	int8_t eof_if_empty;
 };
 
 struct Keymap {

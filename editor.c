@@ -1667,6 +1667,8 @@ runmapping(EditorState *state, int key)
 		return result(nil, -3);
 	if(map->end_of_file)
 		return result(nil, -4);
+	if(map->eof_if_empty && state->bufend == 0)
+		return result(nil, -4);
 
 	if(map->base_hook == nil) {
 		if(map->hook == nil)
@@ -1692,8 +1694,10 @@ create_default_mapping(Keymap *map)
 		.breakkey = 1,
 	};
 	map->base_keys[KeyCtrlD] = (Mapping){
-		.hook = &pass_key,
-		.end_of_file = 1,
+		.hook = nil,
+		.base_hook = &delete_char,
+		.reset_completion = 1,
+		.eof_if_empty = 1,
 	};
 	map->base_keys[KeyBackspace] = (Mapping){
 		.hook = nil,
