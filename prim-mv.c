@@ -610,7 +610,7 @@ PRIM(sortlist) {
 	List *res = nil; Root r_res;
 
 	if(list == nil)
-		fail("$&sortlist", "missing argument");
+		return nil;
 
 	gcref(&r_lp, (void **)&lp);
 	gcref(&r_res, (void **)&res);
@@ -730,6 +730,12 @@ PRIM(editormatchbraces) {
 	return list;
 }
 
+PRIM(esmlegetterm) {
+	if(editor->initialized)
+		return mklist(mkstr(str("%s", editor->term)), nil);
+	return mklist(mkstr(str("unknown")), nil);
+}
+
 Dict *
 initprims_mv(Dict *primdict)
 {
@@ -770,6 +776,7 @@ initprims_mv(Dict *primdict)
 	X(mapaskey);
 	X(clearkey);
 	X(editormatchbraces);
+	X(esmlegetterm);
 
 	return primdict;
 }

@@ -1004,8 +1004,11 @@ ditto = ''
 set-ditto = $&setditto
 get-ditto = $&getditto
 
-es_conf_match-braces = 'false'
-set-es_conf_match-braces = $&editormatchbraces
+esmle_conf_match-braces = 'false'
+set-esmle_conf_match-braces = $&editormatchbraces
+
+esmle_conf_terminal = 'unknown'
+get-esmle_conf_terminal = $&esmlegetterm
 
 #
 # Variables
@@ -1314,14 +1317,21 @@ fn box list {
 # based on benchmarks this is the most performant implementation
 # this is used a lot in the test suite and it might be useful to
 # reimplement this as a primitive.
+# new: this remove-duplicates preserves list order
 fn remove-duplicates list {
 	# dump doesn't support dicts so you need to use dictnew here
 	# instead of %dict().
-	local (res = <=dictnew){
+	let (
+		res = ()
+		elems = <=dictnew
+	) {
 		for (l = $list) {
-			res := $l => 1
+			if {! dicthaskey $elems $l} {
+				elems := $l => 1
+				res = $res $l
+			}
 		}
-		dictnames $res
+		result $res
 	}
 }
 

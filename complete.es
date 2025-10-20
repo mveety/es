@@ -4,8 +4,8 @@ if {~ $#_es_complete_debug 0} {
 	_es_complete_debug = false
 }
 
-if {~ $#es_conf_completion-prefix-commands 0} {
-	es_conf_completion-prefix-commands = (doas sudo)
+if {~ $#esmle_conf_prefix-commands 0} {
+	esmle_conf_prefix-commands = (doas sudo)
 }
 
 fn escomp_echo {
@@ -259,7 +259,7 @@ fn es_complete_get_last_raw_command cmdline {
 
 fn es_complete_get_last_command cmdline {
 	let (cll = <={es_complete_get_last_cmdline $cmdline |> %fsplit ' '}){
-		if {~ $cll(1) $es_conf_completion-prefix-commands} {
+		if {~ $cll(1) $esmle_conf_prefix-commands} {
 			result $cll(2)
 		} {
 			result $cll(1)
@@ -268,7 +268,7 @@ fn es_complete_get_last_command cmdline {
 }
 
 fn es_complete_is_sub_command curline {
-	for (cmd = $es_conf_completion-prefix-commands) {
+	for (cmd = $esmle_conf_prefix-commands) {
 		if {es_complete_is_sub_command1 $cmd $curline} {
 			return <=true
 		}
@@ -362,29 +362,45 @@ fn __es_complete_initialize {
 	_es_complete_command_hooks = <=dictnew
 }
 
-if {~ $#es_conf_complete_order 0} {
-	es_conf_complete_order = executables functions variables
+if {~ $#esmle_conf_complete_order 0} {
+	esmle_conf_complete_order = executables functions variables
 }
 
-if {~ $#es_conf_sort-completions 0} {
-	es_conf_sort-completions = true
+if {~ $#esmle_conf_sort-completions 0} {
+	esmle_conf_sort-completions = true
 } {
-	if {! ~ $es_conf_sort-completions true false} {
-		es_conf_sort-completions = true
+	if {! ~ $esmle_conf_sort-completions true false grouped} {
+		esmle_conf_sort-completions = true
+	}
+}
+
+if {~ $#esmle_conf_remove-duplicate-completions 0} {
+	esmle_conf_remove-duplicate-completions = true
+} {
+	if {! ~ $esmle_conf_remove-duplicate-completions true false} {
+		esmle_conf_remove-duplicate-completions = true
 	}
 }
 
 # try to protect this mess
-set-es_conf_sort-completions = @{
-	if{~ $1 true || ~ $1 false} {
+set-esmle_conf_sort-completions = @{
+	if{~ $1 true || ~ $1 false || ~ $1 grouped} {
 		result $1
 	} {
-		result $es_conf_sort-completions
+		result $esmle_conf_sort-completions
 	}
 }
 
-fn complete_base_complete partial {
-	process $es_conf_complete_order (
+set-esmle_conf_remove-duplicate-completions = @{
+	if {~ $1 true || ~ $1 false} {
+		result $1
+	} {
+		result $esmle_conf_remove-duplicate-completions
+	}
+}
+
+fn es_complete_run_completer type partial {
+	match $type (
 		executables { result <={complete_executables $partial} }
 		functions { result <={complete_functions $partial} }
 		visible_functions { result <={complete_visible_functions $partial} }
@@ -395,6 +411,41 @@ fn complete_base_complete partial {
 		* { unreachable }
 	)
 }
+
+fn complete_base_complete partial {
+	let (res = ()) {
+		for (t = $esmle_conf_complete_order) {
+			let (compres = <={es_complete_run_completer $t $partial}){
+				if {~ $esmle_conf_sort-completions grouped} {
+					res = $res <={sortlist $compres}
+				} {
+					res = $res $compres
+				}
+			}
+		}
+		if {~ $esmle_conf_sort-completions true} {
+			result $res
+		} {
+			if {$esmle_conf_remove-duplicate-completions} {
+				remove-duplicates $res
+			} {
+				result $res
+			}
+		}
+	}
+}
+
+#	process $esmle_conf_complete_order (
+#		executables { result <={complete_executables $partial} }
+#		functions { result <={complete_functions $partial} }
+#		visible_functions { result <={complete_visible_functions $partial} }
+#		hidden_functions { result <={complete_hidden_functions $partial} }
+#		variables { result <={complete_variables '' $partial} }
+#		visible_variables { result <={complete_visible_variables '' $partial} }
+#		hidden_variables { result <={complete_hidden_variables '' $partial} }
+#		* { unreachable }
+#	)
+#}
 
 # %complete returns a list of possible completions based on the context
 # at this time it's pretty simple, completing executables if start is 1

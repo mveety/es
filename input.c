@@ -445,6 +445,7 @@ es_complete_hook(char *text, int start, int end)
 {
 	List *new_completer = nil; Root r_new_completer;
 	List *complete_sort_list = nil; Root r_complete_sort_list;
+	List *complete_remove_dupes = nil; Root r_complete_remove_dupes;
 
 	new_completer = varlookup("fn-%new_completer", nil);
 	if(!new_completer)
@@ -452,18 +453,25 @@ es_complete_hook(char *text, int start, int end)
 
 	gcref(&r_new_completer, (void **)&new_completer);
 	gcref(&r_complete_sort_list, (void **)&complete_sort_list);
+	gcref(&r_complete_remove_dupes, (void**)&complete_remove_dupes);
 
-	complete_sort_list = varlookup("es_conf_sort-completions", nil);
+	complete_sort_list = varlookup("esmle_conf_sort-completions", nil);
+	complete_remove_dupes = varlookup("esmle_conf_remove-duplicate-completions", nil);
 	if(complete_sort_list != nil) {
 		if(termeq(complete_sort_list->term, "true")) {
 			editor->sort_completions = 1;
-			editor->remove_duplicates = 1;
+			if(complete_remove_dupes != nil && termeq(complete_remove_dupes->term, "true")){
+				editor->remove_duplicates = 1;
+			} else {
+				editor->remove_duplicates = 0;
+			}
 		} else {
 			editor->sort_completions = 0;
 			editor->remove_duplicates = 0;
 		}
 	}
 
+	gcrderef(&r_complete_remove_dupes);
 	gcrderef(&r_complete_sort_list);
 	gcrderef(&r_new_completer);
 
