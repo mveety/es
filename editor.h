@@ -44,6 +44,7 @@ enum {
 	KeyDelete = 127,
 	KeyTab = 9,
 	KeyEnter = 13,
+	KeySpace = 32,
 
 	/* extended keys */
 	ExtKeyOffset = 1000,
@@ -209,6 +210,7 @@ struct Mapping {
 	int8_t reset_completion;
 	int8_t end_of_file;
 	int8_t eof_if_empty;
+	int8_t input_finished;
 };
 
 struct Keymap {

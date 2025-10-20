@@ -1669,6 +1669,8 @@ runmapping(EditorState *state, int key)
 		return result(nil, -4);
 	if(map->eof_if_empty && state->bufend == 0)
 		return result(nil, -4);
+	if(map->input_finished)
+		return result(nil, -5);
 
 	if(map->base_hook == nil) {
 		if(map->hook == nil)
@@ -1688,6 +1690,16 @@ create_default_mapping(Keymap *map)
 	memset(&map->base_keys[0], 0, sizeof(Mapping) * 128);
 	memset(&map->ext_keys[0], 0, sizeof(Mapping) * ExtendedKeys);
 
+	map->base_keys[KeyEnter] = (Mapping){
+		.hook = nil,
+		.base_hook = nil,
+		.input_finished = 1,
+	};
+	map->base_keys[KeySpace] = (Mapping){
+		.hook = &pass_key,
+		.base_hook = nil,
+		.reset_completion = 1,
+	};
 	map->base_keys[KeyCtrlC] = (Mapping){
 		.hook = nil,
 		.base_hook = nil,
@@ -1824,6 +1836,7 @@ char *keynames[] = {
 	[KeyCtrlX]	= "CtrlX",
 	[KeyCtrlY]	= "CtrlY",
 	[KeyCtrlZ]	= "CtrlZ",
+	[KeySpace]	= "Space",
 	[KeyEscape]	= "Escape",
 };
 
@@ -1912,6 +1925,9 @@ key2name(int key)
 	if(key == KeyBackspace)
 		return "Backspace";
 
+	if(key == KeySpace)
+		return keynames[KeySpace];
+
 	if(key >= KeyNull && key <= KeyEscape)
 		return keynames[key];
 
@@ -1928,6 +1944,9 @@ name2key(char *name)
 
 	if(strcmp(name, "Backspace") == 0)
 		return KeyBackspace;
+
+	if(strcmp(name, keynames[KeySpace]) == 0)
+		return KeySpace;
 
 	for(i = 0; i <= KeyEscape; i++)
 		if(strcmp(name, keynames[i]) == 0)
@@ -2130,7 +2149,7 @@ line_editor(EditorState *state)
 		dprint("read 1...");
 		if(read(state->ifd, &c, 1) < 0)
 			goto fail;
-		if(c >= ' ' && c <= '~') {
+		if(c > ' ' && c <= '~') {
 			dprint("\n");
 			insert_char(state, c);
 			completion_reset(state);
@@ -2158,10 +2177,10 @@ line_editor(EditorState *state)
 			 * just skip until we get something sensible
 			 */
 			continue;
+		} else if (c == KeySpace) {
+			key = KeySpace;
 		} else if(c == KeyEnter) {
-			readstate = StateDone;
-			dprint("\n");
-			continue;
+			key = KeyEnter;
 		} else if(c == KeyBackspace) {
 			key = KeyBackspace;
 		} else if(c == KeyEscape) {
@@ -2265,6 +2284,18 @@ line_editor(EditorState *state)
 									dprintf(state->dfd, "\ngot unknown code %c%c%c%c\n", seq[0],
 											seq[1], seq[2], seq[3]);
 								continue;
+							case '1':
+								key = KeyPF1;
+								break;
+							case '2':
+								key = KeyPF2;
+								break;
+							case '3':
+								key = KeyPF3;
+								break;
+							case '4':
+								key = KeyPF4;
+								break;
 							case '5':
 								key = KeyPF5;
 								break;
@@ -2352,6 +2383,14 @@ line_editor(EditorState *state)
 						continue;
 					}
 					break;
+				case ' ': /* sun application space */
+					break;
+				case 'I':
+					key = KeyTab;
+					break;
+				case 'M':
+					key = KeyEnter;
+					break;
 				case 'P':
 					key = KeyPF1;
 					break;
@@ -2405,6 +2444,9 @@ line_editor(EditorState *state)
 		switch(status(r)) {
 		default:
 			unreachable();
+			break;
+		case -5:
+			readstate = StateDone;
 			break;
 		case -4:
 			goto fail;
