@@ -127,7 +127,7 @@ void
 usage(void)
 {
 	eprint(
-		"usage: es [-c command] [-sIAlNpodv] [-X gcopt] [-D flags] [-r flags] [file [args ...]]\n"
+		"usage: es [-c command] [-sIAlNpodv] [-X extopt] [-D flags] [-r flags] [file [args ...]]\n"
 		"	-c         cmd execute argument\n"
 		"	-s         read commands from standard input; stop option parsing\n"
 		"	-I file    alternative init file\n"
