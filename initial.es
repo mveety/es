@@ -1004,12 +1004,6 @@ ditto = ''
 set-ditto = $&setditto
 get-ditto = $&getditto
 
-esmle_conf_match-braces = 'false'
-set-esmle_conf_match-braces = $&editormatchbraces
-
-esmle_conf_terminal = 'unknown'
-get-esmle_conf_terminal = $&esmlegetterm
-
 #
 # Variables
 #
@@ -1316,6 +1310,14 @@ fn remove-duplicates list {
 			}
 		}
 		result $res
+	}
+}
+
+fn %termtypeof args {
+	if {~ $#args 0} {
+		result nil
+	} {
+		$&termtypeof $args
 	}
 }
 
