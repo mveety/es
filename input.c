@@ -1148,6 +1148,271 @@ exit_rawmode(void)
 	}
 }
 
+// clang-format off
+EditorFnDef editfndefs[] = {
+	[FnInvalid] = (EditorFnDef) {
+		.name = "%esmle:Invalid",
+		.map = (Mapping){nil, nil, nil, 0 ,0 ,0 ,0 ,0},
+	},
+	[FnEsFunction] = (EditorFnDef) {
+		.name = "%esmle:EsFunction",
+		.map = (Mapping){
+			.hook = nil,
+			.base_hook = nil,
+			.aux = nil,
+			.breakkey = 0,
+			.reset_completion = 0,
+			.end_of_file = 0,
+		},
+	},
+	[FnEndInput] = (EditorFnDef) {
+		.name = "%esmle:EndInput",
+		.map = (Mapping){
+			.input_finished = 1,
+		},
+	},
+	[FnPassKey] = (EditorFnDef) {
+		.name = "%esmle:PassKey",
+		.map = (Mapping){
+			.hook = &pass_key,
+			.reset_completion = 1,
+		},
+	},
+	[FnBreak] = (EditorFnDef) {
+		.name = "%esmle:Break",
+		.map = (Mapping){
+			.breakkey = 1,
+		},
+	},
+	[FnDelete] = (EditorFnDef) {
+		.name = "%esmle:Delete",
+		.map = (Mapping) {
+			.base_hook = &delete_char,
+			.reset_completion = 1,
+		},
+	},
+	[FnDeleteOrEOF] = (EditorFnDef) {
+		.name = "%esmle:DeleteOrEOF",
+		.map = (Mapping){
+			.base_hook = &delete_char,
+			.reset_completion = 1,
+			.eof_if_empty = 1,
+		},
+	},
+	[FnEOF] = (EditorFnDef) {
+		.name = "%esmle:EOF",
+		.map = (Mapping){
+			.end_of_file = 1,
+		},
+	},
+	[FnBackspace] = (EditorFnDef) {
+		.name = "%esmle:Backspace",
+		.map = (Mapping){
+			.base_hook = &backspace_char,
+			.reset_completion = 1,
+		},
+	},
+	[FnNextCompletion] = (EditorFnDef) {
+		.name = "%esmle:NextCompletion",
+		.map = (Mapping){
+			.base_hook = &completion_next,
+		},
+	},
+	[FnPrevCompletion] = (EditorFnDef) {
+		.name = "%esmle:PrevCompletion",
+		.map = (Mapping){
+			.base_hook = &completion_prev,
+		},
+	},
+	[FnCursorHome] = (EditorFnDef) {
+		.name = "%esmle:CursorHome",
+		.map = (Mapping){
+			.hook = nil,
+			.base_hook = &cursor_home,
+			.reset_completion = 2,
+		},
+	},
+	[FnCursorEnd] = (EditorFnDef) {
+		.name = "%esmle:CursorEnd",
+		.map = (Mapping){
+			.hook = nil,
+			.base_hook = &cursor_end,
+			.reset_completion = 2,
+		},
+	},
+	[FnDeleteWord] = (EditorFnDef) {
+		.name = "%esmle:DeleteWord",
+		.map = (Mapping){
+			.hook = nil,
+			.base_hook = &delete_word,
+			.reset_completion = 1,
+		},
+	},
+	[FnDeleteToStart] = (EditorFnDef) {
+		.name = "%esmle:DeleteToStart",
+		.map = (Mapping){
+			.hook = nil,
+			.base_hook = &delete_to_start,
+			.reset_completion = 1,
+		},
+	},
+	[FnDeleteToEnd] = (EditorFnDef) {
+		.name = "%esmle:DeleteToEnd",
+		.map = (Mapping){
+			.hook = nil,
+			.base_hook = &delete_to_end,
+			.reset_completion = 1,
+		},
+	},
+	[FnClearScreen] = (EditorFnDef) {
+		.name = "%esmle:ClearScreen",
+		.map = (Mapping){
+			.hook = nil,
+			.base_hook = &clear_screen,
+		},
+	},
+	[FnNextHistory] = (EditorFnDef) {
+		.name = "%esmle:NextHistory",
+		.map = (Mapping) {
+			.base_hook = &history_next,
+			.reset_completion = 1,
+		},
+	},
+	[FnPrevHistory] = (EditorFnDef) {
+		.name = "%esmle:PrevHistory",
+		.map = (Mapping) {
+			.base_hook = &history_prev,
+			.reset_completion = 1,
+		},
+	},
+	[FnCursorLeft] = (EditorFnDef) {
+		.name = "%esmle:CursorLeft",
+		.map = (Mapping){
+			.base_hook = &cursor_move_left,
+			.reset_completion = 2,
+		},
+	},
+	[FnCursorRight] = (EditorFnDef) {
+		.name = "%esmle:CursorRight",
+		.map = (Mapping){
+			.base_hook = &cursor_move_right,
+			.reset_completion = 2,
+		},
+	},
+	[FnCursorWordLeft] = (EditorFnDef) {
+		.name = "%esmle:CursorWordLeft",
+		.map = (Mapping){
+			.base_hook = &cursor_move_word_left,
+			.reset_completion = 1,
+		},
+	},
+	[FnCursorWordRight] = (EditorFnDef) {
+		.name = "%esmle:CursorWordRight",
+		.map = (Mapping){
+			.base_hook = &cursor_move_word_right,
+			.reset_completion = 1,
+		},
+	},
+};
+// clang-format on
+
+EditorFunction
+name2edfn(char *name)
+{
+	int i = 0;
+
+	for(i = 0; i <= FnCursorWordRight; i++){
+		if(streq(name, editfndefs[i].name))
+			return i;
+	}
+
+	return FnInvalid;
+}
+
+char*
+edfn2name(EditorFunction edfn)
+{
+	return editfndefs[edfn].name;
+}
+
+Mapping
+edfn2mapping(EditorFunction edfn)
+{
+	return editfndefs[edfn].map;
+}
+
+EditorFunction
+mapping2edfn(Mapping map)
+{
+	int i = 0;
+
+	if(map.hook == &line_editor_hook)
+		return FnEsFunction;
+
+	for(i = 0; i <= FnCursorWordRight; i++){
+		if(map.hook != editfndefs[i].map.hook)
+			continue;
+		if(map.base_hook != editfndefs[i].map.base_hook)
+			continue;
+		if(map.aux != editfndefs[i].map.aux)
+			continue;
+		if(map.breakkey != editfndefs[i].map.breakkey)
+			continue;
+		if(map.reset_completion != editfndefs[i].map.reset_completion)
+			continue;
+		if(map.end_of_file != editfndefs[i].map.end_of_file)
+			continue;
+		if(map.eof_if_empty != editfndefs[i].map.eof_if_empty)
+			continue;
+		if(map.input_finished != editfndefs[i].map.input_finished)
+			continue;
+		return i;
+	}
+
+	return FnInvalid;
+}
+
+char*
+mapping2name(Mapping map)
+{
+	EditorFunction fn;
+
+	fn = mapping2edfn(map);
+
+	if(fn == FnEsFunction)
+		return map.aux;
+	return editfndefs[fn].name;
+}
+
+Mapping
+name2mapping(char *name)
+{
+	EditorFunction fn;
+
+	fn = name2edfn(name);
+	return edfn2mapping(fn);
+}
+
+int
+bind_base_function(char *keyname, char *function)
+{
+	int key = 0;
+	EditorFunction fn;
+	Mapping basemap;
+
+	if((key = name2key(keyname)) < 0)
+		return -1;
+
+	fn = name2edfn(function);
+	if(fn == FnInvalid || fn == FnEsFunction)
+		return -2;
+
+	basemap = edfn2mapping(fn);
+	bindmapping(editor, key, basemap);
+
+	return 0;
+}
+
 /*
  * initialization
  */

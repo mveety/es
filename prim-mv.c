@@ -626,6 +626,7 @@ PRIM(sortlist) {
 
 PRIM(mapkey) {
 	List *lp = nil; Root r_lp;
+	int res = 0;
 
 	if(list == nil)
 		fail("$&mapkey", "missing argument");
@@ -635,12 +636,19 @@ PRIM(mapkey) {
 	gcref(&r_lp, (void **)&lp);
 	lp = list;
 
-	if(varlookup2("fn-", getstr(lp->next->term), nil) == nil)
-		fail("$&mapkey", "function %s not found", getstr(lp->next->term));
+	if(hasprefix(getstr(lp->next->term), "%esmle:")){
+		res = bind_base_function(getstr(lp->term), getstr(lp->next->term));
+		if(res == -1)
+			fail("$&mapkey", "keyname %s is not valid", getstr(lp->term));
+		if(res == -2)
+			fail("$&mapkey", "editor function %s not found", getstr(lp->next->term));
+	} else {
+		if(varlookup2("fn-", getstr(lp->next->term), nil) == nil)
+			fail("$&mapkey", "function %s not found", getstr(lp->next->term));
 
-	if(bind_es_function(getstr(lp->term), getstr(lp->next->term)) < 0)
-		fail("$&mapkey", "keyname %s is not valid", getstr(lp->term));
-
+		if(bind_es_function(getstr(lp->term), getstr(lp->next->term)) < 0)
+			fail("$&mapkey", "keyname %s is not valid", getstr(lp->term));
+	}
 	gcrderef(&r_lp);
 	return nil;
 }
@@ -716,6 +724,41 @@ PRIM(clearkey) {
 	return nil;
 }
 
+PRIM(getkeymap) {
+	List *res = nil; Root r_res;
+	EditorFunction fn;
+	int i = 0;
+
+	gcref(&r_res, (void**)&res);
+
+	for(i = 127; i > 0; i--){
+		fn = mapping2edfn(editor->keymap->base_keys[i]);
+		if(fn == FnInvalid)
+			continue;
+		if(fn == FnEsFunction) {
+			res = mklist(mkstr(str("%s", editor->keymap->base_keys[i].aux)), res);
+		} else {
+			res = mklist(mkstr(str("%s", edfn2name(fn))), res);
+		}
+		res = mklist(mkstr(str("%s", key2name(i))), res);
+	}
+
+	for(i = (ExtendedKeys-1); i >= 0; i--){
+		fn = mapping2edfn(editor->keymap->ext_keys[i]);
+		if(fn == FnInvalid)
+			continue;
+		if(fn == FnEsFunction) {
+			res = mklist(mkstr(str("%s", editor->keymap->ext_keys[i].aux)), res);
+		} else {
+			res = mklist(mkstr(str("%s", edfn2name(fn))), res);
+		}
+		res = mklist(mkstr(str("%s", key2name(i+ExtKeyOffset))), res);
+	}
+
+	gcrderef(&r_res);
+	return res;
+}
+
 PRIM(editormatchbraces) {
 	if(list == nil)
 		fail("$&editormatchbraces", "missing argument");
@@ -775,6 +818,7 @@ initprims_mv(Dict *primdict)
 	X(unmapkey);
 	X(mapaskey);
 	X(clearkey);
+	X(getkeymap);
 	X(editormatchbraces);
 	X(esmlegetterm);
 

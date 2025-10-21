@@ -224,6 +224,39 @@ struct Result {
 	int status;
 };
 
+/* keymapping */
+
+typedef enum {
+	FnInvalid,
+	FnEsFunction,
+	FnEndInput,
+	FnPassKey,
+	FnBreak,
+	FnDelete,
+	FnDeleteOrEOF,
+	FnEOF,
+	FnBackspace,
+	FnNextCompletion,
+	FnPrevCompletion,
+	FnCursorHome,
+	FnCursorEnd,
+	FnDeleteWord,
+	FnDeleteToStart,
+	FnDeleteToEnd,
+	FnClearScreen,
+	FnNextHistory,
+	FnPrevHistory,
+	FnCursorLeft,
+	FnCursorRight,
+	FnCursorWordLeft,
+	FnCursorWordRight,
+} EditorFunction;
+
+typedef struct {
+	char *name;
+	Mapping map;
+} EditorFnDef;
+
 /*
  * our programming environment
  */
@@ -467,6 +500,13 @@ extern int unbind_es_function(char *keyname);
 extern int map_as_key(char *keyname, char *srckeyname);
 extern int clear_key_mapping(char *keyname);
 extern void exit_rawmode(void);
+extern EditorFunction name2edfn(char *name);
+extern char *edfn2name(EditorFunction edfn);
+extern Mapping edfn2mapping(EditorFunction edfn);
+extern EditorFunction mapping2edfn(Mapping map);
+extern char *mapping2name(Mapping map);
+extern Mapping name2mapping(char *name);
+extern int bind_base_function(char *keyname, char *function);
 
 /* eval_* flags are also understood as runflags */
 #define run_interactive 4 /* -i or $0[0] = '-' */

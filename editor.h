@@ -10,6 +10,7 @@
 
 enum {
 	/* base keys */
+#define BaseKeys 128
 	KeyMax = 128,
 	KeyNull = 0,
 	KeyCtrlA = 1,
@@ -244,8 +245,8 @@ extern void delete_to_start(EditorState *state);
 extern void delete_to_end(EditorState *state);
 extern void cursor_move_left(EditorState *state);
 extern void cursor_move_right(EditorState *state);
-extern void cursor_move_home(EditorState *state);
-extern void cursor_move_end(EditorState *state);
+extern void cursor_home(EditorState *state);
+extern void cursor_end(EditorState *state);
 extern void clear_screen(EditorState *state);
 extern void cursor_move_word_left(EditorState *state);
 extern void cursor_move_word_right(EditorState *state);

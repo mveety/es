@@ -1687,7 +1687,7 @@ runmapping(EditorState *state, int key)
 void
 create_default_mapping(Keymap *map)
 {
-	memset(&map->base_keys[0], 0, sizeof(Mapping) * 128);
+	memset(&map->base_keys[0], 0, sizeof(Mapping) * BaseKeys);
 	memset(&map->ext_keys[0], 0, sizeof(Mapping) * ExtendedKeys);
 
 	map->base_keys[KeyEnter] = (Mapping){

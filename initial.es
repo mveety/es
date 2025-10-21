@@ -1206,22 +1206,6 @@ fn %clear-history {
 # we'll keep this around for compatibility
 fn %readline { true }
 
-fn %mapkey keyname funname {
-	$&mapkey $keyname $funname
-}
-
-fn %unmapkey keyname {
-	$&unmapkey $keyname
-}
-
-fn %mapaskey keyname srckeyname {
-	$&mapaskey $keyname $srckeyname
-}
-
-fn %clearkey keyname {
-	$&clearkey $keyname
-}
-
 fn %elem n list {
 	result $list($n)
 }
