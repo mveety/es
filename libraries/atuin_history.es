@@ -1,4 +1,4 @@
-library atuin_history (init history)
+library atuin_history (init esmle history)
 
 defconf atuin_history update-history-file true
 defconf atuin_history debugging false
