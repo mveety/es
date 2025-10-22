@@ -480,6 +480,8 @@ supported_term(char *term)
 		return 1;
 	if(hasprefix(term, "putty"))
 		return 1;
+	if(hasprefix(term, "dtterm"))
+		return 1;
 	if(hasprefix(term, "st"))
 		return 1;
 	if(hasprefix(term, "vt1"))
