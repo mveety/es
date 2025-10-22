@@ -632,6 +632,8 @@ PRIM(mapkey) {
 		fail("$&mapkey", "missing argument");
 	if(list->next == nil)
 		fail("$&mapkey", "missing argument");
+	if(!editor->initialized)
+		fail("$&mapkey", "using fallback editor");
 
 	gcref(&r_lp, (void **)&lp);
 	lp = list;
@@ -658,6 +660,9 @@ PRIM(unmapkey) {
 
 	if(list == nil)
 		fail("$&unmapkey", "missing argument");
+
+	if(!editor->initialized)
+		fail("$&unmapkey", "using fallback editor");
 
 	gcref(&r_lp, (void **)&lp);
 	lp = list;
@@ -690,6 +695,9 @@ PRIM(mapaskey) {
 		fail("$&mapaskey", "missing argument");
 	if(list->next == nil)
 		fail("$&mapaskey", "missing argument");
+
+	if(!editor->initialized)
+		fail("$&mapaskey", "using fallback editor");
 
 	gcref(&r_lp, (void **)&lp);
 	lp = list;
@@ -729,6 +737,8 @@ PRIM(getkeymap) {
 	EditorFunction fn;
 	int i = 0;
 
+	if(!editor->initialized)
+		fail("$&getkeymap", "using fallback editor");
 	gcref(&r_res, (void**)&res);
 
 	for(i = 127; i > 0; i--){
