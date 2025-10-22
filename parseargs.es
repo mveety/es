@@ -1,28 +1,28 @@
 #!/usr/bin/env es
 
-let (
-	fn es_canonicalize_args args {
-		let (res=;tmp=) {
-			for (i = $args) {
-				if {~ $i '-'^*} {
-					tmp = <={~~ $i '-'^*}
-					if {eq <={%count $:tmp} 0} {
-						res = $res '-'
-					} {gt <={%count $:tmp} 1} {
-						res = $res '-'^<={%strlist $tmp}
-					} {
-						res = $res $i
-					}
+fn es_canonicalize_args args {
+	let (res=;tmp=) {
+		for (i = $args) {
+			if {~ $i '-'^*} {
+				tmp = <={~~ $i '-'^*}
+				if {eq <={%count $:tmp} 0} {
+					res = $res '-'
+				} {gt <={%count $:tmp} 1} {
+					res = $res '-'^<={%strlist $tmp}
 				} {
-					if {! ~ <={%count $:i} 0} {
-						res = $res $i
-					}
+					res = $res $i
+				}
+			} {
+				if {! ~ <={%count $:i} 0} {
+					res = $res $i
 				}
 			}
-			result $res
 		}
+		result $res
 	}
+}
 
+let (
 	fn es_run_parseargs argfn usagefn args {
 		local (
 			i = 1
