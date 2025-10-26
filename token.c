@@ -224,7 +224,7 @@ top:
 							y->str = adup(buf);
 							return GNUARG;
 						}
-						if(!isalnum(c) && c != '-' && c != '_' && c != '~'){
+						if(!isalnum(c) && c != '-' && c != '_' && c != '~') {
 							input_ungetc(c);
 							buf[i] = '\0';
 							y->str = adup(buf);

@@ -213,7 +213,7 @@ aseal(void *ptr)
 	return nptr;
 }
 
-char*
+char *
 asealbuffer(Buffer *buf)
 {
 	char *str = nil;
@@ -223,7 +223,7 @@ asealbuffer(Buffer *buf)
 	return str;
 }
 
-char*
+char *
 asealcountedbuffer(Buffer *buf)
 {
 	char *str = nil;
@@ -232,4 +232,3 @@ asealcountedbuffer(Buffer *buf)
 	efree(buf);
 	return str;
 }
-

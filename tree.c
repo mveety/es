@@ -8,7 +8,7 @@ DefineTag(Tree2, static);
 
 /* mk -- make a new node; used to generate the parse tree */
 Tree *
-gmk(void* (*alloc)(size_t, int tag), NodeKind t, va_list ap)
+gmk(void *(*alloc)(size_t, int tag), NodeKind t, va_list ap)
 {
 	Tree *n;
 
@@ -70,7 +70,7 @@ gcmk(NodeKind t, ...)
 	va_list ap;
 	Tree *tree = nil; Root r_tree;
 
-	gcref(&r_tree, (void**)&tree);
+	gcref(&r_tree, (void **)&tree);
 
 	va_start(ap, t);
 	tree = gmk(gcalloc, t, ap);
@@ -92,7 +92,6 @@ mk(NodeKind t, ...)
 
 	return tree;
 }
-
 
 char *
 treekind(Tree *t)

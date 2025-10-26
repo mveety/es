@@ -318,7 +318,7 @@ forward(void *p)
 		return p;
 	}
 
-	if(isinarena(input->arena, p)){
+	if(isinarena(input->arena, p)) {
 		pmode = 1;
 		VERBOSE(("GC %8ux : <<in parser arena>>\n", p));
 	}

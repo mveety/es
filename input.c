@@ -449,14 +449,14 @@ es_complete_hook(char *text, int start, int end)
 
 	gcref(&r_new_completer, (void **)&new_completer);
 	gcref(&r_complete_sort_list, (void **)&complete_sort_list);
-	gcref(&r_complete_remove_dupes, (void**)&complete_remove_dupes);
+	gcref(&r_complete_remove_dupes, (void **)&complete_remove_dupes);
 
 	complete_sort_list = varlookup("esmle_conf_sort-completions", nil);
 	complete_remove_dupes = varlookup("esmle_conf_remove-duplicate-completions", nil);
 	if(complete_sort_list != nil) {
 		if(termeq(complete_sort_list->term, "true")) {
 			editor->sort_completions = 1;
-			if(complete_remove_dupes != nil && termeq(complete_remove_dupes->term, "true")){
+			if(complete_remove_dupes != nil && termeq(complete_remove_dupes->term, "true")) {
 				editor->remove_duplicates = 1;
 			} else {
 				editor->remove_duplicates = 0;
@@ -690,11 +690,11 @@ parse(char *pr1, char *pr2)
 		set_prompt2(editor, pr2);
 	}
 
-	gcref(&r_res, (void**)&res);
-//	gcreserve(300 * sizeof(Tree));
-//	gcdisable();
+	gcref(&r_res, (void **)&res);
+	//	gcreserve(300 * sizeof(Tree));
+	//	gcdisable();
 	result = yyparse();
-//	gcenable();
+	//	gcenable();
 
 	if(result || error != NULL) {
 		char *e;
@@ -1326,7 +1326,7 @@ name2edfn(char *name)
 {
 	int i = 0;
 
-	for(i = 0; i <= FnCursorWordRight; i++){
+	for(i = 0; i <= FnCursorWordRight; i++) {
 		if(streq(name, editfndefs[i].name))
 			return i;
 	}
@@ -1334,7 +1334,7 @@ name2edfn(char *name)
 	return FnInvalid;
 }
 
-char*
+char *
 edfn2name(EditorFunction edfn)
 {
 	return editfndefs[edfn].name;
@@ -1354,7 +1354,7 @@ mapping2edfn(Mapping map)
 	if(map.hook == &line_editor_hook)
 		return FnEsFunction;
 
-	for(i = 0; i <= FnCursorWordRight; i++){
+	for(i = 0; i <= FnCursorWordRight; i++) {
 		if(map.hook != editfndefs[i].map.hook)
 			continue;
 		if(map.base_hook != editfndefs[i].map.base_hook)
@@ -1377,7 +1377,7 @@ mapping2edfn(Mapping map)
 	return FnInvalid;
 }
 
-char*
+char *
 mapping2name(Mapping map)
 {
 	EditorFunction fn;

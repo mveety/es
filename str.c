@@ -17,7 +17,7 @@ str_grow(Format *f, size_t more)
 
 /* strv -- print a formatted string into gc space */
 extern char *
-gstrv(char* (*seal)(Buffer*), const char *fmt, va_list args)
+gstrv(char *(*seal)(Buffer *), const char *fmt, va_list args)
 {
 	Buffer *buf;
 	Format format;
@@ -61,7 +61,7 @@ str(const char *fmt, ...)
 	return s;
 }
 
-char*
+char *
 astr(const char *fmt, ...)
 {
 	char *str;

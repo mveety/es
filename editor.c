@@ -203,7 +203,7 @@ find_matching_paren(EditorState *state)
 		c = state->buffer[state->bufpos - 1];
 	else
 		c = state->buffer[state->bufpos];
-	switch(c){
+	switch(c) {
 	default:
 		return -1;
 	case '[':
@@ -232,7 +232,7 @@ find_matching_paren(EditorState *state)
 		break;
 	}
 
-	switch(c){
+	switch(c) {
 	default:
 		unreachable();
 		break;
@@ -242,14 +242,14 @@ find_matching_paren(EditorState *state)
 	case '<':
 		if(state->bufpos == state->bufend)
 			return -1;
-		for(i = state->bufpos; i <= (int64_t)state->bufend; i++){
+		for(i = state->bufpos; i <= (int64_t)state->bufend; i++) {
 			if(reg < 0)
 				return -1;
-			if(state->buffer[i] == c){
+			if(state->buffer[i] == c) {
 				reg++;
 				continue;
 			}
-			if(state->buffer[i] == m){
+			if(state->buffer[i] == m) {
 				reg--;
 				if(reg == 0)
 					return i;
@@ -260,14 +260,14 @@ find_matching_paren(EditorState *state)
 	case '}':
 	case ')':
 	case '>':
-		for(i = state->bufpos; i >= 0; i--){
+		for(i = state->bufpos; i >= 0; i--) {
 			if(reg < 0)
 				return -1;
-			if(state->buffer[i] == c){
+			if(state->buffer[i] == c) {
 				reg++;
 				continue;
 			}
-			if(state->buffer[i] == m){
+			if(state->buffer[i] == m) {
 				reg--;
 				if(reg == 0)
 					return i;
@@ -297,7 +297,7 @@ outbuf_append_printable(EditorState *state, OutBuf *obuf, char *str, int len)
 	}
 
 	for(i = 0; i < len; i++) {
-		if(i == highlight){
+		if(i == highlight) {
 			dprint("adding highlight at %ld\n", i);
 			obuf->str[obuf->len++] = '\x1b';
 			obuf->str[obuf->len++] = '[';
@@ -311,13 +311,12 @@ outbuf_append_printable(EditorState *state, OutBuf *obuf, char *str, int len)
 		} else {
 			dprint("got unprintable char in buffer: %x\n", str[i]);
 		}
-		if(i == highlight){
+		if(i == highlight) {
 			obuf->str[obuf->len++] = '\x1b';
 			obuf->str[obuf->len++] = '[';
 			obuf->str[obuf->len++] = '0';
 			obuf->str[obuf->len++] = 'm';
 		}
-
 	}
 }
 
@@ -1191,7 +1190,6 @@ cursor_move_word_right(EditorState *state)
 		i = state->bufend;
 	state->bufpos = i;
 }
-
 
 /* history */
 
@@ -2179,7 +2177,7 @@ line_editor(EditorState *state)
 			 * just skip until we get something sensible
 			 */
 			continue;
-		} else if (c == KeySpace) {
+		} else if(c == KeySpace) {
 			key = KeySpace;
 		} else if(c == KeyEnter) {
 			key = KeyEnter;

@@ -638,7 +638,7 @@ PRIM(mapkey) {
 	gcref(&r_lp, (void **)&lp);
 	lp = list;
 
-	if(hasprefix(getstr(lp->next->term), "%esmle:")){
+	if(hasprefix(getstr(lp->next->term), "%esmle:")) {
 		res = bind_base_function(getstr(lp->term), getstr(lp->next->term));
 		if(res == -1)
 			fail("$&mapkey", "keyname %s is not valid", getstr(lp->term));
@@ -739,9 +739,9 @@ PRIM(getkeymap) {
 
 	if(!editor->initialized)
 		fail("$&getkeymap", "using fallback editor");
-	gcref(&r_res, (void**)&res);
+	gcref(&r_res, (void **)&res);
 
-	for(i = 127; i > 0; i--){
+	for(i = 127; i > 0; i--) {
 		fn = mapping2edfn(editor->keymap->base_keys[i]);
 		if(fn == FnInvalid)
 			continue;
@@ -753,7 +753,7 @@ PRIM(getkeymap) {
 		res = mklist(mkstr(str("%s", key2name(i))), res);
 	}
 
-	for(i = (ExtendedKeys-1); i >= 0; i--){
+	for(i = (ExtendedKeys - 1); i >= 0; i--) {
 		fn = mapping2edfn(editor->keymap->ext_keys[i]);
 		if(fn == FnInvalid)
 			continue;
@@ -762,7 +762,7 @@ PRIM(getkeymap) {
 		} else {
 			res = mklist(mkstr(str("%s", edfn2name(fn))), res);
 		}
-		res = mklist(mkstr(str("%s", key2name(i+ExtKeyOffset))), res);
+		res = mklist(mkstr(str("%s", key2name(i + ExtKeyOffset))), res);
 	}
 
 	gcrderef(&r_res);
