@@ -1,5 +1,8 @@
 /* gc.h -- garbage collector interface for es ($Revision: 1.1.1.1 $) */
 
+#ifndef __es_gc_h
+#define __es_gc_h
+
 #include <stddef.h>
 #include "stdenv.h"
 
@@ -29,6 +32,7 @@ typedef struct Buffer Buffer;
 typedef struct AnonSpace AnonSpace;
 typedef struct Region Region;
 typedef struct Block Block;
+typedef struct Arena Arena;
 
 struct Tag {
 	void *(*copy)(void *);
@@ -93,6 +97,14 @@ struct Block {
 	Block *next;
 	uint32_t size; /* includes the size of this header */
 	uint32_t age;
+};
+
+struct Arena {
+	void *ptr;
+	void *cur;
+	size_t size;
+	size_t remain;
+	Arena *next;
 };
 
 /* Tags */
@@ -174,3 +186,17 @@ extern char *sealcountedbuffer(Buffer *buf);
 extern void freebuffer(Buffer *buf);
 extern void *forward(void *p);
 extern Boolean istracked(void *p);
+
+/* arena allocator */
+extern Arena *newarena(size_t size);
+extern void *arena_allocate(Arena *arena, size_t nbytes);
+extern int isinarena(Arena *arena, void *ptr);
+extern int arena_destroy(Arena *arena);
+
+/* arena allocator api? */
+extern void *aseal(void *ptr);
+extern char *asealbuffer(Buffer *buf);
+extern char *asealcountedbuffer(Buffer *buf);
+
+#endif
+

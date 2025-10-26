@@ -25,7 +25,7 @@ getherevar(void)
 		buf = bufputc(buf, c);
 
 	len = buf->len;
-	s = sealcountedbuffer(buf);
+	s = asealcountedbuffer(buf);
 
 	if(len == 0) {
 		yyerror("null variable name in here document");
@@ -62,7 +62,7 @@ snarfheredoc(const char *eof, Boolean quoted)
 				freebuffer(buf);
 			else {
 				assert(tailp);
-				*tailp = treecons(mk(nQword, sealcountedbuffer(buf)), NULL);
+				*tailp = treecons(mk(nQword, asealcountedbuffer(buf)), NULL);
 			}
 			break;
 		}
@@ -81,7 +81,7 @@ snarfheredoc(const char *eof, Boolean quoted)
 				if(buf->current == 0)
 					freebuffer(buf);
 				else {
-					*tailp = treecons(mk(nQword, sealcountedbuffer(buf)), NULL);
+					*tailp = treecons(mk(nQword, asealcountedbuffer(buf)), NULL);
 					tailp = &(*tailp)->CDR;
 				}
 				var = getherevar();
@@ -143,7 +143,7 @@ queueheredoc(Tree *t)
 		return FALSE;
 	}
 
-	here = gcalloc(sizeof(Here), tNil);
+	here = aalloc(sizeof(Here), tNil);
 	here->next = hereq;
 	here->marker = eof;
 	hereq = here;

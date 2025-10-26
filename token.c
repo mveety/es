@@ -215,19 +215,19 @@ top:
 						if(c == ' ' || c == '\t' || c == '\n' || c == EOF) {
 							input_ungetc(c);
 							buf[i] = '\0';
-							y->str = gcdup(buf);
+							y->str = adup(buf);
 							return LONGARG;
 						}
 						if(c == '=') {
 							buf[i++] = '=';
 							buf[i] = '\0';
-							y->str = gcdup(buf);
+							y->str = adup(buf);
 							return GNUARG;
 						}
 						if(!isalnum(c) && c != '-' && c != '_' && c != '~'){
 							input_ungetc(c);
 							buf[i] = '\0';
-							y->str = gcdup(buf);
+							y->str = adup(buf);
 							return LONGARG;
 						}
 						buf[i++] = c;
@@ -285,7 +285,7 @@ top:
 		else if(streq(buf, "%re"))
 			return REGEX;
 		w = RW;
-		y->str = gcdup(buf);
+		y->str = adup(buf);
 		return WORD;
 	}
 	if(c == '`' || c == '!' || c == '$' || c == '\'') {
@@ -344,7 +344,7 @@ top:
 		}
 		input_ungetc(c);
 		buf[i] = '\0';
-		y->str = gcdup(buf);
+		y->str = adup(buf);
 		return QWORD;
 	case '\\':
 		if((c = input_getc()) == '\n') {
@@ -425,7 +425,7 @@ badescape:
 			break;
 		}
 		buf[1] = 0;
-		y->str = gcdup(buf);
+		y->str = adup(buf);
 		return QWORD;
 	case '#':
 		while((c = input_getc()) != '\n') /* skip comment until newline */

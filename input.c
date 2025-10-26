@@ -7,6 +7,7 @@
 #include <stdio.h>
 #include <string.h>
 // #include <threads.h>
+#include "gc.h"
 #include "input.h"
 
 /*
@@ -403,16 +404,13 @@ run_new_completer(List *completer0, const char *text, int start, int end)
 	matches = ealloc(MATCHTABLE * sizeof(char *));
 	matchsz = MATCHTABLE;
 
-	gcenable();
 	assert(!gcisblocked());
-
+	gc();
 	args = mklist(mkstr(str("%s", editor->buffer)),
 				  mklist(mkstr(str("%s", text)),
 						 mklist(mkstr(str("%d", start)), mklist(mkstr(str("%d", end)), nil))));
 	completer = append(completer, args);
 	result = eval(completer, nil, 0);
-
-	gcdisable();
 
 	if(result == nil) {
 		free(matches);
@@ -431,12 +429,10 @@ run_new_completer(List *completer0, const char *text, int start, int end)
 		matches[matchi++] = nil;
 
 done:
-	gcenable();
 	gcrderef(&r_lp);
 	gcrderef(&r_result);
 	gcrderef(&r_args);
 	gcrderef(&r_completer);
-	gcdisable();
 	return matches;
 }
 
@@ -643,7 +639,6 @@ fdfill(Input *in)
 					history_add(editor, line_in);
 				loghistory((char *)in->bufbegin, nread);
 			} else {
-				gcenable();
 				gcref(&r_result, (void **)&result);
 				args = mklist(mkstr(str("%s", line_in)), NULL);
 				history_hook = append(history_hook, args);
@@ -657,7 +652,6 @@ fdfill(Input *in)
 					loghistory((char *)in->bufbegin, nread);
 				}
 				gcrderef(&r_result);
-				gcdisable();
 			}
 		}
 		free(line_in);
@@ -675,6 +669,7 @@ fdfill(Input *in)
 extern Tree *
 parse(char *pr1, char *pr2)
 {
+	Tree *res = nil; Root r_res;
 	int result;
 	assert(error == NULL);
 
@@ -695,10 +690,11 @@ parse(char *pr1, char *pr2)
 		set_prompt2(editor, pr2);
 	}
 
-	gcreserve(300 * sizeof(Tree));
-	gcdisable();
+	gcref(&r_res, (void**)&res);
+//	gcreserve(300 * sizeof(Tree));
+//	gcdisable();
 	result = yyparse();
-	gcenable();
+//	gcenable();
 
 	if(result || error != NULL) {
 		char *e;
@@ -709,6 +705,11 @@ parse(char *pr1, char *pr2)
 			fail("$&parse", "yyparse: %s: \"%s\"", e, input_dumptokstatus());
 		fail("$&parse", "yyparse: %s", e);
 	}
+
+	res = aseal(parsetree);
+	parsetree = res;
+	gcrderef(&r_res);
+
 	if(input->runflags & run_lisptrees)
 		eprint("%B\n", parsetree);
 	return parsetree;
@@ -777,6 +778,8 @@ fdcleanup(Input *in)
 	if(in->fd != -1)
 		close(in->fd);
 	efree(in->bufbegin);
+	if(in->arena != nil)
+		arena_destroy(in->arena);
 }
 
 /* runfd -- run commands from a file descriptor */
@@ -809,6 +812,8 @@ static void
 stringcleanup(Input *in)
 {
 	efree(in->bufbegin);
+	if(in->arena != nil)
+		arena_destroy(in->arena);
 }
 
 /* stringfill -- placeholder than turns into EOF right away */

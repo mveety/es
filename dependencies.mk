@@ -46,6 +46,7 @@ version.o : version.c $(ESHFILES)
 dynlib.o : dynlib.c $(ESHFILES) prim.h gc.h
 objects.o : objects.c $(ESHFILES) prim.h gc.h
 editor.o : editor.c $(ESHFILES) gc.h
+arenas.o : arenas.c $(ESHFILES) gc.h
 test_editor.o : MODCFLAGS=-DSTANDALONE
 test_editor.o : test_editor.c editor.h
 # modules

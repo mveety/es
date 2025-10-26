@@ -17,7 +17,7 @@ str_grow(Format *f, size_t more)
 
 /* strv -- print a formatted string into gc space */
 extern char *
-strv(const char *fmt, va_list args)
+gstrv(char* (*seal)(Buffer*), const char *fmt, va_list args)
 {
 	Buffer *buf;
 	Format format;
@@ -40,7 +40,13 @@ strv(const char *fmt, va_list args)
 	fmtputc(&format, '\0');
 	gcenable();
 
-	return sealbuffer(format.u.p);
+	return seal(format.u.p);
+}
+
+char *
+strv(const char *fmt, va_list args)
+{
+	return gstrv(sealbuffer, fmt, args);
 }
 
 /* str -- create a string (in garbage collection space) by printing to it */
@@ -50,9 +56,22 @@ str(const char *fmt, ...)
 	char *s;
 	va_list args;
 	va_start(args, fmt);
-	s = strv(fmt, args);
+	s = gstrv(sealbuffer, fmt, args);
 	va_end(args);
 	return s;
+}
+
+char*
+astr(const char *fmt, ...)
+{
+	char *str;
+	va_list args;
+
+	va_start(args, fmt);
+	str = gstrv(asealbuffer, fmt, args);
+	va_end(args);
+
+	return str;
 }
 
 #define PRINT_ALLOCSIZE 64

@@ -14,7 +14,7 @@ MAINCFILES	= access.c closure.c conv.c dict.c eval.c except.c fd.c gc.c \
 		  prim-io.c prim-math.c prim-mv.c prim-sys.c prim.c print.c \
 		  proc.c sigmsgs.c signal.c split.c status.c str.c syntax.c \
 		  term.c token.c tree.c util.c var.c vec.c version.c y.tab.c dump.c \
-		  objects.c editor.c
+		  objects.c editor.c arenas.c
 
 DYNCFILES = dynlib.c
 
@@ -24,7 +24,7 @@ MAINOFILES	= access.o closure.o conv.o dict.o eval.o except.o fd.o gc.o \
 		  prim-io.o prim-math.o prim-mv.o prim-sys.o prim.o print.o \
 		  proc.o sigmsgs.o signal.o split.o status.o str.o syntax.o \
 		  term.o token.o tree.o util.o var.o vec.o version.o y.tab.o \
-		  objects.o editor.o
+		  objects.o editor.o arenas.o
 
 DYNOFILES = dynlib.o
 

@@ -167,8 +167,8 @@ mkpipe(Tree *t1, int outfd, int infd, Tree *t2)
 	Boolean pipetail;
 
 	pipetail = firstis(t2, "%pipe");
-	tail = prefix(str("%d", outfd),
-				  prefix(str("%d", infd), pipetail ? t2->CDR : treecons(thunkify(t2), NULL)));
+	tail = prefix(astr("%d", outfd),
+				  prefix(astr("%d", infd), pipetail ? t2->CDR : treecons(thunkify(t2), NULL)));
 	if(firstis(t1, "%pipe"))
 		return treeappend(t1, tail);
 	t1 = thunkify(t1);
@@ -237,7 +237,7 @@ redirect(Tree *t)
 Tree *
 mkredircmd(char *cmd, int fd)
 {
-	return prefix(cmd, prefix(str("%d", fd), NULL));
+	return prefix(cmd, prefix(astr("%d", fd), NULL));
 }
 
 Tree *
@@ -256,7 +256,7 @@ mkredir(Tree *cmd, Tree *file)
 			yyerror("bad /dev/fd redirection");
 			op = "";
 		}
-		var = mk(nWord, str("_devfd%d", id++));
+		var = mk(nWord, astr("_devfd%d", id++));
 		cmd = treecons(mk(nWord, op), treecons(var, NULL));
 		word = treecons(mk(nVar, var), NULL);
 	} else if(!firstis(cmd, "%heredoc") && !firstis(cmd, "%here"))
@@ -271,7 +271,7 @@ mkredir(Tree *cmd, Tree *file)
 Tree *
 mkclose(int fd)
 {
-	return prefix("%close", prefix(str("%d", fd), treecons(&placeholder, NULL)));
+	return prefix("%close", prefix(astr("%d", fd), treecons(&placeholder, NULL)));
 }
 
 /* mkdup -- make a %dup node with a placeholder */
@@ -279,7 +279,7 @@ Tree *
 mkdup(int fd0, int fd1)
 {
 	return prefix("%dup",
-				  prefix(str("%d", fd0), prefix(str("%d", fd1), treecons(&placeholder, NULL))));
+				  prefix(astr("%d", fd0), prefix(astr("%d", fd1), treecons(&placeholder, NULL))));
 }
 
 /* redirappend -- destructively add to the list of redirections, before any other nodes */
@@ -503,9 +503,9 @@ mklongarg(char *argname, char *argvalue)
 	char *fullarg = nil;
 
 	if(argvalue)
-		fullarg = str("%s%s", argname, argvalue);
+		fullarg = astr("%s%s", argname, argvalue);
 	else
-		fullarg = str("%s", argname);
+		fullarg = astr("%s", argname);
 
 	return mk(nQword, fullarg);
 }

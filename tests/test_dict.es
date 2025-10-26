@@ -56,10 +56,12 @@ fn run_test_dict {
 		assert {<={result $y(g) onerror result true}}
 		y := 1 => 2
 		y := 3 => 4
+		echo 'y =' $y
 		assert {~ $y(1) 2}
 		assert {~ $y(3) 4}
 		y := 1 =>
 		y := 3 =>
+		echo 'y =' $y
 		assert {<={result $y(1) onerror result true}}
 		assert {<={result $y(3) onerror result true}}
 		assert {~ <={$&termtypeof $sdict} string}

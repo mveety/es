@@ -4,6 +4,7 @@
 
 #include "es.h"
 #include "gc.h"
+#include "input.h"
 
 typedef struct Space Space;
 struct Space {
@@ -310,10 +311,16 @@ forward(void *p)
 	Header *h, *nh;
 	Tag *tag;
 	void *np;
+	int pmode = 0;
 
-	if(!isinspace(old, p)) {
+	if(!isinspace(old, p) && !isinarena(input->arena, p)) {
 		VERBOSE(("GC %8ux : <<not in old space>>\n", p));
 		return p;
+	}
+
+	if(isinarena(input->arena, p)){
+		pmode = 1;
+		VERBOSE(("GC %8ux : <<in parser arena>>\n", p));
 	}
 
 	h = header(p);
@@ -332,8 +339,11 @@ forward(void *p)
 		VERBOSE(("%s	-> %8ux (forwarded)\n", tag->typename, np));
 	}
 
-	/* this is probably not needed now */
 	assert(gettag(header(np)->tag)->magic == TAGMAGIC);
+
+	if(pmode)
+		gettag(header(np)->tag)->scan(np);
+
 	return np;
 }
 

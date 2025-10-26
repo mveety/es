@@ -1,5 +1,10 @@
 /* input.h -- definitions for es lexical analyzer ($Revision: 1.1.1.1 $) */
 
+#ifndef __es_input_h
+#define __es_input_h
+
+#include "gc.h"
+
 #define MAXUNGET 2	   /* maximum 2 character pushback */
 #define MAXTOKBUF 4096 // defined in input.c
 
@@ -20,6 +25,7 @@ struct Input {
 	char tokstatus[MAXTOKBUF];
 	char *lasttokstatus;
 	size_t tokstatusi;
+	Arena *arena;
 };
 
 /* input.c */
@@ -49,3 +55,6 @@ extern void initparse(void);
 /* heredoc.c */
 
 extern void emptyherequeue(void);
+
+#endif
+

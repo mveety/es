@@ -8,14 +8,10 @@ DefineTag(Tree2, static);
 
 /* mk -- make a new node; used to generate the parse tree */
 Tree *
-mk(NodeKind t, ...)
+gmk(void* (*alloc)(size_t, int tag), NodeKind t, va_list ap)
 {
-	va_list ap;
 	Tree *n;
-	Tree *tree = NULL; Root r_tree;
 
-	gcdisable();
-	va_start(ap, t);
 	switch(t) {
 	default:
 		panic("mk: bad node kind %d", t);
@@ -23,7 +19,7 @@ mk(NodeKind t, ...)
 	case nWord:
 	case nQword:
 	case nPrim:
-		n = gcalloc(offsetof(Tree, u[1]), tTree1);
+		n = alloc(offsetof(Tree, u[1]), tTree1);
 		n->u[0].s = va_arg(ap, char *);
 		break;
 	case nCall:
@@ -31,7 +27,7 @@ mk(NodeKind t, ...)
 	case nVar:
 	case nDict:
 	case nRegex:
-		n = gcalloc(offsetof(Tree, u[1]), tTree1);
+		n = alloc(offsetof(Tree, u[1]), tTree1);
 		n->u[0].p = va_arg(ap, Tree *);
 		break;
 	case nAssign:
@@ -47,17 +43,17 @@ mk(NodeKind t, ...)
 	case nExtract:
 	case nLets:
 	case nAssoc:
-		n = gcalloc(offsetof(Tree, u[2]), tTree2);
+		n = alloc(offsetof(Tree, u[2]), tTree2);
 		n->u[0].p = va_arg(ap, Tree *);
 		n->u[1].p = va_arg(ap, Tree *);
 		break;
 	case nRedir:
-		n = gcalloc(offsetof(Tree, u[2]), tNil);
+		n = alloc(offsetof(Tree, u[2]), tNil);
 		n->u[0].p = va_arg(ap, Tree *);
 		n->u[1].p = va_arg(ap, Tree *);
 		break;
 	case nPipe:
-		n = gcalloc(offsetof(Tree, u[2]), tNil);
+		n = alloc(offsetof(Tree, u[2]), tNil);
 		n->u[0].i = va_arg(ap, int);
 		n->u[1].i = va_arg(ap, int);
 		break;
@@ -65,12 +61,38 @@ mk(NodeKind t, ...)
 	n->kind = t;
 	va_end(ap);
 
-	tree = n;
-	gcref(&r_tree, (void **)&tree);
-	gcenable();
-	gcderef(&r_tree, (void **)&tree);
+	return n;
+}
+
+Tree *
+gcmk(NodeKind t, ...)
+{
+	va_list ap;
+	Tree *tree = nil; Root r_tree;
+
+	gcref(&r_tree, (void**)&tree);
+
+	va_start(ap, t);
+	tree = gmk(gcalloc, t, ap);
+	va_end(ap);
+
+	gcrderef(&r_tree);
 	return tree;
 }
+
+Tree *
+mk(NodeKind t, ...)
+{
+	va_list ap;
+	Tree *tree = nil;
+
+	va_start(ap, t);
+	tree = gmk(aalloc, t, ap);
+	va_end(ap);
+
+	return tree;
+}
+
 
 char *
 treekind(Tree *t)
