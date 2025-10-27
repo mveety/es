@@ -37,7 +37,10 @@ Vconv(Format *f)
 			unreachable();
 		case tkRegex:
 		case tkString:
-			fmtprint(f, "%S", getstr(lp->term));
+			if(f->flags & FMT_altform)
+				fmtprint(f, "%#S", getstr(lp->term));
+			else
+				fmtprint(f, "%S", getstr(lp->term));
 			break;
 		case tkClosure:
 		case tkDict:
