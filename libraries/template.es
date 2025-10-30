@@ -1,35 +1,6 @@
-library template (init libraries)
+library template (init libraries string)
 
 # template 'hello ${world} this is ${a} ${test}' %dict(world=>'people';a=>'a really cool';test=>'test')
-
-fn string_iterator string {
-	let (strhead=(); strtail=$:string) {
-		result (
-			@ { # getchar
-				local (s=) {
-					s = $strtail(1)
-					strhead = $strhead $s
-					strtail = $strtail(2 ...)
-					result $s
-				}
-			}
-			@ { # ungetchar
-				local (s=){
-					if {lt <={sub $#strhead 1} 1} { return () }
-					s = $strhead($#strhead)
-					strhead = $strhead(1 ... <={sub $#strhead 1})
-					strtail = $s $strtail
-					result $s
-				}
-			}
-			@ { # curchar
-				if {lt <={sub $#strhead 1} 1} { return () }
-				result $strhead($#strhead)
-			}
-			@ { %count $strtail }
-		)
-	}
-}
 
 fn parse_template_string string {
 	local (

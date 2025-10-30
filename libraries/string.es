@@ -6,13 +6,13 @@
 
 library string (init libraries)
 
-fn string:length str {
+fn string_length str {
 	local (str0 = $:str) {
 		return <=true $#str0
 	}
 }
 
-fn string:find needle haystack {
+fn string_find needle haystack {
 	local (
 		lhaystack = $:haystack
 		lneedle = $:needle
@@ -41,7 +41,7 @@ fn string:find needle haystack {
 	}
 }
 
-fn string:slice str start end {
+fn string_slice str start end {
 	local (
 		lstr = $:str
 		lslice =
@@ -55,6 +55,41 @@ fn string:slice str start end {
 	}
 }
 
-fn string:sub str start len {
+fn string_sub str start len {
 	return <={string:slice $str $start <={add $start <={sub $len 1}}}
 }
+
+fn string_iterator string {
+	let (strhead=(); strtail=$:string) {
+		result (
+			@ { # getchar
+				local (s=) {
+					s = $strtail(1)
+					strhead = $strhead $s
+					strtail = $strtail(2 ...)
+					result $s
+				}
+			}
+			@ { # ungetchar
+				local (s=){
+					if {lt <={sub $#strhead 1} 1} { return () }
+					s = $strhead($#strhead)
+					strhead = $strhead(1 ... <={sub $#strhead 1})
+					strtail = $s $strtail
+					result $s
+				}
+			}
+			@ { # curchar
+				if {lt <={sub $#strhead 1} 1} { return () }
+				result $strhead($#strhead)
+			}
+			@ { %count $strtail }
+		)
+	}
+}
+
+fn string:length { string_length $* }
+fn string:find { string_find $* }
+fn string:slice { string_slice $* }
+fn string:sub { string_sub $* }
+
