@@ -49,7 +49,7 @@ fn run_test_dict {
 			assert {! test1 dicks}
 		}
 		y = %dict(a=>b;c=>d;e=>f)
-		assert {~ $y '%dict(a => b; c => d; e => f)'}
+		assert {~ $y '%dict(a => ''b''; c => ''d''; e => ''f'')'}
 		assert {~ $y(a) b}
 		assert {~ $y(c) d}
 		assert {~ $y(e) f}
