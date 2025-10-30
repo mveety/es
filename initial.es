@@ -286,7 +286,7 @@ fn cd dir {
 	if {~ $#dir 1} {
 		$&cd $dir
 		if {!~ $#fn-%cdhook 0} {
-			%cdhook $dir
+			try %cdhook $dir
 		}
 	} {~ $#dir 0} {
 		if {!~ $#home 1} {
@@ -300,7 +300,7 @@ fn cd dir {
 		}
 		$&cd $home
 		if {!~ $#fn-%cdhook 0} {
-			%cdhook $home
+			try %cdhook $home
 		}
 	} {
 		throw usage cd 'usage: cd [directory]'
