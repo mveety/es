@@ -141,6 +141,7 @@ mkdict0(int size)
 	size_t len = offsetof(Dict, table[size]);
 	Dict *dict = gcalloc(len, tDict);
 	memzero(dict, len);
+	dict->readonly = 0;
 	dict->size = size;
 	dict->remain = REMAIN(size);
 	return dict;
@@ -217,6 +218,7 @@ put(Dict *dict, char *name, void *value)
 
 	assert(get(dict, name) == NULL);
 	assert(value != NULL);
+	assert(!dict->readonly);
 
 	if(dict->remain <= 1) {
 		old = dict;
@@ -298,7 +300,10 @@ dictget(Dict *dict, const char *name)
 extern Dict *
 dictput(Dict *dict, char *name, void *value)
 {
-	Assoc *ap = get(dict, name);
+	Assoc *ap = nil;
+
+	assert(!dict->readonly);
+	ap = get(dict, name);
 	if(value != NULL)
 		if(ap == NULL)
 			dict = put(dict, name, value);

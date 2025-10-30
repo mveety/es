@@ -237,6 +237,29 @@ PRIM(dictcopy) {
 	return res;
 }
 
+PRIM(dictreadonly) {
+	Dict *d = nil; Root r_d;
+	int res = 0;
+
+	if(!list)
+		fail("$&dictreadonly", "missing argument");
+
+	gcref(&r_d, (void**)&d);
+
+	d = getdict(list->term);
+	if(!d)
+		fail("$&dictreadonly", "term not valid dict");
+	res = d->readonly;
+	if(d->readonly)
+		d->readonly = 0;
+	else
+		d->readonly = 1;
+
+	gcrderef(&r_d);
+
+	return mklist(mkstr(str("%d", res)), nil);
+}
+
 Dict *
 initprims_dict(Dict *primdict)
 {
@@ -248,5 +271,7 @@ initprims_dict(Dict *primdict)
 	X(dictsize);
 	X(termtypeof);
 	X(dictcopy);
+	X(dictreadonly);
+
 	return primdict;
 }

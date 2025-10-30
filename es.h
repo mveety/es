@@ -123,6 +123,7 @@ struct Assoc {
 };
 
 struct Dict {
+	int readonly;
 	int size, remain;
 	Assoc table[1];
 };
