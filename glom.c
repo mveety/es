@@ -384,7 +384,7 @@ glom1(Tree *tree, Binding *binding)
 					l = dictget(dict, subnamestr);
 					if(!l)
 						fail("es:glom", "element '%s' is empty", subnamestr);
-					list = append(list, l);
+					list = append(list, listcopy(l));
 				}
 
 				gcrderef(&r_li);
