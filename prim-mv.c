@@ -61,12 +61,6 @@ PRIM(sethistory) {
 	RefReturn(lp);
 }
 
-PRIM(getlast) {
-	if(lastcmd == NULL)
-		return mklist(mkstr((char *)""), NULL);
-	return mklist(mkstr((char *)lastcmd), NULL);
-}
-
 PRIM(getevaldepth) {
 	return mklist(mkstr(str("%d", evaldepth)), NULL);
 }
@@ -798,7 +792,6 @@ initprims_mv(Dict *primdict)
 	X(addhistorylist);
 	X(clearhistory);
 	X(sethistory);
-	X(getlast);
 	X(getevaldepth);
 	X(range);
 	X(reverse);

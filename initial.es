@@ -975,12 +975,6 @@ if {~ <=$&primitives resetterminal} {
 # variable's contents are retreived. The value of the variable is $1 to
 # the getter function. If the variable is not defined the getter is not
 # called.
-last = ''
-get-last = @ {
-	$&getlast |>
-		%fsplit ' ' |>
-		@{ let(r=) { for (i = $*) { if {! ~ $i ''} {r = $r $i} } ; result $r }}
-}
 
 eval-depth = ''
 get-eval-depth = $&getevaldepth
@@ -1015,7 +1009,7 @@ get-ditto = $&getditto
 home		= /
 ifs		= ' ' \t \n
 prompt		= '; ' ''
-max-eval-depth	= 2500 # found experimentally. this will work on linux and freebsd
+max-eval-depth	= 680 # found experimentally. this will work on linux and freebsd
 noexport = noexport
 
 #
@@ -1306,10 +1300,10 @@ fn remove-duplicates list {
 		for (l = $list) {
 			if {! dicthaskey $elems $l} {
 				elems := $l => 1
-				res = $res $l
+				res = $l $res
 			}
 		}
-		result $res
+		$&reverse_noalloc $res
 	}
 }
 
