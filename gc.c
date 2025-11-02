@@ -1,5 +1,6 @@
 /* gc.c -- copying garbage collector for es ($Revision: 1.2 $) */
 
+#include "stdenv.h"
 #define GARBAGE_COLLECTOR 1 /* for es.h */
 
 #include "es.h"
@@ -304,6 +305,16 @@ old_istracked(void *p)
  * root list building and scanning
  */
 
+Boolean
+isininputarena(Input *ip, void *p)
+{
+	if(ip == nil)
+		return FALSE;
+	if(isinarena(ip->arena, p))
+		return TRUE;
+	return FALSE;
+}
+
 /* forward -- forward an individual pointer from old space */
 extern void *
 forward(void *p)
@@ -313,12 +324,12 @@ forward(void *p)
 	void *np;
 	int pmode = 0;
 
-	if(!isinspace(old, p) && !isinarena(input->arena, p)) {
+	if(!isinspace(old, p) && !isininputarena(input, p)) {
 		VERBOSE(("GC %8ux : <<not in old space>>\n", p));
 		return p;
 	}
 
-	if(input != nil && isinarena(input->arena, p)) {
+	if(isininputarena(input, p)) {
 		pmode = 1;
 		VERBOSE(("GC %8ux : <<in parser arena>>\n", p));
 	}

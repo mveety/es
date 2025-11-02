@@ -86,10 +86,10 @@ VarMark(void *p)
 static Boolean
 iscounting(const char *name)
 {
-	int c;
 	const char *s = name;
-	while((c = *s++) != '\0')
-		if(!isdigit(c))
+
+	for(; *s != '\0'; s++)
+		if(!isdigit(*s))
 			return FALSE;
 	if(streq(name, "0"))
 		return FALSE;
