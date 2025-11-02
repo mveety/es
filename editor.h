@@ -173,6 +173,7 @@ struct EditorState {
 	int match_braces;
 	Brace *braces;
 	size_t nbraces;
+	int force_fallback;
 	// history
 	char *histbuf;
 	size_t histbufsz;

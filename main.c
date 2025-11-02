@@ -43,6 +43,8 @@ extern Boolean comprehensive_matches;
 #ifdef DYNAMIC_LIBRARIES
 extern Boolean dynlib_verbose;
 #endif
+extern int forcetty;
+extern int force_fallback_editor;
 
 void *
 used(void *v)
@@ -167,9 +169,9 @@ void
 debug_flag_usage(void)
 { /* this is a mess */
 #ifdef DYNAMIC_LIBRARIES
-	dprintf(2, "debug flags: es -D [GIaEPRAMrhHCm]\n%s",
+	dprintf(2, "debug flags: es -D [GIaEPRAMrhHCtm]\n%s",
 #else
-	dprintf(2, "debug flags: es -D [GIaEPRAMrhHC]\n%s",
+	dprintf(2, "debug flags: es -D [GIaEPRAMrhHCt]\n%s",
 #endif
 			"	? -- show this message\n"
 			"	G -- gcverbose\n"
@@ -185,6 +187,8 @@ debug_flag_usage(void)
 			"	h -- HaahrHash\n"
 			"	H -- FNV1AHash\n"
 			"	C -- comprehensive_matches\n"
+			"	t -- forcetty\n"
+			"	e -- force_fallback_editor\n"
 #ifdef DYNAMIC_LIBRARIES
 			"	m -- dynlib_verbose\n"
 #endif
@@ -409,6 +413,12 @@ main(int argc, char *argv[])
 				case 'C':
 					comprehensive_matches = TRUE;
 					break;
+				case 't':
+					forcetty = 1;
+					break;
+				case 'e':
+					force_fallback_editor = 1;
+					break;
 #ifdef DYNAMIC_LIBRARIES
 				case 'm':
 					dynlib_verbose = TRUE;
@@ -532,6 +542,9 @@ getopt_done:
 		checkfd(2, oCreate);
 	}
 
+	/* we use real isatty here because we really do care. if you want to override this you
+	 * can set the interactive runflag
+	 */
 	if(cmd == NULL && (optind == argc || cmd_stdin) && (runflags & run_interactive) == 0 &&
 	   isatty(0))
 		runflags |= run_interactive;

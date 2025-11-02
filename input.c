@@ -42,6 +42,7 @@ extern Boolean verbose_parser;
 EditorState *editor;
 Keymap *default_keymap;
 int editor_debugfd = -1;
+int force_fallback_editor = 0;
 
 #if ABUSED_GETENV
 static char *stdgetenv(const char *);
@@ -1442,6 +1443,7 @@ initinput(void)
 	editor = ealloc(sizeof(EditorState));
 	if(initialize_editor(editor, 0, 1) == 0) {
 		editor_debugging(editor, editor_debugfd);
+		editor->force_fallback = force_fallback_editor;
 		set_prompt1(editor, "% ");
 		set_prompt2(editor, "_% ");
 		set_complete_hook(editor, &es_complete_hook);

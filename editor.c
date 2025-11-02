@@ -149,6 +149,12 @@ editor_istracked(void *ptr)
 	return 0;
 }
 
+int
+eisatty(int fd)
+{
+	return isatty(fd);
+}
+
 #else
 
 int
@@ -443,6 +449,9 @@ gettermsize(EditorState *state)
 	Position saved_pos;
 	Position res;
 
+	/* this stuff only works if this is really a for real tty */
+	if(!isatty(state->ofd) || !isatty(state->ifd))
+		return (Position){80 ,24};
 	if(ioctl(state->ofd, TIOCGWINSZ, &ws) == -1 || ws.ws_col == 0) {
 		saved_pos = getposition(state);
 		if(saved_pos.cols == -1 && saved_pos.lines == -1)
@@ -500,7 +509,7 @@ initialize_editor(EditorState *state, int ifd, int ofd)
 	state->prompt1 = nil;
 	state->initialized = 0;
 
-	if(!isatty(ifd) || !isatty(ofd))
+	if(!eisatty(ifd) || !eisatty(ofd))
 		return -1;
 	term = getterm();
 	if(!supported_term(term)) {
@@ -541,6 +550,7 @@ initialize_editor(EditorState *state, int ifd, int ofd)
 		.match_braces = 1,
 		.braces = nil,
 		.nbraces = 0,
+		.force_fallback = 0,
 	};
 	memset(state->outbuf, 0, sizeof(OutBuf));
 	rawmode_on(state);
@@ -2016,6 +2026,8 @@ basic_editor(EditorState *state)
 
 	if(!state->initialized)
 		return fallback_editor(state);
+	if(state->force_fallback)
+		return fallback_editor(state);
 
 	rawmode_on(state);
 	if(reset_editor(state) < 0)
@@ -2146,6 +2158,8 @@ line_editor(EditorState *state)
 	size_t readn = 0;
 
 	if(!state->initialized)
+		return fallback_editor(state);
+	if(state->force_fallback)
 		return fallback_editor(state);
 
 	rawmode_on(state);

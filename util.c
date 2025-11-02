@@ -3,6 +3,8 @@
 #include "es.h"
 #include <stdint.h>
 
+int forcetty = 0;
+
 #if !HAVE_STRERROR
 /* strerror -- turn an error code into a string */
 static char *
@@ -177,6 +179,14 @@ esexit(int status)
 	if(editor_debugfd > 0)
 		close(editor_debugfd);
 	exit(status);
+}
+
+int
+eisatty(int fd)
+{
+	if(forcetty)
+		return 1;
+	return isatty(fd);
 }
 
 /* results */

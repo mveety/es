@@ -468,6 +468,7 @@ extern long eread(int fd, char *buf, size_t n);
 extern Boolean isabsolute(char *path);
 extern Boolean streq2(const char *s, const char *t1, const char *t2);
 extern void esexit(int status) __attribute__((noreturn));
+extern int eisatty(int fd);
 extern int status(Result r);
 extern void *ok(Result r);
 extern int64_t ok_int(Result r);
