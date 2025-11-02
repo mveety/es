@@ -405,7 +405,6 @@ run_new_completer(List *completer0, const char *text, int start, int end)
 	matchsz = MATCHTABLE;
 
 	assert(!gcisblocked());
-	gc();
 	args = mklist(mkstr(str("%s", editor->buffer)),
 				  mklist(mkstr(str("%s", text)),
 						 mklist(mkstr(str("%d", start)), mklist(mkstr(str("%d", end)), nil))));
