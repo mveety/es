@@ -1307,14 +1307,14 @@ EditorFnDef editfndefs[] = {
 		.name = "%esmle:CursorWordLeft",
 		.map = (Mapping){
 			.base_hook = &cursor_move_word_left,
-			.reset_completion = 1,
+			.reset_completion = 2,
 		},
 	},
 	[FnCursorWordRight] = (EditorFnDef) {
 		.name = "%esmle:CursorWordRight",
 		.map = (Mapping){
 			.base_hook = &cursor_move_word_right,
-			.reset_completion = 1,
+			.reset_completion = 2,
 		},
 	},
 };
