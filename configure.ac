@@ -25,6 +25,8 @@ OFILEOPTS='$(MAINOFILES)'
 MODULES=''
 MODOFILES=''
 development='false'
+ASAN=false
+MSAN=false
 
 AC_ARG_ENABLE(loginshell,
 [  --enable-loginshell	Only load esrc if a login shell],
@@ -52,7 +54,15 @@ AC_ARG_ENABLE(modules,
 
 AC_ARG_ENABLE(development,
 [  --enable-development	Extras for development],
-[CFLAGS="-g -O0"])
+[CFLAGS="-g -O0"; development=true])
+
+AC_ARG_ENABLE(addrsan,
+[  --enable-addrsan	Enable llvm address sanitizer],
+[ASAN=true])
+
+AC_ARG_ENABLE(memorysan,
+[  --enable-memorysan	Enable llvm memory sanitizer],
+[MSAN=true])
 
 AC_SUBST(ENABLE_LOGINSHELL)
 AC_SUBST(DEVFD_IMPL)
@@ -165,6 +175,32 @@ then
 	OFILEOPTS='$(MAINOFILES) $(DYNOFILES)'
 	CFLAGS="$CFLAGS -fPIC"
 	LDFLAGS="$LDFLAGS -rdynamic"
+fi
+
+if test "$ASAN" = "true" && test "$MSAN" = "false" && test "$development" = "true"
+then
+	case "`basename ${CC}`" in
+		clang*)
+			CFLAGS="-fsanitize=address -fno-omit-frame-pointer $CFLAGS"
+			LDFLAGS="-fsanitize=address -fno-omit-frame-pointer $LDFLAGS"
+			;;
+		*)
+			AC_MSG_ERROR([address sanitizer requires clang])
+			;;
+	esac
+fi
+
+if test "$MSAN" = "true" && test "$ASAN" = "false" && test "$development" = "true"
+then
+	case "`basename ${CC}`" in
+		clang*)
+			CFLAGS="-fsanitize=memory -fsanitize-memory-track-origins -fPIE -pie -fno-omit-frame-pointer $CFLAGS"
+			LDFLAGS="-fsanitize=memory -fsanitize-memory-track-origins -fPIE -pie -fno-omit-frame-pointer $LDFLAGS"
+			;;
+		*)
+			AC_MSG_ERROR([memory sanitizer requires clang])
+			;;
+	esac
 fi
 
 dnl ----------------------------
