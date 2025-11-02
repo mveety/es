@@ -4,6 +4,10 @@ if {~ $options esmle} {
 	fn esmle_wrap string {
 		result <={%string \x01 $string \x02}
 	}
+} {
+	fn esmle_wrap string {
+		result $string
+	}
 }
 
 let (
