@@ -135,6 +135,7 @@ typedef struct HistoryEntry HistoryEntry;
 typedef struct Wordpos Wordpos;
 typedef struct Mapping Mapping;
 typedef struct Keymap Keymap;
+typedef struct Brace Brace;
 
 struct Position {
 	int cols;
@@ -170,6 +171,8 @@ struct EditorState {
 	int clear_screen;
 	int done_reading;
 	int match_braces;
+	Brace *braces;
+	size_t nbraces;
 	// history
 	char *histbuf;
 	size_t histbufsz;
@@ -219,6 +222,11 @@ struct Keymap {
 	Mapping ext_keys[ExtendedKeys];
 };
 
+struct Brace {
+	char open;
+	char close;
+};
+
 /* basics */
 extern int rawmode_on(EditorState *state);
 extern int rawmode_off(EditorState *state);
@@ -226,6 +234,7 @@ extern int rawmode_off(EditorState *state);
 extern int initialize_editor(EditorState *state, int ifd, int ofd);
 extern void editor_debugging(EditorState *state, int dfd);
 extern void free_editor(EditorState *state);
+extern int register_braces(EditorState *state, char open, char close);
 extern int reset_editor(EditorState *state);
 extern void refresh(EditorState *state);
 extern void set_prompt1(EditorState *state, char *str);

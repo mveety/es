@@ -187,87 +187,80 @@ outbuf_append(OutBuf *obuf, char *str, int len)
 	obuf->len += len;
 }
 
+typedef struct {
+	Brace *brace;
+	enum {Open, Close} type;
+} BraceState;
+
+BraceState
+findbrace(char c, EditorState *state)
+{
+	size_t i = 0;
+
+	for(i = 0; i < state->nbraces; i++){
+		if(state->braces[i].open == c)
+			return (BraceState){.brace = &state->braces[i], .type = Open};
+		if(state->braces[i].close == c)
+			return (BraceState){.brace = &state->braces[i], .type = Close};
+	}
+
+	return (BraceState){.brace = nil};
+}
+
 int64_t
 find_matching_paren(EditorState *state)
 {
 	int64_t i = 0;
 	int reg = 0;
 	char c = 0;
-	char m = 0;
+	BraceState bs;
 
 	if(!state->match_braces)
 		return -1;
 	if(state->done_reading)
 		return -1;
+	if(state->braces == nil || state->nbraces == 0)
+		return -1;
+
 	if(state->bufpos == state->bufend && state->bufpos > 0)
 		c = state->buffer[state->bufpos - 1];
 	else
 		c = state->buffer[state->bufpos];
-	switch(c) {
-	default:
-		return -1;
-	case '[':
-		m = ']';
-		break;
-	case ']':
-		m = '[';
-		break;
-	case '{':
-		m = '}';
-		break;
-	case '}':
-		m = '{';
-		break;
-	case '(':
-		m = ')';
-		break;
-	case ')':
-		m = '(';
-		break;
-	case '<':
-		m = '>';
-		break;
-	case '>':
-		m = '<';
-		break;
-	}
 
-	switch(c) {
+	bs = findbrace(c, state);
+	if(bs.brace == nil)
+		return -1;
+
+	switch(bs.type){
 	default:
 		unreachable();
 		break;
-	case '[':
-	case '{':
-	case '(':
-	case '<':
+	case Open:
 		if(state->bufpos == state->bufend)
 			return -1;
 		for(i = state->bufpos; i <= (int64_t)state->bufend; i++) {
 			if(reg < 0)
 				return -1;
-			if(state->buffer[i] == c) {
+			if(state->buffer[i] == bs.brace->open) {
 				reg++;
 				continue;
 			}
-			if(state->buffer[i] == m) {
+			if(state->buffer[i] == bs.brace->close) {
 				reg--;
 				if(reg == 0)
 					return i;
 			}
 		}
 		return -1;
-	case ']':
-	case '}':
-	case ')':
-	case '>':
+	case Close:
 		for(i = state->bufpos; i >= 0; i--) {
 			if(reg < 0)
 				return -1;
-			if(state->buffer[i] == c) {
+			if(state->buffer[i] == bs.brace->close) {
 				reg++;
 				continue;
 			}
-			if(state->buffer[i] == m) {
+			if(state->buffer[i] == bs.brace->open) {
 				reg--;
 				if(reg == 0)
 					return i;
@@ -546,6 +539,8 @@ initialize_editor(EditorState *state, int ifd, int ofd)
 		.clear_screen = 0,
 		.done_reading = 0,
 		.match_braces = 1,
+		.braces = nil,
+		.nbraces = 0,
 	};
 	memset(state->outbuf, 0, sizeof(OutBuf));
 	rawmode_on(state);
@@ -603,6 +598,8 @@ free_editor(EditorState *state)
 		free(cur);
 	}
 	free(state->keymap);
+	if(state->braces)
+		free(state->braces);
 }
 
 int
@@ -628,6 +625,20 @@ reset_editor(EditorState *state)
 	state->done_reading = 0;
 	return 0;
 }
+
+int
+register_braces(EditorState *state, char open, char close)
+{
+	if(!state->initialized)
+		return -1;
+
+	state->braces = erealloc(state->braces, state->nbraces+1);
+	state->braces[state->nbraces] = (Brace){.open = open, .close = close};
+	state->nbraces++;
+
+	return 0;
+}
+
 
 size_t
 marked_strlen(char *str)

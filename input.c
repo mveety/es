@@ -1451,6 +1451,8 @@ initinput(void)
 		editor->sort_completions = 1;
 		editor->remove_duplicates = 1;
 		editor->match_braces = 0;
+		register_braces(editor, '(', ')');
+		register_braces(editor, '{', '}');
 		default_keymap = ealloc(sizeof(Keymap));
 		memcpy(default_keymap, editor->keymap, sizeof(Keymap));
 	}
