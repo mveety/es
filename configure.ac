@@ -194,8 +194,8 @@ if test "$MSAN" = "true" && test "$ASAN" = "false" && test "$development" = "tru
 then
 	case "`basename ${CC}`" in
 		clang*)
-			CFLAGS="-fsanitize=memory -fsanitize-memory-track-origins -fPIE -pie -fno-omit-frame-pointer $CFLAGS"
-			LDFLAGS="-fsanitize=memory -fsanitize-memory-track-origins -fPIE -pie -fno-omit-frame-pointer $LDFLAGS"
+			CFLAGS="-fsanitize=memory -fsanitize-memory-track-origins -fno-omit-frame-pointer $CFLAGS"
+			LDFLAGS="-fsanitize=memory -fsanitize-memory-track-origins -fno-omit-frame-pointer $LDFLAGS"
 			;;
 		*)
 			AC_MSG_ERROR([memory sanitizer requires clang])
