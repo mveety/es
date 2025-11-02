@@ -632,7 +632,7 @@ register_braces(EditorState *state, char open, char close)
 	if(!state->initialized)
 		return -1;
 
-	state->braces = erealloc(state->braces, state->nbraces+1);
+	state->braces = erealloc(state->braces, (state->nbraces+1)*sizeof(Brace));
 	state->braces[state->nbraces] = (Brace){.open = open, .close = close};
 	state->nbraces++;
 

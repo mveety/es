@@ -1,6 +1,7 @@
 /* match.c -- pattern matching routines ($Revision: 1.1.1.1 $) */
 
 #include "es.h"
+#include <stdio.h>
 #include <stdlib.h>
 
 enum { RANGE_FAIL = -1, RANGE_ERROR = -2 };
@@ -25,6 +26,8 @@ Boolean verbose_rangematch = FALSE;
 int
 isquoted(const char *q, size_t qi, size_t quotelen)
 {
+	if(verbose_rangematch)
+		dprintf(2, "isquoted: q = \"%s\", qi = %lu, quotelen = %lu\n", q ,qi, quotelen);
 	if(q == QUOTED)
 		return 1;
 	if(q == UNQUOTED)
@@ -53,6 +56,7 @@ rangematch(const char *p, const char *q, char c)
 	Boolean matched = FALSE;
 	size_t quotelen;
 	size_t qi = 0;
+	int iq = 0;
 
 	quotelen = strlen(q);
 
@@ -61,19 +65,23 @@ rangematch(const char *p, const char *q, char c)
 	if(verbose_rangematch)
 		dprintf(2, "rangematch: p = \"%s\", q = \"%s\", c = %c\n", p, q, c);
 	if(*p == '~' && !isquoted(q, qi, quotelen)) {
-		p++, q++;
+		p++;
+		if(q != UNQUOTED && q != QUOTED)
+			q++;
 		neg = TRUE;
 	} else
 		neg = FALSE;
 	if(*p == ']' && !isquoted(q, qi, quotelen)) {
-		p++, q++;
+		p++;
+		if(q != UNQUOTED && q != QUOTED)
+			q++;
 		matched = (c == ']');
 	}
-	for(; *p != ']' || isquoted(q, qi, quotelen); p++, qi++) {
+	for(; *p != ']' || (iq = isquoted(q, qi, quotelen)); p++, qi++) {
 		if(verbose_rangematch) {
 			dprintf(2, "rangematch: p = \"%s\", q = \"%s\", qi = %lu, c = %c", p, q, qi, c);
 			dprintf(2, ", matched = %s", matched == TRUE ? "true" : "false");
-			dprintf(2, ", isquoted = %d\n", isquoted(q, qi, quotelen));
+			dprintf(2, ", isquoted = %d\n", iq);
 		}
 		if(*p == '\0')
 			return RANGE_ERROR; /* bad syntax */
@@ -83,7 +91,8 @@ rangematch(const char *p, const char *q, char c)
 			if(c >= *p && c <= p[2])
 				matched = TRUE;
 			p += 2;
-			q += 2;
+			if(q != UNQUOTED && q != QUOTED)
+				q += 2;
 		} else if(*p == c)
 			matched = TRUE;
 	}
