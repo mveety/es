@@ -31,7 +31,6 @@ fn run_test_esmle {
 			Tab => '%esmle:NextCompletion'
 			Enter => '%esmle:EndInput'
 		)
-
 	) {
 		for (keyname = <={dictnames $default_map}) {
 			assert {dicthaskey $test_map $keyname}
