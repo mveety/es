@@ -1,12 +1,21 @@
 #!/usr/bin/env es
 # vi: ft=es
 
+fmt = %dict(
+	bold => <={%string \x01 \x1b '[1m' \x02}
+	redbold => <={%string \x01 \x1b '[' 31 ';' 1 'm' \x02}
+	yellow => <={%string \x01 \x1b '[33m' \x02}
+	green => <={%string \x01 \x1b '[' 32 'm' \x02}
+	greenbold => <={%string \x01 \x1b '[' 32 ';1' 'm' \x02}
+	nocolor => <={%string \x01 \x1b '[' 0 'm' \x02}
+)
+
 fn info {
-	echo '>>> info:' $*
+	echo '>>> '^$fmt(bold)^'info:'^$fmt(nocolor) $*
 }
 
 fn warning {
-	echo '>>> warning:' $*
+	echo '>>> '^$fmt(redbold)^'warning:'^$fmt(nocolor) $*
 }
 
 fn lastelem elems {
@@ -26,7 +35,7 @@ runbin = false
 testoutput = false
 estest_debugging = false
 testpath = 'tests'
-print_failure_output = true
+print_failure_output = false
 print_failure_stderr = false
 extra_es_args = false
 always_yes = false
@@ -37,7 +46,7 @@ subprocess_default = false
 libdir = 'libraries'
 testlibs = false
 testcore = true
-commit = <={%fsplit ' ' $buildstring |> %elem 3 |> %fsplit '-' |> %elem 2}
+commit = <={%fsplit ' ' $buildstring |> %elem 3 |> %fsplit '-' |> %last}
 run_one = false
 test_to_run = ()
 
@@ -58,7 +67,7 @@ test_to_run = ()
 		(-v) { verbose = true }
 		(-V) { testoutput = true }
 		(-d) { estest_debugging = true }
-		(-q) { print_failure_output = false; testoutput = false }
+		(-E) { print_failure_output = true }
 		(-A) {
 			extra_es_args = true; done
 		}
@@ -124,7 +133,7 @@ test_to_run = ()
         -d -- enable debugging
         -v -- verbose
         -V -- show test output in all cases
-        -q -- quiet
+        -E -- show test output on failures
         -y -- automatically answer yes
         -h -- show this message
         -s -- default to using subprocesses for tests
@@ -220,9 +229,6 @@ fn run_test_file file {
 				result 'test_'^$testname^'_subprocess_arguments'
 			}
 		}
-		redbold = <={%string \x01 \x1b '[' 31 ';' 1 'm' \x02}
-		green = <={%string \x01 \x1b '[' 32 'm' \x02}
-		nocolor = <={%string \x01 \x1b '[' 0 'm' \x02}
 	) {
 		. $file
 		if {~ <={%count $$tfp} 0} {
@@ -284,7 +290,7 @@ fn run_test_file file {
 		if {$skipped} {
 			echo 'skipped.'
 		} {$passed} {
-			echo $green^'passed!'^$nocolor
+			echo $fmt(green)^'passed!'^$fmt(nocolor)
 			if {$testoutput} {
 				output '>>> '^$testname^' output:'
 				for(outline = ``(\n) {cat $test_log}) {
@@ -292,8 +298,8 @@ fn run_test_file file {
 				}
 			}
 		} {
-			echo $redbold^'failed!'^$nocolor
-			echo '>>> exception: '^$^test_exception
+			echo $fmt(redbold)^'failed!'^$fmt(nocolor)
+			echo '>>> '^$fmt(redbold)^'exception:'^$fmt(nocolor)^' '^$^test_exception
 			if {$print_failure_output} {
 				output '>>> '^$testname^' output:'
 				for(outline = ``(\n) {cat $test_log}) {
@@ -357,7 +363,7 @@ if {$runbin} {
 	}
 	info 'test build: '^$buildstring
 	if {! ~ <={get-git-rev $srcdir} $commit} {
-		warning 'estest commit and es commit do not match (es '^$commit^', estest '^<={get-git-rev $srcdir}^')'
+		warning 'es commit and estest commit do not match (es '^$commit^', estest '^<={get-git-rev $srcdir}^')'
 	}
 	info 'using '^<={%gcstats |> %first}^' garbage collector'
 	if {! $testcore} {
