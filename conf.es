@@ -200,8 +200,12 @@ let (
 			}
 
 			if {$all} {
-				esconf_printall $confdict $raw
-				return <=true
+				if {$return_results} {
+					return $confdict
+				} {
+					esconf_printall $confdict $raw
+					return <=true
+				}
 			}
 
 			if {! esconf_havepackage $confdict $package} {
