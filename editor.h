@@ -137,6 +137,12 @@ typedef struct Mapping Mapping;
 typedef struct Keymap Keymap;
 typedef struct Brace Brace;
 
+typedef enum {
+	FirstLetter,
+	FirstBreak,
+	LastBreak,
+} WordStart;
+
 struct Position {
 	int cols;
 	int lines;
@@ -174,6 +180,7 @@ struct EditorState {
 	Brace *braces;
 	size_t nbraces;
 	int force_fallback;
+	WordStart word_start;
 	// history
 	char *histbuf;
 	size_t histbufsz;

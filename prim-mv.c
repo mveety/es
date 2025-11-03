@@ -626,7 +626,7 @@ PRIM(mapkey) {
 		fail("$&mapkey", "missing argument");
 	if(list->next == nil)
 		fail("$&mapkey", "missing argument");
-	if(!editor->initialized){
+	if(!editor->initialized) {
 		if(isinteractive())
 			fail("$&mapkey", "using fallback editor");
 		else
@@ -659,7 +659,7 @@ PRIM(unmapkey) {
 	if(list == nil)
 		fail("$&unmapkey", "missing argument");
 
-	if(!editor->initialized){
+	if(!editor->initialized) {
 		if(isinteractive())
 			fail("$&unmapkey", "using fallback editor");
 		else
@@ -698,7 +698,7 @@ PRIM(mapaskey) {
 	if(list->next == nil)
 		fail("$&mapaskey", "missing argument");
 
-	if(!editor->initialized){
+	if(!editor->initialized) {
 		if(isinteractive())
 			fail("$&mapaskey", "using fallback editor");
 		else
@@ -733,7 +733,7 @@ PRIM(clearkey) {
 	if(list == nil)
 		fail("$&clearkey", "missing argument");
 
-	if(!editor->initialized){
+	if(!editor->initialized) {
 		if(isinteractive())
 			fail("$&clearkey", "using fallback editor");
 		else
@@ -750,7 +750,7 @@ PRIM(getkeymap) {
 	EditorFunction fn;
 	int i = 0;
 
-	if(!editor->initialized){
+	if(!editor->initialized) {
 		if(isinteractive())
 			fail("$&getkeymap", "using fallback editor");
 		else
@@ -807,6 +807,42 @@ PRIM(esmlegetterm) {
 	return mklist(mkstr(str("unknown")), nil);
 }
 
+PRIM(esmlegetwordstart) {
+	if(!editor->initialized) {
+		if(isinteractive())
+			fail("$&esmlegetwordstart", "using fallback editor");
+		else
+			return mklist(mkstr(str("unknown")), nil);
+	}
+	return mklist(mkstr(str("%s", get_word_start())), nil);
+}
+
+PRIM(esmlesetwordstart) {
+	List *lp = nil; Root r_lp;
+	List *res = nil; Root r_res;
+
+	if(!editor->initialized) {
+		if(isinteractive())
+			fail("$&esmlesetwordstart", "using fallback editor");
+		else
+			return list_false;
+	}
+	if(list == nil)
+		fail("$&esmlesetwordstart", "missing argument");
+	gcref(&r_lp, (void **)&lp);
+	gcref(&r_res, (void **)&res);
+
+	lp = list;
+
+	if(configure_word_start(getstr(list->term)) < 0)
+		fail("$&esmlesetwordstart", "invalid argument: %s", getstr(lp->term));
+	res = mklist(mkstr(str("%s", getstr(lp->term))), nil);
+
+	gcrderef(&r_res);
+	gcrderef(&r_lp);
+	return res;
+}
+
 Dict *
 initprims_mv(Dict *primdict)
 {
@@ -848,6 +884,8 @@ initprims_mv(Dict *primdict)
 	X(getkeymap);
 	X(editormatchbraces);
 	X(esmlegetterm);
+	X(esmlegetwordstart);
+	X(esmlesetwordstart);
 
 	return primdict;
 }

@@ -6,6 +6,14 @@ set-esmle_conf_match-braces = $&editormatchbraces
 esmle_conf_terminal = 'unknown'
 get-esmle_conf_terminal = $&esmlegetterm
 
+esmle_conf_word-start = ''
+get-esmle_conf_word-start = $&esmlegetwordstart
+set-esmle_conf_word-start = @ x {
+	match $x (
+		(first-letter first-break last-break) { $&esmlesetwordstart $x }
+		* { $&esmlegetwordstart }
+	)
+}
 
 fn %mapkey keyname funname {
 	if {~ <={$&termtypeof $funname} closure} {

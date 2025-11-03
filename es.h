@@ -511,6 +511,8 @@ extern EditorFunction mapping2edfn(Mapping map);
 extern char *mapping2name(Mapping map);
 extern Mapping name2mapping(char *name);
 extern int bind_base_function(char *keyname, char *function);
+extern int configure_word_start(char *str);
+extern char *get_word_start(void);
 
 /* eval_* flags are also understood as runflags */
 #define run_interactive 4 /* -i or $0[0] = '-' */

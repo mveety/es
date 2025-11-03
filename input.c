@@ -1418,6 +1418,42 @@ bind_base_function(char *keyname, char *function)
 	return 0;
 }
 
+int
+configure_word_start(char *str)
+{
+	if(streq(str, "first-letter")) {
+		editor->word_start = FirstLetter;
+		return 0;
+	}
+	if(streq(str, "first-break")) {
+		editor->word_start = FirstBreak;
+		return 0;
+	}
+	if(streq(str, "last-break")) {
+		editor->word_start = LastBreak;
+		return 0;
+	}
+	return -1;
+}
+
+char *
+get_word_start(void)
+{
+	switch(editor->word_start) {
+	default:
+		unreachable();
+		break;
+	case FirstLetter:
+		return "first-letter";
+	case FirstBreak:
+		return "first-break";
+	case LastBreak:
+		return "last-break";
+	}
+	unreachable();
+	return "unknown";
+}
+
 /*
  * initialization
  */
@@ -1452,6 +1488,7 @@ initinput(void)
 		editor->sort_completions = 1;
 		editor->remove_duplicates = 1;
 		editor->match_braces = 0;
+		editor->word_start = FirstBreak;
 		register_braces(editor, '(', ')');
 		register_braces(editor, '{', '}');
 		default_keymap = ealloc(sizeof(Keymap));

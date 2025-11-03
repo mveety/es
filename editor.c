@@ -195,7 +195,7 @@ outbuf_append(OutBuf *obuf, char *str, int len)
 
 typedef struct {
 	Brace *brace;
-	enum {Open, Close} type;
+	enum { Open, Close } type;
 } BraceState;
 
 BraceState
@@ -203,7 +203,7 @@ findbrace(char c, EditorState *state)
 {
 	size_t i = 0;
 
-	for(i = 0; i < state->nbraces; i++){
+	for(i = 0; i < state->nbraces; i++) {
 		if(state->braces[i].open == c)
 			return (BraceState){.brace = &state->braces[i], .type = Open};
 		if(state->braces[i].close == c)
@@ -237,7 +237,7 @@ find_matching_paren(EditorState *state)
 	if(bs.brace == nil)
 		return -1;
 
-	switch(bs.type){
+	switch(bs.type) {
 	default:
 		unreachable();
 		break;
@@ -451,7 +451,7 @@ gettermsize(EditorState *state)
 
 	/* this stuff only works if this is really a for real tty */
 	if(!isatty(state->ofd) || !isatty(state->ifd))
-		return (Position){80 ,24};
+		return (Position){80, 24};
 	if(ioctl(state->ofd, TIOCGWINSZ, &ws) == -1 || ws.ws_col == 0) {
 		saved_pos = getposition(state);
 		if(saved_pos.cols == -1 && saved_pos.lines == -1)
@@ -551,6 +551,7 @@ initialize_editor(EditorState *state, int ifd, int ofd)
 		.braces = nil,
 		.nbraces = 0,
 		.force_fallback = 0,
+		.word_start = FirstLetter,
 	};
 	memset(state->outbuf, 0, sizeof(OutBuf));
 	rawmode_on(state);
@@ -642,13 +643,12 @@ register_braces(EditorState *state, char open, char close)
 	if(!state->initialized)
 		return -1;
 
-	state->braces = erealloc(state->braces, (state->nbraces+1)*sizeof(Brace));
+	state->braces = erealloc(state->braces, (state->nbraces + 1) * sizeof(Brace));
 	state->braces[state->nbraces] = (Brace){.open = open, .close = close};
 	state->nbraces++;
 
 	return 0;
 }
-
 
 size_t
 marked_strlen(char *str)
@@ -1183,7 +1183,36 @@ cursor_move_word_left(EditorState *state)
 	}
 	dprint("end nextword = {.start = %lu, .end = %lu}\n", nextword.start, nextword.end);
 
-	state->bufpos = nextword.start;
+	switch(state->word_start) {
+	default:
+		unreachable();
+	case FirstLetter:
+		state->bufpos = nextword.start;
+		break;
+	case FirstBreak:
+		if(nextword.start == 0) {
+			state->bufpos = 0;
+			return;
+		}
+		if(isawordbreak(state, strlen(state->wordbreaks), state->buffer[nextword.start - 1]))
+			state->bufpos = nextword.start - 1;
+		else
+			state->bufpos = nextword.start;
+		break;
+	case LastBreak:
+		if(nextword.start == 0) {
+			state->bufpos = 0;
+			return;
+		}
+		nextword.start--;
+		while(nextword.start > 0 &&
+			  isawordbreak(state, strlen(state->wordbreaks), state->buffer[nextword.start]))
+			nextword.start--;
+		if(isawordbreak(state, strlen(state->wordbreaks), state->buffer[nextword.start + 1]))
+			nextword.start++;
+		state->bufpos = nextword.start;
+		break;
+	}
 }
 
 void
