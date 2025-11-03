@@ -213,6 +213,13 @@ fn run_test_file file {
 				result 'test_'^$testname^'_subprocess'
 			}
 		}
+		tspargs = <={
+			if {$islibtest} {
+				result 'libtest_'^$testname^'_subprocess_arguments'
+			} {
+				result 'test_'^$testname^'_subprocess_arguments'
+			}
+		}
 		redbold = <={%string \x01 \x1b '[' 31 ';' 1 'm' \x02}
 		green = <={%string \x01 \x1b '[' 32 'm' \x02}
 		nocolor = <={%string \x01 \x1b '[' 0 'm' \x02}
@@ -247,6 +254,9 @@ fn run_test_file file {
 		} {
 			if {$$tsp} {
 				escmd = $esbin
+				if {! ~ <={%count $$tspargs} 0} {
+					escmd = $escmd $$tspargs
+				}
 				if {$extra_es_args} { escmd = $escmd $restargs }
 				escmd = $escmd -c 'run_subproc_test '^$testname^' run_test_'^$testname^' '^$test_log^' '^$tfp^' '^$libdir
 				if {$estest_debugging} { info 'running: ' $escmd }
