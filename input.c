@@ -1318,7 +1318,17 @@ EditorFnDef editfndefs[] = {
 			.reset_completion = 2,
 		},
 	},
+	[FnJumpToParen] = (EditorFnDef) {
+		.name = "%esmle:JumpToMatchingParen",
+		.map = (Mapping) {
+			.base_hook = &jump_to_matching_paren,
+			.reset_completion = 1,
+		},
+	},
 };
+
+#define LastEditorFn FnJumpToParen
+
 // clang-format on
 
 EditorFunction
@@ -1326,7 +1336,7 @@ name2edfn(char *name)
 {
 	int i = 0;
 
-	for(i = 0; i <= FnCursorWordRight; i++) {
+	for(i = 0; i <= LastEditorFn; i++) {
 		if(streq(name, editfndefs[i].name))
 			return i;
 	}
@@ -1354,7 +1364,7 @@ mapping2edfn(Mapping map)
 	if(map.hook == &line_editor_hook)
 		return FnEsFunction;
 
-	for(i = 0; i <= FnCursorWordRight; i++) {
+	for(i = 0; i <= LastEditorFn; i++) {
 		if(map.hook != editfndefs[i].map.hook)
 			continue;
 		if(map.base_hook != editfndefs[i].map.base_hook)

@@ -49,8 +49,8 @@ enum {
 
 	/* extended keys */
 	ExtKeyOffset = 1000,
-	ExtKeyMax = 1075,
-#define ExtendedKeys 75
+	ExtKeyMax = 1079,
+#define ExtendedKeys 79
 	KeyArrowLeft = 1000,  // x
 	KeyArrowRight = 1001, // x
 	KeyArrowUp = 1002,	  // x
@@ -127,6 +127,10 @@ enum {
 	KeyCtrlRight = 1072,
 	KeyCtrlUp = 1073,
 	KeyCtrlDown = 1074,
+	KeyAltLeft = 1075,
+	KeyAltRight = 1076,
+	KeyAltUp = 1077,
+	KeyAltDown = 1078,
 };
 
 typedef struct Position Position;
@@ -267,6 +271,7 @@ extern void cursor_end(EditorState *state);
 extern void clear_screen(EditorState *state);
 extern void cursor_move_word_left(EditorState *state);
 extern void cursor_move_word_right(EditorState *state);
+extern void jump_to_matching_paren(EditorState *state);
 
 /* history */
 extern void history_add(EditorState *state, char *str);

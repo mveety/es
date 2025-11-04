@@ -251,6 +251,7 @@ typedef enum {
 	FnCursorRight,
 	FnCursorWordLeft,
 	FnCursorWordRight,
+	FnJumpToParen,
 } EditorFunction;
 
 typedef struct {

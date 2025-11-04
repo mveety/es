@@ -5,6 +5,8 @@
  */
 
 #include <stdint.h>
+#include <locale.h>
+#include <wchar.h>
 #ifdef STANDALONE
 #include <termios.h>
 #include <unistd.h>
@@ -23,8 +25,6 @@
 #include "es.h"
 #include "gc.h"
 #endif
-#include <locale.h>
-#include <wchar.h>
 #include "editor.h"
 
 #define dprint(args...)                \
@@ -221,10 +221,6 @@ find_matching_paren(EditorState *state)
 	char c = 0;
 	BraceState bs;
 
-	if(!state->match_braces)
-		return -1;
-	if(state->done_reading)
-		return -1;
 	if(state->braces == nil || state->nbraces == 0)
 		return -1;
 
@@ -284,9 +280,11 @@ outbuf_append_printable(EditorState *state, OutBuf *obuf, char *str, int len)
 	int64_t highlight = -1;
 	int64_t highlightsz = 0;
 
-	highlight = find_matching_paren(state);
-	if(highlight >= 0)
-		highlightsz = 8;
+	if(state->match_braces && !state->done_reading){
+		highlight = find_matching_paren(state);
+		if(highlight >= 0)
+			highlightsz = 8;
+	}
 
 	if(obuf->str == nil)
 		obuf->str = ealloc(len + highlightsz + 2);
@@ -1241,6 +1239,24 @@ cursor_move_word_right(EditorState *state)
 	state->bufpos = i;
 }
 
+void
+jump_to_matching_paren(EditorState *state)
+{
+	int64_t nextparen = -1;
+
+	nextparen = find_matching_paren(state);
+	if(nextparen < 0){
+		dprint("found no matching paren\n");
+		return;
+	}
+	dprint("found matching paren at %ld\n", nextparen);
+	dprint("old state->bufpos = %lu\n", state->bufpos);
+	state->bufpos = nextparen;
+	if(state->bufpos > state->bufend)
+		state->bufpos = state->bufend;
+	dprint("new state->bufpos = %lu\n", state->bufpos);
+}
+
 /* history */
 
 void
@@ -1966,6 +1982,10 @@ char *extkeynames[] = {
 	[72] = "CtrlRight",
 	[73] = "CtrlUp",
 	[74] = "CtrlDown",
+	[75] = "AltLeft",
+	[76] = "AltRight",
+	[77] = "AltUp",
+	[78] = "AltDown",
 };
 // clang-format on
 
@@ -2390,35 +2410,56 @@ line_editor(EditorState *state)
 							continue;
 						}
 					} else if(seq[2] == ';' && seq[1] == '1') { // Ctrl+Arrow
-						dprint("Ctrl+Arrow read 1...");
+						dprint("(Ctrl/Alt)+Arrow read 1...");
 						if(read(state->ifd, &seq[3], 1) < 0)
 							continue;
-						if(seq[3] != '5') {
+						if(seq[3] == '5' || seq[3] == '3') {
+							dprint("(Ctrl/Alt)+Arrow read 2...");
+							if(read(state->ifd, &seq[4], 1) < 0)
+								continue;
+							switch(seq[4]) {
+							default:
+								dprint("\ngot unknown code %c%c%c%c%c\n", seq[0], seq[1], seq[2],
+									   seq[3], seq[4]);
+								continue;
+							case 'A':
+								if(seq[3] == '5')
+									key = KeyCtrlUp;
+								else if (seq[3] == '3')
+									key = KeyAltUp;
+								else
+									unreachable();
+								break;
+							case 'B':
+								if(seq[3] == '5')
+									key = KeyCtrlDown;
+								else if (seq[3] == '3')
+									key = KeyAltDown;
+								else
+									unreachable();
+								break;
+							case 'C':
+								if(seq[3] == '5')
+									key = KeyCtrlRight;
+								else if (seq[3] == '3')
+									key = KeyAltRight;
+								else
+									unreachable();
+								break;
+							case 'D':
+								if(seq[3] == '5')
+									key = KeyCtrlLeft;
+								else if (seq[3] == '3')
+									key = KeyAltLeft;
+								else
+									unreachable();
+								break;
+							}
+						} else {
 							if(state->dfd > 0)
 								dprintf(state->dfd, "\ngot unknown code %c%c%c%c\n", seq[0], seq[1],
 										seq[2], seq[3]);
 							continue;
-						}
-						dprint("Ctrl+Arrow read 2...");
-						if(read(state->ifd, &seq[4], 1) < 0)
-							continue;
-						switch(seq[4]) {
-						default:
-							dprint("\ngot unknown code %c%c%c%c%c\n", seq[0], seq[1], seq[2],
-								   seq[3], seq[4]);
-							continue;
-						case 'A':
-							key = KeyCtrlUp;
-							break;
-						case 'B':
-							key = KeyCtrlDown;
-							break;
-						case 'C':
-							key = KeyCtrlRight;
-							break;
-						case 'D':
-							key = KeyCtrlLeft;
-							break;
 						}
 					}
 					break;
