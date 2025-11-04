@@ -308,10 +308,6 @@ outbuf_append_printable(EditorState *state, OutBuf *obuf, char *str, int len)
 	for(i = 0; i < len; i++) {
 		if(i == highlight || i == highlight2) {
 			dprint("adding highlight at %ld\n", i);
-			//obuf->str[obuf->len++] = '\x1b';
-			//obuf->str[obuf->len++] = '[';
-			//obuf->str[obuf->len++] = '7';
-			//obuf->str[obuf->len++] = 'm';
 			obuf->str[obuf->len++] = '\x1b';
 			obuf->str[obuf->len++] = '[';
 			obuf->str[obuf->len++] = '4';
