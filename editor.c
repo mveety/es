@@ -278,26 +278,48 @@ outbuf_append_printable(EditorState *state, OutBuf *obuf, char *str, int len)
 {
 	int64_t i = 0;
 	int64_t highlight = -1;
+	int64_t highlight2 = -1;
 	int64_t highlightsz = 0;
 
 	if(state->match_braces && !state->done_reading) {
 		highlight = find_matching_paren(state);
 		if(highlight >= 0)
-			highlightsz = 8;
+			highlightsz = 5+5+4;
 	}
 
-	if(obuf->str == nil)
+	if(highlight >= 0 && state->bufpos == state->bufend) {
+		highlight2 = state->bufpos-1;
+		highlightsz += highlightsz;
+	}
+
+	dprint("highlight1 = %ld\n", highlight);
+	dprint("highlight2 = %ld\n", highlight2);
+	dprint("highlightsz = %ld\n", highlightsz);
+
+	if(obuf->str == nil){
 		obuf->str = ealloc(len + highlightsz + 2);
+		obuf->size = len+ highlightsz + 2;
+	}
 	if(obuf->len + highlightsz + len + 1 > obuf->size) {
 		obuf->str = erealloc(obuf->str, obuf->size + highlightsz + len + 1);
-		obuf->size += len + 1;
+		obuf->size += len + highlightsz + 1;
 	}
 
 	for(i = 0; i < len; i++) {
-		if(i == highlight) {
+		if(i == highlight || i == highlight2) {
 			dprint("adding highlight at %ld\n", i);
+			//obuf->str[obuf->len++] = '\x1b';
+			//obuf->str[obuf->len++] = '[';
+			//obuf->str[obuf->len++] = '7';
+			//obuf->str[obuf->len++] = 'm';
 			obuf->str[obuf->len++] = '\x1b';
 			obuf->str[obuf->len++] = '[';
+			obuf->str[obuf->len++] = '4';
+			obuf->str[obuf->len++] = '6';
+			obuf->str[obuf->len++] = 'm';
+			obuf->str[obuf->len++] = '\x1b';
+			obuf->str[obuf->len++] = '[';
+			obuf->str[obuf->len++] = '3';
 			obuf->str[obuf->len++] = '7';
 			obuf->str[obuf->len++] = 'm';
 		}
@@ -308,7 +330,7 @@ outbuf_append_printable(EditorState *state, OutBuf *obuf, char *str, int len)
 		} else {
 			dprint("got unprintable char in buffer: %x\n", str[i]);
 		}
-		if(i == highlight) {
+		if(i == highlight || i == highlight2) {
 			obuf->str[obuf->len++] = '\x1b';
 			obuf->str[obuf->len++] = '[';
 			obuf->str[obuf->len++] = '0';
