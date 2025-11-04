@@ -15,21 +15,38 @@ set-esmle_conf_word-start = @ x {
 	)
 }
 
+fn _esmle_genfunction key func {
+	local (funname = <={gensym __esmle_^$key^_hook_}) {
+		fn-$funname = $func
+		result $funname
+	}
+}
+
+fn _esmle_getkeyfunction key {
+	for ((k f) = <=$&getkeymap) {
+		if {~ $key $k} {
+			if {! ~ $f %esmle:*} {
+				return true $f
+			}
+		}
+	}
+	return false
+}
+
 fn %mapkey keyname funname {
 	if {~ <={$&termtypeof $funname} closure} {
-		fn-^$keyname^-hook = $funname
-		funname = $keyname^-hook
+		funname = <={_esmle_genfunction $keyname $funname}
 	}
 	$&mapkey $keyname $funname
 }
 
 fn %unmapkey keyname {
-	$&unmapkey $keyname
-	let (keyfun = fn-^$keyname^-hook) {
-		if {gt <={%count $$keyfun} 0} {
-			$$keyfun =
+	let ((haskeyfun keyfun) = <={_esmle_getkeyfunction $keyname}) {
+		if {~ $keyfun __esmle_^$keyname^_hook_*} {
+			fn-^$keyfun =
 		}
 	}
+	$&unmapkey $keyname
 }
 
 fn %mapaskey keyname srckeyname {
@@ -37,12 +54,12 @@ fn %mapaskey keyname srckeyname {
 }
 
 fn %clearkey keyname {
-	$&clearkey $keyname
-	let (keyfun = fn-^$keyname^-hook) {
-		if {gt <={%count $$keyfun} 0} {
-			$keyfun =
+	let ((haskeyfun keyfun) = <={_esmle_getkeyfunction $keyname}) {
+		if {~ $keyfun __esmle_^$keyname^_hook_*} {
+			fn-^$keyfun =
 		}
 	}
+	$&clearkey $keyname
 }
 
 fn keymap args {
@@ -61,6 +78,11 @@ fn keymap args {
 		if {~ $#args 0} {
 			let (res = <=dictnew) {
 				for ((k f) = <=$&getkeymap) {
+					if {~ $f __esmle_^$k^_hook_*} {
+						let (tmpvar = fn-^$f) {
+							f = $$tmpvar
+						}
+					}
 					res := $k => $f
 				}
 				if {$print} {
