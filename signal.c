@@ -11,6 +11,8 @@ Boolean sigint_newline = TRUE;
 jmp_buf slowlabel;
 Atomic slow = FALSE;
 Atomic interrupted = FALSE;
+Atomic sigwinch_resize = FALSE;
+Atomic in_editor = FALSE;
 static Atomic sigcount;
 static Atomic caught[NSIG];
 static Sigeffect sigeffect[NSIG];
@@ -129,7 +131,7 @@ esignal(int sig, Sigeffect effect)
 			}
 			break;
 		case sig_special:
-			if(sig != SIGINT) {
+			if(sig != SIGINT && sig != SIGWINCH) {
 				eprint("$&setsignals: special handler not defined for %s\n", signame(sig));
 				return old;
 			}
@@ -203,6 +205,8 @@ initsignals(Boolean interactive, Boolean allowdumps)
 
 	if(interactive || sigeffect[SIGINT] == sig_default)
 		esignal(SIGINT, sig_special);
+	if(interactive || sigeffect[SIGWINCH] == sig_default)
+		esignal(SIGWINCH, sig_special);
 	if(!allowdumps) {
 		if(interactive)
 			esignal(SIGTERM, sig_noop);
@@ -335,15 +339,27 @@ sigchk(void)
 		unreachable();
 		break;
 	case sig_special:
-		assert(sig == SIGINT);
-		/* this is the newline you see when you hit ^C while typing a command */
-		if(sigint_newline)
-			eprint("\n");
-		sigint_newline = TRUE;
-		while(gcisblocked())
-			gcenable();
-		throw(e);
-		unreachable();
+		assert(sig == SIGINT || sig == SIGWINCH);
+		if(sig == SIGINT){
+			/* this is the newline you see when you hit ^C while typing a command */
+			if(sigint_newline)
+				eprint("\n");
+			sigint_newline = TRUE;
+			while(gcisblocked())
+				gcenable();
+			throw(e);
+			unreachable();
+		} else {
+			if(in_editor == TRUE){
+				sigwinch_resize = TRUE;
+				update_size(editor);
+			} else {
+				while(gcisblocked())
+					gcenable();
+				throw(e);
+				unreachable();
+			}
+		}
 		break;
 	case sig_noop:
 		break;

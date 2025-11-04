@@ -249,6 +249,7 @@ extern void free_editor(EditorState *state);
 extern int register_braces(EditorState *state, char open, char close);
 extern int reset_editor(EditorState *state);
 extern void refresh(EditorState *state);
+extern void update_size(EditorState *state);
 extern void set_prompt1(EditorState *state, char *str);
 extern void set_prompt2(EditorState *state, char *str);
 extern void set_complete_hook(EditorState *state, char **(*hook)(char *, int, int));

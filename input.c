@@ -43,6 +43,8 @@ EditorState *editor;
 Keymap *default_keymap;
 int editor_debugfd = -1;
 int force_fallback_editor = 0;
+extern Atomic sigwinch_resize;
+extern Atomic in_editor;
 
 #if ABUSED_GETENV
 static char *stdgetenv(const char *);
@@ -308,6 +310,8 @@ call_editor(int which_prompt)
 	}
 	editor->which_prompt = which_prompt;
 	interrupted = FALSE;
+	sigwinch_resize = FALSE;
+	in_editor = TRUE;
 	if(!setjmp(slowlabel)) {
 		slow = TRUE;
 		res = interrupted ? nil : line_editor(editor);
@@ -596,12 +600,21 @@ fdfill(Input *in)
 	List *args;
 	List *result = NULL; Root r_result;
 	size_t i;
+	const char cr[] = "\r";
 
 	assert(in->buf == in->bufend);
 	assert(in->fd >= 0);
 
 	if(in->runflags & run_interactive && in->fd == 0) {
-		char *rlinebuf = call_editor(prompt);
+		char *rlinebuf = nil;
+edit_start:
+		rlinebuf = call_editor(prompt);
+		if(sigwinch_resize == TRUE){
+			sigwinch_resize = FALSE;
+			write(editor->ofd, cr, sizeof(cr));
+			goto edit_start;
+		}
+		in_editor = FALSE;
 		if(rlinebuf == NULL)
 			nread = 0;
 		else {

@@ -890,6 +890,15 @@ refresh(EditorState *state)
 }
 
 void
+update_size(EditorState *state)
+{
+	dprint("size update: old: state->size = {.lines = %d, .cols = %d}\n", state->size.lines, state->size.cols); 
+	state->size = gettermsize(state);
+	dprint("size update: new: state->size = {.lines = %d, .cols = %d}\n", state->size.lines, state->size.cols); 
+	refresh(state);
+}
+
+void
 grow_buffer(EditorState *state, size_t sz)
 {
 	bufferassert();
