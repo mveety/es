@@ -280,7 +280,7 @@ outbuf_append_printable(EditorState *state, OutBuf *obuf, char *str, int len)
 	int64_t highlight = -1;
 	int64_t highlightsz = 0;
 
-	if(state->match_braces && !state->done_reading){
+	if(state->match_braces && !state->done_reading) {
 		highlight = find_matching_paren(state);
 		if(highlight >= 0)
 			highlightsz = 8;
@@ -1245,7 +1245,7 @@ jump_to_matching_paren(EditorState *state)
 	int64_t nextparen = -1;
 
 	nextparen = find_matching_paren(state);
-	if(nextparen < 0){
+	if(nextparen < 0) {
 		dprint("found no matching paren\n");
 		return;
 	}
@@ -2425,7 +2425,7 @@ line_editor(EditorState *state)
 							case 'A':
 								if(seq[3] == '5')
 									key = KeyCtrlUp;
-								else if (seq[3] == '3')
+								else if(seq[3] == '3')
 									key = KeyAltUp;
 								else
 									unreachable();
@@ -2433,7 +2433,7 @@ line_editor(EditorState *state)
 							case 'B':
 								if(seq[3] == '5')
 									key = KeyCtrlDown;
-								else if (seq[3] == '3')
+								else if(seq[3] == '3')
 									key = KeyAltDown;
 								else
 									unreachable();
@@ -2441,7 +2441,7 @@ line_editor(EditorState *state)
 							case 'C':
 								if(seq[3] == '5')
 									key = KeyCtrlRight;
-								else if (seq[3] == '3')
+								else if(seq[3] == '3')
 									key = KeyAltRight;
 								else
 									unreachable();
@@ -2449,7 +2449,7 @@ line_editor(EditorState *state)
 							case 'D':
 								if(seq[3] == '5')
 									key = KeyCtrlLeft;
-								else if (seq[3] == '3')
+								else if(seq[3] == '3')
 									key = KeyAltLeft;
 								else
 									unreachable();
