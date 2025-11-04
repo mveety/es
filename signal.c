@@ -3,6 +3,7 @@
 #include "es.h"
 #include "sigmsgs.h"
 #include <sys/signal.h>
+#include "editor.h"
 
 typedef Sigresult (*Sighandler)(int);
 
@@ -16,6 +17,7 @@ Atomic in_editor = FALSE;
 static Atomic sigcount;
 static Atomic caught[NSIG];
 static Sigeffect sigeffect[NSIG];
+extern EditorContext *editor_ctx;
 
 #if HAVE_SIGACTION
 #ifndef SA_NOCLDSTOP
@@ -353,6 +355,7 @@ sigchk(void)
 			if(in_editor == TRUE){
 				sigwinch_resize = TRUE;
 				update_size(editor);
+				editor_ctx = save_editor_context(editor);
 			} else {
 				while(gcisblocked())
 					gcenable();

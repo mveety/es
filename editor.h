@@ -140,6 +140,7 @@ typedef struct Wordpos Wordpos;
 typedef struct Mapping Mapping;
 typedef struct Keymap Keymap;
 typedef struct Brace Brace;
+typedef struct EditorContext EditorContext;
 
 typedef enum {
 	FirstLetter,
@@ -185,6 +186,7 @@ struct EditorState {
 	size_t nbraces;
 	int force_fallback;
 	WordStart word_start;
+	int noreset;
 	// history
 	char *histbuf;
 	size_t histbufsz;
@@ -239,6 +241,12 @@ struct Brace {
 	char close;
 };
 
+struct EditorContext {
+	char *bufdata;
+	size_t bufpos;
+	size_t bufsize;
+};
+
 /* basics */
 extern int rawmode_on(EditorState *state);
 extern int rawmode_off(EditorState *state);
@@ -250,6 +258,8 @@ extern int register_braces(EditorState *state, char open, char close);
 extern int reset_editor(EditorState *state);
 extern void refresh(EditorState *state);
 extern void update_size(EditorState *state);
+extern EditorContext *save_editor_context(EditorState *state);
+extern EditorContext *restore_editor_context(EditorState *state, EditorContext *ctx);
 extern void set_prompt1(EditorState *state, char *str);
 extern void set_prompt2(EditorState *state, char *str);
 extern void set_complete_hook(EditorState *state, char **(*hook)(char *, int, int));

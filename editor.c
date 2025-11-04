@@ -550,6 +550,7 @@ initialize_editor(EditorState *state, int ifd, int ofd)
 		.nbraces = 0,
 		.force_fallback = 0,
 		.word_start = FirstLetter,
+		.noreset = 0,
 	};
 	memset(state->outbuf, 0, sizeof(OutBuf));
 	rawmode_on(state);
@@ -616,6 +617,21 @@ reset_editor(EditorState *state)
 {
 	if(!state->initialized)
 		return -1;
+
+	if(state->noreset){
+		state->noreset = 0;
+		state->size = gettermsize(state);
+		if(state->inhistory) {
+			assert(state->histbuf);
+			free(state->histbuf);
+			state->histbufsz = 0;
+			state->cur = nil;
+			state->inhistory = 0;
+		}
+		completion_reset(state);
+		return 0;
+	}
+
 	memset(state->buffer, 0, state->bufsz);
 	state->bufpos = 0;
 	state->bufend = 0;
@@ -904,6 +920,41 @@ grow_buffer(EditorState *state, size_t sz)
 	bufferassert();
 	state->bufsz += sz;
 	state->buffer = erealloc(state->buffer, state->bufsz);
+}
+
+EditorContext *
+save_editor_context(EditorState *state)
+{
+	EditorContext *ctx = nil;
+
+	ctx = ealloc(sizeof(EditorContext));
+	ctx->bufpos = state->bufpos;
+	ctx->bufsize = state->bufend;
+	if(state->bufend > 0)
+		ctx->bufdata = estrndup(state->buffer, state->bufend + 1);
+
+	dprint("saving editor context: pos = %lu, size = %lu\n", ctx->bufpos, ctx->bufsize);
+	return ctx;
+}
+
+EditorContext *
+restore_editor_context(EditorState *state, EditorContext *ctx)
+{
+	dprint("restoring editor context: pos = %lu, size = %lu\n", ctx->bufpos, ctx->bufsize);
+	if(state->bufsz < ctx->bufsize)
+		grow_buffer(state, ctx->bufsize+5);
+	memset(state->buffer, 0, state->bufsz);
+	if(ctx->bufsize > 0){
+		memcpy(state->buffer, ctx->bufdata, ctx->bufsize);
+		free(ctx->bufdata);
+	}
+	state->bufend = ctx->bufsize;
+	state->bufpos = ctx->bufpos;
+	state->noreset = 1;
+
+	free(ctx);
+
+	return nil;
 }
 
 /* motions and editing */

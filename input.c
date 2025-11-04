@@ -45,6 +45,7 @@ int editor_debugfd = -1;
 int force_fallback_editor = 0;
 extern Atomic sigwinch_resize;
 extern Atomic in_editor;
+EditorContext *editor_ctx = nil;
 
 #if ABUSED_GETENV
 static char *stdgetenv(const char *);
@@ -612,6 +613,8 @@ edit_start:
 		if(sigwinch_resize == TRUE){
 			sigwinch_resize = FALSE;
 			write(editor->ofd, cr, sizeof(cr));
+			if(editor_ctx != nil)
+				editor_ctx = restore_editor_context(editor, editor_ctx);
 			goto edit_start;
 		}
 		in_editor = FALSE;
