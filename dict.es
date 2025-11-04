@@ -9,7 +9,7 @@ fn-dictsize = $&dictsize
 fn-dictforall = $&dictforall
 fn-dictcopy = $&dictcopy
 
-fn dictnames dict {
+fn dictkeys dict {
 	let (names=) {
 		dictforall $dict @ n v {
 			names = $n $names
@@ -17,6 +17,8 @@ fn dictnames dict {
 		reverse $names
 	}
 }
+
+fn-dictnames = $fn-dictkeys
 
 fn dictvalues dict {
 	let (values=) {

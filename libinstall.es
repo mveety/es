@@ -121,25 +121,25 @@ fn copy_dynlib lib libdir {
 			}
 		}
 	) {
-		%dict($lib => dynlibfile) = $need_dynlibs
-		if {! access -r $dynlibsrc/$dynlibfile.$ext} {
-			return <=false
-		}
-		if {access -rw $libdir/$dynlibfile.$platform.$arch.$ext} {
-			let (
-				srcfile_md5 = `{md5sum $dynlibsrc/$dynlibfile.$ext | awk '{print $1}' }
-				curfile_md5 = `{md5sum $libdir/$dynlibfile.$platform.$arch.$ext | awk '{print $1}' }
-			) {
-				if {! ~ $srcfile_md5 $curfile_md5} {
-					echo 'installing' $dynlibfile.$ext '->' $libdir^'/'^$dynlibfile^'.'^$platform^'.'^$arch^'.'^$ext
-					copyfile $dynlibsrc/$dynlibfile.$ext $libdir/$dynlibfile.$platform.$arch.$ext
-				}
-				return <=true
+		%dict($lib => dynlibfiles) = $need_dynlibs
+		for (dynlibfile = $dynlibfiles) {
+			if {! access -r $dynlibsrc/$dynlibfile.$ext} {
+				return <=false
 			}
-		} {
-			echo 'installing' $dynlibfile.$ext '->' $libdir^'/'^$dynlibfile^'.'^$platform^'.'^$arch^'.'^$ext
-			copyfile $dynlibsrc/$dynlibfile.$ext $libdir/$dynlibfile.$platform.$arch.$ext
-			return <=true
+			if {access -rw $libdir/$dynlibfile.$platform.$arch.$ext} {
+				let (
+					srcfile_md5 = `{md5sum $dynlibsrc/$dynlibfile.$ext | awk '{print $1}' }
+					curfile_md5 = `{md5sum $libdir/$dynlibfile.$platform.$arch.$ext | awk '{print $1}' }
+				) {
+					if {! ~ $srcfile_md5 $curfile_md5} {
+						echo 'installing' $dynlibfile.$ext '->' $libdir^'/'^$dynlibfile^'.'^$platform^'.'^$arch^'.'^$ext
+						copyfile $dynlibsrc/$dynlibfile.$ext $libdir/$dynlibfile.$platform.$arch.$ext
+					}
+				}
+			} {
+				echo 'installing' $dynlibfile.$ext '->' $libdir^'/'^$dynlibfile^'.'^$platform^'.'^$arch^'.'^$ext
+				copyfile $dynlibsrc/$dynlibfile.$ext $libdir/$dynlibfile.$platform.$arch.$ext
+			}
 		}
 		return <=true
 	}
