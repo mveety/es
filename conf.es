@@ -81,11 +81,19 @@ let (
 		echo 'package '^$pkg^':'
 		for (vn = <={dictget $confdict $pkg}) {
 			echo -n '    '
-			let (var = $pkg^_conf_^$vn) {
+			let (var = $pkg^_conf_^$vn;fmt = $pkg^_conf_fmt_^$vn) {
 				if {$raw} {
-					echo $var^' = '^<={$&fmtvar $var}
+					if {~ $$fmt raw} {
+						echo $var^' = '^<={%flatten ' ' $$var}
+					} {
+						echo $var^' = '^<={$&fmtvar $var}
+					}
 				} {
-					echo $vn^' = '^<={$&fmtvar $var}
+					if {~ $$fmt raw} {
+						echo $vn^' = '^<={%flatten ' ' $$var}
+					} {
+						echo $vn^' = '^<={$&fmtvar $var}
+					}
 				}
 			}
 		}
@@ -100,11 +108,19 @@ let (
 			echo 'package '^$n^':'
 			for (vn = $v) {
 				echo -n '    '
-				let (var = $n^_conf_^$vn) {
+				let (var = $n^_conf_^$vn;fmt = $pkg^_conf_fmt_^$vn) {
 					if {$raw} {
-						echo $var^' = '^<={$&fmtvar $var}
+						if {~ $$fmt raw} {
+							echo $var^' = '^<={%flatten ' ' $$var}
+						} {
+							echo $var^' = '^<={$&fmtvar $var}
+						}
 					} {
-						echo $vn^' = '^<={$&fmtvar $var}
+						if {~ $$fmt raw} {
+							echo $vn^' = '^<={%flatten ' ' $$var}
+						} {
+							echo $vn^' = '^<={$&fmtvar $var}
+						}
 					}
 				}
 			}
@@ -112,11 +128,19 @@ let (
 	}
 
 	fn esconf_printvar raw pkg name {
-		let (var = $pkg^_conf_^$name) {
+		let (var = $pkg^_conf_^$name;fmt = $pkg^_conf_fmt_^$vn) {
 			if {$raw} {
-				echo $var^' = '^<={$&fmtvar $var}
+				if {~ $$fmt raw} {
+					echo $var^' = '^<={%flatten ' ' $$var}
+				} {
+					echo $var^' = '^<={$&fmtvar $var}
+				}
 			} {
-				echo $pkg^': '^$name^' = '^<={$&fmtvar $var}
+				if {~ $$fmt raw} {
+					echo $vn^' = '^<={%flatten ' ' $$var}
+				} {
+					echo $vn^' = '^<={$&fmtvar $var}
+				}
 			}
 		}
 	}

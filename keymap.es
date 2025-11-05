@@ -15,7 +15,8 @@ set-esmle_conf_word-start = @ x {
 	)
 }
 
-esmle_conf_highlight = ''
+esmle_conf_highlight = \e^'[46m'^\e^'[39m'
+esmle_conf_fmt_highlight = 'raw'
 get-esmle_conf_highlight = $&esmlegethighlight
 set-esmle_conf_highlight = @ arg {
 	if {~ $arg none} {
