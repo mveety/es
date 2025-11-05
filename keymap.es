@@ -15,6 +15,16 @@ set-esmle_conf_word-start = @ x {
 	)
 }
 
+esmle_conf_highlight = ''
+get-esmle_conf_highlight = $&esmlegethighlight
+set-esmle_conf_highlight = @ arg {
+	if {~ $arg none} {
+		$&esmlesethighlight
+	} {
+		$&esmlesethighlight <={%string $arg}
+	}
+}
+
 fn _esmle_genfunction key func {
 	local (funname = <={gensym __esmle_^$key^_hook_}) {
 		fn-$funname = $func

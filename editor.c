@@ -280,11 +280,16 @@ outbuf_append_printable(EditorState *state, OutBuf *obuf, char *str, int len)
 	int64_t highlight = -1;
 	int64_t highlight2 = -1;
 	int64_t highlightsz = 0;
+	size_t hlfmtlen = 0;
 
-	if(state->match_braces && !state->done_reading) {
+	if(state->match_braces && !state->done_reading)
 		highlight = find_matching_paren(state);
-		if(highlight >= 0)
-			highlightsz = 5+5+4;
+
+	if(state->highlight_formatting == nil)
+		highlight = -1;
+	if(highlight >= 0){
+		hlfmtlen = strlen(state->highlight_formatting);
+		highlightsz = hlfmtlen+4;
 	}
 
 	if(highlight >= 0 && state->bufpos == state->bufend) {
@@ -308,16 +313,8 @@ outbuf_append_printable(EditorState *state, OutBuf *obuf, char *str, int len)
 	for(i = 0; i < len; i++) {
 		if(i == highlight || i == highlight2) {
 			dprint("adding highlight at %ld\n", i);
-			obuf->str[obuf->len++] = '\x1b';
-			obuf->str[obuf->len++] = '[';
-			obuf->str[obuf->len++] = '4';
-			obuf->str[obuf->len++] = '6';
-			obuf->str[obuf->len++] = 'm';
-			obuf->str[obuf->len++] = '\x1b';
-			obuf->str[obuf->len++] = '[';
-			obuf->str[obuf->len++] = '3';
-			obuf->str[obuf->len++] = '7';
-			obuf->str[obuf->len++] = 'm';
+			memcpy(&obuf->str[obuf->len], state->highlight_formatting, hlfmtlen);
+			obuf->len += hlfmtlen;
 		}
 		if(str[i] >= ' ' && str[i] <= '~') {
 			obuf->str[obuf->len++] = str[i];
@@ -569,6 +566,7 @@ initialize_editor(EditorState *state, int ifd, int ofd)
 		.force_fallback = 0,
 		.word_start = FirstLetter,
 		.noreset = 0,
+		.highlight_formatting = nil,
 	};
 	memset(state->outbuf, 0, sizeof(OutBuf));
 	rawmode_on(state);
@@ -628,6 +626,8 @@ free_editor(EditorState *state)
 	free(state->keymap);
 	if(state->braces)
 		free(state->braces);
+	if(state->highlight_formatting)
+		free(state->highlight_formatting);
 }
 
 int
@@ -812,6 +812,19 @@ set_complete_hook(EditorState *state, char **(*hook)(char *, int, int))
 		return;
 	completion_reset(state);
 	state->completions_hook = hook;
+}
+
+void
+set_highlight_formatting(EditorState *state, char *formatting)
+{
+	if(!state->initialized)
+		return;
+	if(state->highlight_formatting)
+		free(state->highlight_formatting);
+	state->highlight_formatting = nil;
+	if(formatting == nil)
+		return;
+	state->highlight_formatting = estrdup(formatting);
 }
 
 void /* I really think this could use work */

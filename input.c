@@ -46,6 +46,7 @@ int force_fallback_editor = 0;
 extern Atomic sigwinch_resize;
 extern Atomic in_editor;
 EditorContext *editor_ctx = nil;
+char default_highlight_formatting[] = "\x1b[46m\x1b[37m";
 
 #if ABUSED_GETENV
 static char *stdgetenv(const char *);
@@ -1517,6 +1518,7 @@ initinput(void)
 		editor->word_start = FirstBreak;
 		register_braces(editor, '(', ')');
 		register_braces(editor, '{', '}');
+		set_highlight_formatting(editor, default_highlight_formatting);
 		default_keymap = ealloc(sizeof(Keymap));
 		memcpy(default_keymap, editor->keymap, sizeof(Keymap));
 	}

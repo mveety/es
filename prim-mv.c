@@ -843,6 +843,52 @@ PRIM(esmlesetwordstart) {
 	return res;
 }
 
+PRIM(esmlesethighlight) {
+	List *lp = nil; Root r_lp;
+
+	if(!editor->initialized) {
+		if(isinteractive())
+			fail("$&esmlesethighlight", "using fallback editor");
+		else
+			return list_false;
+	}
+	if(list == nil){
+		set_highlight_formatting(editor, nil);
+		return mklist(mkstr(str("")), nil);
+	}
+
+	gcref(&r_lp, (void **)&lp);
+	lp = list;
+	if(lp->term->kind != tkString)
+		fail("$&esmlesethighlight", "argument must be a string");
+	set_highlight_formatting(editor, getstr(lp->term));
+	gcrderef(&r_lp);
+	return mklist(mkstr(str("%#S", getstr(lp->term))), nil);
+}
+
+PRIM(esmlegethighlight) {
+	List *res = nil; Root r_res;
+
+	if(!editor->initialized) {
+		if(isinteractive())
+			fail("$&esmlegethighlight", "using fallback editor");
+		else
+			return list_false;
+	}
+
+	if(editor->highlight_formatting == nil)
+		return mklist(mkstr(str("")), nil);
+
+	gcref(&r_res, (void**)&res);
+	if(list != nil && termeq(list->term, "-r"))
+		res = mklist(mkstr(str("%s", editor->highlight_formatting)), nil);
+	else
+		res = mklist(mkstr(str("%#S", editor->highlight_formatting)), nil);
+
+	gcrderef(&r_res);
+	return res;
+}
+
 Dict *
 initprims_mv(Dict *primdict)
 {
@@ -886,6 +932,8 @@ initprims_mv(Dict *primdict)
 	X(esmlegetterm);
 	X(esmlegetwordstart);
 	X(esmlesetwordstart);
+	X(esmlesethighlight);
+	X(esmlegethighlight);
 
 	return primdict;
 }

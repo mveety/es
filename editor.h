@@ -187,6 +187,7 @@ struct EditorState {
 	int force_fallback;
 	WordStart word_start;
 	int noreset;
+	char *highlight_formatting;
 	// history
 	char *histbuf;
 	size_t histbufsz;
@@ -263,6 +264,7 @@ extern EditorContext *restore_editor_context(EditorState *state, EditorContext *
 extern void set_prompt1(EditorState *state, char *str);
 extern void set_prompt2(EditorState *state, char *str);
 extern void set_complete_hook(EditorState *state, char **(*hook)(char *, int, int));
+extern void set_highlight_formatting(EditorState *state, char *formatting);
 
 /* motions and editing */
 extern Position getposition(EditorState *state);
