@@ -108,7 +108,7 @@ let (
 			echo 'package '^$n^':'
 			for (vn = $v) {
 				echo -n '    '
-				let (var = $n^_conf_^$vn;fmt = $pkg^_conffmt_^$vn) {
+				let (var = $n^_conf_^$vn;fmt = $n^_conffmt_^$vn) {
 					if {$raw} {
 						if {~ $$fmt raw} {
 							echo $var^' = '^<={%flatten ' ' $$var}
