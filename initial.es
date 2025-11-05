@@ -722,6 +722,14 @@ set-es_conf_parse-echo = @ value _ {
 	}
 }
 
+fn %fmt str {
+	$&fmt $^str
+}
+
+fn %unfmt str {
+	eval 'result '^$^str
+}
+
 fn-%parse = @{
 	local(res = <={$&parse $*}){
 		if {$es_conf_parse-echo}{

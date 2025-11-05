@@ -889,6 +889,21 @@ PRIM(esmlegethighlight) {
 	return res;
 }
 
+PRIM(fmt) {
+	List *res = nil; Root r_res;
+
+	if(list == nil)
+		fail("$&fmt", "missing argument");
+
+	gcref(&r_res, (void**)&res);
+
+	res = mklist(mkstr(str("%#S", getstr(list->term))), nil);
+
+	gcrderef(&r_res);
+
+	return res;
+}
+
 Dict *
 initprims_mv(Dict *primdict)
 {
@@ -934,6 +949,7 @@ initprims_mv(Dict *primdict)
 	X(esmlesetwordstart);
 	X(esmlesethighlight);
 	X(esmlegethighlight);
+	X(fmt);
 
 	return primdict;
 }

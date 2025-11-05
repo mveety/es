@@ -83,13 +83,13 @@ let (
 			echo -n '    '
 			let (var = $pkg^_conf_^$vn;fmt = $pkg^_conffmt_^$vn) {
 				if {$raw} {
-					if {~ $$fmt raw} {
+					if {~ $$fmt formatted} {
 						echo $var^' = '^<={%flatten ' ' $$var}
 					} {
 						echo $var^' = '^<={$&fmtvar $var}
 					}
 				} {
-					if {~ $$fmt raw} {
+					if {~ $$fmt formatted} {
 						echo $vn^' = '^<={%flatten ' ' $$var}
 					} {
 						echo $vn^' = '^<={$&fmtvar $var}
@@ -110,13 +110,13 @@ let (
 				echo -n '    '
 				let (var = $n^_conf_^$vn;fmt = $n^_conffmt_^$vn) {
 					if {$raw} {
-						if {~ $$fmt raw} {
+						if {~ $$fmt formatted} {
 							echo $var^' = '^<={%flatten ' ' $$var}
 						} {
 							echo $var^' = '^<={$&fmtvar $var}
 						}
 					} {
-						if {~ $$fmt raw} {
+						if {~ $$fmt formatted} {
 							echo $vn^' = '^<={%flatten ' ' $$var}
 						} {
 							echo $vn^' = '^<={$&fmtvar $var}
@@ -130,13 +130,13 @@ let (
 	fn esconf_printvar raw pkg name {
 		let (var = $pkg^_conf_^$name;fmt = $pkg^_conffmt_^$vn) {
 			if {$raw} {
-				if {~ $$fmt raw} {
+				if {~ $$fmt formatted} {
 					echo $var^' = '^<={%flatten ' ' $$var}
 				} {
 					echo $var^' = '^<={$&fmtvar $var}
 				}
 			} {
-				if {~ $$fmt raw} {
+				if {~ $$fmt formatted} {
 					echo $vn^' = '^<={%flatten ' ' $$var}
 				} {
 					echo $vn^' = '^<={$&fmtvar $var}

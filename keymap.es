@@ -16,10 +16,12 @@ set-esmle_conf_word-start = @ x {
 }
 
 esmle_conf_highlight = \e^'[46m'^\e^'[39m'
-esmle_conffmt_highlight = 'raw'
+# esmle:highlight is stored formatted in es land so relay that to
+# conf. the actual highlight data is stored inside of the editor
+esmle_conffmt_highlight = 'formatted'
 get-esmle_conf_highlight = $&esmlegethighlight
 set-esmle_conf_highlight = @ arg {
-	if {~ $arg none} {
+	if {~ $arg none || ~ $#arg 0} {
 		$&esmlesethighlight
 	} {
 		$&esmlesethighlight <={%string $arg}
