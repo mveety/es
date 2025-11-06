@@ -381,6 +381,12 @@ quoteit:
 			case '\33':
 				fmtprint(f, "\\e");
 				break;
+			case '\x01':
+				fmtprint(f, "\\ds");
+				break;
+			case '\x02':
+				fmtprint(f, "\\de");
+				break;
 			default:
 				fmtprint(f, "\\%o", c);
 				break;

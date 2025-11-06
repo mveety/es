@@ -51,12 +51,35 @@ ctrls_hook(EditorState *state, int key, void *aux)
 	return nil;
 }
 
+char *
+syntax_highlight_hook(char *buffer, size_t len)
+{
+	char redcolor[] = "\x01\x1b[31m\x02";
+	char resetfmt[] = "\x01\x1b[0m\x02";
+	char *resbuf = nil;
+
+	dprintf(dfd, "sizeof(redcolor) = %lu, sizeof(resetfmt) = %lu\n", sizeof(redcolor), sizeof(resetfmt));
+	if(dfd > 0)
+		dprintf(dfd, "syntax hook: got \"%s\" (len = %lu)\n", buffer, len);
+	if(len == 0)
+		return nil;
+
+	resbuf = ealloc(len+sizeof(redcolor)+sizeof(resetfmt));
+	memcpy(resbuf, redcolor, sizeof(redcolor)-1);
+	memcpy(&resbuf[sizeof(redcolor)-1], buffer, len);
+	memcpy(&resbuf[sizeof(redcolor)-1+len], resetfmt, sizeof(resetfmt));
+	dprintf(dfd, "resbuf = \"%s\"\n", resbuf);
+
+	return resbuf;
+}
+
 int
 main(int argc, char *argv[])
 {
 	EditorState state;
 	char *line;
 	int st;
+	char highlight_formatting[] = "\x1b[46m\x1b[37m";
 
 	if(argc == 2) {
 		if((dfd = open(argv[1], O_WRONLY)) < 0) {
@@ -81,6 +104,12 @@ main(int argc, char *argv[])
 	bindmapping(&state, KeyCtrlS, (Mapping){.hook = &ctrls_hook, .reset_completion = 0});
 	state.wordbreaks = " \t\n\\'`$><=;|&{()}";
 	state.prefixes = "$";
+	set_syntax_highlight_hook(&state, &syntax_highlight_hook);
+	state.match_braces = 1;
+	state.word_start = FirstBreak;
+	register_braces(&state, '(', ')');
+	register_braces(&state, '{', '}');
+	set_highlight_formatting(&state, highlight_formatting);
 
 	dprintf(state.ofd, "running in %s\n", state.term);
 	dprintf(state.ofd, "type \"exit\" or \"quit\" to quit or exit\n");

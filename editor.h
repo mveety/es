@@ -181,13 +181,15 @@ struct EditorState {
 	void *outbuf;
 	int clear_screen;
 	int done_reading;
-	int match_braces;
-	Brace *braces;
-	size_t nbraces;
 	int force_fallback;
 	WordStart word_start;
 	int noreset;
+	// syntax highlighting
+	int match_braces;
+	Brace *braces;
+	size_t nbraces;
 	char *highlight_formatting;
+	char *(*syntax_highlight_hook)(char *, size_t);
 	// history
 	char *histbuf;
 	size_t histbufsz;
@@ -265,6 +267,7 @@ extern void set_prompt1(EditorState *state, char *str);
 extern void set_prompt2(EditorState *state, char *str);
 extern void set_complete_hook(EditorState *state, char **(*hook)(char *, int, int));
 extern void set_highlight_formatting(EditorState *state, char *formatting);
+extern void set_syntax_highlight_hook(EditorState *state, char *(*hook)(char*, size_t));
 
 /* motions and editing */
 extern Position getposition(EditorState *state);

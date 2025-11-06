@@ -274,9 +274,11 @@ find_matching_paren(EditorState *state)
 }
 
 void
-outbuf_append_printable(EditorState *state, OutBuf *obuf, char *str, int len)
+outbuf_append_printable(EditorState *state, OutBuf *obuf, char *str, int len, int all)
 {
 	int64_t i = 0;
+	int64_t pos = 0;
+	int64_t incr = 1;
 	int64_t highlight = -1;
 	int64_t highlight2 = -1;
 	int64_t highlightsz = 0;
@@ -287,13 +289,13 @@ outbuf_append_printable(EditorState *state, OutBuf *obuf, char *str, int len)
 
 	if(state->highlight_formatting == nil)
 		highlight = -1;
-	if(highlight >= 0){
+	if(highlight >= 0) {
 		hlfmtlen = strlen(state->highlight_formatting);
-		highlightsz = hlfmtlen+4;
+		highlightsz = hlfmtlen + 4;
 	}
 
 	if(highlight >= 0 && state->bufpos == state->bufend) {
-		highlight2 = state->bufpos-1;
+		highlight2 = state->bufpos - 1;
 		highlightsz += highlightsz;
 	}
 
@@ -301,34 +303,46 @@ outbuf_append_printable(EditorState *state, OutBuf *obuf, char *str, int len)
 	dprint("highlight2 = %ld\n", highlight2);
 	dprint("highlightsz = %ld\n", highlightsz);
 
-	if(obuf->str == nil){
+	if(obuf->str == nil) {
 		obuf->str = ealloc(len + highlightsz + 2);
-		obuf->size = len+ highlightsz + 2;
+		obuf->size = len + highlightsz + 2;
 	}
 	if(obuf->len + highlightsz + len + 1 > obuf->size) {
 		obuf->str = erealloc(obuf->str, obuf->size + highlightsz + len + 1);
 		obuf->size += len + highlightsz + 1;
 	}
 
-	for(i = 0; i < len; i++) {
-		if(i == highlight || i == highlight2) {
-			dprint("adding highlight at %ld\n", i);
+	for(i = 0, pos = 0; i < len; i++) {
+		if(str[i] == '\x01') {
+			incr = 0;
+			continue;
+		} else if(str[i] == '\x02') {
+			incr = 1;
+			continue;
+		}
+		if(incr == 1 && (pos == highlight || pos == highlight2)) {
+			dprint("adding highlight at %ld (pos = %ld)\n", i, pos);
 			memcpy(&obuf->str[obuf->len], state->highlight_formatting, hlfmtlen);
 			obuf->len += hlfmtlen;
 		}
-		if(str[i] >= ' ' && str[i] <= '~') {
+		if(all)
 			obuf->str[obuf->len++] = str[i];
-		} else if(str[i] & 0b10000000) {
-			obuf->str[obuf->len++] = str[i];
-		} else {
-			dprint("got unprintable char in buffer: %x\n", str[i]);
+		else {
+			if(str[i] >= ' ' && str[i] <= '~') {
+				obuf->str[obuf->len++] = str[i];
+			} else if(str[i] & 0b10000000) {
+				obuf->str[obuf->len++] = str[i];
+			} else {
+				dprint("got unprintable char in buffer: %x\n", str[i]);
+			}
 		}
-		if(i == highlight || i == highlight2) {
+		if(incr == 1 && (pos == highlight || pos == highlight2)) {
 			obuf->str[obuf->len++] = '\x1b';
 			obuf->str[obuf->len++] = '[';
 			obuf->str[obuf->len++] = '0';
 			obuf->str[obuf->len++] = 'm';
 		}
+		pos += incr;
 	}
 }
 
@@ -567,6 +581,7 @@ initialize_editor(EditorState *state, int ifd, int ofd)
 		.word_start = FirstLetter,
 		.noreset = 0,
 		.highlight_formatting = nil,
+		.syntax_highlight_hook = nil,
 	};
 	memset(state->outbuf, 0, sizeof(OutBuf));
 	rawmode_on(state);
@@ -636,7 +651,7 @@ reset_editor(EditorState *state)
 	if(!state->initialized)
 		return -1;
 
-	if(state->noreset){
+	if(state->noreset) {
 		state->noreset = 0;
 		state->size = gettermsize(state);
 		if(state->inhistory) {
@@ -827,6 +842,14 @@ set_highlight_formatting(EditorState *state, char *formatting)
 	state->highlight_formatting = estrdup(formatting);
 }
 
+void
+set_syntax_highlight_hook(EditorState *state, char *(*hook)(char *, size_t))
+{
+	if(!state->initialized)
+		return;
+	state->syntax_highlight_hook = hook;
+}
+
 void /* I really think this could use work */
 refresh(EditorState *state)
 {
@@ -845,6 +868,7 @@ refresh(EditorState *state)
 	size_t utf8_promptsz = 0;
 	size_t utf8_bufpos = 0;
 	size_t utf8_bufend = 0;
+	char *highlighted_buffer = nil;
 
 	bufferassert();
 	buf = state->outbuf;
@@ -906,7 +930,15 @@ refresh(EditorState *state)
 	}
 
 	outbuf_append(buf, prompt, strlen(prompt));
-	outbuf_append_printable(state, buf, state->buffer, state->bufend);
+	if(state->syntax_highlight_hook) {
+		dprint("calling syntax highlighting hook");
+		highlighted_buffer = state->syntax_highlight_hook(state->buffer, state->bufend);
+		if(highlighted_buffer) {
+			outbuf_append_printable(state, buf, highlighted_buffer, strlen(highlighted_buffer), 1);
+			free(highlighted_buffer);
+		}
+	} else
+		outbuf_append_printable(state, buf, state->buffer, state->bufend, 0);
 
 	if(rel_next_end.lines - 1 > 0) {
 		if(rel_next_end.cols > 0)
@@ -939,9 +971,11 @@ refresh(EditorState *state)
 void
 update_size(EditorState *state)
 {
-	dprint("size update: old: state->size = {.lines = %d, .cols = %d}\n", state->size.lines, state->size.cols); 
+	dprint("size update: old: state->size = {.lines = %d, .cols = %d}\n", state->size.lines,
+		   state->size.cols);
 	state->size = gettermsize(state);
-	dprint("size update: new: state->size = {.lines = %d, .cols = %d}\n", state->size.lines, state->size.cols); 
+	dprint("size update: new: state->size = {.lines = %d, .cols = %d}\n", state->size.lines,
+		   state->size.cols);
 	refresh(state);
 }
 
@@ -973,9 +1007,9 @@ restore_editor_context(EditorState *state, EditorContext *ctx)
 {
 	dprint("restoring editor context: pos = %lu, size = %lu\n", ctx->bufpos, ctx->bufsize);
 	if(state->bufsz < ctx->bufsize)
-		grow_buffer(state, ctx->bufsize+5);
+		grow_buffer(state, ctx->bufsize + 5);
 	memset(state->buffer, 0, state->bufsz);
-	if(ctx->bufsize > 0){
+	if(ctx->bufsize > 0) {
 		memcpy(state->buffer, ctx->bufdata, ctx->bufsize);
 		free(ctx->bufdata);
 	}

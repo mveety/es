@@ -368,6 +368,20 @@ top:
 		case 'b':
 			*buf = '\b';
 			break;
+		case 'd': /* esmle formatting delimiters */
+			c = input_getc();
+			switch(c) {
+			default:
+				goto badescape;
+				break;
+			case 's': /* \ds is start */
+				*buf = '\x01';
+				break;
+			case 'e': /* \de is end */
+				*buf = '\x02';
+				break;
+			}
+			break;
 		case 'e':
 			*buf = '\033';
 			break;
