@@ -18,6 +18,7 @@ newarena(size_t size)
 	newa->size = size;
 	newa->remain = size;
 	newa->next = nil;
+	newa->note = nil;
 
 	return newa;
 }
@@ -31,6 +32,7 @@ extend_arena(Arena *arena, size_t size)
 	nexta = newarena(size);
 	if(arena == nil)
 		return nexta;
+	nexta->note = arena->note;
 
 	for(cur = arena; cur->next != nil; cur = cur->next)
 		;
@@ -152,7 +154,10 @@ arena_destroy(Arena *arena)
 		return 0;
 
 	if(editor_debugfd > 0 && arena_debugging){
-		dprintf(editor_debugfd, "destroying arena %p ", arena);
+		if(arena->note)
+			dprintf(editor_debugfd, "destroying arena %s@%p ", arena->note, arena);
+		else
+			dprintf(editor_debugfd, "destroying arena %p ", arena);
 		dprintf(editor_debugfd, "(size = %lu, used = %lu)\n", arena_size(arena), arena_used(arena));
 	}
 
@@ -178,8 +183,11 @@ aalloc(size_t sz, int tag)
 
 	assert(sz > 0);
 
-	if(input->arena == nil)
+	if(input->arena == nil){
 		input->arena = newarena(ARENASIZE);
+		if(input->name)
+			input->arena->note = arena_dup(input->arena, input->name);
+	}
 
 	realsz = sz + sizeof(Header);
 	nb = arena_allocate(input->arena, realsz);

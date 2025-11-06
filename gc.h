@@ -102,6 +102,7 @@ struct Block {
 struct Arena {
 	void *ptr;
 	void *cur;
+	char *note;
 	size_t size;
 	size_t remain;
 	Arena *next;
