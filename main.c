@@ -45,6 +45,7 @@ extern Boolean dynlib_verbose;
 #endif
 extern int forcetty;
 extern int force_fallback_editor;
+extern int arena_debugging;
 
 void *
 used(void *v)
@@ -311,6 +312,17 @@ parse_gcopt(char *optarg)
 		}
 	} else if(streq(parameter, "editordebug")) {
 		editor_debug_file = strdup(arg);
+	} else if(streq(parameter, "arenadebug")) {
+		switch(trueargument(arg)){
+		default:
+			goto fail;
+		case 1:
+			arena_debugging = 1;
+			break;
+		case -1:
+			arena_debugging = 0;
+			break;
+		}
 	} else {
 		goto fail;
 	}
@@ -322,6 +334,7 @@ fail:
 			"Global:\n"
 			"	gc:[old|new|generational] -- which gc to use (was -X and -G)\n"
 			"	editordebug:[file] -- file to output line editor debugging info\n"
+			"	arenadebug:[true|false] -- enable arena allocator debugging\n"
 			"\n"
 			"Old GC:\n"
 			"	protect:[true|false] -- enable the protect option to memory testing\n"

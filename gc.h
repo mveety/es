@@ -190,6 +190,8 @@ extern Boolean istracked(void *p);
 /* arena allocator */
 extern Arena *newarena(size_t size);
 extern void *arena_allocate(Arena *arena, size_t nbytes);
+extern char *arena_ndup(Arena *arena, const char *str, size_t n);
+extern char *arena_dup(Arena *arena, const char *str);
 extern int isinarena(Arena *arena, void *ptr);
 extern int arena_destroy(Arena *arena);
 

@@ -2,7 +2,10 @@
 #include "gc.h"
 #include "input.h"
 
-#define ARENASIZE (2 * 1024 * 1024)
+#define ARENASIZE (2 * 1024)
+
+int arena_debugging = 0;
+extern int editor_debugfd;
 
 Arena *
 newarena(size_t size)
@@ -60,6 +63,7 @@ arena_allocate(Arena *arena, size_t nbytes)
 	size_t nextsize = 0;
 	void *ptr = nil;
 
+	nbytes = ALIGN(nbytes);
 	if(nbytes >= arena->size)
 		nextsize = arena->size + (2 * nbytes);
 	else
@@ -76,6 +80,24 @@ arena_allocate(Arena *arena, size_t nbytes)
 	return ptr;
 }
 
+char *
+arena_ndup(Arena *arena, const char *str, size_t n)
+{
+	char *res = nil;
+
+	res = arena_allocate(arena, n+1);
+	memcpy(res, str, n);
+	res[n] = 0;
+
+	return res;
+}
+
+char *
+arena_dup(Arena *arena, const char *str)
+{
+	return arena_ndup(arena, str, strlen(str));
+}
+
 int
 isinarena(Arena *arena, void *ptr)
 {
@@ -86,27 +108,6 @@ isinarena(Arena *arena, void *ptr)
 	for(cur = arena; cur != nil; cur = cur->next)
 		if(ptr >= cur->ptr && ptr < (cur->ptr + cur->size))
 			return 1;
-
-	return 0;
-}
-
-int
-arena_destroy(Arena *arena)
-{
-	Arena *cur = nil;
-	Arena *prev = nil;
-
-	if(arena == nil)
-		return 0;
-
-	cur = arena;
-	do {
-		prev = cur;
-		cur = cur->next;
-
-		efree(prev->ptr);
-		efree(prev);
-	} while(cur != nil);
 
 	return 0;
 }
@@ -141,6 +142,32 @@ arena_used(Arena *arena)
 	return nbytes;
 }
 
+int
+arena_destroy(Arena *arena)
+{
+	Arena *cur = nil;
+	Arena *prev = nil;
+
+	if(arena == nil)
+		return 0;
+
+	if(editor_debugfd > 0 && arena_debugging){
+		dprintf(editor_debugfd, "destroying arena %p ", arena);
+		dprintf(editor_debugfd, "(size = %lu, used = %lu)\n", arena_size(arena), arena_used(arena));
+	}
+
+	cur = arena;
+	do {
+		prev = cur;
+		cur = cur->next;
+
+		efree(prev->ptr);
+		efree(prev);
+	} while(cur != nil);
+
+	return 0;
+}
+
 void *
 aalloc(size_t sz, int tag)
 {
@@ -154,7 +181,7 @@ aalloc(size_t sz, int tag)
 	if(input->arena == nil)
 		input->arena = newarena(ARENASIZE);
 
-	realsz = ALIGN(sz + sizeof(Header));
+	realsz = sz + sizeof(Header);
 	nb = arena_allocate(input->arena, realsz);
 
 	nb->flags = 0;
@@ -174,7 +201,6 @@ andup(const char *str, size_t n)
 	res = aalloc((n + 1) * sizeof(char), tString);
 	memcpy(res, str, n);
 	res[n] = 0;
-	assert(strlen(res) == n);
 
 	return res;
 }
