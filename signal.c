@@ -356,11 +356,6 @@ sigchk(void)
 				sigwinch_resize = TRUE;
 				update_size(editor);
 				editor_ctx = save_editor_context(editor);
-			} else {
-				while(gcisblocked())
-					gcenable();
-				throw(e);
-				unreachable();
 			}
 		}
 		break;
