@@ -6,7 +6,6 @@
 #include "stdenv.h"
 #include <stdio.h>
 #include <string.h>
-// #include <threads.h>
 #include "gc.h"
 #include "input.h"
 

@@ -358,7 +358,7 @@ main(int argc, char *argv[])
 {
 	int c, fd;
 	volatile int ac;
-	char **volatile av;
+	volatile char **av;
 	char *ds;
 	char *rs;
 	char *file;

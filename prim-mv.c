@@ -852,7 +852,7 @@ PRIM(esmlesethighlight) {
 		else
 			return list_false;
 	}
-	if(list == nil){
+	if(list == nil) {
 		set_highlight_formatting(editor, nil);
 		return mklist(mkstr(str("")), nil);
 	}
@@ -879,7 +879,7 @@ PRIM(esmlegethighlight) {
 	if(editor->highlight_formatting == nil)
 		return mklist(mkstr(str("")), nil);
 
-	gcref(&r_res, (void**)&res);
+	gcref(&r_res, (void **)&res);
 	if(list != nil && termeq(list->term, "-r"))
 		res = mklist(mkstr(str("%s", editor->highlight_formatting)), nil);
 	else
@@ -895,7 +895,7 @@ PRIM(fmt) {
 	if(list == nil)
 		fail("$&fmt", "missing argument");
 
-	gcref(&r_res, (void**)&res);
+	gcref(&r_res, (void **)&res);
 
 	res = mklist(mkstr(str("%#S", getstr(list->term))), nil);
 

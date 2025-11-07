@@ -14,6 +14,8 @@ need_dynlibs = %dict(
 	float.es => mod_float
 	math.es => mod_math
 	json.es => mod_json
+	syntax.es => mod_syntax
+	256syntax.es => mod_syntax
 )
 
 libsrc = <={if {~ $#* 1} {

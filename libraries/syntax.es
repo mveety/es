@@ -1,0 +1,210 @@
+
+
+with-dynlibs mod_syntax {
+	library syntax (init libraries esmle colors)
+
+	defconf syntax debugging false
+	defconf syntax colors %dict(
+		basic => $colors(fg_default)
+		number => $colors(fg_red)
+		variable => $colors(fg_cyan)
+		keyword => $colors(fg_magenta)
+		function => $colors(fg_yellow)
+		string => $colors(fg_blue)
+		comment => <={%string $colors(fg_white) $attrib(dim)}
+		primitive => $colors(fg_green)
+	)
+
+	defconf syntax enable false
+	set-syntax_conf_enable = @ arg _ {
+		if {~ $arg true} {
+			$&enablehighlighting
+		} {~ $arg false} {
+			$&disablehighlighting
+		} {
+			return $syntax_conf_enabled
+		}
+		result $arg
+	}
+
+	defconf syntax funvars-as-functions false
+	set-syntax_conf_funvars-as-functions = @ arg _ {
+		match $arg (
+			(true false) { result $arg }
+			* { result $set-syntax_conf_funvars-as-functions }
+		)
+	}
+
+	fn isatom str {
+		let (
+			atomregex = (
+				%re('^\$&[a-zA-Z0-9\-_]+$')
+				%re('^\$+[#\^":]?[a-zA-Z0-9\-_:]+$')
+				%re('^[a-zA-Z0-9\-_:%]+$')
+				%re('^[0-9]+$')
+				%re('^0x[0-9a-fA-F]+$')
+				%re('^0b[01]+$')
+				%re('^0o[0-7]+$')
+			)
+		){
+			if {~ $str $atomregex} {
+				return <=true
+			}
+			result <=false
+		}
+	}
+
+	fn iscomment str {
+		if {~ $str %re('^#.*$')} {
+			return <=true
+		}
+		result <=false
+	}
+
+	fn isstring str peeknexttok {
+		if {~ $str %re('^''(.|'''')*''?$')} {
+			return <=true
+		}
+		result <=false
+	} # '
+
+	fn atom_type str lasttok futuretok {
+		let (
+			primregex = %re('^\$&[a-zA-Z0-9\-_]+$')
+			varregex = %re('^\$+[#\^":]?[a-zA-Z0-9\-_:%]+$')
+			basicatomregex = %re('^[a-zA-Z0-9\-_:%]+$')
+			numberregexes = (
+				%re('^[0-9]+$')
+				%re('^0x[0-9a-fA-F]+$')
+				%re('^0b[01]+$')
+				%re('^0o[0-7]+$')
+			)
+			keywords = (
+				'~' '~~' 'local' 'let' 'lets'
+				'for' 'fn' '%closure' 'match'
+				'matchall' 'process' '%dict'
+				'%re' 'onerror'
+			)
+			primtmp = ''
+		) {
+			if {~ $str $numberregexes} {
+				return number
+			}
+			if {~ $str $keywords} {
+				return keyword
+			}
+			if {~ $str $primregex} {
+				primtmp = <={~~ $str '$&'^*}
+				if {~  $primtmp <=$&primitives} {
+					return primitive
+				}
+			}
+			if {~ $str $varregex} {
+				return variable
+			}
+			if {~ $str $basicatomregex} {
+				let (fnname = fn-^$str) {
+					if {! ~ <={%count $$fnname} 0} {
+						return function
+					}
+				}
+				if {~ $lasttok 'fn'} {
+					return function
+				}
+				if {~ $futuretok '=' ':=' '+='} {
+					if {~ $str 'fn-'^*} {
+						if {$set-syntax_conf_funvars-as-functions} {
+							return function
+						}
+					}
+					return variable
+				}
+				return basic
+			}
+			return basic
+		}
+	}
+
+	fn iswhitespace str {
+		if {~ $str %re('^[ \t\r\n]+$')} {
+			return <=true
+		}
+		result <=false
+	}
+
+	fn toksiterator toks {
+		result (
+			@ {
+				let (ntok = $toks(1)) {
+					toks = $toks(2 ...)
+					result $ntok
+				}
+			}
+			@ {
+				for (t = $toks) {
+					if {! iswhitespace $t} {
+						return $t
+					}
+				}
+			}
+			@ { result $#toks }
+			@ { result $toks(1) }
+		)
+	}
+
+	fn %syntax_highlight str {
+		let(
+			lasttok = ''
+			res = ()
+			syncol = $syntax_conf_colors
+			(e toks) = <={try $&basictokenize $str}
+			fn-nexttok=()
+			fn-futuretok=()
+			fn-toksleft=()
+			fn-peektok=()
+		) {
+			if {$e} {
+				return $str
+			}
+			(fn-nexttok fn-futuretok fn-toksleft fn-peektok) = <={toksiterator $toks}
+			while {gt <=toksleft 0} {
+				let (tok = <=nexttok) {
+					if {isstring $tok <=peektok} {
+						if {$syntax_conf_debugging} {
+							echo <={%fmt $tok} 'is a string' >> parselog.txt
+						}
+						if {dicthaskey $syncol string} {
+							res += \ds^$syncol(string)^\de^$tok^\ds^$attrib(reset)^\de
+						}
+					} {iscomment $tok} {
+						if {dicthaskey $syncol comment} {
+							res += \ds^$syncol(comment)^\de^$tok^\ds^$attrib(reset)^\de
+						}
+					} {isatom $tok} {
+						if {$syntax_conf_debugging} {
+							echo <={%fmt $tok} 'is a' <={atom_type $tok $lasttok} >> parselog.txt
+						}
+						if {dicthaskey $syncol <={atom_type $tok $lasttok <=futuretok}} {
+							res += \ds^$syncol(<={atom_type $tok $lasttok <=futuretok})^\de^$tok^\ds^$attrib(reset)^\de
+						}
+					} {
+						if {$syntax_conf_debugging} {
+							echo <={%fmt $tok} 'is an other' >> parselog.txt
+						}
+						res += $tok
+					}
+					if {! iswhitespace $tok} {
+						lasttok = $tok
+					}
+				}
+			}
+			result <={%string $res}
+		}
+	}
+
+	noexport += syntax_conf_debugging syntax_conf_colors syntax_conf_enable
+	noexport += set-syntax_conf_enable
+	noexport += fn-isatom fn-iscomment fn-isstring fn-atom_type fn-iswhitespace
+	noexport += fn-toksiterator fn-%syntax_highlight
+}
+
