@@ -38,7 +38,7 @@ let (
 					exit { exit $type }
 					error { echo >[1=2] 'esrc:' $err^':' $type^':' $msg }
 					signal {
-						if {! ~ $type 'sigint'} {
+						if {! ~ $type 'sigint' 'sigwinch'} {
 							echo >[1=2] 'esrc: uncaught signal:' $err $type $msg
 						}
 					}
@@ -101,7 +101,7 @@ let (
 						return <=false
 					}
 					signal {
-						if {!~ $type sigint sigterm sigquit} {
+						if {!~ $type sigint sigterm sigquit sigwinch} {
 							echo >[1=2] '%user-init: caught unexpected signal:' $type
 						}
 						return <=false
