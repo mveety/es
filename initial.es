@@ -807,7 +807,7 @@ fn %interactive-exception-handler errobj result {
 			}
 		}
 		signal {
-			if {!~ $type sigint sigterm sigquit} {
+			if {!~ $type sigint sigterm sigquit sigwinch} {
 				echo >[1=2] caught unexpected signal: $type
 			}
 		}
@@ -831,7 +831,7 @@ fn %interactive-hook-exception-handler hook errobj {
 			}
 		}
 		signal {
-			if {!~ $type sigint sigterm sigquit} {
+			if {!~ $type sigint sigterm sigquit sigwinch} {
 				echo >[1=2] $hook^' handler: caught unexpected signal:' $type
 			}
 		}
