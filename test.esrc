@@ -11,12 +11,12 @@
 # we're going to use the defaults now
 # libraries = $home/eslib
 
-# this is for testing. use local libs
 libraries = `{pwd}^/libraries $libraries
+conf -s es:dynlib-local-search true
 
 # base libraries. most stuff autoloads, but this stuff is required
 match `{hostname} (
-	(silverfox redfox) { import prompt autoinit library_autoload atuin_history }
+	(silverfox redfox) { import 256syntax prompt autoinit library_autoload atuin_history }
 	thefoundry { import prompt autoinit library_autoload history }
 
 )
@@ -45,14 +45,20 @@ conf -s history:reload 100
 conf -s history:load-on-change false
 conf -s history:file '/home/mveety/.history'
 conf -s prompt:name mveety
-conf -s es:dynlib-local-search true
 conf -s esmle:match-braces true
 
 match `{hostname} (
 	(silverfox redfox) {
 		conf -s atuin_history:update-history-file true
 		conf -s history:use-hook atuin
+		conf -s syntax:enable true
 	}
 	(thefoundry) { conf -s history:use-hook true }
+)
+
+keymap %dict(
+	CtrlLeft => %esmle:CursorWordLeft
+	CtrlRight => %esmle:CursorWordRight
+	Alta => %esmle:JumpToMatchingParen
 )
 

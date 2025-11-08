@@ -10,6 +10,8 @@
 		}                                  \
 	} while(0)
 
+#define TokenizerDebug 0
+
 extern EditorState *editor;
 
 char *
@@ -123,6 +125,12 @@ PRIM(basictokenize) {
 	size_t s = 0, i = 0, e = 0;
 	enum { Start, Run, End } op = Start;
 	enum { Whitespace, Atom, Symbol, String, Comment, Initialize } state = Initialize;
+	char **imp = nil;
+	char **newimp = nil;
+	size_t impsz = 0;
+	size_t impi = 0;
+	size_t oldimpsz = 0;
+	int64_t pi = 0;
 
 	/* Whitespace = \n, \t, \r, ' '
 	 * Atom = ^\$?[#\^":]?[a-zA-Z0-9\-_:]+$
@@ -146,6 +154,8 @@ PRIM(basictokenize) {
 
 	tokarena = newarena(1024);
 	lp = list;
+	imp = arena_allocate(tokarena, sizeof(char*)*100);
+	impsz = 100;
 
 	tokarena->note = arena_dup(tokarena, "basictokenizer_arena");
 	instr = arena_dup(tokarena, getstr(lp->term));
@@ -155,6 +165,7 @@ PRIM(basictokenize) {
 	dprint("basictokenizer start\n");
 	dprint("instr = \"%s\"\n", instr);
 	for(i = 0; i < instrsz;) {
+#if TokenizerDebug == 1
 		dprint("s = %ld, instr[%lu] = %c, state = ", s, i, instr[i]);
 		switch(state) {
 		default:
@@ -180,6 +191,7 @@ PRIM(basictokenize) {
 			break;
 		}
 		dprint("\n");
+#endif
 
 		switch(state) {
 		default:
@@ -206,7 +218,14 @@ PRIM(basictokenize) {
 				assert(e >= s);
 				if(e - s > 0) {
 					tmp = arena_ndup(tokarena, &instr[s], e - s);
-					res = mklist(mkstr(gcdup(tmp)), res);
+					if(impi >= impsz){
+						oldimpsz = impsz;
+						impsz *= 2;
+						newimp = arena_allocate(tokarena, sizeof(char*)*impsz);
+						memcpy(newimp, imp, oldimpsz*sizeof(char*));
+						imp = newimp;
+					}
+					imp[impi++] = tmp;
 				}
 				s = i;
 				if(_issymbol(instr[i], 0))
@@ -246,7 +265,15 @@ PRIM(basictokenize) {
 				assert(e >= s);
 				if(e - s > 0) {
 					tmp = arena_ndup(tokarena, &instr[s], e - s);
-					res = mklist(mkstr(gcdup(tmp)), res);
+					if(impi >= impsz){
+						oldimpsz = impsz;
+						impsz *= 2;
+						newimp = arena_allocate(tokarena, sizeof(char*)*impsz);
+						memcpy(newimp, imp, oldimpsz*sizeof(char*));
+						imp = newimp;
+					}
+					imp[impi++] = tmp;
+					assert(tmp);
 				}
 				s = i;
 				if(_issymbol(instr[i], 0))
@@ -268,7 +295,15 @@ PRIM(basictokenize) {
 				assert(e >= s);
 				if(e - s > 0) {
 					tmp = arena_ndup(tokarena, &instr[s], e - s);
-					res = mklist(mkstr(gcdup(tmp)), res);
+					if(impi >= impsz){
+						oldimpsz = impsz;
+						impsz *= 2;
+						newimp = arena_allocate(tokarena, sizeof(char*)*impsz);
+						memcpy(newimp, imp, oldimpsz*sizeof(char*));
+						imp = newimp;
+					}
+					imp[impi++] = tmp;
+					assert(tmp);
 				}
 				s = i;
 				if(_issymbol(instr[i], 0))
@@ -287,6 +322,13 @@ PRIM(basictokenize) {
 			i++;
 			break;
 		case Symbol:
+			if(impi >= impsz){
+				oldimpsz = impsz;
+				impsz *= 2;
+				newimp = arena_allocate(tokarena, sizeof(char*)*impsz);
+				memcpy(newimp, imp, oldimpsz*sizeof(char*));
+				imp = newimp;
+			}
 			switch(instr[i]) {
 			default:
 				goto fail;
@@ -302,17 +344,22 @@ PRIM(basictokenize) {
 			case ']':
 			case '>':
 			case '.':
-				res = mklist(mkstr(str("%c", instr[i])), res);
+				tmp = arena_dup(tokarena, str("%c", instr[i]));
+				imp[impi++] = tmp;
+				assert(tmp);
 				i++;
 				break;
 			case '=':
 				if(i + 1 < instrsz && instr[i + 1] == '>') {
-					res = mklist(mkstr(str("=>")), res);
+					tmp = arena_dup(tokarena, str("=>"));
+					imp[impi++] = tmp;
 					i += 2;
 				} else {
-					res = mklist(mkstr(str("=")), res);
+					tmp = arena_dup(tokarena, str("="));
+					imp[impi++] = tmp;
 					i++;
 				}
+				assert(tmp);
 				break;
 			case '|':
 				if(i + 1 >= instrsz) {
@@ -320,12 +367,15 @@ PRIM(basictokenize) {
 					goto done;
 				}
 				if(instr[i + 1] == '>') {
-					res = mklist(mkstr(str("|>")), res);
+					tmp = arena_dup(tokarena, str("|>"));
+					imp[impi++] = tmp;
 					i += 2;
 				} else {
-					res = mklist(mkstr(str("|")), res);
+					tmp = arena_dup(tokarena, str("|"));
+					imp[impi++] = tmp;
 					i++;
 				}
+				assert(tmp);
 				break;
 			case '<':
 				if(i + 1 >= instrsz) {
@@ -333,15 +383,19 @@ PRIM(basictokenize) {
 					goto done;
 				}
 				if(instr[i + 1] == '<') {
-					res = mklist(mkstr(str("<<")), res);
+					tmp = arena_dup(tokarena, str("<<"));
+					imp[impi++] = tmp;
 					i += 2;
 				} else if(instr[i + 1] == '=') {
-					res = mklist(mkstr(str("<=")), res);
+					tmp = arena_dup(tokarena, str("<="));
+					imp[impi++] = tmp;
 					i += 2;
 				} else {
-					res = mklist(mkstr(str("<")), res);
+					tmp = arena_dup(tokarena, str("<"));
+					imp[impi++] = tmp;
 					i++;
 				}
+				assert(tmp);
 				break;
 			case ':':
 			case '+':
@@ -351,7 +405,9 @@ PRIM(basictokenize) {
 				}
 				if(instr[i + 1] != '=')
 					goto fail;
-				res = mklist(mkstr(str("%c=", instr[i])), res);
+				tmp = arena_dup(tokarena, str("%c="));
+				assert(tmp);
+				imp[impi++] = tmp;
 				i += 2;
 				break;
 			}
@@ -372,7 +428,14 @@ PRIM(basictokenize) {
 			break;
 		case Comment:
 			tmp = arena_dup(tokarena, &instr[s]);
-			res = mklist(mkstr(gcdup(tmp)), res);
+			if(impi >= impsz){
+				oldimpsz = impsz;
+				impsz *= 2;
+				newimp = arena_allocate(tokarena, sizeof(char*)*impsz);
+				memcpy(newimp, imp, oldimpsz*sizeof(char*));
+				imp = newimp;
+			}
+			imp[impi++] = tmp;
 			i = instrsz;
 			s = i;
 			e = i;
@@ -383,13 +446,28 @@ done:
 	e = i;
 	if(e - s > 0) {
 		tmp = arena_ndup(tokarena, &instr[s], e - s);
-		res = mklist(mkstr(gcdup(tmp)), res);
+		if(impi >= impsz){
+			oldimpsz = impsz;
+			impsz *= 2;
+			newimp = arena_allocate(tokarena, sizeof(char*)*impsz);
+			memcpy(newimp, imp, oldimpsz*sizeof(char*));
+			imp = newimp;
+		}
+		imp[impi++] = tmp;
 	}
 
-	res = reverse(res);
+	dprint("basictokenize arena: size = %lu, used = %lu\n", arena_size(tokarena), arena_used(tokarena));
+	dprint("generated %lu tokens. impsz = %lu\n", impi, impsz);
+	gc();
+	for(pi = impi-1; pi >= 0; pi--){
+		assert(imp[pi] != nil);
+		res = mklist(mkstr(str("%s", imp[pi])), res);
+	}
+
 	arena_destroy(tokarena);
 	gcrderef(&r_res);
 	gcrderef(&r_lp);
+	dprint("done parsing\n");
 	return res;
 
 fail:

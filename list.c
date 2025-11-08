@@ -61,12 +61,14 @@ reverse(List *list)
 	List *prev, *next;
 	if(list == NULL)
 		return NULL;
+	gcdisable();
 	prev = NULL;
 	do {
 		next = list->next;
 		list->next = prev;
 		prev = list;
 	} while((list = next) != NULL);
+	gcenable();
 	return prev;
 }
 
@@ -169,6 +171,8 @@ using_partial_append(List *head0, List *tail0)
 	return result;
 }
 
+extern size_t old_ngcs;
+
 List *
 append(List *head0, List *tail0)
 {
@@ -179,6 +183,7 @@ append(List *head0, List *tail0)
 	List *rp = nil; Root r_rp;
 	List *tmp = nil; Root r_tmp;
 	Term *term = nil; Root r_term;
+	volatile size_t startgc = 0;
 
 	if(head0 == nil)
 		return tail0;
@@ -194,7 +199,10 @@ append(List *head0, List *tail0)
 	head = head0;
 	tail = tail0;
 
-	gcdisable();
+	if(gctype == OldGc)
+		startgc = old_ngcs;
+	used(&startgc);
+
 	for(lp = head; lp != nil; lp = lp->next) {
 		term = lp->term;
 		tmp = mklist(term, nil);
@@ -208,8 +216,6 @@ append(List *head0, List *tail0)
 	}
 
 	rp->next = tail;
-
-	gcenable();
 
 	gcrderef(&r_term);
 	gcrderef(&r_tmp);
