@@ -31,18 +31,19 @@ typedef struct Object Object;
 typedef struct Result Result;
 
 typedef enum {
-	tkString,
-	tkClosure,
-	tkDict,
-	tkRegex,
-	tkObject,
+	tkBad = 0,
+	tkString = 1,
+	tkClosure = 2,
+	tkDict = 3,
+	tkRegex = 4,
+	tkObject = 5,
 } TermKind;
 
 typedef enum {
-	ttNone,
-	ttError,
-	ttBox,
-	ttRegex,
+	ttNone = 0,
+	ttError = 1,
+	ttBox = 2,
+	ttRegex = 3,
 } Termtag;
 
 typedef enum {
