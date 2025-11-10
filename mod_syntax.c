@@ -1,4 +1,5 @@
 #include "es.h"
+#include "pcre2posix.h"
 #include "prim.h"
 #include "gc.h"
 #include "editor.h"
@@ -11,8 +12,68 @@
 	} while(0)
 
 #define TokenizerDebug 0
+#define REMode (REG_EXTENDED | REG_NOSUB)
+
+typedef struct TokenResults TokenResults;
+
+struct TokenResults {
+	Arena *arena;
+	int status;
+	size_t impsz;
+	size_t impi;
+	char **imp;
+};
 
 extern EditorState *editor;
+
+regex_t prim_regex;
+regex_t var_regex;
+regex_t basic_regex;
+regex_t number_regex;
+regex_t string_regex;
+regex_t comment_regex;
+regex_t whitespace_regex;
+regex_t keywords_regex;
+
+int
+dyn_onload(void)
+{
+
+	if(pcre2_regcomp(&prim_regex, "^\\$&[a-zA-Z0-9\\-_]+$", REMode) != 0)
+		return -1;
+	if(pcre2_regcomp(&var_regex, "^\\$+[#\\^\":]?[a-zA-Z0-9\\-_:%]+$", REMode) != 0)
+		return -2;
+	if(pcre2_regcomp(&basic_regex, "^[a-zA-Z0-9\\-_:%]+$", REMode) != 0)
+		return -3;
+	if(pcre2_regcomp(&number_regex, "^([0-9]+|0x[0-9a-fA-F]+|0b[01]+|0o[0-7]+)$", REMode) != 0)
+		return -4;
+	if(pcre2_regcomp(&string_regex, "^'(.|'')*'?$", REMode) != 0)
+		return -5;
+	if(pcre2_regcomp(&comment_regex, "^#.*$", REMode) != 0)
+		return -6;
+	if(pcre2_regcomp(&whitespace_regex, "^[ \\t\r\\n]+$", REMode) != 0)
+		return -7;
+	if(pcre2_regcomp(&keywords_regex, "^(~|~~|local|let|lets|for|fn|%closure|match|matchall|process|%dict|%re|onerror)$", REMode) != 0)
+		return -8;
+
+	return 0;
+}
+
+int
+dyn_onunload(void)
+{
+	set_syntax_highlight_hook(editor, nil);
+	pcre2_regfree(&prim_regex);
+	pcre2_regfree(&var_regex);
+	pcre2_regfree(&basic_regex);
+	pcre2_regfree(&number_regex);
+	pcre2_regfree(&string_regex);
+	pcre2_regfree(&comment_regex);
+	pcre2_regfree(&whitespace_regex);
+	pcre2_regfree(&keywords_regex);
+
+	return 0;
+}
 
 char *
 es_syntax_highlighting_hook(char *buffer, size_t len)
@@ -115,50 +176,24 @@ _validatom(char c, char last)
 	return 1;
 }
 
-PRIM(basictokenize) {
-	List *lp = nil; Root r_lp;
-	List *res = nil; Root r_res;
-	Arena *tokarena = nil;
+TokenResults
+basictokenize(char *tokstr)
+{
 	char *instr = nil;
 	size_t instrsz = 0;
 	char *tmp = nil;
 	size_t s = 0, i = 0, e = 0;
 	enum { Start, Run, End } op = Start;
 	enum { Whitespace, Atom, Symbol, String, Comment, Initialize } state = Initialize;
-	char **imp = nil;
-	char **newimp = nil;
-	size_t impsz = 0;
-	size_t impi = 0;
-	size_t oldimpsz = 0;
-	int64_t pi = 0;
+	TokenResults results;
 
-	/* Whitespace = \n, \t, \r, ' '
-	 * Atom = ^\$?[#\^":]?[a-zA-Z0-9\-_:]+$
-	 * Symbol = { } ( ) | |> = => <= := +=
-	 * String = between ' and '
-	 * Regex = between %re( and )
-	 */
+	memset(&results, 0, sizeof(results));
+	results.arena = newarena(1024);
+	results.imp = arena_allocate(results.arena, sizeof(char*)*100);
+	results.impsz = 100;
 
-	if(list == nil)
-		fail("$&basictokenize", "missing argument");
-	if(list->next != nil)
-		fail("$&basictokenize", "too many arguments");
-	if(list->term->kind != tkString)
-		fail("$&basictokenize", "argument must be a string");
-
-	if(strlen(getstr(list->term)) <= 0)
-		return mklist(mkstr(gcdup("")), nil);
-
-	gcref(&r_lp, (void **)&r_lp);
-	gcref(&r_res, (void **)&r_res);
-
-	tokarena = newarena(1024);
-	lp = list;
-	imp = arena_allocate(tokarena, sizeof(char*)*100);
-	impsz = 100;
-
-	tokarena->note = arena_dup(tokarena, "basictokenizer_arena");
-	instr = arena_dup(tokarena, getstr(lp->term));
+	results.arena->note = arena_dup(results.arena, "basictokenizer_arena");
+	instr = arena_dup(results.arena, tokstr);
 	instrsz = strlen(instr);
 
 	s = 0;
@@ -217,15 +252,12 @@ PRIM(basictokenize) {
 				e = i;
 				assert(e >= s);
 				if(e - s > 0) {
-					tmp = arena_ndup(tokarena, &instr[s], e - s);
-					if(impi >= impsz){
-						oldimpsz = impsz;
-						impsz *= 2;
-						newimp = arena_allocate(tokarena, sizeof(char*)*impsz);
-						memcpy(newimp, imp, oldimpsz*sizeof(char*));
-						imp = newimp;
+					tmp = arena_ndup(results.arena, &instr[s], e - s);
+					if(results.impi >= results.impsz){
+						results.impsz *= 2;
+						results.imp = arena_reallocate(results.arena, results.imp, sizeof(char*)*results.impsz);
 					}
-					imp[impi++] = tmp;
+					results.imp[results.impi++] = tmp;
 				}
 				s = i;
 				if(_issymbol(instr[i], 0))
@@ -264,15 +296,12 @@ PRIM(basictokenize) {
 				e = i;
 				assert(e >= s);
 				if(e - s > 0) {
-					tmp = arena_ndup(tokarena, &instr[s], e - s);
-					if(impi >= impsz){
-						oldimpsz = impsz;
-						impsz *= 2;
-						newimp = arena_allocate(tokarena, sizeof(char*)*impsz);
-						memcpy(newimp, imp, oldimpsz*sizeof(char*));
-						imp = newimp;
+					tmp = arena_ndup(results.arena, &instr[s], e - s);
+					if(results.impi >= results.impsz){
+						results.impsz *= 2;
+						results.imp = arena_reallocate(results.arena, results.imp, sizeof(char*)*results.impsz);
 					}
-					imp[impi++] = tmp;
+					results.imp[results.impi++] = tmp;
 					assert(tmp);
 				}
 				s = i;
@@ -294,15 +323,12 @@ PRIM(basictokenize) {
 				e = i;
 				assert(e >= s);
 				if(e - s > 0) {
-					tmp = arena_ndup(tokarena, &instr[s], e - s);
-					if(impi >= impsz){
-						oldimpsz = impsz;
-						impsz *= 2;
-						newimp = arena_allocate(tokarena, sizeof(char*)*impsz);
-						memcpy(newimp, imp, oldimpsz*sizeof(char*));
-						imp = newimp;
+					tmp = arena_ndup(results.arena, &instr[s], e - s);
+					if(results.impi >= results.impsz){
+						results.impsz *= 2;
+						results.imp = arena_reallocate(results.arena, results.imp, sizeof(char*)*results.impsz);
 					}
-					imp[impi++] = tmp;
+					results.imp[results.impi++] = tmp;
 					assert(tmp);
 				}
 				s = i;
@@ -322,12 +348,9 @@ PRIM(basictokenize) {
 			i++;
 			break;
 		case Symbol:
-			if(impi >= impsz){
-				oldimpsz = impsz;
-				impsz *= 2;
-				newimp = arena_allocate(tokarena, sizeof(char*)*impsz);
-				memcpy(newimp, imp, oldimpsz*sizeof(char*));
-				imp = newimp;
+			if(results.impi >= results.impsz){
+				results.impsz *= 2;
+				results.imp = arena_reallocate(results.arena, results.imp, sizeof(char*)*results.impsz);
 			}
 			switch(instr[i]) {
 			default:
@@ -344,19 +367,19 @@ PRIM(basictokenize) {
 			case ']':
 			case '>':
 			case '.':
-				tmp = arena_dup(tokarena, str("%c", instr[i]));
-				imp[impi++] = tmp;
+				tmp = arena_dup(results.arena, str("%c", instr[i]));
+				results.imp[results.impi++] = tmp;
 				assert(tmp);
 				i++;
 				break;
 			case '=':
 				if(i + 1 < instrsz && instr[i + 1] == '>') {
-					tmp = arena_dup(tokarena, str("=>"));
-					imp[impi++] = tmp;
+					tmp = arena_dup(results.arena, str("=>"));
+					results.imp[results.impi++] = tmp;
 					i += 2;
 				} else {
-					tmp = arena_dup(tokarena, str("="));
-					imp[impi++] = tmp;
+					tmp = arena_dup(results.arena, str("="));
+					results.imp[results.impi++] = tmp;
 					i++;
 				}
 				assert(tmp);
@@ -367,12 +390,12 @@ PRIM(basictokenize) {
 					goto done;
 				}
 				if(instr[i + 1] == '>') {
-					tmp = arena_dup(tokarena, str("|>"));
-					imp[impi++] = tmp;
+					tmp = arena_dup(results.arena, str("|>"));
+					results.imp[results.impi++] = tmp;
 					i += 2;
 				} else {
-					tmp = arena_dup(tokarena, str("|"));
-					imp[impi++] = tmp;
+					tmp = arena_dup(results.arena, str("|"));
+					results.imp[results.impi++] = tmp;
 					i++;
 				}
 				assert(tmp);
@@ -383,16 +406,16 @@ PRIM(basictokenize) {
 					goto done;
 				}
 				if(instr[i + 1] == '<') {
-					tmp = arena_dup(tokarena, str("<<"));
-					imp[impi++] = tmp;
+					tmp = arena_dup(results.arena, str("<<"));
+					results.imp[results.impi++] = tmp;
 					i += 2;
 				} else if(instr[i + 1] == '=') {
-					tmp = arena_dup(tokarena, str("<="));
-					imp[impi++] = tmp;
+					tmp = arena_dup(results.arena, str("<="));
+					results.imp[results.impi++] = tmp;
 					i += 2;
 				} else {
-					tmp = arena_dup(tokarena, str("<"));
-					imp[impi++] = tmp;
+					tmp = arena_dup(results.arena, str("<"));
+					results.imp[results.impi++] = tmp;
 					i++;
 				}
 				assert(tmp);
@@ -405,9 +428,9 @@ PRIM(basictokenize) {
 				}
 				if(instr[i + 1] != '=')
 					goto fail;
-				tmp = arena_dup(tokarena, str("%c="));
+				tmp = arena_dup(results.arena, str("%c="));
 				assert(tmp);
-				imp[impi++] = tmp;
+				results.imp[results.impi++] = tmp;
 				i += 2;
 				break;
 			}
@@ -427,15 +450,12 @@ PRIM(basictokenize) {
 				goto fail;
 			break;
 		case Comment:
-			tmp = arena_dup(tokarena, &instr[s]);
-			if(impi >= impsz){
-				oldimpsz = impsz;
-				impsz *= 2;
-				newimp = arena_allocate(tokarena, sizeof(char*)*impsz);
-				memcpy(newimp, imp, oldimpsz*sizeof(char*));
-				imp = newimp;
+			tmp = arena_dup(results.arena, &instr[s]);
+			if(results.impi >= results.impsz){
+				results.impsz *= 2;
+				results.imp = arena_reallocate(results.arena, results.imp, sizeof(char*)*results.impsz);
 			}
-			imp[impi++] = tmp;
+			results.imp[results.impi++] = tmp;
 			i = instrsz;
 			s = i;
 			e = i;
@@ -445,33 +465,68 @@ PRIM(basictokenize) {
 done:
 	e = i;
 	if(e - s > 0) {
-		tmp = arena_ndup(tokarena, &instr[s], e - s);
-		if(impi >= impsz){
-			oldimpsz = impsz;
-			impsz *= 2;
-			newimp = arena_allocate(tokarena, sizeof(char*)*impsz);
-			memcpy(newimp, imp, oldimpsz*sizeof(char*));
-			imp = newimp;
+		tmp = arena_ndup(results.arena, &instr[s], e - s);
+		if(results.impi >= results.impsz){
+			results.impsz += 5; /* we're done so we don't need to double. just add a safe amount here */
+			results.imp = arena_reallocate(results.arena, results.imp, sizeof(char*)*results.impsz);
 		}
-		imp[impi++] = tmp;
+		results.imp[results.impi++] = tmp;
 	}
+	results.status = 0;
+	return results;
+fail:
+	results.status = -1;
+	return results;
+}
 
-	dprint("basictokenize arena: size = %lu, used = %lu\n", arena_size(tokarena), arena_used(tokarena));
-	dprint("generated %lu tokens. impsz = %lu\n", impi, impsz);
+PRIM(basictokenize) {
+	List *lp = nil; Root r_lp;
+	List *res = nil; Root r_res;
+	TokenResults results;
+	int64_t i = 0;
+
+	/* Whitespace = \n, \t, \r, ' '
+	 * Atom = ^\$?[#\^":]?[a-zA-Z0-9\-_:]+$
+	 * Symbol = { } ( ) | |> = => <= := +=
+	 * String = between ' and '
+	 * Regex = between %re( and )
+	 */
+
+	if(list == nil)
+		fail("$&basictokenize", "missing argument");
+	if(list->next != nil)
+		fail("$&basictokenize", "too many arguments");
+	if(list->term->kind != tkString)
+		fail("$&basictokenize", "argument must be a string");
+
+	if(strlen(getstr(list->term)) <= 0)
+		return mklist(mkstr(gcdup("")), nil);
+
+	gcref(&r_lp, (void **)&r_lp);
+	gcref(&r_res, (void **)&r_res);
+
+	lp = list;
+
+	results = basictokenize(getstr(lp->term));
+	if(status < 0)
+		goto fail;
+
+	dprint("basictokenize arena: size = %lu, used = %lu\n", arena_size(results.arena), arena_used(results.arena));
+	dprint("generated %lu tokens. results.impsz = %lu\n", results.impi, results.impsz);
 	gc();
-	for(pi = impi-1; pi >= 0; pi--){
-		assert(imp[pi] != nil);
-		res = mklist(mkstr(str("%s", imp[pi])), res);
+	for(i = results.impi-1; i >= 0; i--){
+		assert(results.imp[i] != nil);
+		res = mklist(mkstr(str("%s", results.imp[i])), res);
 	}
 
-	arena_destroy(tokarena);
+	arena_destroy(results.arena);
 	gcrderef(&r_res);
 	gcrderef(&r_lp);
 	dprint("done parsing\n");
 	return res;
 
 fail:
-	arena_destroy(tokarena);
+	arena_destroy(results.arena);
 	gcrderef(&r_res);
 	gcrderef(&r_lp);
 	fail("$&basictokenize", "tokenizer failure");
@@ -489,10 +544,77 @@ PRIM(disablehighlighting) {
 	return list_true;
 }
 
+PRIM(syn_isatom) {
+	List *result = list_false;
+	char *teststr = nil;
+	regmatch_t pmatch[1];
+
+	if(list == nil)
+		fail("$&syn_isatom", "missing argument");
+
+	teststr = estrdup(getstr(list->term));
+	if(pcre2_regexec(&prim_regex, teststr, 0, pmatch, 0) == 0)
+		result = list_true;
+	else if(pcre2_regexec(&var_regex, teststr, 0, pmatch, 0) == 0)
+		result = list_true;
+	else if(pcre2_regexec(&basic_regex, teststr, 0, pmatch, 0) == 0)
+		result = list_true;
+	else if(pcre2_regexec(&number_regex, teststr, 0, pmatch, 0) == 0)
+		result = list_true;
+	else if(pcre2_regexec(&keywords_regex, teststr, 0, pmatch, 0) == 0)
+		result = list_true;
+	else
+		result = list_false;
+
+	free(teststr);
+	return result;
+}
+
+PRIM(syn_iscomment) {
+	regmatch_t pmatch[1];
+
+	if(list == nil)
+		fail("$&syn_iscomment", "missing argument");
+
+	if(pcre2_regexec(&comment_regex, getstr(list->term), 0, pmatch, 0) == 0)
+		return list_true;
+	return list_false;
+}
+
+
+PRIM(syn_isstring) {
+	regmatch_t pmatch[1];
+
+	if(list == nil)
+		fail("$&syn_isstring", "missing argument");
+
+	if(pcre2_regexec(&string_regex, getstr(list->term), 0, pmatch, 0) == 0)
+		return list_true;
+	return list_false;
+}
+
+PRIM(syn_iswhitespace) {
+	regmatch_t pmatch[1];
+
+	if(list == nil)
+		fail("$&syn_isstring", "missing argument");
+
+	if(pcre2_regexec(&whitespace_regex, getstr(list->term), 0, pmatch, 0) == 0)
+		return list_true;
+	return list_false;
+}
+
+
 MODULE(mod_syntax) = {
 	DX(basictokenize),
 	DX(enablehighlighting),
 	DX(disablehighlighting),
+
+	// accel
+	DX(syn_isatom),
+	DX(syn_iscomment),
+	DX(syn_isstring),
+	DX(syn_iswhitespace),
 
 	PRIMSEND,
 };

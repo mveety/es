@@ -35,19 +35,42 @@ with-dynlibs mod_syntax {
 		)
 	}
 
+	defconf syntax accelerate false
+	set-syntax_conf_accelerate = @ arg _ {
+		match $arg (
+			(true false) { result $arg }
+			* { result $set-syntax_conf_accelerate }
+		)
+	}
+
+	_es_syntax_defs = %dict(
+		prim => %re('^\$&[a-zA-Z0-9\-_]+$')
+		var => %re('^\$+[#\^":]?[a-zA-Z0-9\-_:%]+$')
+		basic=> %re('^[a-zA-Z0-9\-_:%]+$')
+		number => (%re('^[0-9]+$') %re('^0x[0-9a-fA-F]+$') %re('^0b[01]+$') %re('^0o[0-7]+$'))
+		keywords => ('~' '~~' 'local' 'let' 'lets' 'for' 'fn' '%closure' 'match' 'matchall'
+			'process' '%dict' '%re' 'onerror')
+		string => %re('^''(.|'''')*''?$')
+		comment => %re('^#.*$')
+		whitespace => %re('^[ \t\r\n]+$')
+	)
+
+	fn _synaccel prim {
+		if {$syntax_conf_accelerate && ~ 'syn_'^$prim <=$&primitives} {
+			result <=true
+		} {
+			result <=false
+		}
+	}
+
 	fn isatom str {
+		if {_synaccel isatom} {
+			return <={$&syn_isatom $str}
+		}
 		let (
-			atomregex = (
-				%re('^\$&[a-zA-Z0-9\-_]+$')
-				%re('^\$+[#\^":]?[a-zA-Z0-9\-_:%]+$')
-				%re('^[a-zA-Z0-9\-_:%]+$')
-				%re('^[0-9]+$')
-				%re('^0x[0-9a-fA-F]+$')
-				%re('^0b[01]+$')
-				%re('^0o[0-7]+$')
-			)
+			validatoms = $_es_syntax_defs(prim var basic number keywords)
 		){
-			if {~ $str $atomregex} {
+			if {~ $str $validatoms} {
 				return <=true
 			}
 			result <=false
@@ -55,14 +78,20 @@ with-dynlibs mod_syntax {
 	}
 
 	fn iscomment str {
-		if {~ $str %re('^#.*$')} {
+		if {_synaccel iscomment} {
+			return <={$&syn_iscomment $str}
+		}
+		if {~ $str $_es_syntax_defs(comment)} {
 			return <=true
 		}
 		result <=false
 	}
 
 	fn isstring str peeknexttok {
-		if {~ $str %re('^''(.|'''')*''?$')} {
+		if {_synaccel isstring} {
+			return <={$&syn_isstring $str}
+		}
+		if {~ $str $_es_syntax_defs(string)} {
 			return <=true
 		}
 		result <=false
@@ -70,21 +99,11 @@ with-dynlibs mod_syntax {
 
 	fn atom_type str lasttok futuretok {
 		let (
-			primregex = %re('^\$&[a-zA-Z0-9\-_]+$')
-			varregex = %re('^\$+[#\^":]?[a-zA-Z0-9\-_:%]+$')
-			basicatomregex = %re('^[a-zA-Z0-9\-_:%]+$')
-			numberregexes = (
-				%re('^[0-9]+$')
-				%re('^0x[0-9a-fA-F]+$')
-				%re('^0b[01]+$')
-				%re('^0o[0-7]+$')
-			)
-			keywords = (
-				'~' '~~' 'local' 'let' 'lets'
-				'for' 'fn' '%closure' 'match'
-				'matchall' 'process' '%dict'
-				'%re' 'onerror'
-			)
+			primregex = $_es_syntax_defs(prim)
+			varregex = $_es_syntax_defs(var)
+			basicatomregex = $_es_syntax_defs(basic)
+			numberregexes = $_es_syntax_defs(number)
+			keywords = $_es_syntax_defs(keywords)
 			primtmp = ''
 		) {
 			if {~ $str $numberregexes} {
@@ -126,7 +145,10 @@ with-dynlibs mod_syntax {
 	}
 
 	fn iswhitespace str {
-		if {~ $str %re('^[ \t\r\n]+$')} {
+		if {_synaccel iswhitespace} {
+			return <={$&syn_iswhitespace $str}
+		}
+		if {~ $str $_es_syntax_defs(whitespace)} {
 			return <=true
 		}
 		result <=false
