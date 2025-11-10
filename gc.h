@@ -105,6 +105,7 @@ struct Arena {
 	char *note;
 	size_t size;
 	size_t remain;
+	Arena *root;
 	Arena *next;
 };
 
@@ -191,11 +192,15 @@ extern Boolean istracked(void *p);
 /* arena allocator */
 extern Arena *newarena(size_t size);
 extern void *arena_allocate(Arena *arena, size_t nbytes);
+extern void *arena_reallocate(Arena *arena, void *p, size_t nbytes);
+extern size_t arena_sizeof(Arena *arena, void *p);
+extern size_t arena_nelem(Arena *arena, void *p, size_t elemsize);
 extern char *arena_ndup(Arena *arena, const char *str, size_t n);
 extern char *arena_dup(Arena *arena, const char *str);
 extern int isinarena(Arena *arena, void *ptr);
 extern size_t arena_size(Arena *arena);
 extern size_t arena_used(Arena *arena);
+extern void arena_annotate(Arena *arena, const char *note);
 extern int arena_destroy(Arena *arena);
 
 /* arena allocator api? */

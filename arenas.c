@@ -2,23 +2,63 @@
 #include "gc.h"
 #include "input.h"
 
-#define ARENASIZE (2 * 1024)
+typedef struct ArenaBlock ArenaBlock;
+
+struct ArenaBlock {
+	uint64_t magic;
+	size_t size;
+};
+
+enum {
+	ArenaSize = 2*1024,
+	ArenaBlockMagic = 0xdeadbeefdeadbeef,
+};
 
 int arena_debugging = 0;
 extern int editor_debugfd;
+
+void *
+ptr(ArenaBlock *block)
+{
+	assert(block);
+	return (void*)(((char*)block)+sizeof(ArenaBlock));
+}
+
+void *
+newptr(ArenaBlock *block, size_t nbytes)
+{
+	block->magic = ArenaBlockMagic;
+	block->size = nbytes-sizeof(ArenaBlock);
+
+	return ptr(block);
+}
+
+ArenaBlock *
+arenablock(void *ptr)
+{
+	ArenaBlock *block;
+
+	assert(ptr);
+	block = (ArenaBlock*)(((char*)ptr)-sizeof(ArenaBlock));
+	assert(block->magic == ArenaBlockMagic);
+	return block;
+}
 
 Arena *
 newarena(size_t size)
 {
 	Arena *newa = nil;
+	size_t realsize = 0;
 
-	newa = ealloc(sizeof(Arena));
-	newa->ptr = ealloc(size);
+	realsize = ALIGN(sizeof(Arena) + size);
+	newa = ealloc(realsize);
+	newa->ptr = ((char*)newa)+sizeof(Arena);
 	newa->cur = newa->ptr;
 	newa->size = size;
 	newa->remain = size;
 	newa->next = nil;
 	newa->note = nil;
+	newa->root = newa;
 
 	return newa;
 }
@@ -33,6 +73,7 @@ extend_arena(Arena *arena, size_t size)
 	if(arena == nil)
 		return nexta;
 	nexta->note = arena->note;
+	nexta->root = arena;
 
 	for(cur = arena; cur->next != nil; cur = cur->next)
 		;
@@ -63,9 +104,10 @@ arena_allocate(Arena *arena, size_t nbytes)
 {
 	Arena *cur = nil;
 	size_t nextsize = 0;
-	void *ptr = nil;
+	ArenaBlock *block = nil;
 
-	nbytes = ALIGN(nbytes);
+	assert(arena);
+	nbytes = ALIGN(nbytes+sizeof(ArenaBlock));
 	if(nbytes >= arena->size)
 		nextsize = arena->size + (2 * nbytes);
 	else
@@ -75,11 +117,62 @@ arena_allocate(Arena *arena, size_t nbytes)
 	if(cur == nil)
 		cur = extend_arena(arena, nextsize);
 
-	ptr = cur->cur;
+	block = (ArenaBlock*)cur->cur;
 	cur->cur += nbytes;
 	cur->remain -= nbytes;
 
-	return ptr;
+	return newptr(block, nbytes);
+}
+
+int
+isinarena(Arena *arena, void *ptr)
+{
+	Arena *cur = nil;
+
+	if(arena == nil)
+		return 0;
+	for(cur = arena; cur != nil; cur = cur->next)
+		if(ptr >= cur->ptr && ptr < (cur->ptr + cur->size))
+			return 1;
+
+	return 0;
+}
+
+void *
+arena_reallocate(Arena *arena, void *p, size_t nbytes)
+{
+	ArenaBlock *block = nil;
+	ArenaBlock *newblock = nil;
+	void *np;
+
+	assert(arena);
+	assert(isinarena(arena, p));
+	if(nbytes == 0)
+		return nil;
+
+	block = arenablock(p);
+	if(block->size == nbytes)
+		return p;
+
+	np = arena_allocate(arena, nbytes);
+	newblock = arenablock(np);
+	memset(np, 0, newblock->size);
+	memcpy(np, p, nbytes < block->size ? nbytes : block->size);
+
+	return np;
+}
+
+size_t
+arena_sizeof(Arena *arena, void *p)
+{
+	assert(arena);
+	return arenablock(p)->size;
+}
+
+size_t
+arena_nelem(Arena *arena, void *p, size_t elemsize)
+{
+	return arena_sizeof(arena, p)/elemsize;
 }
 
 char *
@@ -98,20 +191,6 @@ char *
 arena_dup(Arena *arena, const char *str)
 {
 	return arena_ndup(arena, str, strlen(str));
-}
-
-int
-isinarena(Arena *arena, void *ptr)
-{
-	Arena *cur = nil;
-
-	if(arena == nil)
-		return 0;
-	for(cur = arena; cur != nil; cur = cur->next)
-		if(ptr >= cur->ptr && ptr < (cur->ptr + cur->size))
-			return 1;
-
-	return 0;
 }
 
 size_t
@@ -144,6 +223,21 @@ arena_used(Arena *arena)
 	return nbytes;
 }
 
+void
+arena_annotate(Arena *arena, const char *note)
+{
+	Arena *root = nil;
+	Arena *cur = nil;
+	char *newnote = nil;
+
+	root = arena->root;
+	if(note)
+		newnote = arena_dup(root, note);
+
+	for(cur = root; cur != nil; cur = cur->next)
+		cur->note = newnote;
+}
+
 int
 arena_destroy(Arena *arena)
 {
@@ -165,8 +259,6 @@ arena_destroy(Arena *arena)
 	do {
 		prev = cur;
 		cur = cur->next;
-
-		efree(prev->ptr);
 		efree(prev);
 	} while(cur != nil);
 
@@ -184,9 +276,8 @@ aalloc(size_t sz, int tag)
 	assert(sz > 0);
 
 	if(input->arena == nil){
-		input->arena = newarena(ARENASIZE);
-		if(input->name)
-			input->arena->note = arena_dup(input->arena, input->name);
+		input->arena = newarena(ArenaSize);
+		arena_annotate(input->arena, input->name);
 	}
 
 	realsz = sz + sizeof(Header);
