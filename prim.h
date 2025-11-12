@@ -73,6 +73,7 @@ extern Dict *initprims_dynlib(Dict *primdict); /* dynlib.c */
 #endif
 
 /* prim.c */
+extern Dict *primitives(void);
 extern void add_prim(char *name, List *(*primfn)(List *, Binding *, int));
 extern void remove_prim(char *name);
 

@@ -16,6 +16,12 @@ prim(char *s, List *list, Binding *binding, int evalflags)
 		return (*p)(list, binding, evalflags);
 }
 
+extern Dict *
+primitives(void)
+{
+	return prims;
+}
+
 PRIM(primitives) {
 	List *primlist = nil; Root r_primlist;
 

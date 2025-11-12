@@ -239,6 +239,30 @@ arena_annotate(Arena *arena, const char *note)
 }
 
 int
+arena_reset(Arena *arena)
+{
+	Arena *cur = nil;
+
+	if(arena == nil)
+		return 0;
+
+	if(editor_debugfd > 0 && arena_debugging){
+		if(arena->note)
+			dprintf(editor_debugfd, "destroying arena %s@%p ", arena->note, arena);
+		else
+			dprintf(editor_debugfd, "destroying arena %p ", arena);
+		dprintf(editor_debugfd, "(size = %lu, used = %lu)\n", arena_size(arena), arena_used(arena));
+	}
+
+	for(cur = arena; cur != nil; cur = cur->next){
+		cur->cur = cur->ptr;
+		cur->remain = cur->size;
+	}
+
+	return 0;
+}
+
+int
 arena_destroy(Arena *arena)
 {
 	Arena *cur = nil;
