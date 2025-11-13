@@ -552,6 +552,7 @@ initialize_editor(EditorState *state, int ifd, int ofd)
 		.bufsz = EDITINITIALBUFSZ,
 		.bufpos = 0,
 		.bufend = 0,
+		.lastbufpos = 0,
 		.position = (Position){.lines = 1, .cols = 0},
 		.last_end = (Position){.lines = 1, .cols = 0},
 		.initialized = 1,
@@ -668,6 +669,7 @@ reset_editor(EditorState *state)
 	memset(state->buffer, 0, state->bufsz);
 	state->bufpos = 0;
 	state->bufend = 0;
+	state->lastbufpos = 0;
 	state->position = (Position){.lines = 1, .cols = 0};
 	state->last_end = (Position){.lines = 1, .cols = 0};
 	state->size = gettermsize(state);
@@ -909,24 +911,33 @@ refresh(EditorState *state)
 		dprintf(state->dfd, "state->buffer = \"%s\"\n", state->buffer);
 	}
 
-	/* go to end */
-	if(rel_end.lines - rel_cur_pos.lines > 0)
-		snsz = snprintf(&snbuf[0], sizeof(snbuf), "\r\x1b[%dB", rel_end.lines - rel_cur_pos.lines);
-	else
-		snsz = snprintf(&snbuf[0], sizeof(snbuf), "\r");
-	outbuf_append(buf, &snbuf[0], snsz);
-
-	for(i = 0; i < (size_t)(rel_end.lines - 1); i++) {
-		snsz = snprintf(&snbuf[0], sizeof(snbuf), "\r\x1b[0K\x1b[1A");
-		outbuf_append(buf, &snbuf[0], snsz);
-	}
-
-	snsz = snprintf(&snbuf[0], sizeof(snbuf), "\r\x1b[0K");
-	outbuf_append(buf, &snbuf[0], snsz);
 	if(state->clear_screen) {
 		snsz = snprintf(&snbuf[0], sizeof(snbuf), "\x1b[H\x1b[2J");
 		outbuf_append(buf, &snbuf[0], snsz);
 		state->clear_screen = 0;
+	} else {
+		/* go to end */
+
+		if(rel_end.lines - rel_cur_pos.lines > 0)
+			snsz = snprintf(&snbuf[0], sizeof(snbuf), "\r\x1b[%dB", rel_end.lines - rel_cur_pos.lines);
+		else
+			snsz = snprintf(&snbuf[0], sizeof(snbuf), "\r");
+		outbuf_append(buf, &snbuf[0], snsz);
+
+		if(state->bufpos <= state->lastbufpos){
+			for(i = 0; i < (size_t)(rel_end.lines - 1); i++) {
+				snsz = snprintf(&snbuf[0], sizeof(snbuf), "\r\x1b[0K\x1b[1A");
+				outbuf_append(buf, &snbuf[0], snsz);
+			}
+
+			snsz = snprintf(&snbuf[0], sizeof(snbuf), "\r\x1b[0K");
+			outbuf_append(buf, &snbuf[0], snsz);
+		} else {
+			for(i = 0; i < (size_t)(rel_end.lines - 1); i++) {
+				snsz = snprintf(&snbuf[0], sizeof(snbuf), "\r\x1b[1A");
+				outbuf_append(buf, &snbuf[0], snsz);
+			}
+		}
 	}
 
 	outbuf_append(buf, prompt, strlen(prompt));
@@ -966,6 +977,7 @@ refresh(EditorState *state)
 	if(state->dfd > 0)
 		dprintf(state->dfd, "buf->size = %lu, buf->len = %lu\n", buf->size, buf->len);
 	outbuf_clean(buf);
+	state->lastbufpos = state->bufpos;
 }
 
 void

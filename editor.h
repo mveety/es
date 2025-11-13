@@ -177,6 +177,7 @@ struct EditorState {
 	size_t bufsz;
 	size_t bufpos;
 	size_t bufend;
+	size_t lastbufpos;
 	int initialized;
 	void *outbuf;
 	int clear_screen;
