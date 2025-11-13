@@ -3,6 +3,7 @@
 #include "prim.h"
 #include "gc.h"
 #include "editor.h"
+#include "stdenv.h"
 
 #define dprint(args...)                    \
 	do {                                   \
@@ -15,17 +16,40 @@
 #define REMode (REG_EXTENDED | REG_NOSUB)
 
 typedef struct TokenResults TokenResults;
+typedef struct Token Token;
+typedef struct SOutBuf SOutBuf;
 
 struct TokenResults {
-	Arena *arena;
 	int status;
 	size_t impsz;
 	size_t impi;
-	char **imp;
+	Token *imp;
 };
+
+struct Token {
+	char *str;
+	size_t len;
+};
+
+struct SOutBuf {
+	char *str;
+	size_t len;
+	size_t size;
+};
+
+typedef enum {
+	AtomNone = 0,
+	AtomBasic = 1,
+	AtomNumber = 2,
+	AtomKeyword = 3,
+	AtomPrimitive = 4,
+	AtomFunction = 5,
+	AtomVariable = 6,
+} AtomType;
 
 extern EditorState *editor;
 
+Arena *syntax_arena = nil;
 regex_t prim_regex;
 regex_t var_regex;
 regex_t basic_regex;
@@ -38,7 +62,6 @@ regex_t keywords_regex;
 int
 dyn_onload(void)
 {
-
 	if(pcre2_regcomp(&prim_regex, "^\\$&[a-zA-Z0-9\\-_]+$", REMode) != 0)
 		return -1;
 	if(pcre2_regcomp(&var_regex, "^\\$+[#\\^\":]?[a-zA-Z0-9\\-_:%]+$", REMode) != 0)
@@ -62,6 +85,7 @@ dyn_onload(void)
 int
 dyn_onunload(void)
 {
+	arena_destroy(syntax_arena);
 	set_syntax_highlight_hook(editor, nil);
 	pcre2_regfree(&prim_regex);
 	pcre2_regfree(&var_regex);
@@ -73,6 +97,45 @@ dyn_onunload(void)
 	pcre2_regfree(&keywords_regex);
 
 	return 0;
+}
+
+void
+soutbuf_clean(SOutBuf *buf)
+{
+	memset(buf->str, 0, buf->len + 1);
+	buf->len = 0;
+}
+
+void
+soutbuf_append(Arena *arena, SOutBuf *buf, char *str, size_t len)
+{
+	if(buf->str == nil){
+		buf->str = arena_allocate(arena, len+2);
+		buf->size = len+2;
+	}
+	if(buf->len + len + 1 > buf->size) {
+		buf->str = arena_reallocate(arena, buf->str, buf->size+len+1);
+		buf->size += len + 1;
+	}
+	memcpy(&buf->str[buf->len], str, len);
+	buf->len += len;
+}
+
+void
+soutbuf_append_color(Arena *arena, SOutBuf *buf, char *str, size_t len)
+{
+	soutbuf_append(arena, buf, "\x01", 1);
+	soutbuf_append(arena, buf, str, len);
+	soutbuf_append(arena, buf, "\x02", 1);
+}
+
+void
+soutbuf_initialize(Arena *arena, SOutBuf *buf, int len)
+{
+	if(buf->str != nil)
+		return;
+	buf->str = arena_allocate(arena, len+2);
+	buf->size = len+2;
 }
 
 char *
@@ -98,7 +161,7 @@ es_syntax_highlighting_hook(char *buffer, size_t len)
 
 	args = mklist(mkstr(gcndup(buffer, len)), nil);
 	hook = append(hook, args);
-	res = eval(hook, nil, 0);
+	res= eval(hook, nil, 0);
 
 	if(res)
 		resstr = estrdup(getstr(res->term));
@@ -145,7 +208,7 @@ _issymbol(char c, int inatom)
 	case ']':
 	case '.':
 		return 1;
-	case ':':
+case ':':
 		if(inatom)
 			return 0;
 		return 1;
@@ -177,7 +240,7 @@ _validatom(char c, char last)
 }
 
 TokenResults
-basictokenize(char *tokstr)
+basictokenize(char *tokstr, Arena *arena)
 {
 	char *instr = nil;
 	size_t instrsz = 0;
@@ -188,12 +251,10 @@ basictokenize(char *tokstr)
 	TokenResults results;
 
 	memset(&results, 0, sizeof(results));
-	results.arena = newarena(1024);
-	results.imp = arena_allocate(results.arena, sizeof(char*)*100);
+	results.imp = arena_allocate(arena, sizeof(Token)*100);
 	results.impsz = 100;
 
-	results.arena->note = arena_dup(results.arena, "basictokenizer_arena");
-	instr = arena_dup(results.arena, tokstr);
+	instr = arena_dup(arena, tokstr);
 	instrsz = strlen(instr);
 
 	s = 0;
@@ -252,12 +313,13 @@ basictokenize(char *tokstr)
 				e = i;
 				assert(e >= s);
 				if(e - s > 0) {
-					tmp = arena_ndup(results.arena, &instr[s], e - s);
+					tmp = arena_ndup(arena, &instr[s], e - s);
 					if(results.impi >= results.impsz){
 						results.impsz *= 2;
-						results.imp = arena_reallocate(results.arena, results.imp, sizeof(char*)*results.impsz);
+						results.imp = arena_reallocate(arena, results.imp, sizeof(Token)*results.impsz);
 					}
-					results.imp[results.impi++] = tmp;
+					results.imp[results.impi].str = tmp;
+					results.imp[results.impi++].len = e - s;
 				}
 				s = i;
 				if(_issymbol(instr[i], 0))
@@ -296,12 +358,13 @@ basictokenize(char *tokstr)
 				e = i;
 				assert(e >= s);
 				if(e - s > 0) {
-					tmp = arena_ndup(results.arena, &instr[s], e - s);
+					tmp = arena_ndup(arena, &instr[s], e - s);
 					if(results.impi >= results.impsz){
-						results.impsz *= 2;
-						results.imp = arena_reallocate(results.arena, results.imp, sizeof(char*)*results.impsz);
+results.impsz *= 2;
+						results.imp = arena_reallocate(arena, results.imp, sizeof(Token)*results.impsz);
 					}
-					results.imp[results.impi++] = tmp;
+					results.imp[results.impi].str = tmp;
+					results.imp[results.impi++].len = e - s;
 					assert(tmp);
 				}
 				s = i;
@@ -323,12 +386,13 @@ basictokenize(char *tokstr)
 				e = i;
 				assert(e >= s);
 				if(e - s > 0) {
-					tmp = arena_ndup(results.arena, &instr[s], e - s);
+					tmp = arena_ndup(arena, &instr[s], e - s);
 					if(results.impi >= results.impsz){
 						results.impsz *= 2;
-						results.imp = arena_reallocate(results.arena, results.imp, sizeof(char*)*results.impsz);
+						results.imp = arena_reallocate(arena, results.imp, sizeof(Token)*results.impsz);
 					}
-					results.imp[results.impi++] = tmp;
+					results.imp[results.impi].str = tmp;
+					results.imp[results.impi++].len = e - s;
 					assert(tmp);
 				}
 				s = i;
@@ -350,7 +414,7 @@ basictokenize(char *tokstr)
 		case Symbol:
 			if(results.impi >= results.impsz){
 				results.impsz *= 2;
-				results.imp = arena_reallocate(results.arena, results.imp, sizeof(char*)*results.impsz);
+				results.imp = arena_reallocate(arena, results.imp, sizeof(Token)*results.impsz);
 			}
 			switch(instr[i]) {
 			default:
@@ -367,19 +431,22 @@ basictokenize(char *tokstr)
 			case ']':
 			case '>':
 			case '.':
-				tmp = arena_dup(results.arena, str("%c", instr[i]));
-				results.imp[results.impi++] = tmp;
+				tmp = arena_dup(arena, str("%c", instr[i]));
 				assert(tmp);
+				results.imp[results.impi].str = tmp;
+				results.imp[results.impi++].len = 1;
 				i++;
 				break;
 			case '=':
 				if(i + 1 < instrsz && instr[i + 1] == '>') {
-					tmp = arena_dup(results.arena, str("=>"));
-					results.imp[results.impi++] = tmp;
+					tmp = arena_dup(arena, str("=>"));
+					results.imp[results.impi].str = tmp;
+					results.imp[results.impi++].len = 2;
 					i += 2;
 				} else {
-					tmp = arena_dup(results.arena, str("="));
-					results.imp[results.impi++] = tmp;
+					tmp = arena_dup(arena, str("="));
+					results.imp[results.impi].str = tmp;
+					results.imp[results.impi++].len = 1;
 					i++;
 				}
 				assert(tmp);
@@ -390,12 +457,14 @@ basictokenize(char *tokstr)
 					goto done;
 				}
 				if(instr[i + 1] == '>') {
-					tmp = arena_dup(results.arena, str("|>"));
-					results.imp[results.impi++] = tmp;
+					tmp = arena_dup(arena, str("|>"));
+					results.imp[results.impi].str = tmp;
+					results.imp[results.impi++].len = 2;
 					i += 2;
 				} else {
-					tmp = arena_dup(results.arena, str("|"));
-					results.imp[results.impi++] = tmp;
+					tmp = arena_dup(arena, str("|"));
+					results.imp[results.impi].str = tmp;
+					results.imp[results.impi++].len = 1;
 					i++;
 				}
 				assert(tmp);
@@ -406,16 +475,19 @@ basictokenize(char *tokstr)
 					goto done;
 				}
 				if(instr[i + 1] == '<') {
-					tmp = arena_dup(results.arena, str("<<"));
-					results.imp[results.impi++] = tmp;
+					tmp = arena_dup(arena, str("<<"));
+					results.imp[results.impi].str = tmp;
+					results.imp[results.impi++].len = 2;
 					i += 2;
 				} else if(instr[i + 1] == '=') {
-					tmp = arena_dup(results.arena, str("<="));
-					results.imp[results.impi++] = tmp;
+					tmp = arena_dup(arena, str("<="));
+					results.imp[results.impi].str = tmp;
+					results.imp[results.impi++].len = 2;
 					i += 2;
 				} else {
-					tmp = arena_dup(results.arena, str("<"));
-					results.imp[results.impi++] = tmp;
+					tmp = arena_dup(arena, str("<"));
+					results.imp[results.impi].str = tmp;
+					results.imp[results.impi++].len = 1;
 					i++;
 				}
 				assert(tmp);
@@ -428,9 +500,10 @@ basictokenize(char *tokstr)
 				}
 				if(instr[i + 1] != '=')
 					goto fail;
-				tmp = arena_dup(results.arena, str("%c="));
+				tmp = arena_dup(arena, str("%c="));
 				assert(tmp);
-				results.imp[results.impi++] = tmp;
+				results.imp[results.impi].str = tmp;
+				results.imp[results.impi++].len = 2;
 				i += 2;
 				break;
 			}
@@ -450,12 +523,13 @@ basictokenize(char *tokstr)
 				goto fail;
 			break;
 		case Comment:
-			tmp = arena_dup(results.arena, &instr[s]);
+			tmp = arena_dup(arena, &instr[s]);
 			if(results.impi >= results.impsz){
 				results.impsz *= 2;
-				results.imp = arena_reallocate(results.arena, results.imp, sizeof(char*)*results.impsz);
+				results.imp = arena_reallocate(arena, results.imp, sizeof(char*)*results.impsz);
 			}
-			results.imp[results.impi++] = tmp;
+			results.imp[results.impi].str = tmp;
+			results.imp[results.impi++].len = strlen(tmp);
 			i = instrsz;
 			s = i;
 			e = i;
@@ -465,12 +539,13 @@ basictokenize(char *tokstr)
 done:
 	e = i;
 	if(e - s > 0) {
-		tmp = arena_ndup(results.arena, &instr[s], e - s);
+		tmp = arena_ndup(arena, &instr[s], e - s);
 		if(results.impi >= results.impsz){
 			results.impsz += 5; /* we're done so we don't need to double. just add a safe amount here */
-			results.imp = arena_reallocate(results.arena, results.imp, sizeof(char*)*results.impsz);
+			results.imp = arena_reallocate(arena, results.imp, sizeof(Token)*results.impsz);
 		}
-		results.imp[results.impi++] = tmp;
+		results.imp[results.impi].str = tmp;
+		results.imp[results.impi++].len = strlen(tmp);
 	}
 	results.status = 0;
 	return results;
@@ -479,11 +554,256 @@ fail:
 	return results;
 }
 
+AtomType
+syn_isatom(char *teststr)
+{
+	regmatch_t pmatch[1];
+
+	if(pcre2_regexec(&number_regex, teststr, 0, pmatch, 0) == 0)
+		return AtomNumber;
+	if(pcre2_regexec(&keywords_regex, teststr, 0, pmatch, 0) == 0)
+		return AtomKeyword;
+	if(pcre2_regexec(&prim_regex, teststr, 0, pmatch, 0) == 0)
+		return AtomPrimitive;
+	if(pcre2_regexec(&var_regex, teststr, 0, pmatch, 0) == 0)
+		return AtomVariable;
+	if(pcre2_regexec(&basic_regex, teststr, 0, pmatch, 0) == 0)
+		return AtomBasic;
+	return AtomNone;
+}
+
+int
+syn_iscomment(char *teststr)
+{
+	regmatch_t pmatch[1];
+
+	if(pcre2_regexec(&comment_regex, teststr, 0, pmatch, 0) == 0)
+		return 1;
+	return 0;
+}
+
+int
+syn_isstring(char *teststr)
+{
+	regmatch_t pmatch[1];
+
+	if(pcre2_regexec(&string_regex, teststr, 0, pmatch, 0) == 0)
+		return 1;
+return 0;
+}
+
+int
+syn_iswhitespace(char *teststr)
+{
+	regmatch_t pmatch[1];
+
+	if(pcre2_regexec(&whitespace_regex, teststr, 0, pmatch, 0) == 0)
+		return 1;
+	return 0;
+}
+
+int
+valid_primitive(char *str)
+{
+	size_t strsz = strlen(str);
+	char *tstr = nil;
+
+	if(strsz > 2 && str[0] == '$' && str[1] == '&')
+		tstr = &str[2];
+	else
+		tstr = str;
+
+	if(dictget(primitives(), tstr) != nil)
+		return 1;
+	return 0;
+}
+
+int
+valid_function(char *str)
+{
+	if(varlookup2("fn-", str, nil) != nil)
+		return 1;
+	return 0;
+}
+
+AtomType
+atom_type(char *str, char *lasttok, char *futuretok)
+{
+	AtomType type = AtomNone;
+
+	switch((type = syn_isatom(str))){
+	default:
+	case AtomNone:
+		unreachable();
+		break;
+	case AtomNumber:
+	case AtomKeyword:
+	case AtomVariable:
+	case AtomFunction:
+		return type;
+	case AtomPrimitive:
+		if(valid_primitive(str))
+			return AtomPrimitive;
+		return AtomBasic;
+	case AtomBasic:
+		if(valid_function(str))
+			return AtomFunction;
+		if(lasttok != nil && streq(lasttok, "fn"))
+			return AtomFunction;
+		if(futuretok != nil && (futuretok[0] == '=' || streq(futuretok, ":=") || streq(futuretok, "+=")))
+			return AtomVariable;
+		return AtomBasic;
+	}
+}
+
+char *
+es_fast_highlighting(char *buffer, size_t bufend)
+{
+	char *line = nil;
+	Dict *synhighlights = nil;
+	List *synhigh = nil;
+	List *tmp = nil;
+	TokenResults results;
+	char *colorbasic = nil;
+	char *colornumber = nil;
+	char *colorvariable = nil;
+	char *colorkeyword = nil;
+	char *colorfunction = nil;
+	char *colorstring = nil;
+	char *colorcomment = nil;
+	char *colorprimitive = nil;
+	char colorreset[] = "\x1b[0m";
+	size_t highsize = 0;
+	size_t t = 0;
+	size_t i = 0;
+	size_t ii = 0;
+	char *lasttok = nil;
+	char *futuretok = nil;
+	SOutBuf *obuf = nil;
+
+	if(syntax_arena == nil)
+		syntax_arena = newarena(4*1024);
+	else
+		arena_reset(syntax_arena);
+
+	gcdisable();
+
+	if((synhigh = varlookup("syntax_conf_colors", nil)) == nil){
+		gcenable();
+		return estrdup(line);
+	}
+	obuf = arena_allocate(syntax_arena, sizeof(SOutBuf));
+	soutbuf_initialize(syntax_arena, obuf, 1024);
+	synhighlights = getdict(synhigh->term);
+	highsize = strlen(colorreset);
+	if((tmp = dictget(synhighlights, "basic")) != nil){
+		colorbasic = getstr(tmp->term);
+		t = strlen(colorbasic);
+		if(t > highsize)
+			highsize = t;
+	}
+	if((tmp = dictget(synhighlights, "number")) != nil){
+		colornumber = getstr(tmp->term);
+		t = strlen(colornumber);
+		if(t > highsize)
+			highsize = t;
+	}
+	if((tmp = dictget(synhighlights, "variable")) != nil){
+		colorvariable = getstr(tmp->term);
+		t = strlen(colorvariable);
+		if(t > highsize)
+			highsize = t;
+	}
+	if((tmp = dictget(synhighlights, "keyword")) != nil){
+		colorkeyword = getstr(tmp->term);
+		t = strlen(colorkeyword);
+		if(t > highsize)
+			highsize = t;
+	}
+	if((tmp = dictget(synhighlights, "function")) != nil){
+		colorfunction = getstr(tmp->term);
+		t = strlen(colorfunction);
+		if(t > highsize)
+			highsize = t;
+	}
+	if((tmp = dictget(synhighlights, "string")) != nil){
+		colorstring = getstr(tmp->term);
+		t = strlen(colorstring);
+		if(t > highsize)
+			highsize = t;
+	}
+	if((tmp = dictget(synhighlights, "comment")) != nil){
+		colorcomment = getstr(tmp->term);
+		t = strlen(colorcomment);
+		if(t > highsize)
+			highsize = t;
+	}
+	if((tmp = dictget(synhighlights, "primitive")) != nil){
+		colorprimitive = getstr(tmp->term);
+		t = strlen(colorprimitive);
+		if(t > highsize)
+			highsize = t;
+	}
+
+	line = arena_ndup(syntax_arena, buffer, bufend);
+	results = basictokenize(line, syntax_arena);
+
+	for(i = 0; i < results.impi; i++){
+		if(syn_isstring(results.imp[i].str)){
+			soutbuf_append_color(syntax_arena, obuf, colorstring, strlen(colorstring));
+			soutbuf_append(syntax_arena, obuf, results.imp[i].str, results.imp[i].len);
+			soutbuf_append_color(syntax_arena, obuf, colorreset, strlen(colorreset));
+		} else if(syn_iscomment(results.imp[i].str)) {
+			soutbuf_append_color(syntax_arena, obuf, colorstring, strlen(colorstring));
+			soutbuf_append(syntax_arena, obuf, results.imp[i].str, results.imp[i].len);
+			soutbuf_append_color(syntax_arena, obuf, colorreset, strlen(colorreset));
+		} else if(syn_isatom(results.imp[i].str)){
+			for(ii = i, futuretok = nil; ii < results.impi; ii++)
+				if(!syn_iswhitespace(results.imp[ii].str))
+					futuretok = results.imp[ii].str;
+			switch(atom_type(results.imp[i].str, lasttok, futuretok)){
+			default:
+				unreachable();
+				break;
+			case AtomNumber:
+				soutbuf_append_color(syntax_arena, obuf, colornumber, strlen(colornumber));
+				break;
+			case AtomKeyword:
+				soutbuf_append_color(syntax_arena, obuf, colorkeyword, strlen(colorkeyword));
+				break;
+			case AtomVariable:
+				soutbuf_append_color(syntax_arena, obuf, colorvariable, strlen(colorvariable));
+				break;
+			case AtomFunction:
+				soutbuf_append_color(syntax_arena, obuf, colorfunction, strlen(colorfunction));
+				break;
+			case AtomPrimitive:
+				soutbuf_append_color(syntax_arena, obuf, colorprimitive, strlen(colorprimitive));
+				break;
+			case AtomBasic:
+				soutbuf_append_color(syntax_arena, obuf, colorbasic, strlen(colorbasic));
+				break;
+			}
+			soutbuf_append(syntax_arena, obuf, results.imp[i].str, results.imp[i].len);
+			soutbuf_append_color(syntax_arena, obuf, colorreset, strlen(colorreset));
+		} else {
+			soutbuf_append(syntax_arena, obuf, results.imp[i].str, results.imp[i].len);
+		}
+		if(!syn_iswhitespace(results.imp[i].str))
+			lasttok = results.imp[i].str;
+	}
+
+	gcenable();
+
+	return estrndup(obuf->str, obuf->len);
+}
+
 PRIM(basictokenize) {
 	List *lp = nil; Root r_lp;
 	List *res = nil; Root r_res;
 	TokenResults results;
 	int64_t i = 0;
+	Arena *btarena = nil;
 
 	/* Whitespace = \n, \t, \r, ' '
 	 * Atom = ^\$?[#\^":]?[a-zA-Z0-9\-_:]+$
@@ -507,26 +827,28 @@ PRIM(basictokenize) {
 
 	lp = list;
 
-	results = basictokenize(getstr(lp->term));
+	btarena = newarena(1024);
+	arena_annotate(btarena, "basictokenizer arena");
+	results = basictokenize(getstr(lp->term), btarena);
 	if(status < 0)
 		goto fail;
 
-	dprint("basictokenize arena: size = %lu, used = %lu\n", arena_size(results.arena), arena_used(results.arena));
+	dprint("basictokenize arena: size = %lu, used = %lu\n", arena_size(btarena), arena_used(btarena));
 	dprint("generated %lu tokens. results.impsz = %lu\n", results.impi, results.impsz);
 	gc();
 	for(i = results.impi-1; i >= 0; i--){
-		assert(results.imp[i] != nil);
-		res = mklist(mkstr(str("%s", results.imp[i])), res);
+		assert(results.imp[i].str != nil);
+		res = mklist(mkstr(str("%s", results.imp[i].str)), res);
 	}
 
-	arena_destroy(results.arena);
+	arena_destroy(btarena);
 	gcrderef(&r_res);
 	gcrderef(&r_lp);
 	dprint("done parsing\n");
 	return res;
 
 fail:
-	arena_destroy(results.arena);
+	arena_destroy(btarena);
 	gcrderef(&r_res);
 	gcrderef(&r_lp);
 	fail("$&basictokenize", "tokenizer failure");
@@ -547,65 +869,98 @@ PRIM(disablehighlighting) {
 PRIM(syn_isatom) {
 	List *result = list_false;
 	char *teststr = nil;
-	regmatch_t pmatch[1];
 
 	if(list == nil)
 		fail("$&syn_isatom", "missing argument");
 
 	teststr = estrdup(getstr(list->term));
-	if(pcre2_regexec(&prim_regex, teststr, 0, pmatch, 0) == 0)
+	if(syn_isatom(teststr))
 		result = list_true;
-	else if(pcre2_regexec(&var_regex, teststr, 0, pmatch, 0) == 0)
-		result = list_true;
-	else if(pcre2_regexec(&basic_regex, teststr, 0, pmatch, 0) == 0)
-		result = list_true;
-	else if(pcre2_regexec(&number_regex, teststr, 0, pmatch, 0) == 0)
-		result = list_true;
-	else if(pcre2_regexec(&keywords_regex, teststr, 0, pmatch, 0) == 0)
-		result = list_true;
-	else
-		result = list_false;
 
 	free(teststr);
 	return result;
 }
 
 PRIM(syn_iscomment) {
-	regmatch_t pmatch[1];
-
 	if(list == nil)
 		fail("$&syn_iscomment", "missing argument");
 
-	if(pcre2_regexec(&comment_regex, getstr(list->term), 0, pmatch, 0) == 0)
+	if(syn_iscomment(getstr(list->term)))
 		return list_true;
+
 	return list_false;
 }
 
-
 PRIM(syn_isstring) {
-	regmatch_t pmatch[1];
-
 	if(list == nil)
 		fail("$&syn_isstring", "missing argument");
 
-	if(pcre2_regexec(&string_regex, getstr(list->term), 0, pmatch, 0) == 0)
+	if(syn_isstring(getstr(list->term)))
 		return list_true;
 	return list_false;
 }
 
 PRIM(syn_iswhitespace) {
-	regmatch_t pmatch[1];
-
 	if(list == nil)
 		fail("$&syn_isstring", "missing argument");
 
-	if(pcre2_regexec(&whitespace_regex, getstr(list->term), 0, pmatch, 0) == 0)
+	if(syn_iswhitespace(getstr(list->term)))
 		return list_true;
 	return list_false;
 }
 
+PRIM(syn_atom_type) {
+	if(list == nil)
+		fail("$&syn_atom_type", "missing $1, $2, and $3");
+	if(list->next == nil)
+		fail("$&syn_atom_type", "missing $2 and $3");
+	if(list->next->next == nil)
+		fail("$&syn_atom_type", "missing $3");
+
+	switch(atom_type(getstr(list->term), getstr(list->next->term), getstr(list->next->next->term))){
+	default:
+	case AtomNone:
+		unreachable();
+		break;
+	case AtomNumber:
+		return mklist(mkstr(str("number")), nil);
+	case AtomKeyword:
+		return mklist(mkstr(str("keyword")), nil);
+	case AtomVariable:
+		return mklist(mkstr(str("variable")), nil);
+	case AtomPrimitive:
+		return mklist(mkstr(str("primitive")), nil);
+	case AtomFunction:
+		return mklist(mkstr(str("function")), nil);
+	case AtomBasic:
+		return mklist(mkstr(str("basic")), nil);
+	}
+}
+
+PRIM(fasthighlighting) {
+	char *instr = nil;
+	char *res = nil;
+	List *reslist = nil; Root r_reslist;
+
+	if(list == nil)
+		fail("$&fasthighlighting", "missing argument");
+
+	instr = getstr(list->term);
+	res = es_fast_highlighting(instr, strlen(instr));
+	gcref(&r_reslist, (void**)&reslist);
+	reslist = mklist(mkstr(gcdup(res)), nil);
+	efree(res);
+	gcrderef(&r_reslist);
+	return reslist;
+}
+
+PRIM(enablefasthighlighting) {
+	set_syntax_highlight_hook(editor, &es_fast_highlighting);
+	return list_true;
+}
 
 MODULE(mod_syntax) = {
+	// core
 	DX(basictokenize),
 	DX(enablehighlighting),
 	DX(disablehighlighting),
@@ -615,6 +970,9 @@ MODULE(mod_syntax) = {
 	DX(syn_iscomment),
 	DX(syn_isstring),
 	DX(syn_iswhitespace),
+	DX(syn_atom_type),
+	DX(fasthighlighting),
+	DX(enablefasthighlighting),
 
 	PRIMSEND,
 };

@@ -105,6 +105,7 @@ arena_allocate(Arena *arena, size_t nbytes)
 	Arena *cur = nil;
 	size_t nextsize = 0;
 	ArenaBlock *block = nil;
+	void *ptr = nil;
 
 	assert(arena);
 	nbytes = ALIGN(nbytes+sizeof(ArenaBlock));
@@ -121,7 +122,10 @@ arena_allocate(Arena *arena, size_t nbytes)
 	cur->cur += nbytes;
 	cur->remain -= nbytes;
 
-	return newptr(block, nbytes);
+	ptr = newptr(block, nbytes);
+	memset(ptr, 0, block->size);
+
+	return ptr;
 }
 
 int

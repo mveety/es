@@ -21,6 +21,8 @@ with-dynlibs mod_syntax {
 			$&enablehighlighting
 		} {~ $arg false} {
 			$&disablehighlighting
+		} {~ $arg fast} {
+			$&enablefasthighlighting
 		} {
 			return $syntax_conf_enabled
 		}
@@ -55,16 +57,8 @@ with-dynlibs mod_syntax {
 		whitespace => %re('^[ \t\r\n]+$')
 	)
 
-	fn _synaccel prim {
-		if {$syntax_conf_accelerate && ~ 'syn_'^$prim <=$&primitives} {
-			result <=true
-		} {
-			result <=false
-		}
-	}
-
 	fn isatom str {
-		if {_synaccel isatom} {
+		if {$syntax_conf_accelerate} {
 			return <={$&syn_isatom $str}
 		}
 		let (
@@ -78,7 +72,7 @@ with-dynlibs mod_syntax {
 	}
 
 	fn iscomment str {
-		if {_synaccel iscomment} {
+		if {$syntax_conf_accelerate} {
 			return <={$&syn_iscomment $str}
 		}
 		if {~ $str $_es_syntax_defs(comment)} {
@@ -88,7 +82,7 @@ with-dynlibs mod_syntax {
 	}
 
 	fn isstring str peeknexttok {
-		if {_synaccel isstring} {
+		if {$syntax_conf_accelerate} {
 			return <={$&syn_isstring $str}
 		}
 		if {~ $str $_es_syntax_defs(string)} {
@@ -98,6 +92,11 @@ with-dynlibs mod_syntax {
 	} # '
 
 	fn atom_type str lasttok futuretok {
+		if {$synax_conf_accelerate} {
+			if {~ $#lasttok 0} { lasttok = '' }
+			if {~ $#futuretok 0} { futuretok = '' }
+			return <={$&syn_atom_type $str $lasttok $futuretok}
+		}
 		let (
 			primregex = $_es_syntax_defs(prim)
 			varregex = $_es_syntax_defs(var)
@@ -145,7 +144,7 @@ with-dynlibs mod_syntax {
 	}
 
 	fn iswhitespace str {
-		if {_synaccel iswhitespace} {
+		if {$syntax_conf_accelerate} {
 			return <={$&syn_iswhitespace $str}
 		}
 		if {~ $str $_es_syntax_defs(whitespace)} {
@@ -175,6 +174,9 @@ with-dynlibs mod_syntax {
 	}
 
 	fn %syntax_highlight str {
+		if {$syntax_conf_accelerate} {
+			return <={$&fasthighlighting $^str}
+		}
 		let(
 			lasttok = ''
 			res = ()
@@ -193,7 +195,7 @@ with-dynlibs mod_syntax {
 				let (tok = <=nexttok) {
 					if {isstring $tok <=peektok} {
 						if {$syntax_conf_debugging} {
-							echo <={%fmt $tok} 'is a string' >> parselog.txt
+							echo <={%fmt $tok} 'is a string'
 						}
 						if {dicthaskey $syncol string} {
 							res += \ds^$syncol(string)^\de^$tok^\ds^$attrib(reset)^\de
@@ -204,14 +206,14 @@ with-dynlibs mod_syntax {
 						}
 					} {isatom $tok} {
 						if {$syntax_conf_debugging} {
-							echo <={%fmt $tok} 'is a' <={atom_type $tok $lasttok} >> parselog.txt
+							echo <={%fmt $tok} 'is a' <={atom_type $tok $lasttok}
 						}
 						if {dicthaskey $syncol <={atom_type $tok $lasttok <=futuretok}} {
 							res += \ds^$syncol(<={atom_type $tok $lasttok <=futuretok})^\de^$tok^\ds^$attrib(reset)^\de
 						}
 					} {
 						if {$syntax_conf_debugging} {
-							echo <={%fmt $tok} 'is an other' >> parselog.txt
+							echo <={%fmt $tok} 'is an other'
 						}
 						res += $tok
 					}
