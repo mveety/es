@@ -754,7 +754,7 @@ es_fast_highlighting(char *buffer, size_t bufend)
 			soutbuf_append(syntax_arena, obuf, results.imp[i].str, results.imp[i].len);
 			soutbuf_append_color(syntax_arena, obuf, colorreset, strlen(colorreset));
 		} else if(syn_iscomment(results.imp[i].str)) {
-			soutbuf_append_color(syntax_arena, obuf, colorstring, strlen(colorstring));
+			soutbuf_append_color(syntax_arena, obuf, colorcomment, strlen(colorcomment));
 			soutbuf_append(syntax_arena, obuf, results.imp[i].str, results.imp[i].len);
 			soutbuf_append_color(syntax_arena, obuf, colorreset, strlen(colorreset));
 		} else if(syn_isatom(results.imp[i].str)){
@@ -792,6 +792,9 @@ es_fast_highlighting(char *buffer, size_t bufend)
 		if(!syn_iswhitespace(results.imp[i].str))
 			lasttok = results.imp[i].str;
 	}
+
+	dprint("fasthighlighting arena: size = %lu, used = %lu\n", arena_size(syntax_arena), arena_used(syntax_arena));
+	dprint("processed %lu tokens. results.impsz = %lu\n", results.impi, results.impsz);
 
 	gcenable();
 

@@ -931,7 +931,7 @@ refresh(EditorState *state)
 
 	outbuf_append(buf, prompt, strlen(prompt));
 	if(state->syntax_highlight_hook) {
-		dprint("calling syntax highlighting hook");
+		dprint("calling syntax highlighting hook\n");
 		highlighted_buffer = state->syntax_highlight_hook(state->buffer, state->bufend);
 		if(highlighted_buffer) {
 			outbuf_append_printable(state, buf, highlighted_buffer, strlen(highlighted_buffer), 1);
