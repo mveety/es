@@ -1,5 +1,6 @@
 #ifndef __es_result
 #define __es_result
+#include <stdint.h>
 
 typedef struct Result Result;
 
