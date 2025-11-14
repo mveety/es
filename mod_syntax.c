@@ -757,9 +757,6 @@ es_fast_highlighting(char *buffer, size_t bufend)
 					futuretok = results.imp[ii].str;
 					break;
 				}
-			if(editor->dfd > 0)
-				dprintf(editor->dfd, "results.imp.str = \"%s\", lasttok = \"%s\", futuretok = \"%s\"\n",
-						results.imp[i].str, lasttok, futuretok);
 			switch(atom_type(results.imp[i].str, lasttok, futuretok)) {
 			default:
 				unreachable();
