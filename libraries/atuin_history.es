@@ -44,6 +44,8 @@ fn __atuin_enable {
 			local (id=; ctime = $unixtime_ns) {
 				__atuin_echo 'id = `{atuin history start ''--'' '^$cmdline
 				id = `{atuin history start '--' $cmdline}
+				%add-history $cmdline
+				ditto = $cmdline
 				ATUIN_HISTORY_ID = $id
 				cmdstarttime = $ctime
 				if {$atuin_history_conf_update-history-file} {

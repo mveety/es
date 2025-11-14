@@ -752,9 +752,14 @@ es_fast_highlighting(char *buffer, size_t bufend)
 			if(colorcomment.data)
 				soutbuf_append_color(syntax_arena, obuf, colorreset.data, colorreset.len);
 		} else if(syn_isatom(results.imp[i].str)) {
-			for(ii = i, futuretok = nil; ii < results.impi; ii++)
-				if(!syn_iswhitespace(results.imp[ii].str))
+			for(ii = i+1, futuretok = nil; ii < results.impi; ii++)
+				if(!syn_iswhitespace(results.imp[ii].str)){
 					futuretok = results.imp[ii].str;
+					break;
+				}
+			if(editor->dfd > 0)
+				dprintf(editor->dfd, "results.imp.str = \"%s\", lasttok = \"%s\", futuretok = \"%s\"\n",
+						results.imp[i].str, lasttok, futuretok);
 			switch(atom_type(results.imp[i].str, lasttok, futuretok)) {
 			default:
 				unreachable();
