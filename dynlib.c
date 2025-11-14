@@ -50,11 +50,11 @@ create_library(char *fname, char *errstr, size_t errstrlen)
 
 	apiversion = dlsym(lib->handle, "dynlibapi");
 
-	if(!apiversion || *apiversion < DynLibApi) {
+	if(!apiversion || *apiversion > DynLibApi) {
 		if(apiversion) {
 			if(errstr)
-				snprintf(&errstr[0], errstrlen, "module api too old! (is %ld, need %d)",
-						 *apiversion, DynLibApi);
+				snprintf(&errstr[0], errstrlen, "module's api is too new! (es is %d, lib is %ld)",
+						 DynLibApi, *apiversion);
 		} else {
 			if(errstr)
 				snprintf(&errstr[0], errstrlen, "module api too old!");

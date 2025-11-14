@@ -21,7 +21,7 @@
 #define PRIMSEND {0, 0}
 
 enum {
-	DynLibApi = 4,
+	DynLibApi = 5,
 
 	// loading errors
 	ErrorOkay = 0,
