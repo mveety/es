@@ -84,6 +84,7 @@ typedef volatile void noreturn;
 typedef void noreturn;
 #endif
 
+#include "result.h"
 #include "editor.h"
 
 /* for regexes */
@@ -240,5 +241,6 @@ extern int getgroups(int, int *);
 #ifndef HAVE_SETPGID
 #error es-mveety requires setpgid
 #endif
+
 
 #endif

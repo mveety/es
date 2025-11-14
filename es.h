@@ -1,5 +1,8 @@
 /* es.h -- definitions for higher order shell ($Revision: 1.2 $) */
 
+#ifndef __es_h
+#define __es_h
+
 #include "config.h"
 #include "stdenv.h"
 
@@ -28,7 +31,6 @@ typedef struct RegexStatus RegexStatus;
 typedef struct AppendContext AppendContext;
 typedef struct Root Root;
 typedef struct Object Object;
-typedef struct Result Result;
 
 typedef enum {
 	tkBad = 0,
@@ -214,16 +216,6 @@ struct Object {
 	size_t size;	   /* object payload size */
 	int64_t refcount;
 	void *data;
-};
-
-struct Result {
-	union {
-		int64_t i;
-		double f;
-		char *str;
-		void *ptr;
-	};
-	int status;
 };
 
 /* keymapping */
@@ -803,4 +795,6 @@ extern List *raised(List *e);
 
 #ifndef unreachable
 #define unreachable() STMT(assert(UNREACHABLE));
+#endif
+
 #endif

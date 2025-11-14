@@ -1,6 +1,6 @@
 # --- dependencies ---
 
-ESHFILES = config.h esconfig.h stdenv.h es.h editor.h
+ESHFILES = config.h esconfig.h stdenv.h es.h editor.h result.h
 
 stdenv.h : esconfig.h
 es.h : config.h stdenv.h

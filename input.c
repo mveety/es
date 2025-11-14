@@ -298,10 +298,10 @@ eoffill(Input *in)
 	return EOF;
 }
 
-static char *
+Result
 call_editor(int which_prompt)
 {
-	char *res;
+	Result res;
 
 	if(which_prompt > 1)
 		which_prompt = 0;
@@ -315,11 +315,11 @@ call_editor(int which_prompt)
 	in_editor = TRUE;
 	if(!setjmp(slowlabel)) {
 		slow = TRUE;
-		res = interrupted ? nil : line_editor(editor);
+		res = interrupted ? result(nil, 0) : line_editor(editor);
 	} else
-		res = nil;
+		res = result(nil, 0);
 	slow = FALSE;
-	if(res == nil)
+	if(res.str == nil)
 		errno = EINTR;
 	SIGCHK();
 	return res;
@@ -602,6 +602,7 @@ fdfill(Input *in)
 	List *result = NULL; Root r_result;
 	size_t i;
 	const char cr[] = "\r";
+	Result res = (Result){.ptr = nil, .status = -2};
 
 	assert(in->buf == in->bufend);
 	assert(in->fd >= 0);
@@ -609,7 +610,7 @@ fdfill(Input *in)
 	if(in->runflags & run_interactive && in->fd == 0) {
 		char *rlinebuf = nil;
 edit_start:
-		rlinebuf = call_editor(prompt);
+		res = call_editor(prompt);
 		if(sigwinch_resize == TRUE){
 			sigwinch_resize = FALSE;
 			write(editor->ofd, cr, sizeof(cr));
@@ -618,8 +619,11 @@ edit_start:
 			goto edit_start;
 		}
 		in_editor = FALSE;
-		if(rlinebuf == NULL)
-			nread = 0;
+		rlinebuf = res.str;
+		if(res.status == -1)
+			nread = -1;
+		else if(rlinebuf == NULL)
+				nread = 0;
 		else {
 			nread = copybuffer(in, rlinebuf, strlen(rlinebuf)) + 1;
 			in->bufbegin[nread - 1] = '\n';
@@ -632,12 +636,14 @@ edit_start:
 		} while(nread == -1 && errno == EINTR);
 
 	if(nread <= 0) {
-		close(in->fd);
-		in->fd = -1;
-		in->fill = eoffill;
-		in->runflags &= ~run_interactive;
-		if(nread == -1)
-			fail("$&parse", "%s: %s", in->name == NULL ? "es" : in->name, esstrerror(errno));
+		if(res.status == -2){
+			close(in->fd);
+			in->fd = -1;
+			in->fill = eoffill;
+			in->runflags &= ~run_interactive;
+			if(nread == -1)
+				fail("$&parse", "%s: %s", in->name == NULL ? "es" : in->name, esstrerror(errno));
+		}
 		return EOF;
 	}
 

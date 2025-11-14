@@ -5,6 +5,7 @@
 #include <termios.h>
 #include <stddef.h>
 #include <stdint.h>
+#include "result.h"
 
 #define EDITINITIALBUFSZ 4096
 
@@ -251,6 +252,20 @@ struct EditorContext {
 	size_t bufsize;
 };
 
+#ifdef STANDALONE
+typedef struct Result Result;
+
+struct Result {
+	union {
+		int64_t i;
+		double f;
+		char *str;
+		void *ptr;
+	};
+	int status;
+};
+#endif
+
 /* basics */
 extern int rawmode_on(EditorState *state);
 extern int rawmode_off(EditorState *state);
@@ -311,6 +326,6 @@ extern char *getcurrentline(EditorState *state);
 
 /* editors */
 extern char *basic_editor(EditorState *state);
-extern char *line_editor(EditorState *state);
+extern Result line_editor(EditorState *state);
 
 #endif

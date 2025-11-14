@@ -6,7 +6,7 @@ VPATH = $(srcdir)
 
 HFILES	= config.h es.h gc.h input.h prim.h print.h sigmsgs.h \
 		  stdenv.h syntax.h esconfig.h eval.h esmodule.h float_util.h \
-		  editor.h
+		  editor.h result.h
 
 MAINCFILES	= access.c closure.c conv.c dict.c eval.c except.c fd.c gc.c \
 		  gc_common.c glob.c glom.c input.c heredoc.c list.c main.c \

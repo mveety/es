@@ -109,11 +109,6 @@ estrndup(char *str, size_t len)
 	return res;
 }
 
-typedef struct {
-	void *ptr;
-	int status;
-} Result;
-
 Result
 result(void *ptr, int status)
 {
@@ -727,7 +722,7 @@ marked_strlen(char *str)
 }
 
 size_t
-utf8_strnlen(EditorState *state, char *str, size_t lim)
+old_utf8_strnlen(EditorState *state, char *str, size_t lim)
 {
 	size_t i = 0;
 	size_t sz = 0;
@@ -751,13 +746,48 @@ utf8_strnlen(EditorState *state, char *str, size_t lim)
 }
 
 size_t
+new_utf8_strnlen(EditorState *state, char *str, size_t lim)
+{
+	wchar_t *wstr = nil;
+	char *sstr = nil;
+	size_t nwchars = 0;
+	int cols = 0;
+
+	sstr = estrndup(str, lim);
+	wstr = ealloc(sizeof(wchar_t)*(lim+2));
+	errno = 0;
+	nwchars = mbstowcs(wstr, sstr, lim);
+	if(nwchars == (size_t)-1){
+		if(errno == EILSEQ)
+			dprintf(2, "got invalid multibyte sequence\n");
+		else if (errno == EINVAL)
+			dprintf(2, "conversion state is invalid\n");
+		unreachable();
+	}
+	cols = wcswidth(wstr, nwchars);
+	if(cols == -1){
+		dprintf(2, "non-printing char found?\n");
+		unreachable();
+	}
+	efree(wstr);
+	efree(sstr);
+	return (size_t)cols;
+}
+
+size_t
+utf8_strnlen(EditorState *state, char *str, size_t lim)
+{
+	return new_utf8_strnlen(state, str, lim);
+}
+
+size_t
 utf8_marked_strlen(char *str)
 {
 	size_t i = 0;
 	size_t len = 0;
 	enum { Count, DontCount } state = Count;
-	wchar_t buf;
-	int st;
+	wchar_t buf = 0;
+	int st = 0;
 	int width;
 
 	for(i = 0, len = 0; str[i] != 0;) {
@@ -2332,7 +2362,7 @@ fail:
  * for integration with kqueue/select/etc. I don't think that will be at all
  * valuable for es, but if this has life outside of here it might be of value.
  */
-char *
+Result
 line_editor(EditorState *state)
 {
 	char c;
@@ -2344,9 +2374,9 @@ line_editor(EditorState *state)
 	size_t readn = 0;
 
 	if(!state->initialized)
-		return fallback_editor(state);
+		return result(fallback_editor(state), 0);
 	if(state->force_fallback)
-		return fallback_editor(state);
+		return result(fallback_editor(state), 0);
 
 	rawmode_on(state);
 	if(reset_editor(state) < 0)
@@ -2714,13 +2744,13 @@ line_editor(EditorState *state)
 	rawmode_off(state);
 
 	if(readstate == StateCancel)
-		return estrdup("");
+		return result(nil, -1);
 	if(state->bufend == 0)
-		return estrdup("");
-	return estrndup(state->buffer, state->bufend + 1);
+		return result(estrdup(""), 0);
+	return result(estrndup(state->buffer, state->bufend + 1), 0);
 
 fail:
 	write(state->ofd, "\r\n", 2);
 	rawmode_off(state);
-	return nil;
+	return result(nil, -2);
 }
