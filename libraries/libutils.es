@@ -439,12 +439,22 @@ fn dynlib_info dynlib {
 	}
 }
 
-fn dynlibs {
-	if {~ <={%dynlibs |> %count} 0} {
-		echo 'no dynamic libraries loaded'
-	} {
-		for (dynlib = <=%dynlibs) {
-			dynlib_info $dynlib
+fn dynlibs args {
+	let (verbose = false) {
+		if {~ $args(1) -v } {
+			verbose = true
+			args = $args(2 ...)
+		}
+		if {~ <={%dynlibs |> %count} 0} {
+			echo 'no dynamic libraries loaded'
+		} {
+			if {$verbose} {
+				for (dynlib = <=%dynlibs) {
+					dynlib_info $dynlib
+				}
+			} {
+				echo <=%dynlibs
+			}
 		}
 	}
 }
