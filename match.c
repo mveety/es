@@ -27,7 +27,7 @@ int
 isquoted(const char *q, size_t qi, size_t quotelen)
 {
 	if(verbose_rangematch)
-		dprintf(2, "isquoted: q = \"%s\", qi = %lu, quotelen = %lu\n", q ,qi, quotelen);
+		dprintf(2, "isquoted: q = \"%s\", qi = %lu, quotelen = %lu\n", q, qi, quotelen);
 	if(q == QUOTED)
 		return 1;
 	if(q == UNQUOTED)

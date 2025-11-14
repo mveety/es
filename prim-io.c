@@ -233,7 +233,7 @@ PRIM(pipe) {
 	}
 
 	Ref(List *, result, NULL);
-	for(i = n-1; i >= 0; i--){
+	for(i = n - 1; i >= 0; i--) {
 		Term *t;
 		int status = ewaitfor(pids[i]);
 		printstatus(0, status);

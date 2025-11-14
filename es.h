@@ -437,9 +437,9 @@ extern noreturn panic(const char *fmt, ...) __attribute__((noreturn));
 
 /* str.c */
 
-extern char *str(const char *fmt, ...);		/* create a gc space string by printing */
-extern char *astr(const char *fmt, ...);	/* same as above but in the parser arena */
-extern char *mprint(const char *fmt, ...);	/* create an ealloc space string by printing */
+extern char *str(const char *fmt, ...);	   /* create a gc space string by printing */
+extern char *astr(const char *fmt, ...);   /* same as above but in the parser arena */
+extern char *mprint(const char *fmt, ...); /* create an ealloc space string by printing */
 extern StrList *mkstrlist(char *, StrList *);
 
 /* vec.c */
@@ -625,7 +625,6 @@ extern char *gcndup(const char *s, size_t n); /* copy a counted string into gc s
 extern void *aalloc(size_t sz, int tag);
 extern char *andup(const char *str, size_t n);
 extern char *adup(const char *str);
-
 
 extern void initgc(void);			  /* must be called at the dawn of time */
 extern void gc(void);				  /* provoke a collection, if enabled */

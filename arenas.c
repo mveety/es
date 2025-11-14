@@ -10,7 +10,7 @@ struct ArenaBlock {
 };
 
 enum {
-	ArenaSize = 2*1024,
+	ArenaSize = 2 * 1024,
 	ArenaBlockMagic = 0xdeadbeefdeadbeef,
 };
 
@@ -21,14 +21,14 @@ void *
 ptr(ArenaBlock *block)
 {
 	assert(block);
-	return (void*)(((char*)block)+sizeof(ArenaBlock));
+	return (void *)(((char *)block) + sizeof(ArenaBlock));
 }
 
 void *
 newptr(ArenaBlock *block, size_t nbytes)
 {
 	block->magic = ArenaBlockMagic;
-	block->size = nbytes-sizeof(ArenaBlock);
+	block->size = nbytes - sizeof(ArenaBlock);
 
 	return ptr(block);
 }
@@ -39,7 +39,7 @@ arenablock(void *ptr)
 	ArenaBlock *block;
 
 	assert(ptr);
-	block = (ArenaBlock*)(((char*)ptr)-sizeof(ArenaBlock));
+	block = (ArenaBlock *)(((char *)ptr) - sizeof(ArenaBlock));
 	assert(block->magic == ArenaBlockMagic);
 	return block;
 }
@@ -52,7 +52,7 @@ newarena(size_t size)
 
 	realsize = ALIGN(sizeof(Arena) + size);
 	newa = ealloc(realsize);
-	newa->ptr = ((char*)newa)+sizeof(Arena);
+	newa->ptr = ((char *)newa) + sizeof(Arena);
 	newa->cur = newa->ptr;
 	newa->size = size;
 	newa->remain = size;
@@ -108,7 +108,7 @@ arena_allocate(Arena *arena, size_t nbytes)
 	void *ptr = nil;
 
 	assert(arena);
-	nbytes = ALIGN(nbytes+sizeof(ArenaBlock));
+	nbytes = ALIGN(nbytes + sizeof(ArenaBlock));
 	if(nbytes >= arena->size)
 		nextsize = arena->size + (2 * nbytes);
 	else
@@ -118,7 +118,7 @@ arena_allocate(Arena *arena, size_t nbytes)
 	if(cur == nil)
 		cur = extend_arena(arena, nextsize);
 
-	block = (ArenaBlock*)cur->cur;
+	block = (ArenaBlock *)cur->cur;
 	cur->cur += nbytes;
 	cur->remain -= nbytes;
 
@@ -176,7 +176,7 @@ arena_sizeof(Arena *arena, void *p)
 size_t
 arena_nelem(Arena *arena, void *p, size_t elemsize)
 {
-	return arena_sizeof(arena, p)/elemsize;
+	return arena_sizeof(arena, p) / elemsize;
 }
 
 char *
@@ -184,7 +184,7 @@ arena_ndup(Arena *arena, const char *str, size_t n)
 {
 	char *res = nil;
 
-	res = arena_allocate(arena, n+1);
+	res = arena_allocate(arena, n + 1);
 	memcpy(res, str, n);
 	res[n] = 0;
 
@@ -250,7 +250,7 @@ arena_reset(Arena *arena)
 	if(arena == nil)
 		return 0;
 
-	if(editor_debugfd > 0 && arena_debugging){
+	if(editor_debugfd > 0 && arena_debugging) {
 		if(arena->note)
 			dprintf(editor_debugfd, "destroying arena %s@%p ", arena->note, arena);
 		else
@@ -258,7 +258,7 @@ arena_reset(Arena *arena)
 		dprintf(editor_debugfd, "(size = %lu, used = %lu)\n", arena_size(arena), arena_used(arena));
 	}
 
-	for(cur = arena; cur != nil; cur = cur->next){
+	for(cur = arena; cur != nil; cur = cur->next) {
 		cur->cur = cur->ptr;
 		cur->remain = cur->size;
 	}
@@ -275,7 +275,7 @@ arena_destroy(Arena *arena)
 	if(arena == nil)
 		return 0;
 
-	if(editor_debugfd > 0 && arena_debugging){
+	if(editor_debugfd > 0 && arena_debugging) {
 		if(arena->note)
 			dprintf(editor_debugfd, "destroying arena %s@%p ", arena->note, arena);
 		else
@@ -303,7 +303,7 @@ aalloc(size_t sz, int tag)
 
 	assert(sz > 0);
 
-	if(input->arena == nil){
+	if(input->arena == nil) {
 		input->arena = newarena(ArenaSize);
 		arena_annotate(input->arena, input->name);
 	}

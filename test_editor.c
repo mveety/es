@@ -58,16 +58,17 @@ syntax_highlight_hook(char *buffer, size_t len)
 	char resetfmt[] = "\x01\x1b[0m\x02";
 	char *resbuf = nil;
 
-	dprintf(dfd, "sizeof(redcolor) = %lu, sizeof(resetfmt) = %lu\n", sizeof(redcolor), sizeof(resetfmt));
+	dprintf(dfd, "sizeof(redcolor) = %lu, sizeof(resetfmt) = %lu\n", sizeof(redcolor),
+			sizeof(resetfmt));
 	if(dfd > 0)
 		dprintf(dfd, "syntax hook: got \"%s\" (len = %lu)\n", buffer, len);
 	if(len == 0)
 		return nil;
 
-	resbuf = ealloc(len+sizeof(redcolor)+sizeof(resetfmt));
-	memcpy(resbuf, redcolor, sizeof(redcolor)-1);
-	memcpy(&resbuf[sizeof(redcolor)-1], buffer, len);
-	memcpy(&resbuf[sizeof(redcolor)-1+len], resetfmt, sizeof(resetfmt));
+	resbuf = ealloc(len + sizeof(redcolor) + sizeof(resetfmt));
+	memcpy(resbuf, redcolor, sizeof(redcolor) - 1);
+	memcpy(&resbuf[sizeof(redcolor) - 1], buffer, len);
+	memcpy(&resbuf[sizeof(redcolor) - 1 + len], resetfmt, sizeof(resetfmt));
 	dprintf(dfd, "resbuf = \"%s\"\n", resbuf);
 
 	return resbuf;

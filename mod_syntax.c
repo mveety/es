@@ -82,7 +82,10 @@ dyn_onload(void)
 		return -6;
 	if(pcre2_regcomp(&whitespace_regex, "^[ \\t\r\\n]+$", REMode) != 0)
 		return -7;
-	if(pcre2_regcomp(&keywords_regex, "^(~|~~|local|let|lets|for|fn|%closure|match|matchall|process|%dict|%re|onerror)$", REMode) != 0)
+	if(pcre2_regcomp(
+		   &keywords_regex,
+		   "^(~|~~|local|let|lets|for|fn|%closure|match|matchall|process|%dict|%re|onerror)$",
+		   REMode) != 0)
 		return -8;
 
 	return 0;
@@ -125,12 +128,12 @@ soutbuf_clean(SOutBuf *buf)
 void
 soutbuf_append(Arena *arena, SOutBuf *buf, char *str, size_t len)
 {
-	if(buf->str == nil){
-		buf->str = arena_allocate(arena, len+2);
-		buf->size = len+2;
+	if(buf->str == nil) {
+		buf->str = arena_allocate(arena, len + 2);
+		buf->size = len + 2;
 	}
 	if(buf->len + len + 1 > buf->size) {
-		buf->str = arena_reallocate(arena, buf->str, buf->size+len+1);
+		buf->str = arena_reallocate(arena, buf->str, buf->size + len + 1);
 		buf->size += len + 1;
 	}
 	memcpy(&buf->str[buf->len], str, len);
@@ -150,8 +153,8 @@ soutbuf_initialize(Arena *arena, SOutBuf *buf, int len)
 {
 	if(buf->str != nil)
 		return;
-	buf->str = arena_allocate(arena, len+2);
-	buf->size = len+2;
+	buf->str = arena_allocate(arena, len + 2);
+	buf->size = len + 2;
 }
 
 char *
@@ -177,7 +180,7 @@ es_syntax_highlighting_hook(char *buffer, size_t len)
 
 	args = mklist(mkstr(gcndup(buffer, len)), nil);
 	hook = append(hook, args);
-	res= eval(hook, nil, 0);
+	res = eval(hook, nil, 0);
 
 	if(res)
 		resstr = estrdup(getstr(res->term));
@@ -224,7 +227,7 @@ _issymbol(char c, int inatom)
 	case ']':
 	case '.':
 		return 1;
-case ':':
+	case ':':
 		if(inatom)
 			return 0;
 		return 1;
@@ -267,7 +270,7 @@ basictokenize(char *tokstr, Arena *arena)
 	TokenResults results;
 
 	memset(&results, 0, sizeof(results));
-	results.imp = arena_allocate(arena, sizeof(Token)*100);
+	results.imp = arena_allocate(arena, sizeof(Token) * 100);
 	results.impsz = 100;
 
 	instr = arena_dup(arena, tokstr);
@@ -330,9 +333,10 @@ basictokenize(char *tokstr, Arena *arena)
 				assert(e >= s);
 				if(e - s > 0) {
 					tmp = arena_ndup(arena, &instr[s], e - s);
-					if(results.impi >= results.impsz){
+					if(results.impi >= results.impsz) {
 						results.impsz *= 2;
-						results.imp = arena_reallocate(arena, results.imp, sizeof(Token)*results.impsz);
+						results.imp =
+							arena_reallocate(arena, results.imp, sizeof(Token) * results.impsz);
 					}
 					results.imp[results.impi].str = tmp;
 					results.imp[results.impi++].len = e - s;
@@ -375,9 +379,10 @@ basictokenize(char *tokstr, Arena *arena)
 				assert(e >= s);
 				if(e - s > 0) {
 					tmp = arena_ndup(arena, &instr[s], e - s);
-					if(results.impi >= results.impsz){
-results.impsz *= 2;
-						results.imp = arena_reallocate(arena, results.imp, sizeof(Token)*results.impsz);
+					if(results.impi >= results.impsz) {
+						results.impsz *= 2;
+						results.imp =
+							arena_reallocate(arena, results.imp, sizeof(Token) * results.impsz);
 					}
 					results.imp[results.impi].str = tmp;
 					results.imp[results.impi++].len = e - s;
@@ -403,9 +408,10 @@ results.impsz *= 2;
 				assert(e >= s);
 				if(e - s > 0) {
 					tmp = arena_ndup(arena, &instr[s], e - s);
-					if(results.impi >= results.impsz){
+					if(results.impi >= results.impsz) {
 						results.impsz *= 2;
-						results.imp = arena_reallocate(arena, results.imp, sizeof(Token)*results.impsz);
+						results.imp =
+							arena_reallocate(arena, results.imp, sizeof(Token) * results.impsz);
 					}
 					results.imp[results.impi].str = tmp;
 					results.imp[results.impi++].len = e - s;
@@ -428,9 +434,9 @@ results.impsz *= 2;
 			i++;
 			break;
 		case Symbol:
-			if(results.impi >= results.impsz){
+			if(results.impi >= results.impsz) {
 				results.impsz *= 2;
-				results.imp = arena_reallocate(arena, results.imp, sizeof(Token)*results.impsz);
+				results.imp = arena_reallocate(arena, results.imp, sizeof(Token) * results.impsz);
 			}
 			switch(instr[i]) {
 			default:
@@ -540,9 +546,9 @@ results.impsz *= 2;
 			break;
 		case Comment:
 			tmp = arena_dup(arena, &instr[s]);
-			if(results.impi >= results.impsz){
+			if(results.impi >= results.impsz) {
 				results.impsz *= 2;
-				results.imp = arena_reallocate(arena, results.imp, sizeof(char*)*results.impsz);
+				results.imp = arena_reallocate(arena, results.imp, sizeof(char *) * results.impsz);
 			}
 			results.imp[results.impi].str = tmp;
 			results.imp[results.impi++].len = strlen(tmp);
@@ -555,9 +561,10 @@ done:
 	e = i;
 	if(e - s > 0) {
 		tmp = arena_ndup(arena, &instr[s], e - s);
-		if(results.impi >= results.impsz){
-			results.impsz += 5; /* we're done so we don't need to double. just add a safe amount here */
-			results.imp = arena_reallocate(arena, results.imp, sizeof(Token)*results.impsz);
+		if(results.impi >= results.impsz) {
+			results.impsz +=
+				5; /* we're done so we don't need to double. just add a safe amount here */
+			results.imp = arena_reallocate(arena, results.imp, sizeof(Token) * results.impsz);
 		}
 		results.imp[results.impi].str = tmp;
 		results.imp[results.impi++].len = strlen(tmp);
@@ -604,7 +611,7 @@ syn_isstring(char *teststr)
 
 	if(pcre2_regexec(&string_regex, teststr, 0, pmatch, 0) == 0)
 		return 1;
-return 0;
+	return 0;
 }
 
 int
@@ -646,7 +653,7 @@ atom_type(char *str, char *lasttok, char *futuretok)
 {
 	AtomType type = AtomNone;
 
-	switch((type = syn_isatom(str))){
+	switch((type = syn_isatom(str))) {
 	default:
 	case AtomNone:
 		unreachable();
@@ -665,7 +672,8 @@ atom_type(char *str, char *lasttok, char *futuretok)
 			return AtomFunction;
 		if(lasttok != nil && streq(lasttok, "fn"))
 			return AtomFunction;
-		if(futuretok != nil && (futuretok[0] == '=' || streq(futuretok, ":=") || streq(futuretok, "+=")))
+		if(futuretok != nil &&
+		   (futuretok[0] == '=' || streq(futuretok, ":=") || streq(futuretok, "+=")))
 			return AtomVariable;
 		return AtomBasic;
 	}
@@ -697,13 +705,13 @@ es_fast_highlighting(char *buffer, size_t bufend)
 	String colorreset = {.len = 4, .data = "\x1b[0m"};
 
 	if(syntax_arena == nil)
-		syntax_arena = newarena(4*1024);
+		syntax_arena = newarena(4 * 1024);
 	else
 		arena_reset(syntax_arena);
 
 	gcdisable();
 
-	if((synhigh = varlookup("syntax_conf_colors", nil)) == nil){
+	if((synhigh = varlookup("syntax_conf_colors", nil)) == nil) {
 		gcenable();
 		return estrdup(line);
 	}
@@ -730,8 +738,8 @@ es_fast_highlighting(char *buffer, size_t bufend)
 	line = arena_ndup(syntax_arena, buffer, bufend);
 	results = basictokenize(line, syntax_arena);
 
-	for(i = 0; i < results.impi; i++, colored = 0){
-		if(syn_isstring(results.imp[i].str)){
+	for(i = 0; i < results.impi; i++, colored = 0) {
+		if(syn_isstring(results.imp[i].str)) {
 			if(colorstring.data)
 				soutbuf_append_color(syntax_arena, obuf, colorstring.data, colorstring.len);
 			soutbuf_append(syntax_arena, obuf, results.imp[i].str, results.imp[i].len);
@@ -743,46 +751,47 @@ es_fast_highlighting(char *buffer, size_t bufend)
 			soutbuf_append(syntax_arena, obuf, results.imp[i].str, results.imp[i].len);
 			if(colorcomment.data)
 				soutbuf_append_color(syntax_arena, obuf, colorreset.data, colorreset.len);
-		} else if(syn_isatom(results.imp[i].str)){
+		} else if(syn_isatom(results.imp[i].str)) {
 			for(ii = i, futuretok = nil; ii < results.impi; ii++)
 				if(!syn_iswhitespace(results.imp[ii].str))
 					futuretok = results.imp[ii].str;
-			switch(atom_type(results.imp[i].str, lasttok, futuretok)){
+			switch(atom_type(results.imp[i].str, lasttok, futuretok)) {
 			default:
 				unreachable();
 				break;
 			case AtomNumber:
-				if(colornumber.data){
+				if(colornumber.data) {
 					soutbuf_append_color(syntax_arena, obuf, colornumber.data, colornumber.len);
 					colored = 1;
 				}
 				break;
 			case AtomKeyword:
-				if(colorkeyword.data){
+				if(colorkeyword.data) {
 					soutbuf_append_color(syntax_arena, obuf, colorkeyword.data, colorkeyword.len);
 					colored = 1;
 				}
 				break;
 			case AtomVariable:
-				if(colorvariable.data){
+				if(colorvariable.data) {
 					soutbuf_append_color(syntax_arena, obuf, colorvariable.data, colorvariable.len);
 					colored = 1;
 				}
 				break;
 			case AtomFunction:
-				if(colorfunction.data){
+				if(colorfunction.data) {
 					soutbuf_append_color(syntax_arena, obuf, colorfunction.data, colorfunction.len);
 					colored = 1;
 				}
 				break;
 			case AtomPrimitive:
-				if(colorprimitive.data){
-					soutbuf_append_color(syntax_arena, obuf, colorprimitive.data, colorprimitive.len);
+				if(colorprimitive.data) {
+					soutbuf_append_color(syntax_arena, obuf, colorprimitive.data,
+										 colorprimitive.len);
 					colored = 1;
 				}
 				break;
 			case AtomBasic:
-				if(colorbasic.data){
+				if(colorbasic.data) {
 					soutbuf_append_color(syntax_arena, obuf, colorbasic.data, colorbasic.len);
 					colored = 1;
 				}
@@ -798,7 +807,8 @@ es_fast_highlighting(char *buffer, size_t bufend)
 			lasttok = results.imp[i].str;
 	}
 
-	dprint("fasthighlighting arena: size = %lu, used = %lu\n", arena_size(syntax_arena), arena_used(syntax_arena));
+	dprint("fasthighlighting arena: size = %lu, used = %lu\n", arena_size(syntax_arena),
+		   arena_used(syntax_arena));
 	dprint("processed %lu tokens. results.impsz = %lu\n", results.impi, results.impsz);
 
 	gcenable();
@@ -841,10 +851,11 @@ PRIM(basictokenize) {
 	if(status < 0)
 		goto fail;
 
-	dprint("basictokenize arena: size = %lu, used = %lu\n", arena_size(btarena), arena_used(btarena));
+	dprint("basictokenize arena: size = %lu, used = %lu\n", arena_size(btarena),
+		   arena_used(btarena));
 	dprint("generated %lu tokens. results.impsz = %lu\n", results.impi, results.impsz);
 	gc();
-	for(i = results.impi-1; i >= 0; i--){
+	for(i = results.impi - 1; i >= 0; i--) {
 		assert(results.imp[i].str != nil);
 		res = mklist(mkstr(str("%s", results.imp[i].str)), res);
 	}
@@ -925,7 +936,8 @@ PRIM(syn_atom_type) {
 	if(list->next->next == nil)
 		fail("$&syn_atom_type", "missing $3");
 
-	switch(atom_type(getstr(list->term), getstr(list->next->term), getstr(list->next->next->term))){
+	switch(
+		atom_type(getstr(list->term), getstr(list->next->term), getstr(list->next->next->term))) {
 	default:
 	case AtomNone:
 		unreachable();
@@ -955,7 +967,7 @@ PRIM(fasthighlighting) {
 
 	instr = getstr(list->term);
 	res = es_fast_highlighting(instr, strlen(instr));
-	gcref(&r_reslist, (void**)&reslist);
+	gcref(&r_reslist, (void **)&reslist);
 	reslist = mklist(mkstr(gcdup(res)), nil);
 	efree(res);
 	gcrderef(&r_reslist);

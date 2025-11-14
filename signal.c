@@ -342,7 +342,7 @@ sigchk(void)
 		break;
 	case sig_special:
 		assert(sig == SIGINT || sig == SIGWINCH);
-		if(sig == SIGINT){
+		if(sig == SIGINT) {
 			/* this is the newline you see when you hit ^C while typing a command */
 			if(sigint_newline)
 				eprint("\n");
@@ -352,7 +352,7 @@ sigchk(void)
 			throw(e);
 			unreachable();
 		} else {
-			if(in_editor == TRUE){
+			if(in_editor == TRUE) {
 				sigwinch_resize = TRUE;
 				update_size(editor);
 				editor_ctx = save_editor_context(editor);

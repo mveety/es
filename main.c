@@ -313,7 +313,7 @@ parse_gcopt(char *optarg)
 	} else if(streq(parameter, "editordebug")) {
 		editor_debug_file = strdup(arg);
 	} else if(streq(parameter, "arenadebug")) {
-		switch(trueargument(arg)){
+		switch(trueargument(arg)) {
 		default:
 			goto fail;
 		case 1:

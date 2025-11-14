@@ -210,4 +210,3 @@ extern char *asealbuffer(Buffer *buf);
 extern char *asealcountedbuffer(Buffer *buf);
 
 #endif
-

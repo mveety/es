@@ -244,7 +244,7 @@ PRIM(dictreadonly) {
 	if(!list)
 		fail("$&dictreadonly", "missing argument");
 
-	gcref(&r_d, (void**)&d);
+	gcref(&r_d, (void **)&d);
 
 	d = getdict(list->term);
 	if(!d)

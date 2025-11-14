@@ -611,7 +611,7 @@ fdfill(Input *in)
 		char *rlinebuf = nil;
 edit_start:
 		res = call_editor(prompt);
-		if(sigwinch_resize == TRUE){
+		if(sigwinch_resize == TRUE) {
 			sigwinch_resize = FALSE;
 			write(editor->ofd, cr, sizeof(cr));
 			if(editor_ctx != nil)
@@ -623,7 +623,7 @@ edit_start:
 		if(res.status == -1)
 			nread = -1;
 		else if(rlinebuf == NULL)
-				nread = 0;
+			nread = 0;
 		else {
 			nread = copybuffer(in, rlinebuf, strlen(rlinebuf)) + 1;
 			in->bufbegin[nread - 1] = '\n';
@@ -636,7 +636,7 @@ edit_start:
 		} while(nread == -1 && errno == EINTR);
 
 	if(nread <= 0) {
-		if(res.status == -2){
+		if(res.status == -2) {
 			close(in->fd);
 			in->fd = -1;
 			in->fill = eoffill;

@@ -10,7 +10,7 @@
 #define EDITINITIALBUFSZ 4096
 
 enum {
-	/* base keys */
+/* base keys */
 #define BaseKeys 128
 	KeyMax = 128,
 	KeyNull = 0,
@@ -283,7 +283,7 @@ extern void set_prompt1(EditorState *state, char *str);
 extern void set_prompt2(EditorState *state, char *str);
 extern void set_complete_hook(EditorState *state, char **(*hook)(char *, int, int));
 extern void set_highlight_formatting(EditorState *state, char *formatting);
-extern void set_syntax_highlight_hook(EditorState *state, char *(*hook)(char*, size_t));
+extern void set_syntax_highlight_hook(EditorState *state, char *(*hook)(char *, size_t));
 
 /* motions and editing */
 extern Position getposition(EditorState *state);

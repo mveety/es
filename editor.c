@@ -754,18 +754,18 @@ new_utf8_strnlen(EditorState *state, char *str, size_t lim)
 	int cols = 0;
 
 	sstr = estrndup(str, lim);
-	wstr = ealloc(sizeof(wchar_t)*(lim+2));
+	wstr = ealloc(sizeof(wchar_t) * (lim + 2));
 	errno = 0;
 	nwchars = mbstowcs(wstr, sstr, lim);
-	if(nwchars == (size_t)-1){
+	if(nwchars == (size_t)-1) {
 		if(errno == EILSEQ)
 			dprintf(2, "got invalid multibyte sequence\n");
-		else if (errno == EINVAL)
+		else if(errno == EINVAL)
 			dprintf(2, "conversion state is invalid\n");
 		unreachable();
 	}
 	cols = wcswidth(wstr, nwchars);
-	if(cols == -1){
+	if(cols == -1) {
 		dprintf(2, "non-printing char found?\n");
 		unreachable();
 	}
@@ -949,12 +949,13 @@ refresh(EditorState *state)
 		/* go to end */
 
 		if(rel_end.lines - rel_cur_pos.lines > 0)
-			snsz = snprintf(&snbuf[0], sizeof(snbuf), "\r\x1b[%dB", rel_end.lines - rel_cur_pos.lines);
+			snsz =
+				snprintf(&snbuf[0], sizeof(snbuf), "\r\x1b[%dB", rel_end.lines - rel_cur_pos.lines);
 		else
 			snsz = snprintf(&snbuf[0], sizeof(snbuf), "\r");
 		outbuf_append(buf, &snbuf[0], snsz);
 
-		if(state->bufpos <= state->lastbufpos){
+		if(state->bufpos <= state->lastbufpos) {
 			for(i = 0; i < (size_t)(rel_end.lines - 1); i++) {
 				snsz = snprintf(&snbuf[0], sizeof(snbuf), "\r\x1b[0K\x1b[1A");
 				outbuf_append(buf, &snbuf[0], snsz);
