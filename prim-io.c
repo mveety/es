@@ -187,7 +187,7 @@ PRIM(here) {
 }
 
 PRIM(pipe) {
-	int n, infd, inpipe;
+	int n, infd, inpipe, i;
 	static int *pids = NULL, pidmax = 0;
 
 	n = length(list);
@@ -233,13 +233,13 @@ PRIM(pipe) {
 	}
 
 	Ref(List *, result, NULL);
-	do {
+	for(i = n-1; i >= 0; i--){
 		Term *t;
-		int status = ewaitfor(pids[--n]);
+		int status = ewaitfor(pids[i]);
 		printstatus(0, status);
 		t = mkstr(mkstatus(status));
 		result = mklist(t, result);
-	} while(0 < n);
+	}
 	if(evalflags & eval_inchild)
 		esexit(exitstatus(result));
 	RefReturn(result);

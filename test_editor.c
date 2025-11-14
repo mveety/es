@@ -77,7 +77,7 @@ int
 main(int argc, char *argv[])
 {
 	EditorState state;
-	char *line;
+	Result editres;
 	int st;
 	char highlight_formatting[] = "\x1b[46m\x1b[37m";
 
@@ -114,17 +114,17 @@ main(int argc, char *argv[])
 	dprintf(state.ofd, "running in %s\n", state.term);
 	dprintf(state.ofd, "type \"exit\" or \"quit\" to quit or exit\n");
 	for(;;) {
-		line = line_editor(&state);
-		if(line == nil) {
+		editres = line_editor(&state);
+		if(editres.str == nil) {
 			dprintf(2, "got not input\n");
 			continue;
 		} else {
-			dprintf(2, "got: \"%s\" (size %lu)\n", line, strlen(line));
-			history_add(&state, line);
+			dprintf(2, "got: \"%s\" (size %lu)\n", editres.str, strlen(editres.str));
+			history_add(&state, editres.str);
 		}
-		if(strcmp(line, "quit") == 0 || strcmp(line, "exit") == 0)
+		if(strcmp(editres.str, "quit") == 0 || strcmp(editres.str, "exit") == 0)
 			break;
-		free(line);
+		free(editres.str);
 	}
 	if(dfd > 0)
 		close(dfd);

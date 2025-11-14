@@ -18,6 +18,7 @@
 typedef struct TokenResults TokenResults;
 typedef struct Token Token;
 typedef struct SOutBuf SOutBuf;
+typedef struct String String;
 
 struct TokenResults {
 	int status;
@@ -35,6 +36,11 @@ struct SOutBuf {
 	char *str;
 	size_t len;
 	size_t size;
+};
+
+struct String {
+	size_t len;
+	char *data;
 };
 
 typedef enum {
@@ -97,6 +103,16 @@ dyn_onunload(void)
 	pcre2_regfree(&keywords_regex);
 
 	return 0;
+}
+
+String
+getString(Term *term)
+{
+	String res = {0, nil};
+
+	res.data = getstr(term);
+	res.len = strlen(res.data);
+	return res;
 }
 
 void
@@ -532,7 +548,6 @@ results.impsz *= 2;
 			results.imp[results.impi++].len = strlen(tmp);
 			i = instrsz;
 			s = i;
-			e = i;
 			break;
 		}
 	}
@@ -664,22 +679,22 @@ es_fast_highlighting(char *buffer, size_t bufend)
 	List *synhigh = nil;
 	List *tmp = nil;
 	TokenResults results;
-	char *colorbasic = nil;
-	char *colornumber = nil;
-	char *colorvariable = nil;
-	char *colorkeyword = nil;
-	char *colorfunction = nil;
-	char *colorstring = nil;
-	char *colorcomment = nil;
-	char *colorprimitive = nil;
-	char colorreset[] = "\x1b[0m";
-	size_t highsize = 0;
-	size_t t = 0;
 	size_t i = 0;
 	size_t ii = 0;
 	char *lasttok = nil;
 	char *futuretok = nil;
 	SOutBuf *obuf = nil;
+	int colored = 0;
+
+	String colorbasic = {0, nil};
+	String colornumber = {0, nil};
+	String colorvariable = {0, nil};
+	String colorkeyword = {0, nil};
+	String colorfunction = {0, nil};
+	String colorstring = {0, nil};
+	String colorcomment = {0, nil};
+	String colorprimitive = {0, nil};
+	String colorreset = {.len = 4, .data = "\x1b[0m"};
 
 	if(syntax_arena == nil)
 		syntax_arena = newarena(4*1024);
@@ -695,68 +710,39 @@ es_fast_highlighting(char *buffer, size_t bufend)
 	obuf = arena_allocate(syntax_arena, sizeof(SOutBuf));
 	soutbuf_initialize(syntax_arena, obuf, 1024);
 	synhighlights = getdict(synhigh->term);
-	highsize = strlen(colorreset);
-	if((tmp = dictget(synhighlights, "basic")) != nil){
-		colorbasic = getstr(tmp->term);
-		t = strlen(colorbasic);
-		if(t > highsize)
-			highsize = t;
-	}
-	if((tmp = dictget(synhighlights, "number")) != nil){
-		colornumber = getstr(tmp->term);
-		t = strlen(colornumber);
-		if(t > highsize)
-			highsize = t;
-	}
-	if((tmp = dictget(synhighlights, "variable")) != nil){
-		colorvariable = getstr(tmp->term);
-		t = strlen(colorvariable);
-		if(t > highsize)
-			highsize = t;
-	}
-	if((tmp = dictget(synhighlights, "keyword")) != nil){
-		colorkeyword = getstr(tmp->term);
-		t = strlen(colorkeyword);
-		if(t > highsize)
-			highsize = t;
-	}
-	if((tmp = dictget(synhighlights, "function")) != nil){
-		colorfunction = getstr(tmp->term);
-		t = strlen(colorfunction);
-		if(t > highsize)
-			highsize = t;
-	}
-	if((tmp = dictget(synhighlights, "string")) != nil){
-		colorstring = getstr(tmp->term);
-		t = strlen(colorstring);
-		if(t > highsize)
-			highsize = t;
-	}
-	if((tmp = dictget(synhighlights, "comment")) != nil){
-		colorcomment = getstr(tmp->term);
-		t = strlen(colorcomment);
-		if(t > highsize)
-			highsize = t;
-	}
-	if((tmp = dictget(synhighlights, "primitive")) != nil){
-		colorprimitive = getstr(tmp->term);
-		t = strlen(colorprimitive);
-		if(t > highsize)
-			highsize = t;
-	}
+	if((tmp = dictget(synhighlights, "basic")) != nil)
+		colorbasic = getString(tmp->term);
+	if((tmp = dictget(synhighlights, "number")) != nil)
+		colornumber = getString(tmp->term);
+	if((tmp = dictget(synhighlights, "variable")) != nil)
+		colorvariable = getString(tmp->term);
+	if((tmp = dictget(synhighlights, "keyword")) != nil)
+		colorkeyword = getString(tmp->term);
+	if((tmp = dictget(synhighlights, "function")) != nil)
+		colorfunction = getString(tmp->term);
+	if((tmp = dictget(synhighlights, "string")) != nil)
+		colorstring = getString(tmp->term);
+	if((tmp = dictget(synhighlights, "comment")) != nil)
+		colorcomment = getString(tmp->term);
+	if((tmp = dictget(synhighlights, "primitive")) != nil)
+		colorprimitive = getString(tmp->term);
 
 	line = arena_ndup(syntax_arena, buffer, bufend);
 	results = basictokenize(line, syntax_arena);
 
-	for(i = 0; i < results.impi; i++){
+	for(i = 0; i < results.impi; i++, colored = 0){
 		if(syn_isstring(results.imp[i].str)){
-			soutbuf_append_color(syntax_arena, obuf, colorstring, strlen(colorstring));
+			if(colorstring.data)
+				soutbuf_append_color(syntax_arena, obuf, colorstring.data, colorstring.len);
 			soutbuf_append(syntax_arena, obuf, results.imp[i].str, results.imp[i].len);
-			soutbuf_append_color(syntax_arena, obuf, colorreset, strlen(colorreset));
+			if(colorstring.data)
+				soutbuf_append_color(syntax_arena, obuf, colorreset.data, colorreset.len);
 		} else if(syn_iscomment(results.imp[i].str)) {
-			soutbuf_append_color(syntax_arena, obuf, colorcomment, strlen(colorcomment));
+			if(colorcomment.data)
+				soutbuf_append_color(syntax_arena, obuf, colorcomment.data, colorcomment.len);
 			soutbuf_append(syntax_arena, obuf, results.imp[i].str, results.imp[i].len);
-			soutbuf_append_color(syntax_arena, obuf, colorreset, strlen(colorreset));
+			if(colorcomment.data)
+				soutbuf_append_color(syntax_arena, obuf, colorreset.data, colorreset.len);
 		} else if(syn_isatom(results.imp[i].str)){
 			for(ii = i, futuretok = nil; ii < results.impi; ii++)
 				if(!syn_iswhitespace(results.imp[ii].str))
@@ -766,26 +752,45 @@ es_fast_highlighting(char *buffer, size_t bufend)
 				unreachable();
 				break;
 			case AtomNumber:
-				soutbuf_append_color(syntax_arena, obuf, colornumber, strlen(colornumber));
+				if(colornumber.data){
+					soutbuf_append_color(syntax_arena, obuf, colornumber.data, colornumber.len);
+					colored = 1;
+				}
 				break;
 			case AtomKeyword:
-				soutbuf_append_color(syntax_arena, obuf, colorkeyword, strlen(colorkeyword));
+				if(colorkeyword.data){
+					soutbuf_append_color(syntax_arena, obuf, colorkeyword.data, colorkeyword.len);
+					colored = 1;
+				}
 				break;
 			case AtomVariable:
-				soutbuf_append_color(syntax_arena, obuf, colorvariable, strlen(colorvariable));
+				if(colorvariable.data){
+					soutbuf_append_color(syntax_arena, obuf, colorvariable.data, colorvariable.len);
+					colored = 1;
+				}
 				break;
 			case AtomFunction:
-				soutbuf_append_color(syntax_arena, obuf, colorfunction, strlen(colorfunction));
+				if(colorfunction.data){
+					soutbuf_append_color(syntax_arena, obuf, colorfunction.data, colorfunction.len);
+					colored = 1;
+				}
 				break;
 			case AtomPrimitive:
-				soutbuf_append_color(syntax_arena, obuf, colorprimitive, strlen(colorprimitive));
+				if(colorprimitive.data){
+					soutbuf_append_color(syntax_arena, obuf, colorprimitive.data, colorprimitive.len);
+					colored = 1;
+				}
 				break;
 			case AtomBasic:
-				soutbuf_append_color(syntax_arena, obuf, colorbasic, strlen(colorbasic));
+				if(colorbasic.data){
+					soutbuf_append_color(syntax_arena, obuf, colorbasic.data, colorbasic.len);
+					colored = 1;
+				}
 				break;
 			}
 			soutbuf_append(syntax_arena, obuf, results.imp[i].str, results.imp[i].len);
-			soutbuf_append_color(syntax_arena, obuf, colorreset, strlen(colorreset));
+			if(colored)
+				soutbuf_append_color(syntax_arena, obuf, colorreset.data, colorreset.len);
 		} else {
 			soutbuf_append(syntax_arena, obuf, results.imp[i].str, results.imp[i].len);
 		}
