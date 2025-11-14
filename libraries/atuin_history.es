@@ -38,11 +38,12 @@ fn __atuin_enable {
 		}
 	) {
 		fn %history cmdline {
+			if {! gt <={%count $:cmdline} 0} {
+				return <=false
+			}
 			local (id=; ctime = $unixtime_ns) {
 				__atuin_echo 'id = `{atuin history start ''--'' '^$cmdline
 				id = `{atuin history start '--' $cmdline}
-				%add-history $cmdline
-				ditto = $cmdline
 				ATUIN_HISTORY_ID = $id
 				cmdstarttime = $ctime
 				if {$atuin_history_conf_update-history-file} {
@@ -80,6 +81,7 @@ fn __atuin_enable {
 					atuin history end -e $res -d $duration '--' $ATUIN_HISTORY_ID >/dev/null >[2=1] }} &
 			}
 			cmdstarttime = 0
+			ATUIN_HISTORY_ID = ''
 		}
 	}
 
