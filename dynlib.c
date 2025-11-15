@@ -37,14 +37,14 @@ create_library(char *fname, char *errstr, size_t errstrlen)
 
 	memset(errstr, 0, errstrlen);
 	lib = ealloc(sizeof(DynamicLibrary));
-	lib->fname = strdup(fname);
+	lib->fname = estrdup(fname);
 	lib->handle = dlopen(fname, RTLD_NOW);
 	if(!lib->handle) {
 		dlerrstr = dlerror();
 		if(errstr)
 			strncpy(errstr, dlerrstr, errstrlen);
-		free(lib->fname);
-		free(lib);
+		efree(lib->fname);
+		efree(lib);
 		return nil;
 	}
 
@@ -60,8 +60,8 @@ create_library(char *fname, char *errstr, size_t errstrlen)
 				snprintf(&errstr[0], errstrlen, "module api too old!");
 		}
 		dlclose(lib->handle);
-		free(lib->fname);
-		free(lib);
+		efree(lib->fname);
+		efree(lib);
 		return nil;
 	}
 
@@ -80,8 +80,8 @@ create_library(char *fname, char *errstr, size_t errstrlen)
 			if(errstr)
 				strncpy(errstr, dlerrstr, errstrlen);
 		}
-		free(lib->fname);
-		free(lib);
+		efree(lib->fname);
+		efree(lib);
 		return nil;
 	}
 
@@ -107,8 +107,8 @@ create_library(char *fname, char *errstr, size_t errstrlen)
 				if(errstr)
 					strncpy(errstr, dlerrstr, errstrlen);
 			}
-			free(lib->fname);
-			free(lib);
+			efree(lib->fname);
+			efree(lib);
 			return nil;
 		}
 	}
@@ -189,8 +189,8 @@ destroy_library(DynamicLibrary *lib, char *errstr, size_t errstrlen)
 		if(errstr && errstrlen > 0)
 			strncpy(errstr, dlerrstr, errstrlen);
 	}
-	free(lib->fname);
-	free(lib);
+	efree(lib->fname);
+	efree(lib);
 	return 0;
 }
 

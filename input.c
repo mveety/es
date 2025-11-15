@@ -93,8 +93,8 @@ warn(char *s)
 void
 setnextlastcmd(char *str)
 {
-	free(nextlastcmd);
-	nextlastcmd = strdup(str);
+	efree(nextlastcmd);
+	nextlastcmd = estrdup(str);
 }
 
 char *
@@ -276,7 +276,7 @@ input_resettokstatus(void)
 	if(verbose_parser == TRUE)
 		dprintf(2, "input %s(%p): last tokstatus = \"%s\"\n", input->name, input, s);
 	if(input->lasttokstatus != NULL) {
-		free(input->lasttokstatus);
+		efree(input->lasttokstatus);
 		input->lasttokstatus = NULL;
 	}
 	input->tokstatusi = 0;
@@ -418,7 +418,7 @@ run_new_completer(List *completer0, const char *text, int start, int end)
 	result = eval(completer, nil, 0);
 
 	if(result == nil) {
-		free(matches);
+		efree(matches);
 		matches = nil;
 		goto done;
 	}
@@ -676,7 +676,7 @@ edit_start:
 				gcrderef(&r_result);
 			}
 		}
-		free(line_in);
+		efree(line_in);
 	}
 	in->buf = in->bufbegin;
 	in->bufend = &in->buf[nread];
@@ -1072,7 +1072,7 @@ line_editor_hook(EditorState *state, int key, void *aux)
 
 fail:
 	if(curline)
-		free(curline);
+		efree(curline);
 	if(gcblocked)
 		gcdisable();
 	gcrderef(&r_res);

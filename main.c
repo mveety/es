@@ -233,7 +233,7 @@ parse_gcopt(char *optarg)
 	char *arg = nil;
 	int help = -1;
 
-	orig_work = strdup(optarg);
+	orig_work = estrdup(optarg);
 	work = orig_work;
 	parameter = strsep(&work, ":");
 
@@ -311,7 +311,7 @@ parse_gcopt(char *optarg)
 			goto fail;
 		}
 	} else if(streq(parameter, "editordebug")) {
-		editor_debug_file = strdup(arg);
+		editor_debug_file = estrdup(arg);
 	} else if(streq(parameter, "arenadebug")) {
 		switch(trueargument(arg)) {
 		default:
@@ -326,10 +326,10 @@ parse_gcopt(char *optarg)
 	} else {
 		goto fail;
 	}
-	free(orig_work);
+	efree(orig_work);
 	return 0;
 fail:
-	free(orig_work);
+	efree(orig_work);
 	dprintf(2, "extended parameters: es -X [help|[parameter]:[value]]\n%s\n",
 			"Global:\n"
 			"	gc:[old|new|generational] -- which gc to use (was -X and -G)\n"

@@ -2,7 +2,6 @@
 
 #include "es.h"
 #include "prim.h"
-#include "gc.h"
 #include <stdint.h>
 #include <string.h>
 
@@ -42,7 +41,7 @@ grow_typedefs(void)
 	oldtypedefs = typedefs;
 	typedefs = ealloc(sizeof(Typedef *) * newsize);
 	memcpy(typedefs, oldtypedefs, typessz * sizeof(Typedef *));
-	free(oldtypedefs);
+	efree(oldtypedefs);
 	typessz = newsize;
 }
 
@@ -68,7 +67,7 @@ grow_objects(void)
 	oldobjects = objects;
 	objects = ealloc(sizeof(Object *) * newsize);
 	memcpy(objects, oldobjects, objectssz * sizeof(Object *));
-	free(oldobjects);
+	efree(oldobjects);
 	objectssz = newsize;
 }
 
@@ -111,7 +110,7 @@ define_type(char *name, int (*deallocate)(Object *), int (*refdeps)(Object *))
 
 	newtype = ealloc(sizeof(Typedef));
 
-	newtype->name = strdup(name);
+	newtype->name = estrdup(name);
 	newtype->deallocate = deallocate;
 	newtype->refdeps = refdeps;
 	newtype->stringify = nil;
@@ -198,8 +197,8 @@ undefine_type(char *name)
 
 	oldtype = typedefs[index];
 	typedefs[index] = nil;
-	free(oldtype->name);
-	free(oldtype);
+	efree(oldtype->name);
+	efree(oldtype);
 
 	return 0;
 }
@@ -254,7 +253,7 @@ deallocate_object(Object *obj)
 		if(objtype->deallocate(obj) != 0)
 			return;
 	objects[obj->id] = nil;
-	free(obj);
+	efree(obj);
 }
 
 void
@@ -372,7 +371,7 @@ objectify(char *str)
 			break;
 		case StateInQuote:
 			if(str[i] != '\'') {
-				free(databuf);
+				efree(databuf);
 				return result(nil, ObjectifyInvalidFormat);
 			}
 			databuf[j] = '\'';
@@ -382,10 +381,10 @@ objectify(char *str)
 		}
 	}
 
-	objstr = strdup(databuf);
-	free(databuf);
+	objstr = estrdup(databuf);
+	efree(databuf);
 	res = objtype->objectify(objstr);
-	free(objstr);
+	efree(objstr);
 	return res;
 }
 
@@ -484,7 +483,7 @@ deallocate_all_objects(void)
 
 		if(objtype->deallocate && objects[i]->sysflags & ObjectInitialized)
 			objtype->deallocate(objects[i]);
-		free(objects[i]);
+		efree(objects[i]);
 		objects[i] = nil;
 	}
 }
@@ -516,7 +515,7 @@ all_objects_onfork_ops(void)
 		if((objects[i]->sysflags & onfork_free) == onfork_free) {
 			if(objtype->deallocate)
 				objtype->deallocate(objects[i]);
-			free(objects[i]);
+			efree(objects[i]);
 			objects[i] = nil;
 		}
 	}

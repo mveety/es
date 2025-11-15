@@ -127,11 +127,7 @@ access_gen_usage_opts(void)
 		usage[usagei++] = 'p';
 #endif
 		strcpy(&usage[usagei], usage_end);
-		access_usage = strdup(usage);
-		if(access_usage == nil) {
-			uerror("strdup");
-			esexit(-1);
-		}
+		access_usage = estrdup(usage);
 	}
 	if(access_opts == nil) {
 		memset(&opts[0], 0, sizeof(opts));
@@ -146,11 +142,7 @@ access_gen_usage_opts(void)
 #ifdef S_IFIFO
 		opts[optsi++] = 'p';
 #endif
-		access_opts = strdup(opts);
-		if(access_opts == nil) {
-			uerror("strdup");
-			esexit(-1);
-		}
+		access_opts = estrdup(opts);
 	}
 	return 0;
 }
@@ -233,7 +225,7 @@ PRIM(access) {
 		if(suffix != NULL)
 			name = pathcat(listname, suffix);
 		else
-			name = strdup(listname);
+			name = estrdup(listname);
 		error = testfile(name, perm, type);
 
 		if(first) {

@@ -390,7 +390,7 @@ PRIM(json_encode) {
 		goto fail;
 
 	res = mklist(mkstr(gcdup(str)), nil);
-	free(str);
+	efree(str);
 
 fail:
 	gcrderef(&r_res);
@@ -419,7 +419,7 @@ PRIM(json_encode_formatted) {
 		goto fail;
 
 	res = mklist(mkstr(gcdup(str)), nil);
-	free(str);
+	efree(str);
 
 fail:
 	gcrderef(&r_res);

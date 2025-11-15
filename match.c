@@ -396,10 +396,8 @@ regexmatch(RegexStatus *status, Term *subject0, Term *pattern0)
 	gcref(&r_pattern, (void **)&pattern);
 
 	status->type = ReMatch;
-	subjectstr = strdup(getregex(subject));
-	patternstr = strdup(getregex(pattern));
-	if(!subjectstr || !patternstr)
-		panic("regex strdup failed!");
+	subjectstr = estrdup(getregex(subject));
+	patternstr = estrdup(getregex(pattern));
 	status->compcode = pcre2_regcomp(&regex, patternstr, REG_EXTENDED | REG_NOSUB);
 	if(status->compcode != 0) {
 		if(status->errstrsz > 0)
@@ -417,8 +415,8 @@ regexmatch(RegexStatus *status, Term *subject0, Term *pattern0)
 
 done:
 	pcre2_regfree(&regex);
-	free(subjectstr);
-	free(patternstr);
+	efree(subjectstr);
+	efree(patternstr);
 	gcrderef(&r_pattern);
 	gcrderef(&r_subject);
 	return status;
@@ -446,10 +444,8 @@ regexextract(RegexStatus *status, Term *subject0, Term *pattern0)
 	gcref(&r_status_substrs, (void **)&status->substrs);
 
 	status->type = ReExtract;
-	subjectstr = strdup(getregex(subject));
-	patternstr = strdup(getregex(pattern));
-	if(!subjectstr || !patternstr)
-		panic("regex strdup failed!");
+	subjectstr = estrdup(getregex(subject));
+	patternstr = estrdup(getregex(pattern));
 	copybufsz = strlen(subjectstr);
 	copybuf = ealloc(copybufsz);
 
@@ -491,9 +487,9 @@ regexextract(RegexStatus *status, Term *subject0, Term *pattern0)
 
 done:
 	pcre2_regfree(&regex);
-	free(copybuf);
-	free(subjectstr);
-	free(patternstr);
+	efree(copybuf);
+	efree(subjectstr);
+	efree(patternstr);
 	gcrderef(&r_status_substrs);
 	gcrderef(&r_substrs);
 	gcrderef(&r_pattern);

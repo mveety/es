@@ -218,7 +218,6 @@ _issymbol(char c, int inatom)
 	case '<':
 	case '>':
 	case '=':
-	case '+':
 	case '/':
 	case ';':
 	case '|':
@@ -228,6 +227,7 @@ _issymbol(char c, int inatom)
 	case '.':
 		return 1;
 	case ':':
+	case '+':
 		if(inatom)
 			return 0;
 		return 1;
@@ -520,13 +520,19 @@ basictokenize(char *tokstr, Arena *arena)
 					i++;
 					goto done;
 				}
-				if(instr[i + 1] != '=')
-					goto fail;
-				tmp = arena_dup(arena, str("%c="));
-				assert(tmp);
-				results.imp[results.impi].str = tmp;
-				results.imp[results.impi++].len = 2;
-				i += 2;
+				if(instr[i + 1] != '=') {
+					tmp = arena_dup(arena, str("%c", instr[i]));
+					assert(tmp);
+					results.imp[results.impi].str = tmp;
+					results.imp[results.impi++].len = 1;
+					i++;
+				} else {
+					tmp = arena_dup(arena, str("%c=", instr[i]));
+					assert(tmp);
+					results.imp[results.impi].str = tmp;
+					results.imp[results.impi++].len = 2;
+					i += 2;
+				}
 				break;
 			}
 			s = i;
@@ -898,7 +904,7 @@ PRIM(syn_isatom) {
 	if(syn_isatom(teststr))
 		result = list_true;
 
-	free(teststr);
+	efree(teststr);
 	return result;
 }
 

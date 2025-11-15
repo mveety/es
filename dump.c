@@ -328,10 +328,10 @@ dumpterm(Term *term)
 			break;
 		case tkString:
 		case tkRegex:
-			dstring = strdup(dumpstring(term->str));
+			dstring = estrdup(dumpstring(term->str));
 			break;
 		case tkClosure:
-			dstring = strdup(dumpclosure(term->closure));
+			dstring = estrdup(dumpclosure(term->closure));
 			break;
 		}
 		print("static const Term %s = {%s, ttNone, ", name + 1, termtype(term));
@@ -347,7 +347,7 @@ dumpterm(Term *term)
 			print("{.closure = (Closure*) %s}", dstring);
 			break;
 		}
-		free(dstring);
+		efree(dstring);
 		print("};\n");
 		cvars = dictput(cvars, name, term);
 	}

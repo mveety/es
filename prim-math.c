@@ -347,14 +347,14 @@ PRIM(tobase) {
 		*--se = "0123456789abcdef"[num % base];
 		num = num / base;
 		if(se == s) {
-			free(s);
+			efree(s);
 			gcenable();
 			fail("$&tobase", "overflow");
 		}
 	}
 
 	res = mklist(mkstr(str("%s", se)), NULL);
-	free(s);
+	efree(s);
 
 	gcenable();
 	gcrderef(&r_res);

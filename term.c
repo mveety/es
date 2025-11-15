@@ -198,7 +198,7 @@ getstr(Term *term)
 	case tkObject:
 		if((objstr = stringify(term->obj))) {
 			tmp = str("%%obj:%s('%s')", gettypename(term->obj->type), objstr);
-			free(objstr);
+			efree(objstr);
 			return tmp;
 		}
 		return str("%%obj:%s", gettypename(term->obj->type));

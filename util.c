@@ -74,7 +74,7 @@ ealloc(size_t n)
 	void *p = malloc(n);
 	if(p == NULL) {
 		uerror("malloc");
-		exit(1);
+		abort();
 	}
 	memset(p, 0, n);
 	return p;
@@ -89,7 +89,7 @@ erealloc(void *p, size_t n)
 	p = realloc(p, n);
 	if(p == NULL) {
 		uerror("realloc");
-		exit(1);
+		abort();
 	}
 	return p;
 }
@@ -100,7 +100,10 @@ estrdup(char *str)
 	char *res = nil;
 
 	res = strdup(str);
-	assert(res);
+	if(!res){
+		uerror("strdup");
+		abort();
+	}
 	return res;
 }
 
@@ -110,7 +113,10 @@ estrndup(char *str, size_t len)
 	char *res = nil;
 
 	res = strndup(str, len);
-	assert(res);
+	if(!res){
+		uerror("strdup");
+		abort();
+	}
 	return res;
 }
 

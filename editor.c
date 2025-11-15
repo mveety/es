@@ -89,6 +89,12 @@ erealloc(void *p, size_t n)
 	return ptr;
 }
 
+void
+efree(void *ptr)
+{
+	free(ptr);
+}
+
 char *
 estrdup(char *str)
 {
@@ -535,7 +541,7 @@ initialize_editor(EditorState *state, int ifd, int ofd)
 		return -1;
 	term = getterm();
 	if(!supported_term(term)) {
-		free(term);
+		efree(term);
 		return -2;
 	}
 	*state = (EditorState){
@@ -604,41 +610,41 @@ free_editor(EditorState *state)
 	if(!state->initialized)
 		return;
 
-	free(state->term);
-	free(state->buffer);
+	efree(state->term);
+	efree(state->buffer);
 	if(state->prompt1)
-		free(state->prompt1);
+		efree(state->prompt1);
 	if(state->prompt2)
-		free(state->prompt2);
+		efree(state->prompt2);
 	state->prompt1sz = 0;
 	state->prompt2sz = 0;
 	state->initialized = 0;
 	buf = state->outbuf;
 	if(buf->str)
-		free(buf->str);
-	free(state->outbuf);
+		efree(buf->str);
+	efree(state->outbuf);
 
 	cur = state->history;
 	if(cur) {
 		while(cur->next != nil) {
 			if(cur->prev) {
-				free(cur->prev->str);
-				free(cur->prev);
+				efree(cur->prev->str);
+				efree(cur->prev);
 			}
 			cur = cur->next;
 		}
 		if(cur->prev) {
-			free(cur->prev->str);
-			free(cur->prev);
+			efree(cur->prev->str);
+			efree(cur->prev);
 		}
-		free(cur->str);
-		free(cur);
+		efree(cur->str);
+		efree(cur);
 	}
-	free(state->keymap);
+	efree(state->keymap);
 	if(state->braces)
-		free(state->braces);
+		efree(state->braces);
 	if(state->highlight_formatting)
-		free(state->highlight_formatting);
+		efree(state->highlight_formatting);
 }
 
 int
@@ -652,7 +658,7 @@ reset_editor(EditorState *state)
 		state->size = gettermsize(state);
 		if(state->inhistory) {
 			assert(state->histbuf);
-			free(state->histbuf);
+			efree(state->histbuf);
 			state->histbufsz = 0;
 			state->cur = nil;
 			state->inhistory = 0;
@@ -670,7 +676,7 @@ reset_editor(EditorState *state)
 	state->size = gettermsize(state);
 	if(state->inhistory) {
 		assert(state->histbuf);
-		free(state->histbuf);
+		efree(state->histbuf);
 		state->histbufsz = 0;
 		state->cur = nil;
 		state->inhistory = 0;
@@ -827,7 +833,7 @@ set_prompt1(EditorState *state, char *str)
 {
 	dprint("setting prompt1 to \"%s\"\n", str);
 	if(state->prompt1) {
-		free(state->prompt1);
+		efree(state->prompt1);
 		state->prompt1sz = 0;
 	}
 	if(str == nil)
@@ -843,7 +849,7 @@ set_prompt2(EditorState *state, char *str)
 		return;
 	dprint("setting prompt2 to \"%s\"\n", str);
 	if(state->prompt2) {
-		free(state->prompt2);
+		efree(state->prompt2);
 		state->prompt2sz = 0;
 	}
 	if(str == nil)
@@ -867,7 +873,7 @@ set_highlight_formatting(EditorState *state, char *formatting)
 	if(!state->initialized)
 		return;
 	if(state->highlight_formatting)
-		free(state->highlight_formatting);
+		efree(state->highlight_formatting);
 	state->highlight_formatting = nil;
 	if(formatting == nil)
 		return;
@@ -977,7 +983,7 @@ refresh(EditorState *state)
 		highlighted_buffer = state->syntax_highlight_hook(state->buffer, state->bufend);
 		if(highlighted_buffer) {
 			outbuf_append_printable(state, buf, highlighted_buffer, strlen(highlighted_buffer), 1);
-			free(highlighted_buffer);
+			efree(highlighted_buffer);
 		}
 	} else
 		outbuf_append_printable(state, buf, state->buffer, state->bufend, 0);
@@ -1054,13 +1060,13 @@ restore_editor_context(EditorState *state, EditorContext *ctx)
 	memset(state->buffer, 0, state->bufsz);
 	if(ctx->bufsize > 0) {
 		memcpy(state->buffer, ctx->bufdata, ctx->bufsize);
-		free(ctx->bufdata);
+		efree(ctx->bufdata);
 	}
 	state->bufend = ctx->bufsize;
 	state->bufpos = ctx->bufpos;
 	state->noreset = 1;
 
-	free(ctx);
+	efree(ctx);
 
 	return nil;
 }
@@ -1452,17 +1458,17 @@ history_clear(EditorState *state)
 	if(cur) {
 		while(cur->next != nil) {
 			if(cur->prev) {
-				free(cur->prev->str);
-				free(cur->prev);
+				efree(cur->prev->str);
+				efree(cur->prev);
 			}
 			cur = cur->next;
 		}
 		if(cur->prev) {
-			free(cur->prev->str);
-			free(cur->prev);
+			efree(cur->prev->str);
+			efree(cur->prev);
 		}
-		free(cur->str);
-		free(cur);
+		efree(cur->str);
+		efree(cur);
 	}
 	state->cur = nil;
 	state->history = nil;
@@ -1502,7 +1508,7 @@ do_history_replace(EditorState *state, HistoryEntry *ent)
 		if(ent == nil) {
 			memcpy(state->buffer, state->histbuf, state->histbufsz);
 			state->bufend = state->histbufsz;
-			free(state->histbuf);
+			efree(state->histbuf);
 			state->inhistory = 0;
 		} else {
 			if(ent->len >= state->bufsz)
@@ -1553,7 +1559,7 @@ history_cancel(EditorState *state)
 		memset(state->buffer, 0, state->bufend);
 		memcpy(state->buffer, state->histbuf, state->histbufsz);
 		state->bufend = state->histbufsz;
-		free(state->histbuf);
+		efree(state->histbuf);
 		if(state->bufpos > state->bufend)
 			state->bufpos = state->bufend;
 		state->cur = nil;
@@ -1593,7 +1599,7 @@ call_completions_hook(EditorState *state, Wordpos pos)
 	memcpy(partial, &state->buffer[partial_pos.start], partial_pos.end - partial_pos.start);
 	dprint("partial = %s\n", partial);
 	completions = state->completions_hook(partial, pos.start, pos.end);
-	free(partial);
+	efree(partial);
 	if(completions == nil)
 		return;
 	for(i = 0; completions[i] != nil; i++) {
@@ -1615,7 +1621,7 @@ call_completions_hook(EditorState *state, Wordpos pos)
 				if(completions[i] == nil)
 					break;
 				if(strcmp(completions[i], completions2[completions2sz - 1]) == 0) {
-					free(completions[i]);
+					efree(completions[i]);
 					completions[i] = nil;
 					continue;
 				}
@@ -1623,7 +1629,7 @@ call_completions_hook(EditorState *state, Wordpos pos)
 				completions2sz++;
 			}
 			dprint("completions2sz = %lu\n", completionssz);
-			free(completions);
+			efree(completions);
 			completions = completions2;
 			completionssz = completions2sz;
 		}
@@ -1708,11 +1714,11 @@ do_completion(EditorState *state, char *comp, Wordpos pos)
 		state->bufpos = pos.end;
 		if(state->bufpos > state->bufend)
 			state->bufpos = state->bufend;
-		free(state->completebuf);
+		efree(state->completebuf);
 		if(state->comp_prefix)
-			free(state->comp_prefix);
+			efree(state->comp_prefix);
 		if(state->comp_suffix)
-			free(state->comp_suffix);
+			efree(state->comp_suffix);
 		state->completebuf = nil;
 		state->comp_prefix = nil;
 		state->comp_suffix = nil;
@@ -1769,25 +1775,25 @@ completion_reset(EditorState *state)
 			assert(!editor_istracked(state->completions[i]));
 			if(state->completions[i] == nil)
 				continue;
-			free(state->completions[i]);
+			efree(state->completions[i]);
 			state->completions[i] = nil;
 		}
-		free(state->completions);
+		efree(state->completions);
 		state->completions = nil;
 		state->completionssz = 0;
 	}
 	if(state->completebuf) {
-		free(state->completebuf);
+		efree(state->completebuf);
 		state->completebuf = nil;
 	}
 	state->completionsi = 0;
 	state->lastcomplen = 0;
 	if(state->comp_prefix) {
-		free(state->comp_prefix);
+		efree(state->comp_prefix);
 		state->comp_prefix = nil;
 	}
 	if(state->comp_suffix) {
-		free(state->comp_suffix);
+		efree(state->comp_suffix);
 		state->comp_suffix = nil;
 	}
 	dprint("state->in_completion = %d -> 0\n", state->in_completion);
@@ -1818,7 +1824,7 @@ completion_next(EditorState *state)
 	}
 	do_completion(state, comp, state->pos);
 	if(comp)
-		free(comp);
+		efree(comp);
 }
 
 void
@@ -1838,7 +1844,7 @@ completion_prev(EditorState *state)
 	}
 	do_completion(state, comp, state->pos);
 	if(comp)
-		free(comp);
+		efree(comp);
 }
 
 /* keymapping */
@@ -2228,7 +2234,7 @@ fallback_editor(EditorState *state)
 			break;
 		}
 	res = estrdup(buffer);
-	free(buffer);
+	efree(buffer);
 	return res;
 }
 
@@ -2732,7 +2738,7 @@ line_editor(EditorState *state)
 				memcpy(state->buffer, str, strlen(str));
 				state->bufend = strlen(str);
 				state->bufpos = state->bufend;
-				free(str);
+				efree(str);
 			}
 			break;
 		}
