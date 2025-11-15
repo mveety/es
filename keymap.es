@@ -99,9 +99,14 @@ fn keymap args {
 					res := $k => $f
 				}
 				if {$print} {
-					dictforall $res @ k f {
-						echo $k^': '^$f
+					let (reskeys = <={dictkeys $res |> sortlist}) {
+						for (k = $reskeys) {
+							echo $k^': '^$res($k)
+						}
 					}
+					#dictforall $res @ k f {
+					#	echo $k^': '^$f
+					#}
 				}
 				result $res
 			}
