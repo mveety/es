@@ -75,7 +75,8 @@ const Position ErrPos = (Position){-1, -1};
 #endif
 
 void
-noop(void){
+noop(void)
+{
 	return;
 }
 
@@ -942,20 +943,15 @@ refresh(EditorState *state)
 	};
 	dprint("----------\n");
 	dprint("buf->size = %lu, buf->len = %lu\n", buf->size, buf->len);
-	dprint("state->size = {.lines = %d, .cols = %d}\n", state->size.lines,
-			state->size.cols);
-	dprint("state->bufend = %lu, state->bufpos = %lu\n", state->bufend,
-			state->bufpos);
+	dprint("state->size = {.lines = %d, .cols = %d}\n", state->size.lines, state->size.cols);
+	dprint("state->bufend = %lu, state->bufpos = %lu\n", state->bufend, state->bufpos);
 	dprint("utf8_bufpos = %lu, utf8_bufend = %lu\n", utf8_bufpos, utf8_bufend);
 	dprint("promptsz = %lu, utf8_promptsz = %lu\n", promptsz, utf8_promptsz);
 	dprint("strlen(prompt) = %lu\n", strlen(prompt));
 	dprint("rel_end = {.lines = %d, .cols = %d}\n", rel_end.lines, rel_end.cols);
-	dprint("rel_next_end = {.lines = %d, .cols = %d}\n", rel_next_end.lines,
-			rel_next_end.cols);
-	dprint("rel_cur_pos = {.lines = %d, .cols = %d}\n", rel_cur_pos.lines,
-			rel_cur_pos.cols);
-	dprint("rel_next_pos = {.lines = %d, .cols = %d}\n", rel_next_pos.lines,
-			rel_next_pos.cols);
+	dprint("rel_next_end = {.lines = %d, .cols = %d}\n", rel_next_end.lines, rel_next_end.cols);
+	dprint("rel_cur_pos = {.lines = %d, .cols = %d}\n", rel_cur_pos.lines, rel_cur_pos.cols);
+	dprint("rel_next_pos = {.lines = %d, .cols = %d}\n", rel_next_pos.lines, rel_next_pos.cols);
 	/*dprint("real_position = {.lines = %d, .cols = %d}\n", real_position.lines,
 			real_position.cols);*/
 	dprint("state->buffer = \"%s\"\n", state->buffer);
@@ -1645,8 +1641,8 @@ call_completions_hook(EditorState *state, Wordpos pos)
 			completionssz = completions2sz;
 		}
 		for(i = 0; i < completionssz; i++) {
-			dprint("sorted completions[%lu](%lu) = \"%s\"\n", i,
-					strlen(completions[i]), completions[i]);
+			dprint("sorted completions[%lu](%lu) = \"%s\"\n", i, strlen(completions[i]),
+				   completions[i]);
 		}
 		dprint("completionssz = %lu\n", completionssz);
 	}
@@ -2494,8 +2490,7 @@ line_editor(EditorState *state)
 					if(seq[2] == '~') {
 						switch(seq[1]) {
 						default:
-							dprint("\ngot unknown code %c%c%c\n", seq[0], seq[1],
-									seq[2]);
+							dprint("\ngot unknown code %c%c%c\n", seq[0], seq[1], seq[2]);
 							continue;
 						case '5':
 							key = KeyPageUp;
@@ -2524,16 +2519,15 @@ line_editor(EditorState *state)
 						if(read(state->ifd, &seq[3], 1) < 0)
 							continue;
 						if(seq[3] != '~') {
-							dprint("\ngot unknown code %c%c%c%c\n", seq[0], seq[1],
-									seq[2], seq[3]);
+							dprint("\ngot unknown code %c%c%c%c\n", seq[0], seq[1], seq[2], seq[3]);
 							continue;
 						}
 						if(seq[1] == '1') {
 							switch(seq[2]) {
 							default:
 								if(state->dfd > 0)
-								dprint("\ngot unknown code %c%c%c%c\n", seq[0],
-										seq[1], seq[2], seq[3]);
+									dprint("\ngot unknown code %c%c%c%c\n", seq[0], seq[1], seq[2],
+										   seq[3]);
 								continue;
 							case '1':
 								key = KeyPF1;
@@ -2563,8 +2557,8 @@ line_editor(EditorState *state)
 						} else if(seq[1] == '2') {
 							switch(seq[2]) {
 							default:
-								dprint("\ngot unknown code %c%c%c%c\n", seq[0],
-										seq[1], seq[2], seq[3]);
+								dprint("\ngot unknown code %c%c%c%c\n", seq[0], seq[1], seq[2],
+									   seq[3]);
 								continue;
 							case '0':
 								key = KeyPF9;
@@ -2580,8 +2574,7 @@ line_editor(EditorState *state)
 								break;
 							}
 						} else {
-								dprint("\ngot unknown code %c%c%c%c\n", seq[0], seq[1],
-									seq[2], seq[3]);
+							dprint("\ngot unknown code %c%c%c%c\n", seq[0], seq[1], seq[2], seq[3]);
 							continue;
 						}
 					} else if(seq[2] == ';' && seq[1] == '1') { // Ctrl+Arrow
@@ -2631,8 +2624,7 @@ line_editor(EditorState *state)
 								break;
 							}
 						} else {
-							dprint("\ngot unknown code %c%c%c%c\n", seq[0], seq[1],
-									seq[2], seq[3]);
+							dprint("\ngot unknown code %c%c%c%c\n", seq[0], seq[1], seq[2], seq[3]);
 							continue;
 						}
 					}
@@ -2723,7 +2715,7 @@ line_editor(EditorState *state)
 			break;
 		case -1:
 			if(state->dfd > 0)
-			dprint("got invalid key %d\n", key);
+				dprint("got invalid key %d\n", key);
 			break;
 		case -3:
 			readstate = StateCancel;

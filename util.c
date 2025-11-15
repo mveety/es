@@ -119,7 +119,7 @@ estrdup(char *str)
 	char *res = nil;
 
 	res = strdup(str);
-	if(!res){
+	if(!res) {
 		uerror("strdup");
 		esabort();
 	}
@@ -132,7 +132,7 @@ estrndup(char *str, size_t len)
 	char *res = nil;
 
 	res = strndup(str, len);
-	if(!res){
+	if(!res) {
 		uerror("strdup");
 		esabort();
 	}

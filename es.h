@@ -262,7 +262,6 @@ extern Boolean gcverbose;  /* -G */
 extern Boolean gcinfo;	   /* -I */
 extern Boolean assertions; /* -A */
 
-
 /* initial.c (for es) or dump.c (for esdump) */
 
 extern void runinitial(void);

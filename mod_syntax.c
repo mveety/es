@@ -717,7 +717,7 @@ es_fast_highlighting(char *buffer, size_t bufend)
 	String colorprimitive = {0, nil};
 	String colorreset = {.len = 4, .data = "\x1b[0m"};
 
-	if(syntax_arena == nil){
+	if(syntax_arena == nil) {
 		syntax_arena = newarena(4 * 1024);
 		arena_annotate(syntax_arena, "fasthighlighting");
 	} else
@@ -766,8 +766,8 @@ es_fast_highlighting(char *buffer, size_t bufend)
 			if(colorcomment.data)
 				soutbuf_append_color(syntax_arena, obuf, colorreset.data, colorreset.len);
 		} else if(syn_isatom(results.imp[i].str)) {
-			for(ii = i+1, futuretok = nil; ii < results.impi; ii++)
-				if(!syn_iswhitespace(results.imp[ii].str)){
+			for(ii = i + 1, futuretok = nil; ii < results.impi; ii++)
+				if(!syn_iswhitespace(results.imp[ii].str)) {
 					futuretok = results.imp[ii].str;
 					break;
 				}
