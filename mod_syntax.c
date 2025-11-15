@@ -5,14 +5,21 @@
 #include "editor.h"
 #include "stdenv.h"
 
+#ifndef TokenizerDebug
+#define TokenizerDebug 0
+#endif
+
+#if TokenizerDebug == 1
 #define dprint(args...)                    \
 	do {                                   \
 		if(editor_debugfd > 0) {           \
 			dprintf(editor_debugfd, args); \
 		}                                  \
 	} while(0)
+#else
+#define dprint(args...) noop()
+#endif
 
-#define TokenizerDebug 0
 #define REMode (REG_EXTENDED | REG_NOSUB)
 
 typedef struct TokenResults TokenResults;
@@ -710,9 +717,10 @@ es_fast_highlighting(char *buffer, size_t bufend)
 	String colorprimitive = {0, nil};
 	String colorreset = {.len = 4, .data = "\x1b[0m"};
 
-	if(syntax_arena == nil)
+	if(syntax_arena == nil){
 		syntax_arena = newarena(4 * 1024);
-	else
+		arena_annotate(syntax_arena, "fasthighlighting");
+	} else
 		arena_reset(syntax_arena);
 
 	gcdisable();
@@ -854,7 +862,7 @@ PRIM(basictokenize) {
 	lp = list;
 
 	btarena = newarena(1024);
-	arena_annotate(btarena, "basictokenizer arena");
+	arena_annotate(btarena, "basictokenizer");
 	results = basictokenize(getstr(lp->term), btarena);
 	if(results.status < 0)
 		goto fail;

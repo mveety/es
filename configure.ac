@@ -27,6 +27,7 @@ MODOFILES=''
 development='false'
 ASAN=false
 MSAN=false
+EDITORDEBUG=false
 
 AC_ARG_ENABLE(loginshell,
 [  --enable-loginshell	Only load esrc if a login shell],
@@ -54,7 +55,7 @@ AC_ARG_ENABLE(modules,
 
 AC_ARG_ENABLE(development,
 [  --enable-development	Extras for development],
-[CFLAGS="-g -O0"; development=true])
+[CFLAGS="-g -O0 -DEditorDebug=1"; development=true])
 
 AC_ARG_ENABLE(addrsan,
 [  --enable-addrsan	Enable llvm address sanitizer],
@@ -63,6 +64,10 @@ AC_ARG_ENABLE(addrsan,
 AC_ARG_ENABLE(memorysan,
 [  --enable-memorysan	Enable llvm memory sanitizer],
 [MSAN=true])
+
+AC_ARG_ENABLE(editordebug,
+[  --enable-editordebug	Enable editor debugging],
+[EDITORDEBUG=true])
 
 AC_SUBST(ENABLE_LOGINSHELL)
 AC_SUBST(DEVFD_IMPL)
@@ -175,6 +180,11 @@ then
 	OFILEOPTS='$(MAINOFILES) $(DYNOFILES)'
 	CFLAGS="$CFLAGS -fPIC"
 	LDFLAGS="$LDFLAGS -rdynamic"
+fi
+
+if test "$EDITORDEBUG" = "true" && test "$development" = "false"
+then
+	CFLAGS="$CFLAGS -DEditorDebug=1"
 fi
 
 if test "$ASAN" = "true" && test "$MSAN" = "false" && test "$development" = "true"

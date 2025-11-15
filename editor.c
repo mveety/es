@@ -27,12 +27,20 @@
 #endif
 #include "editor.h"
 
+#ifndef EditorDebug
+#define EditorDebug 0
+#endif
+
+#if EditorDebug == 1
 #define dprint(args...)                \
 	do {                               \
 		if(state->dfd > 0) {           \
 			dprintf(state->dfd, args); \
 		}                              \
 	} while(0)
+#else
+#define dprint(args...) noop()
+#endif
 
 #define bufferassert() assert(state->bufpos <= state->bufend)
 
@@ -65,6 +73,11 @@ const Position ErrPos = (Position){-1, -1};
 	do {            \
 	} while(0) /* fallthrough */
 #endif
+
+void
+noop(void){
+	return;
+}
 
 void *
 ealloc(size_t n)
@@ -895,7 +908,9 @@ refresh(EditorState *state)
 	char snbuf[64];
 	size_t snsz;
 	int promptn = state->which_prompt;
+#if EditorDebug == 1
 	size_t promptsz = promptn == 0 ? state->prompt1sz : state->prompt2sz;
+#endif
 	char *prompt = promptn == 0 ? state->prompt1 : state->prompt2;
 	size_t i;
 	/*Position real_position;*/
@@ -925,27 +940,25 @@ refresh(EditorState *state)
 		.lines = (utf8_bufpos + utf8_promptsz + state->size.cols) / state->size.cols,
 		.cols = (utf8_bufpos + utf8_promptsz) % state->size.cols,
 	};
-	if(state->dfd > 0) {
-		dprintf(state->dfd, "----------\n");
-		dprintf(state->dfd, "buf->size = %lu, buf->len = %lu\n", buf->size, buf->len);
-		dprintf(state->dfd, "state->size = {.lines = %d, .cols = %d}\n", state->size.lines,
-				state->size.cols);
-		dprintf(state->dfd, "state->bufend = %lu, state->bufpos = %lu\n", state->bufend,
-				state->bufpos);
-		dprintf(state->dfd, "utf8_bufpos = %lu, utf8_bufend = %lu\n", utf8_bufpos, utf8_bufend);
-		dprintf(state->dfd, "promptsz = %lu, utf8_promptsz = %lu\n", promptsz, utf8_promptsz);
-		dprintf(state->dfd, "strlen(prompt) = %lu\n", strlen(prompt));
-		dprintf(state->dfd, "rel_end = {.lines = %d, .cols = %d}\n", rel_end.lines, rel_end.cols);
-		dprintf(state->dfd, "rel_next_end = {.lines = %d, .cols = %d}\n", rel_next_end.lines,
-				rel_next_end.cols);
-		dprintf(state->dfd, "rel_cur_pos = {.lines = %d, .cols = %d}\n", rel_cur_pos.lines,
-				rel_cur_pos.cols);
-		dprintf(state->dfd, "rel_next_pos = {.lines = %d, .cols = %d}\n", rel_next_pos.lines,
-				rel_next_pos.cols);
-		/*dprintf(state->dfd, "real_position = {.lines = %d, .cols = %d}\n", real_position.lines,
-				real_position.cols);*/
-		dprintf(state->dfd, "state->buffer = \"%s\"\n", state->buffer);
-	}
+	dprint("----------\n");
+	dprint("buf->size = %lu, buf->len = %lu\n", buf->size, buf->len);
+	dprint("state->size = {.lines = %d, .cols = %d}\n", state->size.lines,
+			state->size.cols);
+	dprint("state->bufend = %lu, state->bufpos = %lu\n", state->bufend,
+			state->bufpos);
+	dprint("utf8_bufpos = %lu, utf8_bufend = %lu\n", utf8_bufpos, utf8_bufend);
+	dprint("promptsz = %lu, utf8_promptsz = %lu\n", promptsz, utf8_promptsz);
+	dprint("strlen(prompt) = %lu\n", strlen(prompt));
+	dprint("rel_end = {.lines = %d, .cols = %d}\n", rel_end.lines, rel_end.cols);
+	dprint("rel_next_end = {.lines = %d, .cols = %d}\n", rel_next_end.lines,
+			rel_next_end.cols);
+	dprint("rel_cur_pos = {.lines = %d, .cols = %d}\n", rel_cur_pos.lines,
+			rel_cur_pos.cols);
+	dprint("rel_next_pos = {.lines = %d, .cols = %d}\n", rel_next_pos.lines,
+			rel_next_pos.cols);
+	/*dprint("real_position = {.lines = %d, .cols = %d}\n", real_position.lines,
+			real_position.cols);*/
+	dprint("state->buffer = \"%s\"\n", state->buffer);
 
 	if(state->clear_screen) {
 		snsz = snprintf(&snbuf[0], sizeof(snbuf), "\x1b[H\x1b[2J");
@@ -1011,8 +1024,7 @@ refresh(EditorState *state)
 	state->position = rel_next_pos;
 	state->last_end = rel_next_end;
 
-	if(state->dfd > 0)
-		dprintf(state->dfd, "buf->size = %lu, buf->len = %lu\n", buf->size, buf->len);
+	dprint("buf->size = %lu, buf->len = %lu\n", buf->size, buf->len);
 	outbuf_clean(buf);
 	state->lastbufpos = state->bufpos;
 }
@@ -1604,8 +1616,7 @@ call_completions_hook(EditorState *state, Wordpos pos)
 		return;
 	for(i = 0; completions[i] != nil; i++) {
 		assert(!editor_istracked(completions[i]));
-		if(state->dfd > 0)
-			dprintf(state->dfd, "completions[%lu] = %p\n", i, completions[i]);
+		dprint("completions[%lu] = %p\n", i, completions[i]);
 	}
 	completionssz = i;
 	dprint("completionssz = %lu\n", completionssz);
@@ -1634,9 +1645,8 @@ call_completions_hook(EditorState *state, Wordpos pos)
 			completionssz = completions2sz;
 		}
 		for(i = 0; i < completionssz; i++) {
-			if(state->dfd > 0)
-				dprintf(state->dfd, "sorted completions[%lu](%lu) = \"%s\"\n", i,
-						strlen(completions[i]), completions[i]);
+			dprint("sorted completions[%lu](%lu) = \"%s\"\n", i,
+					strlen(completions[i]), completions[i]);
 		}
 		dprint("completionssz = %lu\n", completionssz);
 	}
@@ -1815,13 +1825,11 @@ completion_next(EditorState *state)
 	if(!state->in_completion)
 		state->pos = get_word_position(state);
 	comp = get_next_completion(state, state->pos);
-	if(state->dfd > 0) {
-		dprintf(state->dfd, "complete start = %lu, end = %lu\n", state->pos.start, state->pos.end);
-		if(comp != nil)
-			dprintf(state->dfd, "completion string = \"%s\"\n", comp);
-		else
-			dprintf(state->dfd, "completion string = nil\n");
-	}
+	dprint("complete start = %lu, end = %lu\n", state->pos.start, state->pos.end);
+	if(comp != nil)
+		dprint("completion string = \"%s\"\n", comp);
+	else
+		dprint("completion string = nil\n");
 	do_completion(state, comp, state->pos);
 	if(comp)
 		efree(comp);
@@ -1835,13 +1843,11 @@ completion_prev(EditorState *state)
 	if(!state->in_completion)
 		state->pos = get_word_position(state);
 	comp = get_prev_completion(state, state->pos);
-	if(state->dfd > 0) {
-		dprintf(state->dfd, "complete start = %lu, end = %lu\n", state->pos.start, state->pos.end);
-		if(comp != nil)
-			dprintf(state->dfd, "completion string = \"%s\"\n", comp);
-		else
-			dprintf(state->dfd, "completion string = nil\n");
-	}
+	dprint("complete start = %lu, end = %lu\n", state->pos.start, state->pos.end);
+	if(comp != nil)
+		dprint("completion string = \"%s\"\n", comp);
+	else
+		dprint("completion string = nil\n");
 	do_completion(state, comp, state->pos);
 	if(comp)
 		efree(comp);
@@ -2441,8 +2447,7 @@ line_editor(EditorState *state)
 					continue;
 				switch(seq[1]) {
 				default:
-					if(state->dfd > 0)
-						dprintf(state->dfd, "\ngot unknown code %c%c\n", seq[0], seq[1]);
+					dprint("\ngot unknown code %c%c\n", seq[0], seq[1]);
 					continue;
 				case 'A':
 					key = KeyArrowUp;
@@ -2489,9 +2494,8 @@ line_editor(EditorState *state)
 					if(seq[2] == '~') {
 						switch(seq[1]) {
 						default:
-							if(state->dfd > 0)
-								dprintf(state->dfd, "\ngot unknown code %c%c%c\n", seq[0], seq[1],
-										seq[2]);
+							dprint("\ngot unknown code %c%c%c\n", seq[0], seq[1],
+									seq[2]);
 							continue;
 						case '5':
 							key = KeyPageUp;
@@ -2520,17 +2524,16 @@ line_editor(EditorState *state)
 						if(read(state->ifd, &seq[3], 1) < 0)
 							continue;
 						if(seq[3] != '~') {
-							if(state->dfd > 0)
-								dprintf(state->dfd, "\ngot unknown code %c%c%c%c\n", seq[0], seq[1],
-										seq[2], seq[3]);
+							dprint("\ngot unknown code %c%c%c%c\n", seq[0], seq[1],
+									seq[2], seq[3]);
 							continue;
 						}
 						if(seq[1] == '1') {
 							switch(seq[2]) {
 							default:
 								if(state->dfd > 0)
-									dprintf(state->dfd, "\ngot unknown code %c%c%c%c\n", seq[0],
-											seq[1], seq[2], seq[3]);
+								dprint("\ngot unknown code %c%c%c%c\n", seq[0],
+										seq[1], seq[2], seq[3]);
 								continue;
 							case '1':
 								key = KeyPF1;
@@ -2560,9 +2563,8 @@ line_editor(EditorState *state)
 						} else if(seq[1] == '2') {
 							switch(seq[2]) {
 							default:
-								if(state->dfd > 0)
-									dprintf(state->dfd, "\ngot unknown code %c%c%c%c\n", seq[0],
-											seq[1], seq[2], seq[3]);
+								dprint("\ngot unknown code %c%c%c%c\n", seq[0],
+										seq[1], seq[2], seq[3]);
 								continue;
 							case '0':
 								key = KeyPF9;
@@ -2578,9 +2580,8 @@ line_editor(EditorState *state)
 								break;
 							}
 						} else {
-							if(state->dfd > 0)
-								dprintf(state->dfd, "\ngot unknown code %c%c%c%c\n", seq[0], seq[1],
-										seq[2], seq[3]);
+								dprint("\ngot unknown code %c%c%c%c\n", seq[0], seq[1],
+									seq[2], seq[3]);
 							continue;
 						}
 					} else if(seq[2] == ';' && seq[1] == '1') { // Ctrl+Arrow
@@ -2630,9 +2631,8 @@ line_editor(EditorState *state)
 								break;
 							}
 						} else {
-							if(state->dfd > 0)
-								dprintf(state->dfd, "\ngot unknown code %c%c%c%c\n", seq[0], seq[1],
-										seq[2], seq[3]);
+							dprint("\ngot unknown code %c%c%c%c\n", seq[0], seq[1],
+									seq[2], seq[3]);
 							continue;
 						}
 					}
@@ -2647,8 +2647,7 @@ line_editor(EditorState *state)
 					if(seq[1] >= 'A' && seq[1] <= 'L') {
 						key = KeyPF1 + (seq[1] - 'A');
 					} else {
-						if(state->dfd > 0)
-							dprintf(state->dfd, "\ngot unknown code %c%c\n", seq[0], seq[1]);
+						dprint("\ngot unknown code %c%c\n", seq[0], seq[1]);
 						continue;
 					}
 					break;
@@ -2700,8 +2699,7 @@ line_editor(EditorState *state)
 			} else if(seq[0] >= 'a' && seq[0] <= 'z') {
 				key = (seq[0] - 'a') + KeyAlta;
 			} else {
-				if(state->dfd > 0)
-					dprintf(state->dfd, "\ngot code %c\n", seq[0]);
+				dprint("\ngot code %c\n", seq[0]);
 				continue;
 			}
 		} else {
@@ -2721,12 +2719,11 @@ line_editor(EditorState *state)
 			goto fail;
 			break;
 		case -2:
-			if(state->dfd > 0)
-				dprintf(state->dfd, "got unmapped key %s\n", key2name(key));
+			dprint("got unmapped key %s\n", key2name(key));
 			break;
 		case -1:
 			if(state->dfd > 0)
-				dprintf(state->dfd, "got invalid key %d\n", key);
+			dprint("got invalid key %d\n", key);
 			break;
 		case -3:
 			readstate = StateCancel;

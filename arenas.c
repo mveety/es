@@ -52,6 +52,7 @@ newarena(size_t size)
 
 	realsize = ALIGN(sizeof(Arena) + size);
 	newa = ealloc(realsize);
+	assert(newa);
 	newa->ptr = ((char *)newa) + sizeof(Arena);
 	newa->cur = newa->ptr;
 	newa->size = size;
@@ -252,9 +253,9 @@ arena_reset(Arena *arena)
 
 	if(editor_debugfd > 0 && arena_debugging) {
 		if(arena->note)
-			dprintf(editor_debugfd, "destroying arena %s@%p ", arena->note, arena);
+			dprintf(editor_debugfd, "resetting arena %s@%p ", arena->note, arena);
 		else
-			dprintf(editor_debugfd, "destroying arena %p ", arena);
+			dprintf(editor_debugfd, "resetting arena %p ", arena);
 		dprintf(editor_debugfd, "(size = %lu, used = %lu)\n", arena_size(arena), arena_used(arena));
 	}
 

@@ -21,6 +21,18 @@ strerror(int n)
 
 #endif
 
+void *
+used(void *v)
+{
+	return v;
+}
+
+void
+noop(void)
+{
+	return;
+}
+
 void
 esabort(void)
 {

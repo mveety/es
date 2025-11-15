@@ -262,7 +262,6 @@ extern Boolean gcverbose;  /* -G */
 extern Boolean gcinfo;	   /* -I */
 extern Boolean assertions; /* -A */
 
-extern void *used(void *);
 
 /* initial.c (for es) or dump.c (for esdump) */
 
@@ -450,6 +449,8 @@ extern void sortvector(Vector *v);
 
 /* util.c */
 
+extern void *used(void *);
+extern void noop(void);
 extern void esabort(void) __attribute__((noreturn));
 extern char *esstrerror(int err);
 extern void uerror(char *msg);

@@ -47,12 +47,6 @@ extern int forcetty;
 extern int force_fallback_editor;
 extern int arena_debugging;
 
-void *
-used(void *v)
-{
-	return v;
-}
-
 /* checkfd -- open /dev/null on an fd if it is closed */
 static void
 checkfd(int fd, OpenKind r)
@@ -310,7 +304,7 @@ parse_gcopt(char *optarg)
 			dprintf(2, "error: minspace < %d\n", (MIN_minspace / 1024));
 			goto fail;
 		}
-	} else if(streq(parameter, "editordebug")) {
+	} else if(streq(parameter, "debug")) {
 		editor_debug_file = estrdup(arg);
 	} else if(streq(parameter, "arenadebug")) {
 		switch(trueargument(arg)) {
@@ -333,7 +327,7 @@ fail:
 	dprintf(2, "extended parameters: es -X [help|[parameter]:[value]]\n%s\n",
 			"Global:\n"
 			"	gc:[old|new|generational] -- which gc to use (was -X and -G)\n"
-			"	editordebug:[file] -- file to output line editor debugging info\n"
+			"	debug:[file] -- file to output debugging info\n"
 			"	arenadebug:[true|false] -- enable arena allocator debugging\n"
 			"\n"
 			"Old GC:\n"
