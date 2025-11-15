@@ -856,7 +856,7 @@ PRIM(basictokenize) {
 	btarena = newarena(1024);
 	arena_annotate(btarena, "basictokenizer arena");
 	results = basictokenize(getstr(lp->term), btarena);
-	if(status < 0)
+	if(results.status < 0)
 		goto fail;
 
 	dprint("basictokenize arena: size = %lu, used = %lu\n", arena_size(btarena),

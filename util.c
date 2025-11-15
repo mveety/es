@@ -2,6 +2,8 @@
 
 #include "es.h"
 #include <stdint.h>
+#include <signal.h>
+#include <sys/signal.h>
 
 int forcetty = 0;
 
@@ -18,6 +20,12 @@ strerror(int n)
 }
 
 #endif
+
+void
+esabort(void)
+{
+	abort();
+}
 
 /* esstrerror -- a wrapper around sterror(3) */
 extern char *
@@ -74,7 +82,7 @@ ealloc(size_t n)
 	void *p = malloc(n);
 	if(p == NULL) {
 		uerror("malloc");
-		abort();
+		esabort();
 	}
 	memset(p, 0, n);
 	return p;
@@ -89,7 +97,7 @@ erealloc(void *p, size_t n)
 	p = realloc(p, n);
 	if(p == NULL) {
 		uerror("realloc");
-		abort();
+		esabort();
 	}
 	return p;
 }
@@ -102,7 +110,7 @@ estrdup(char *str)
 	res = strdup(str);
 	if(!res){
 		uerror("strdup");
-		abort();
+		esabort();
 	}
 	return res;
 }
@@ -115,7 +123,7 @@ estrndup(char *str, size_t len)
 	res = strndup(str, len);
 	if(!res){
 		uerror("strdup");
-		abort();
+		esabort();
 	}
 	return res;
 }

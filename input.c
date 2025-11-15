@@ -93,7 +93,8 @@ warn(char *s)
 void
 setnextlastcmd(char *str)
 {
-	efree(nextlastcmd);
+	if(nextlastcmd)
+		efree(nextlastcmd);
 	nextlastcmd = estrdup(str);
 }
 

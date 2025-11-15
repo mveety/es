@@ -412,5 +412,5 @@ panic(const char *fmt, ...)
 	fdprint(&format, 2, fmt);
 	va_end(format.args);
 	eprint("\n");
-	abort();
+	esabort();
 }

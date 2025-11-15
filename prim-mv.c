@@ -904,6 +904,17 @@ PRIM(fmt) {
 	return res;
 }
 
+PRIM(panic) {
+	char *panicmsg = "unknown";
+
+	gcdisable();
+
+	if(list != nil)
+		panicmsg = getstr(list->term);
+
+	panic("%s", panicmsg);
+}
+
 Dict *
 initprims_mv(Dict *primdict)
 {
@@ -950,6 +961,7 @@ initprims_mv(Dict *primdict)
 	X(esmlesethighlight);
 	X(esmlegethighlight);
 	X(fmt);
+	X(panic);
 
 	return primdict;
 }

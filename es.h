@@ -450,6 +450,7 @@ extern void sortvector(Vector *v);
 
 /* util.c */
 
+extern void esabort(void) __attribute__((noreturn));
 extern char *esstrerror(int err);
 extern void uerror(char *msg);
 extern void *ealloc(size_t n);
