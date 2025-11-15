@@ -1228,6 +1228,7 @@ delete_word(EditorState *state)
 {
 	Wordpos wordpos;
 	size_t first_end = 0;
+	size_t old_bufend = 0;
 
 	bufferassert();
 	if(state->bufpos == 0)
@@ -1248,7 +1249,10 @@ delete_word(EditorState *state)
 	memset(&state->buffer[wordpos.start], 0, wordpos.end - wordpos.start);
 	memmove(&state->buffer[wordpos.start], &state->buffer[wordpos.end],
 			state->bufend - wordpos.end);
+	old_bufend = state->bufend;
 	state->bufend -= wordpos.end - wordpos.start;
+	if(state->bufend < old_bufend)
+		memset(&state->buffer[state->bufend], 0, old_bufend - state->bufend);
 	state->bufpos = wordpos.start;
 }
 
