@@ -2,7 +2,6 @@
 
 #include "es.h"
 #include <stdint.h>
-#include <signal.h>
 #include <sys/signal.h>
 
 int forcetty = 0;
@@ -228,8 +227,7 @@ ok(Result r)
 {
 	if(r.status == 0)
 		return r.ptr;
-	uerror("result");
-	esexit(r.status);
+	panic("error: result.status = %d", r.status);
 }
 
 int64_t
@@ -237,8 +235,7 @@ ok_int(Result r)
 {
 	if(r.status == 0)
 		return r.i;
-	uerror("result");
-	esexit(r.status);
+	panic("error: result.status = %d", r.status);
 }
 
 double
@@ -246,8 +243,7 @@ ok_float(Result r)
 {
 	if(r.status == 0)
 		return r.f;
-	uerror("result");
-	esexit(r.status);
+	panic("error: result.status = %d", r.status);
 }
 
 char *
@@ -255,8 +251,7 @@ ok_str(Result r)
 {
 	if(r.status == 0)
 		return r.str;
-	uerror("result");
-	esexit(r.status);
+	panic("error: result.status = %d", r.status);
 }
 
 Result

@@ -5,7 +5,9 @@
 #include <termios.h>
 #include <stddef.h>
 #include <stdint.h>
+#ifndef STANDALONE
 #include "result.h"
+#endif
 
 #define EDITINITIALBUFSZ 4096
 
