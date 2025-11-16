@@ -298,6 +298,10 @@ outbuf_append_printable(EditorState *state, OutBuf *obuf, char *str, int len, in
 	int64_t highlight2 = -1;
 	int64_t highlightsz = 0;
 	size_t hlfmtlen = 0;
+	size_t full_len = 0;
+	size_t curfmt_start = 0;
+	size_t curfmt_end = 0;
+	size_t fmtlen = 0;
 
 	if(state->match_braces && !state->done_reading)
 		highlight = find_matching_paren(state);
@@ -322,17 +326,38 @@ outbuf_append_printable(EditorState *state, OutBuf *obuf, char *str, int len, in
 		obuf->str = ealloc(len + highlightsz + 2);
 		obuf->size = len + highlightsz + 2;
 	}
-	if(obuf->len + highlightsz + len + 1 > obuf->size) {
-		obuf->str = erealloc(obuf->str, obuf->size + highlightsz + len + 1);
-		obuf->size += len + highlightsz + 1;
-	}
 
-	for(i = 0, pos = 0; i < len; i++) {
+	full_len = highlightsz + len + 1;
+	dprint("prefmt full_len = %lu\n", full_len);
+	for(i = 0; i < len; i++) {
+		if(str[i] == '\x01') {
+			if(i + 1 < len)
+				curfmt_start = i + 1;
+			continue;
+		}
+		if(str[i] == '\x02')
+			fmtlen += i - curfmt_start;
+	}
+	dprint("fmtlen = %lu\n", fmtlen);
+	full_len += fmtlen * 2;
+	dprint("postfmt full_len = %lu\n", full_len);
+
+	dprint("pre sizecheck: obuf->len = %lu, obuf->size = %lu\n", obuf->len, obuf->size);
+	if(obuf->len + full_len > obuf->size) {
+		obuf->str = erealloc(obuf->str, obuf->size + full_len);
+		obuf->size += full_len;
+	}
+	dprint("post sizecheck: obuf->len = %lu, obuf->size = %lu\n", obuf->len, obuf->size);
+
+	for(i = 0, pos = 0, curfmt_start = 0, curfmt_end = 0; i < len; i++) {
 		if(str[i] == '\x01') {
 			incr = 0;
+			if(i + 1 < len)
+				curfmt_start = i + 1;
 			continue;
 		} else if(str[i] == '\x02') {
 			incr = 1;
+			curfmt_end = i;
 			continue;
 		}
 		if(incr == 1 && (pos == highlight || pos == highlight2)) {
@@ -356,6 +381,13 @@ outbuf_append_printable(EditorState *state, OutBuf *obuf, char *str, int len, in
 			obuf->str[obuf->len++] = '[';
 			obuf->str[obuf->len++] = '0';
 			obuf->str[obuf->len++] = 'm';
+			if(curfmt_end > 0 && curfmt_start != 0 && curfmt_end > curfmt_start) {
+				dprint("resetting formatting: curfmt_start = %lu, curfmt_end = %lu\n", curfmt_start,
+					   curfmt_end);
+				dprint("obuf->len = %lu\n", obuf->len);
+				memcpy(&obuf->str[obuf->len], &str[curfmt_start], curfmt_end - curfmt_start);
+				obuf->len += curfmt_end - curfmt_start;
+			}
 		}
 		pos += incr;
 	}
