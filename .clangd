@@ -1,3 +1,9 @@
 CompileFlags:
-  Add: ["-I/usr/local/include", "-I."]
+  Add: [
+    "-I/usr/local/include",
+    "-I.",
+    "-DEditorDebug=1",
+    "-D_DEFAULT_SOURCE=1",
+    "-D_XOPEN_SOURCE=800",
+  ]
 

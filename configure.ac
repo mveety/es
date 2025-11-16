@@ -28,6 +28,7 @@ development='false'
 ASAN=false
 MSAN=false
 EDITORDEBUG=false
+SYNTAXDEBUG=false
 
 AC_ARG_ENABLE(loginshell,
 [  --enable-loginshell	Only load esrc if a login shell],
@@ -68,6 +69,10 @@ AC_ARG_ENABLE(memorysan,
 AC_ARG_ENABLE(editordebug,
 [  --enable-editordebug	Enable editor debugging],
 [EDITORDEBUG=true])
+
+AC_ARG_ENABLE(syntaxdebug,
+[  --enable-syntaxdebug	Enable mod_syntax debugging],
+[SYNTAXDEBUG=true])
 
 AC_SUBST(ENABLE_LOGINSHELL)
 AC_SUBST(DEVFD_IMPL)
@@ -185,6 +190,11 @@ fi
 if test "$EDITORDEBUG" = "true" && test "$development" = "false"
 then
 	CFLAGS="$CFLAGS -DEditorDebug=1"
+fi
+
+if test "$DYNLIBS" = "true" && test "$SYNTAXDEBUG" = "true"
+then
+	CFLAGS="$CFLAGS -DTokenizerDebug=1"
 fi
 
 if test "$ASAN" = "true" && test "$MSAN" = "false" && test "$development" = "true"
