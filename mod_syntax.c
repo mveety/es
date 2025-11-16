@@ -719,9 +719,9 @@ es_fast_highlighting(char *buffer, size_t bufend)
 
 	if(syntax_arena == nil) {
 		syntax_arena = newarena(4 * 1024);
-		arena_annotate(syntax_arena, "fasthighlighting");
 	} else
 		arena_reset(syntax_arena);
+	arena_annotate(syntax_arena, "fasthighlighting");
 
 	gcdisable();
 
