@@ -2,6 +2,7 @@
 #include "es.h"
 #include "gc.h"
 #include "prim.h"
+#include <stdio.h>
 
 extern Region *regions;
 extern int gc_after;
@@ -915,6 +916,20 @@ PRIM(panic) {
 	panic("%s", panicmsg);
 }
 
+PRIM(debugecho) {
+	if(editor->dfd <= 0)
+		return list_true;
+
+	if(list == nil)
+		fail("$&debugecho", "missing argument");
+	if(list->next != nil)
+		fail("$&debugecho", "too many arguments");
+
+	dprintf(editor->dfd, "%s\n", getstr(list->term));
+
+	return list_true;
+}
+
 Dict *
 initprims_mv(Dict *primdict)
 {
@@ -962,6 +977,7 @@ initprims_mv(Dict *primdict)
 	X(esmlegethighlight);
 	X(fmt);
 	X(panic);
+	X(debugecho);
 
 	return primdict;
 }
