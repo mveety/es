@@ -128,7 +128,11 @@ let (
 	}
 
 	fn esconf_printvar raw pkg name {
-		let (var = $pkg^_conf_^$name;fmt = $pkg^_conffmt_^$vn) {
+		let (
+			var = $pkg^_conf_^$name
+			fmt = $pkg^_conffmt_^$name
+			vn = $pkg^':'^$name
+		) {
 			if {$raw} {
 				if {~ $$fmt formatted} {
 					echo $var^' = '^<={%flatten ' ' $$var}

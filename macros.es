@@ -1,13 +1,53 @@
 #!/usr/bin/env es
 
-if {~ $#__es_symcount 0} {
-	__es_symcount = 0
+if {~ $#es_internal_symcount 0} {
+	es_internal_symcount = 0
+}
+
+if {~ $#es_conf_tempdir 0} {
+	local (set-es_conf_tempdir=) {
+		es_conf_tempdir = '/tmp'
+	}
+}
+
+set-es_conf_tempdir = @ arg _ {
+	if {~ $arg */} {
+		arg = <={~~ $arg */}
+	}
+	result $arg
 }
 
 fn gensym prefix {
-	prefix = <={if {~ $#prefix 0} { result '__es_sym_' } { result $prefix }}
-	__es_symcount = <={add $__es_symcount 1}
-	result $prefix^$__es_symcount
+	prefix = <={if {~ $#prefix 0} { result '__es_sym_'^$pid } { result $prefix }}
+	es_internal_symcount = <={add $es_internal_symcount 1}
+	result $prefix^$es_internal_symcount
+}
+
+fn tempfile prefix dir _ {
+	let (t=){
+		if {~ $prefix */*} {
+			t = $dir
+			dir = $prefix
+			prefix = $t
+		}
+	}
+	if {~ $#prefix 0} { prefix = 'tempfile' }
+	if {~ <={%count $:prefix} 0} { prefix = 'tempfile' }
+	let (
+		filename = <={gensym $prefix^'.es'^$pid^'.'}^'.tmp'
+		tmpfiledir = <={if {~ $#dir 0} {
+				result $es_conf_tempdir
+			} {
+				result $dir
+			}
+		}
+	) {
+		if {! access -rw -d $tmpfiledir} {
+			throw error 'tempfile' $tmpfiledir^' is not writable'
+		}
+		if {~ $tmpfiledir */} { tmpfiledir = <={~~ $tmpfiledir */} }
+		result $tmpfiledir/$filename
+	}
 }
 
 fn nrfn name argsbody {

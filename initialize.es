@@ -30,6 +30,7 @@ let (
 		__es_initgc
 		__es_complete_initialize
 		__es_libraries_initialize
+		%unhidevar es_internal_symcount
 
 		# run $home/.esrc if applicable
 		if {__es_esrc_check} {
