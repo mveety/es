@@ -613,6 +613,8 @@ bindargs(Tree *params, List *args, Binding *binding)
 			value = mklist(args->term, NULL);
 			args = args->next;
 		}
+		if(streq(param->u[0].s, "_"))
+			continue;
 		binding = mkbinding(param->u[0].s, value, binding);
 	}
 
