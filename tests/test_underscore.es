@@ -30,6 +30,28 @@ fn run_test_underscore {
 			assert {~ $i2 a b c d e f g h i j}
 		}
 	}
+	let (
+		fn testfn1 a _ {
+			assert {~ $#_ 0}
+			result $a
+		}
+		fn testfn2 _ _ c _ {
+			assert {~ $#_ 0}
+			result $c
+		}
+		fn testfn3 _ _ _ _ e {
+			assert {~ $#_ 0}
+			result $e
+		}
+		testlist = (1 2 3 4 5)
+	) {
+		assert {~ <={testfn1 $testlist |> %count} 1}
+		assert {~ <={testfn1 $testlist} $testlist(1)}
+		assert {~ <={testfn2 $testlist |> %count} 1}
+		assert {~ <={testfn2 $testlist} $testlist(3)}
+		assert {~ <={testfn3 $testlist |> %count} 1}
+		assert {~ <={testfn3 $testlist} $testlist(5)}
+	}
 }
 
 if {~ $#inside_estest 0 || ! $inside_estest} {
