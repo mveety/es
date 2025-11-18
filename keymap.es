@@ -76,19 +76,32 @@ fn %clearkey keyname {
 }
 
 fn keymap args {
-	let (print = false){
-		if {! ~ $#args 0} {
+	args = <={es_canonicalize_args $args}
+	let (dict=;print = false;dumpfuns = false){
+		while {! ~ $#args 0} {
 			if {~ <={%termtypeof $args} dict} {
 				dict = $args
+				break
 			} {~ $args(1) -v} {
 				print = true
 				args = $args(2 ...)
-				if {~ <={%termtypeof $args} dict} {
-					dict = $args
-				}
+			} {~ $args(1) -f} {
+				dumpfuns = true
+				args = $args(2 ...)
 			}
 		}
-		if {~ $#args 0} {
+		if {$dumpfuns} {
+			let (funlist = (<={$&esmledumpbuiltinfuns |> reverse} %esmle:Clear) ) {
+				if {$print} {
+					for (f = $funlist) {
+						echo $f
+					}
+					return <=true
+				}
+				return $funlist
+			}
+		}
+		if {~ $#dict 0} {
 			let (res = <=dictnew) {
 				for ((k f) = <=$&getkeymap) {
 					if {~ $f __esmle_^$k^_hook_*} {
@@ -104,9 +117,6 @@ fn keymap args {
 							echo $k^': '^$res($k)
 						}
 					}
-					#dictforall $res @ k f {
-					#	echo $k^': '^$f
-					#}
 				}
 				result $res
 			}

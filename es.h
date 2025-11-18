@@ -245,7 +245,10 @@ typedef enum {
 	FnCursorWordLeft,
 	FnCursorWordRight,
 	FnJumpToParen,
+	FnCancelCompletion,
 } EditorFunction;
+
+#define LastEditorFn FnCancelCompletion
 
 typedef struct {
 	char *name;

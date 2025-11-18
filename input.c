@@ -1348,9 +1348,14 @@ EditorFnDef editfndefs[] = {
 			.reset_completion = 1,
 		},
 	},
+	[FnCancelCompletion] = (EditorFnDef) {
+		.name = "%esmle:CancelCompletion",
+		.map = (Mapping) {
+			.hook = nil,
+			.reset_completion = 1,
+		},
+	},
 };
-
-#define LastEditorFn FnJumpToParen
 
 // clang-format on
 
@@ -1516,7 +1521,7 @@ initinput(void)
 		set_prompt1(editor, "% ");
 		set_prompt2(editor, "_% ");
 		set_complete_hook(editor, &es_complete_hook);
-		editor->wordbreaks = " \t\n\\'`$><=;|&{()}";
+		editor->wordbreaks = " \t\n\\'`$><=;|&{()}:";
 		editor->prefixes = "$";
 		editor->sort_completions = 1;
 		editor->remove_duplicates = 1;

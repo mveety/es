@@ -890,6 +890,20 @@ PRIM(esmlegethighlight) {
 	return res;
 }
 
+PRIM(esmledumpbuiltinfuns) {
+	List *res = nil; Root r_res;
+	int i = 0;
+
+	gcref(&r_res, (void**)&res);
+
+	for(i = 0; i <= LastEditorFn; i++)
+		if (i != FnInvalid && i != FnEsFunction)
+			res = mklist(mkstr(str("%s", edfn2name(i))), res);
+
+	gcrderef(&r_res);
+	return res;
+}
+
 PRIM(fmt) {
 	List *res = nil; Root r_res;
 
@@ -975,6 +989,7 @@ initprims_mv(Dict *primdict)
 	X(esmlesetwordstart);
 	X(esmlesethighlight);
 	X(esmlegethighlight);
+	X(esmledumpbuiltinfuns);
 	X(fmt);
 	X(panic);
 	X(debugecho);
