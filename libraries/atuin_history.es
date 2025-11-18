@@ -134,8 +134,10 @@ fn __atuin_enable {
 	}
 
 	if {$atuin_history_conf_enable-keymap-hook} {
-		%mapkey 'CtrlR' atuin-ctrlr-hook
-		%mapkey 'CtrlUp' atuin-ctrlup-hook
+		keymap %dict(
+			CtrlR => atuin-ctrlr-hook
+			CtrlUp => atuin-ctrlup-hook
+		)
 	}
 }
 
@@ -143,6 +145,18 @@ fn __atuin_disable {
 	fn %history
 	fn %postexec
 	fn-reload-history = $old_reload-history
+	let (cmap = <=keymap) {
+		if {dicthaskey $cmap CtrlR} {
+			if {~ $cmap(CtrlR) atuin-ctrlr-hook} {
+				keymap %dict(CtrlR => %esmle:Clear)
+			}
+		}
+		if {dicthaskey $cmap CtrlUp} {
+			if {~ $cmap(CtrlUp) atuin-ctrlup-hook} {
+				keymap %dict(CtrlUp => %esmle:Clear)
+			}
+		}
+	}
 }
 
 set-history_conf_use-hook = @ arg {
