@@ -60,5 +60,6 @@ keymap %dict(
 	CtrlLeft => %esmle:CursorWordLeft
 	CtrlRight => %esmle:CursorWordRight
 	Alta => %esmle:JumpToMatchingParen
+	CtrlZ => %esmle:CancelCompletion
 )
 

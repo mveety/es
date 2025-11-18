@@ -47,6 +47,11 @@ fn _esmle_getkeyfunction key {
 }
 
 fn %mapkey keyname funname {
+	let ((s f) = <={_esmle_getkeyfunction $keyname}) {
+		if {$s && ~ $f __esmle_^$keyname^_hook_*} {
+			fn-$f=
+		}
+	}
 	if {~ <={$&termtypeof $funname} closure} {
 		funname = <={_esmle_genfunction $keyname $funname}
 	}
