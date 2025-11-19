@@ -1694,6 +1694,15 @@ get_next_completion(EditorState *state, Wordpos pos)
 	if(state->completions == nil)
 		return nil;
 
+	if(state->complete_direction == Backward){
+		if(state->completionsi < state->completionssz)
+			state->completionsi++;
+		else if(state->completionsi >= state->completionssz)
+			state->completionsi = 0;
+		state->complete_direction = Forward;
+	}
+	if(state->complete_direction == None)
+		state->complete_direction = Forward;
 	if(state->completionsi < state->completionssz)
 		return estrdup(state->completions[state->completionsi++]);
 
@@ -1709,10 +1718,18 @@ get_prev_completion(EditorState *state, Wordpos pos)
 	if(state->completions == nil)
 		return nil;
 
+	if(state->complete_direction == None)
+		state->complete_direction = Backward;
+
 	if(state->completionsi == 0) {
 		state->completionsi = state->completionssz;
 		return nil;
+	} else if(state->complete_direction == Forward) {
+		if(state->completionsi > 1)
+			state->completionsi--;
+		state->complete_direction = Backward;
 	}
+
 	return estrdup(state->completions[--state->completionsi]);
 }
 
@@ -1838,6 +1855,7 @@ completion_reset(EditorState *state)
 		efree(state->comp_suffix);
 		state->comp_suffix = nil;
 	}
+	state->complete_direction = None;
 	dprint("state->in_completion = %d -> 0\n", state->in_completion);
 	state->in_completion = 0;
 }
