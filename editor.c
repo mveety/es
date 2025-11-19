@@ -210,7 +210,7 @@ outbuf_append(OutBuf *obuf, char *str, int len)
 
 typedef struct {
 	Brace *brace;
-	enum { Open, Close } type;
+	enum { NoBrace, OpenBrace, CloseBrace } type;
 } BraceState;
 
 BraceState
@@ -220,12 +220,12 @@ findbrace(char c, EditorState *state)
 
 	for(i = 0; i < state->nbraces; i++) {
 		if(state->braces[i].open == c)
-			return (BraceState){.brace = &state->braces[i], .type = Open};
+			return (BraceState){.brace = &state->braces[i], .type = OpenBrace};
 		if(state->braces[i].close == c)
-			return (BraceState){.brace = &state->braces[i], .type = Close};
+			return (BraceState){.brace = &state->braces[i], .type = CloseBrace};
 	}
 
-	return (BraceState){.brace = nil};
+	return (BraceState){.brace = nil, .type = NoBrace};
 }
 
 int64_t
@@ -245,14 +245,15 @@ find_matching_paren(EditorState *state)
 		c = state->buffer[state->bufpos];
 
 	bs = findbrace(c, state);
-	if(bs.brace == nil)
-		return -1;
 
-	switch(bs.type) {
+	switch((bs = findbrace(c, state)).type) {
 	default:
 		unreachable();
 		break;
-	case Open:
+	case NoBrace:
+		assert(bs.brace == nil);
+		return -1;
+	case OpenBrace:
 		if(state->bufpos == state->bufend)
 			return -1;
 		for(i = state->bufpos; i <= (int64_t)state->bufend; i++) {
@@ -269,7 +270,7 @@ find_matching_paren(EditorState *state)
 			}
 		}
 		return -1;
-	case Close:
+	case CloseBrace:
 		for(i = state->bufpos; i >= 0; i--) {
 			if(reg < 0)
 				return -1;
