@@ -244,8 +244,6 @@ find_matching_paren(EditorState *state)
 	else
 		c = state->buffer[state->bufpos];
 
-	bs = findbrace(c, state);
-
 	switch((bs = findbrace(c, state)).type) {
 	default:
 		unreachable();
@@ -830,7 +828,7 @@ new_utf8_strnlen(EditorState *state, char *str, size_t lim)
 size_t
 utf8_strnlen(EditorState *state, char *str, size_t lim)
 {
-	return new_utf8_strnlen(state, str, lim);
+	return old_utf8_strnlen(state, str, lim);
 }
 
 size_t
