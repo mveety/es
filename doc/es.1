@@ -1563,6 +1563,9 @@ Exception thrown by assert if the expression is false and unreachable if execute
 Exit from a loop.
 The return value of the loop is the argument to the exception.
 .TP
+.Cr "continue"
+Raised by continue and caught by loops. Similar to C's continue
+.TP
 .Cr eof
 Raised by
 .Cr %parse
@@ -1597,8 +1600,8 @@ and the signal is listed in the variable
 .I Signame
 is the name of the signal that was raised.
 .TP
-.Cr "continue"
-Raised by continue and caught by loops. Similar to C's continue
+.Cr "usage \fIutility\fP \fImessage\fP"
+Raised when the built-in utilities get invalid command line options.
 .PP
 See the builtin commands
 .Cr catch
