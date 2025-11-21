@@ -183,23 +183,14 @@
 .SH NAME
 es \- veety's extensible shell
 .SH SYNOPSIS
-.B es
-.RB [ \-sIAlNpodv ]
-.RB [ \-X
-.IR extended
-.IR argument ]
-.RB [ \-D
-.IR debugging
-.IR flags ]
-.RB [\-r
-.IR run
-.IR flags ]
-.RB [ \-c
-.IR command
-|
-.IR file ]
-.IR [ file 
-.IR [ args ... ] ]
+.SY es
+.OP \-sIAlNpodv
+.OP \-X "extended argument"
+.OP \-D "debugging flags"
+.OP \-r "run flags"
+.OP \-c command
+.RI [ file
+.RI [ args ... ] ]
 .SH DESCRIPTION
 .I Es
 is a command interpreter and programming language which combines
@@ -1562,6 +1553,11 @@ Exceptions are represented by lists.
 The first word of an exception is, by convention, the type of exception
 being raised.
 The following exceptions are known:
+.TP
+.Cr "assert \fIexpression\fP"
+.TQ
+.Cr "assert \fIsource\fP \fIexpression\fP"
+Exception thrown by assert if the expression is false and unreachable if executed
 .TP
 .Cr "break \fIvalue\fP"
 Exit from a loop.
@@ -2937,18 +2933,25 @@ rather than something more useful.
 .PP
 Too many creatures have fept in.
 .SH "SEE ALSO"
-.IR history (1),
-.IR rc (1),
-.IR sh (1),
-.IR execve (2),
-.IR getrlimit (2),
-.IR fopen (3),
-.IR getpwent (3),
-.IR pcre2 (3),
+history(1),
+rc(1),
+sh(1),
+execve(2),
+getrlimit(2),
+fopen(3),
+getpwent(3),
+pcre2(3),
+pcre2pattern(3),
+pcre2syntax(3),
+re_format(7)
 .PP
-https://github.com/mveety/es
+.UR https://github.com/mveety/es
+es-mveety GitHub
+.UE
 .PP
-https://github.com/wryun/es-shell
+.UR https://github.com/wryun/es-shell
+The mothership
+.UE
 .PP
 Paul Haahr and Byron Rakitzis,
 .I "Es \(em A shell with higher-order functions,"
