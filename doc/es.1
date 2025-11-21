@@ -179,17 +179,27 @@
 .nr )P +.5v
 .sp .4v \}
 ..
-.TH ES 1 "5 March 1992"
+.TH ES 1 "20 November 2025"
 .SH NAME
-es \- extensible shell
+es \- veety's extensible shell
 .SH SYNOPSIS
 .B es
-.RB [ \-silevxnpo ]
+.RB [ \-sIAlNpodv ]
+.RB [ \-X
+.IR extended
+.IR argument ]
+.RB [ \-D
+.IR debugging
+.IR flags ]
+.RB [\-r
+.IR run
+.IR flags ]
 .RB [ \-c
 .IR command
 |
 .IR file ]
-.RI [ arguments ]
+.IR [ file 
+.IR [ args ... ] ]
 .SH DESCRIPTION
 .I Es
 is a command interpreter and programming language which combines
@@ -280,7 +290,7 @@ quotes the immediately following character, if it is
 one of the special characters, except for newline.
 In addition,
 .IR es
-recognizes backslash sequences similar to those used in C strings:
+recognizes backslash sequences similar to those used in C strings (plus some extras):
 .IS
 .TP
 .Cr \ea
@@ -303,6 +313,12 @@ carriage return
 .TP
 .Cr \et
 tab
+.TP
+.Cr \eds
+editor formatting start
+.TP
+.Cr \ede
+editor formatting end
 .TP
 .Ci \ex nn
 hexadecimal character
@@ -626,6 +642,11 @@ with the components space-separated, use
 .Ci $^ var
 .De
 .PP
+You can also flatten lists without space separating (useful if you want to generate a string) using
+.Ds
+.Ci $" var
+.De
+.PP
 Flattening is useful when the normal list concatenation rules need to be
 bypassed.
 For example, to append a single period at the end of
@@ -633,6 +654,12 @@ For example, to append a single period at the end of
 use:
 .Ds
 .Cr "echo $^path."
+.De
+.SS "String Lists"
+String lists are lists produced by breaking a string into a list where each element
+is one character. They can be useful for string manipulation tasks. They can be produced with
+.Ds
+.Ci $: var
 .De
 .SS "Wildcard Expansion"
 .I Es
@@ -782,6 +809,92 @@ For example:
 .De
 .PP
 is true.
+.SS "Matching Multiple Patterns"
+.I Es
+provides a
+.Cr match
+command for cases where repeated pattern matching with the tilde
+.Rc ( \(ti )
+operator is inconvenient.
+.PP
+This invocation compares the
+.I subject
+against the given patterns and executes the first action corresponding
+with a matched pattern, or throws an
+.Cr error
+exception if no matches for the
+.I subject
+exist:
+.ta 2.5i
+.Ds
+.Cr "match \fIsubject\fP ("
+.Cr "    \fIpattern1\fP	{\fIaction1\fP}"
+.Cr "    (\fIpattern2 pattern3\fP)	{\fIaction2\fP}"
+.Cr "    * {"
+.Cr "        echo no matching patterns"
+.Cr "    }"
+.Cr ")"
+.De
+.PP
+The body of a
+.Cr match
+must be wrapped in parentheses.
+Each
+.I pattern
+must be on the same line as its corresponding
+.IR action ,
+and separate
+.IR pattern - action
+pairs must be separated by newlines or semicolons.
+.PP
+The matching behavior is equivalent to an
+.Cr if
+command with multiple
+.Cr \(ti
+comparisons.
+For example, the
+.Cr match
+command and the
+.Cr if
+command below are equivalent:
+.Ds
+.Cr "               bc = bang crack"
+.Cr "               bp = biff plop"
+.Cr "               bw = bam boom wham"
+
+.Cr "match $sound (          if {\(ti $sound $bc} {"
+.Cr "  $bc {result 3}          result 3"
+.Cr "  ($bp $bw *ow) {}      } {\(ti $sound $bp $bw *ow} {"
+.Cr "  * {                   } {"
+.Cr "    false                 false"
+.Cr "  }                     }"
+.Cr ")"
+.De
+.PP
+The value of the
+.I subject
+being matched is dynamically bound to the variable
+.Cr $matchexpr
+within the body of the
+.Cr match .
+.PP
+Also available are
+.Cr matchall
+and
+.Cr process .
+.Cr matchall
+will execute all actions that match and will only execute the wildcard if there
+are no matches.
+.Cr process
+is broadly equivalent to
+.Ds
+.Cr "for (l = $list) {"
+.Cr "  match $l ("
+.Cr "    pattern1 { action1 }"
+.Cr "    * { wildaction }"
+.Cr "  )"
+.Cr "}"
+.De
 .SS "Pattern Extraction"
 The double-tilde
 .Rc ( ~~ )
@@ -812,6 +925,15 @@ For example, the result of the extraction operation
 .PP
 is the list
 .Cr "(foo c bar h)" .
+.SS "Regular Expressions"
+Regular expressions are available to be used in matches and extractions as an
+alternative to wildcards. See
+.IR pcre2 (3)
+for more information on regular expressions.
+.Ds
+.Cr "~ $maybe_number %re('^[0-9]+$')"
+.Cr "~ $maybe_whitespace %re('^[ \et\er\en]+$')"
+.De
 .SS "Command Substitution"
 A list may be formed from the output of a command by using backquote
 substitution:
@@ -1043,6 +1165,17 @@ use:
 .PP
 The exit status of a pipeline is considered true if and only if every
 command in the pipeline exits true.
+.SS "Function Pipes"
+Functions pipes appends the return value of the first function to the end of the
+next functions argument list. Therefore
+.Ds
+.Cr "fna |> fnb 1 2 |> fnc 3 4"
+.De
+.PP
+will expand into
+.Ds
+.Cr "fnc 3 4 <={fnb 1 2 <={fna}}"
+.De
 .SS "Input/Output Substitution"
 Some commands, like
 .IR cmp (1)
@@ -1229,8 +1362,8 @@ Lambdas are just another form of code fragment, and, as such, can be
 exported in the environment, passed as arguments, etc.
 The central difference between the two forms is that lambdas bind their arguments,
 while simple brace-enclosed groups just ignore theirs.
-.SS "Local Variables"
-Variable assignments may be made local to a set of commands with the
+.SS "Dynamically Scoped Variables"
+Dynamically scoped variable assignments may be made with the
 .Cr local
 construct:
 .Ds
@@ -1251,7 +1384,7 @@ to a minimal useful path and removes
 for the duration of one long compound command.
 .PP
 Local-bound variables are exported into the environment,
-and will invoke appropriately named settor functions (see below).
+and will invoke appropriately named settor and gettor functions (see below).
 .SS "Lexically Scoped Variables"
 In addition to local variables,
 .I es
@@ -1378,6 +1511,16 @@ Then it returns its argument unchanged for use in the actual assignment to
 .Cr HOME .
 .PP
 Settor functions do not apply to lexically bound variables.
+.SS "Gettor Functions"
+Gettors are the inverse of settors. They are invoked on retrieval when a
+variable exists (ie contains something). This causes the variable to return
+the gettor result as opposed to the actual value of the variable. Gettors will
+get the contents of the variable as arguments. They can be created like:
+.Ds
+.Cr "get-var = @ args { result $args }"
+.De
+.PP
+A number of special variables are defined in terms of gettors.
 .SS Primitives
 Primitives are internal
 .I es
@@ -1457,6 +1600,9 @@ and the signal is listed in the variable
 .Cr signals .
 .I Signame
 is the name of the signal that was raised.
+.TP
+.Cr "continue"
+Raised by continue and caught by loops. Similar to C's continue
 .PP
 See the builtin commands
 .Cr catch
@@ -1499,6 +1645,9 @@ file being interpreted for the duration of a
 .TP
 .Cr apid
 The process ID of the last process started in the background.
+.TP
+.Cr ditto
+Contains the last input line. !! in commands will be replaced by $ditto
 .TP
 .Cr history
 The name of a file to which commands are appended as
@@ -2761,6 +2910,7 @@ or
 .Cr SIGTERM .
 This is used for debugging.
 .SH FILES
+.Cr $home/.config/es-mveety/init.es ,
 .Cr $home/.esrc ,
 .Cr /dev/null
 .SH BUGS
@@ -2786,11 +2936,6 @@ Line numbers in error messages refer to the last line parsed,
 rather than something more useful.
 .PP
 Too many creatures have fept in.
-.PP
-Please send bug reports to
-.Cr "haahr@adobe.com"
-and
-.Cr "byron@netapp.com" .
 .SH "SEE ALSO"
 .IR history (1),
 .IR rc (1),
@@ -2798,7 +2943,12 @@ and
 .IR execve (2),
 .IR getrlimit (2),
 .IR fopen (3),
-.IR getpwent (3)
+.IR getpwent (3),
+.IR pcre2 (3),
+.PP
+https://github.com/mveety/es
+.PP
+https://github.com/wryun/es-shell
 .PP
 Paul Haahr and Byron Rakitzis,
 .I "Es \(em A shell with higher-order functions,"
