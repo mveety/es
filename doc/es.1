@@ -462,7 +462,7 @@ is the same as
 Note that when assigning values to more than one variable,
 the list of variables must be enclosed in parentheses.
 .PP
-For ``free careting'' (see below) to work correctly,
+For \(lq\(lqfree careting\(rq\(rq (see below) to work correctly,
 .I es
 must make certain assumptions
 about what characters may appear in a variable name.
@@ -621,7 +621,7 @@ For example, the following are all equivalent:
 .PP
 .I Es
 inserts a free-caret between the
-.Rc `` \- ''
+.Rc \(lq\(lq \- \(rq\(rq
 and
 .Cr "$opts" ,
 as well
@@ -705,7 +705,7 @@ The rules for character class matching are the same as those for
 .IR ed (1),
 with the exception that character class negation is achieved
 with the tilde
-.Rc ( ~ ),
+.Rc ( \(ti ),
 not the caret
 .Rc ( ^ ),
 since the caret already means
@@ -722,7 +722,7 @@ do not match a dot character
 at the beginning of a filename component.
 .PP
 A tilde
-.Rc ( ~ )
+.Rc ( \(ti )
 as the first character of an argument is used to refer to home directories.
 A tilde alone or followed by a slash
 .Rc ( / )
@@ -734,13 +734,13 @@ of that user, according to
 .IR getpwent (3).
 .SS "Pattern Matching"
 The tilde
-.Rc ( ~ )
+.Rc ( \(ti )
 operator is used in
 .I es
 for matching strings against wildcard patterns.
 The command
 .Ds
-.Cr "~ \fIsubject\fP \fIpattern\fP \fIpattern\fP ..."
+.Cr "\(ti \fIsubject\fP \fIpattern\fP \fIpattern\fP ..."
 .De
 .PP
 returns a true value if and only if the subject matches any of the patterns.
@@ -752,18 +752,18 @@ do not have to be matched explicitly,
 and home directory expansion does not occur.
 Thus
 .Ds
-.Cr "~ foo f*"
+.Cr "\(ti foo f*"
 .De
 .PP
 returns zero (true), while
 .Ds
-.Cr "~ (bar baz) f*"
+.Cr "\(ti (bar baz) f*"
 .De
 .PP
 returns one (false).
 The null list is matched by the null list, so
 .Ds
-.Cr "~ $foo ()"
+.Cr "\(ti $foo ()"
 .De
 .PP
 checks to see whether
@@ -772,11 +772,11 @@ is empty or not.
 This may also be achieved
 by the test
 .Ds
-.Cr "~ $#foo 0"
+.Cr "\(ti $#foo 0"
 .De
 .PP
 Note that inside a
-.Cr ~
+.Cr \(ti
 command
 .I es
 does not match patterns against file
@@ -791,21 +791,21 @@ does expand the subject against filenames if it contains
 metacharacters.
 Thus, the command
 .Ds
-.Cr "~ * ?"
+.Cr "\(ti * ?"
 .De
 .PP
 returns true if any of the files in the current directory have a
 single-character name.
 Note that if the
-.Cr ~
+.Cr \(ti
 command is given a list as its first
 argument, then a successful match against any of the elements of that
 list will cause
-.Cr ~
+.Cr \(ti
 to return true.
 For example:
 .Ds
-.Cr "~ (foo goo zoo) z*"
+.Cr "\(ti (foo goo zoo) z*"
 .De
 .PP
 is true.
@@ -897,13 +897,13 @@ is broadly equivalent to
 .De
 .SS "Pattern Extraction"
 The double-tilde
-.Rc ( ~~ )
+.Rc ( \(ti\(ti )
 operator is used in
 .I es
 for extracting the parts of strings that match patterns.
 The command
 .Ds
-.Cr "~~ \fIsubject\fP \fIpattern\fP \fIpattern\fP ..."
+.Cr "\(ti\(ti \fIsubject\fP \fIpattern\fP \fIpattern\fP ..."
 .De
 .PP
 returns the parts of each matching subject which correspond to the
@@ -920,7 +920,7 @@ subject.  If the subject does not match, the next pattern is tried.
 .PP
 For example, the result of the extraction operation
 .Ds
-.Cr "~~ (foo.c foo.x bar.h) *.[ch]"
+.Cr "\(ti\(ti (foo.c foo.x bar.h) *.[ch]"
 .De
 .PP
 is the list
@@ -931,8 +931,8 @@ alternative to wildcards. See
 .IR pcre2 (3)
 for more information on regular expressions.
 .Ds
-.Cr "~ $maybe_number %re('^[0-9]+$')"
-.Cr "~ $maybe_whitespace %re('^[ \et\er\en]+$')"
+.Cr "\(ti $maybe_number %re('^[0-9]+$')"
+.Cr "\(ti $maybe_whitespace %re('^[ \et\er\en]+$')"
 .De
 .SS "Command Substitution"
 A list may be formed from the output of a command by using backquote
@@ -944,7 +944,7 @@ substitution:
 returns a list formed from the standard output of the command in braces.
 The characters stored in the variable
 .Cr $ifs
-(for ``input field separator'')
+(for \(lq\(lqinput field separator\(rq\(rq)
 are used to split the output into list elements.
 By default,
 .Cr $ifs
@@ -1012,13 +1012,13 @@ might produce the output
 along with any output or error messages from the programs.
 .PP
 .I Es
-functions and primitives can produce ``rich return values,''
+functions and primitives can produce \(lq\(lqrich return values,\(rq\(rq
 that is, arbitrary lists as return values.
 .PP
 When return values are interpreted as truth values,
 an extension of the normal shell conventions apply.
 If any element of a list is not equal to
-.Rc `` 0 ''
+.Rc \(lq\(lq 0 \(rq\(rq
 (or the empty string), that list is considered false.
 .PP
 The return value of an assignment operation is the assigned value.
@@ -1031,13 +1031,13 @@ which depend on the exit status of a command.
 .De
 .PP
 executes the first command and then executes the second command if and only if
-the first command has a ``true'' return value.
+the first command has a \(lq\(lqtrue\(rq\(rq return value.
 .Ds
 .Ic command1 " || " command2
 .De
 .PP
 executes the first command and then executes the second command if and only if
-the first command has a ``false'' return value.
+the first command has a \(lq\(lqfalse\(rq\(rq return value.
 .Ds
 .Ci ! " command"
 .De
@@ -1099,7 +1099,7 @@ truncates a file and opens it for reading and writing, and
 opens a file for reading and appending;
 these operators use file descriptor 1 by default.
 .PP
-``Here documents'' are supported as in
+\(lq\(lqHere documents\(rq\(rq are supported as in
 .IR sh (1)
 with the use of
 .Ds
@@ -1127,7 +1127,7 @@ in a here document created with an unquoted end-of-file marker, use
 .PP
 Additionally,
 .I es
-supports ``here strings'', which are like here documents,
+supports \(lq\(lqhere strings\(rq\(rq, which are like here documents,
 except that input is taken directly from a string on the command line.
 Its use is illustrated here:
 .Ds
@@ -1389,7 +1389,7 @@ and will invoke appropriately named settor and gettor functions (see below).
 In addition to local variables,
 .I es
 supports a different form of temporary variable binding,
-using let-bound, or ``lexically scoped,'' variables.
+using let-bound, or \(lq\(lqlexically scoped,\(rq\(rq variables.
 (Lexical scoping is the form of binding used by most compiled
 programming languages, such as C or Scheme.)
 A lexically scoped variable is introduced with a
@@ -1415,8 +1415,8 @@ An example best shows the difference between
 .Cr let
 and
 .Cr local
-(also known as ``dynamic'') binding: (note that
-.Rc `` "; " ''
+(also known as \(lq\(lqdynamic\(rq\(rq) binding: (note that
+.Rc \(lq\(lq "; " \(rq\(rq
 is
 .IR es 's
 default prompt.)
@@ -1667,7 +1667,7 @@ does not append commands to any file.
 .TP
 .Cr home
 The current user's home directory, used in tilde
-.Rc ( ~ )
+.Rc ( \(ti )
 expansion, as the default directory for the builtin
 .Cr cd
 command, and as the directory in which
@@ -1890,8 +1890,8 @@ fn \fIname\fP \fIargs\fP { \fIcmd\fP }	fn-^\fIname\fP = @ \fIargs\fP {\fIcmd\fP}
 .ft \*(Cf
 $#\fIvar\fP	<={%count $\fIvar\fP}
 $^\fIvar\fP	<={%flatten ' ' $\fIvar\fP}
-\`{\fIcmd args\fP}	<={%backquote <={%flatten '' $ifs} {\fIcmd args\fP}}
-\`\`\fIifs\fP {\fIcmd args\fP}	<={%backquote <={%flatten '' \fIifs\fP} {\fIcmd args\fP}}
+\`{\fIcmd args\fP}	<={%backquote <={%flatten \(rq\(rq $ifs} {\fIcmd args\fP}}
+\`\`\fIifs\fP {\fIcmd args\fP}	<={%backquote <={%flatten \(rq\(rq \fIifs\fP} {\fIcmd args\fP}}
 .ft R
 .De
 .SH BUILTINS
@@ -2137,7 +2137,7 @@ disables core dumps.
 .TP
 \&
 The limit values must either be the word
-.Rc `` unlimited ''
+.Rc \(lq\(lq unlimited \(rq\(rq
 or a number with an optional suffix indicating units.
 For size limits, the suffixes
 .Cr k
@@ -2293,7 +2293,7 @@ the returned string.
 .SS "Hook Functions"
 A subset of the
 .Cr % -named
-functions are known as ``hook functions.''
+functions are known as \(lq\(lqhook functions.\(rq\(rq
 The hook functions are called to implement some internal
 shell operations, and are available as functions in order
 that their values can be changed.
@@ -2677,15 +2677,15 @@ Primitives are referenced with the
 .PP
 notation.
 In this section, the
-.Rc `` $& ''
+.Rc \(lq\(lq $& \(rq\(rq
 prefixes will be omitted when primitive names are mentioned.
 Note that, by convention, primitive names follow C identifier
 names where
 .I es
 variable and function names often contain
-.Rc `` % ''
+.Rc \(lq\(lq % \(rq\(rq
 and
-.Rc `` - ''
+.Rc \(lq\(lq - \(rq\(rq
 characters.
 .PP
 The following primitives directly implement the
@@ -2704,7 +2704,7 @@ exit	result
 In addition, the primitive
 .Cr dot
 implements the
-.Rc `` . ''
+.Rc \(lq\(lq . \(rq\(rq
 builtin function.
 .PP
 The
@@ -2723,7 +2723,7 @@ builtin.
 .PP
 The following primitives implement the hook functions
 of the same names, with
-.Rc `` % ''
+.Rc \(lq\(lq % \(rq\(rq
 prefixes:
 .ta 1.75i 3.5i
 .Ds
@@ -2739,7 +2739,7 @@ fsplit	pipe	whatis
 .PP
 The following primitives implement the similar named hook functions,
 with
-.Rc `` % ''
+.Rc \(lq\(lq % \(rq\(rq
 prefixes and internal hyphens:
 .ta 1.75i 3.5i
 .Ds
