@@ -179,6 +179,11 @@
 .nr )P +.5v
 .sp .4v \}
 ..
+.de CW
+.ft CW
+\\$1
+.ft
+..
 .TH ES 1 "20 November 2025"
 .SH NAME
 es \- veety's extensible shell
@@ -225,58 +230,50 @@ name of a program or shell function to run.
 If the name is the name of a shell function, that function
 is executed.
 Otherwise, the name is used as the name of an executable file.
-If the name begins with
-.Cr / ,
-.Cr ./ ,
-or
-.Cr ../ ,
+If the name begins with \f(CW/\fP, \f(CW./\fP, or \f(CW../\fP,
 then it is used as the absolute path name of a file;
 if not,
 .I es
 looks for an executable file in the directories named by
-.Cr $path .
+.CW "$path."
 .PP
-Commands are terminated by newline or semicolon
-.Rc ( ; ).
-A command may also be terminated by an ampersand
-.Rc ( & ),
+Commands are terminated by newline or semicolon (;).
+A command may also be terminated by an ampersand (&),
 which causes the command to be run in the background:
 the shell does not wait for the command
 to finish before continuing execution.
 Background processes have an implicit redirection of
-.Cr /dev/null
+.CW /dev/null
 as their standard input that may be overridden by an explicit redirection.
 .SS Quoting
 .IR Es
 gives several characters special meaning;
 special characters automatically terminate words.
 The following characters, along with space, tab, and newline, are special:
-.Ds
-.Cr "# $ & \' ( ) ; < = > \e ^ \` { | }"
-.De
 .PP
-The single quote
-.Rc ( ' )
-prevents special treatment of any character other than itself.
-Any characters between single quotes, including newlines, backslashes,
-and control characters, are treated as an uninterpreted string.
-A quote character itself may be quoted by placing two quotes in a row.
-A single quote character is therefore represented by the sequence
-.Cr '''' .
-The empty string is represented by
-.Cr '' .
+.EX
+# $ & \' ( ) ; < = > \e ^ \` { | }
+.EE
+.PP
+The single quote (\f(CW\(aq\fP) prevents special treatment
+of any character other than itself. Any characters between single
+quotes, including newlines, backslashes, and control characters,
+are treated as an uninterpreted string. A quote character itself
+may be quoted by placing two quotes in a row. A single quote character
+is therefore represented by the sequence \f(CW\(aq\(aq\(aq\(aq\fP and
+the empty string is represented by \f(CW\(aq\(aq\fP.
+.br
 Thus:
-.Ds
-.Cr "echo 'What''s the plan, Stan?'"
-.De
+.EX
+echo 'What''s the plan, Stan?'
+.EE
 .PP
 prints out
-.Ds
-.Cr "What's the plan, Stan?"
-.De
+.EX
+What's the plan, Stan?
+.EE
 .PP
-The backslash
-.Cr ( \e )
+The backslash (\f(CW\e\fP)
 quotes the immediately following character, if it is
 one of the special characters, except for newline.
 In addition,
@@ -320,15 +317,12 @@ octal character
 .IR nnn
 .IE
 .SS Comments
-The number sign
-.Rc ( # )
-begins a comment in
+The number sign (\f(CW#\fP) begins a comment in
 .IR es .
 All characters up to but not including the next newline are ignored.
 .SS "Line continuation"
 A long logical line may be continued over several physical lines by
-terminating each line (except the last) with a backslash
-.Rc ( \e ).
+terminating each line (except the last) with a backslash (\f(CW\e\fP).
 The backslash-newline sequence is treated as a space.
 Note that line continuation does not work in comments, where the backslash is
 treated as part of the comment, and inside quoted strings, where the backslash
@@ -344,11 +338,11 @@ Lists have no hierarchical structure;
 a list inside another list is expanded so that the
 outer list contains all the elements of the inner list.
 Thus, the following are all equivalent:
-.Ds
+.EX
 .Cr "one two three"
 .Cr "(one two three)"
 .Cr "((one) () ((two three)))"
-.De
+.EE
 .PP
 Note that the null string,
 .Cr "''" ,
@@ -362,31 +356,31 @@ operation, but it does not remove its definition.
 Two lists may be joined by the concatenation operator
 .Rc ( ^ ).
 A single word is a list of length one, so
-.Ds
+.EX
 .Cr "echo foo^bar"
-.De
+.EE
 .PP
 produces the output
-.Ds
+.EX
 .Cr foobar
-.De
+.EE
 .PP
 For lists of more than one element,
 concatenation produces the cross (Cartesian) product of
 the elements in both lists:
-.Ds
+.EX
 .Cr "echo (a\- b\- c\-)^(1 2)"
-.De
+.EE
 .PP
 produces the output
-.Ds
+.EX
 .Cr "a\-1 a\-2 b\-1 b\-2 c\-1 c\-2"
-.De
+.EE
 .SS "Variables"
 A list may be assigned to a variable, using the notation:
-.Ds
+.EX
 .Ic var " = " list
-.De
+.EE
 .PP
 Any sequence of non-special characters, except a sequence including
 only digits, may be used as a variable name.
@@ -395,29 +389,29 @@ exports all user-defined variables into the environment unless
 it is explicitly told not to.
 .PP
 The value of a variable is referenced with the notation:
-.Ds
+.EX
 .Ci $ var
-.De
+.EE
 .PP
 Any variable which has not been assigned a value returns the empty list
 when referenced.
 In addition, multiple references are allowed:
-.Ds
+.EX
 .Cr "a = foo"
 .Cr "b = a"
 .Cr "echo $$b"
-.De
+.EE
 .PP
 prints
-.Ds
+.EX
 .Cr foo
-.De
+.EE
 .PP
 A variable's definition may also be removed by
 assigning the empty list to a variable:
-.Ds
+.EX
 .Ic var =
-.De
+.EE
 .PP
 Multiple variables may be assigned with a single assignment statement.
 The left hand side of the assignment operation consists of a list of
@@ -428,27 +422,27 @@ If there are fewer variables than elements in the list, the last
 variable is bound to all the remaining list values.
 .PP
 For example,
-.Ds
+.EX
 .Cr "(a b) = 1 2 3"
-.De
+.EE
 .PP
 has the same effect as
-.Ds
+.EX
 .Cr "a = 1"
 .Cr "b = 2 3"
-.De
+.EE
 .PP
 and
-.Ds
+.EX
 .Cr "(a b c) = 1 2"
-.De
+.EE
 .PP
 is the same as
-.Ds
+.EX
 .Cr "a = 1"
 .Cr "b = 2"
 .Cr "c ="
-.De
+.EE
 .PP
 Note that when assigning values to more than one variable,
 the list of variables must be enclosed in parentheses.
@@ -470,53 +464,53 @@ and underscore
 To reference a variable with other
 characters in its name, quote the variable name.
 Thus:
-.Ds
+.EX
 .Cr "echo $'we$Ird\Variab!le'"
-.De
+.EE
 .PP
 A variable name produced by some complex operation,
 such as concatenation, should be enclosed in parentheses:
-.Ds
+.EX
 .Ci $( var )
-.De
+.EE
 .PP
 Thus:
-.Ds
+.EX
 .Cr "Good\-Morning = Bonjour"
 .Cr "Guten = Good"
 .Cr "Morgen = Morning"
 .Cr "echo $($Guten^\-^$Morgen)"
-.De
+.EE
 .PP
 prints
-.Ds
+.EX
 .Cr "Bonjour"
-.De
+.EE
 .PP
 Each element of the list in parentheses is treated as an
 independent variable and expanded separately.
 Thus, given the above definitions,
-.Ds
+.EX
 .Cr "echo $(Guten Morgen)"
-.De
+.EE
 .PP
 prints
-.Ds
+.EX
 .Cr "Good Morning"
-.De
+.EE
 .PP
 To count the number of elements in a variable, use
-.Ds
+.EX
 .Ci $# var
-.De
+.EE
 .PP
 This returns a single-element list with the number of elements in
 .Ci $ var\fR.
 .SS Subscripting
 Variables may be indexed with the notation
-.Ds
+.EX
 .Ci $ var ( n )
-.De
+.EE
 .PP
 where
 .I n
@@ -525,30 +519,30 @@ Subscript indexes are based at one.
 The list of subscripts need
 not be in order or even unique.
 Thus, if
-.Ds
+.EX
 .Cr "a = one two three"
-.De
+.EE
 .PP
 then
-.Ds
+.EX
 .Cr "echo $a(3 3 3)"
-.De
+.EE
 .PP
 prints
-.Ds
+.EX
 .Cr "three three three"
-.De
+.EE
 .PP
 Subscript indices which refer to nonexistent elements
 expand to the empty list.  Thus, given the definition above
-.Ds
+.EX
 .Cr "echo $a(3 1 4 1 5 9 2 6 5)"
-.De
+.EE
 .PP
 prints
-.Ds
+.EX
 .Cr "three one one two"
-.De
+.EE
 .PP
 Subscript ranges are of the form
 .Ic lo ... hi
@@ -564,9 +558,9 @@ is used as a default value; if
 .I hi
 is omitted, the length of the list is used.
 Thus
-.Ds
+.EX
 .Cr "* = $*(2 ...)"
-.De
+.EE
 .PP
 removes the first element of
 .Cr * ,
@@ -593,9 +587,9 @@ and so on.
 Note that the list of subscripts may be given by any
 .IR es
 expression, so
-.Ds
+.EX
 .Cr "$var(\`{awk 'BEGIN{for(i=1;i<=10;i++)print i;exit }'})"
-.De
+.EE
 .PP
 returns the first 10 elements of
 .Cr $var .
@@ -604,11 +598,11 @@ returns the first 10 elements of
 inserts carets (concatenation operators) for free in certain situations,
 in order to save some typing on the user's behalf.
 For example, the following are all equivalent:
-.Ds
+.EX
 .Cr "cc \-O \-g \-c malloc.c alloca.c"
 .Cr "cc \-^(O g c) (malloc alloca)^.c"
 .Cr "opts=O g c; files=malloc alloca; cc \-$opts $files.c"
-.De
+.EE
 .PP
 .I Es
 inserts a free-caret between the
@@ -629,29 +623,29 @@ inserts a caret between them.
 .SS "Flattened Lists"
 To create a single-element list from a multi-element list,
 with the components space-separated, use
-.Ds
+.EX
 .Ci $^ var
-.De
+.EE
 .PP
 You can also flatten lists without space separating (useful if you want to generate a string) using
-.Ds
+.EX
 .Ci $" var
-.De
+.EE
 .PP
 Flattening is useful when the normal list concatenation rules need to be
 bypassed.
 For example, to append a single period at the end of
 .Cr $path ,
 use:
-.Ds
+.EX
 .Cr "echo $^path."
-.De
+.EE
 .SS "String Lists"
 String lists are lists produced by breaking a string into a list where each element
 is one character. They can be useful for string manipulation tasks. They can be produced with
-.Ds
+.EX
 .Ci $: var
-.De
+.EE
 .SS "Wildcard Expansion"
 .I Es
 expands wildcards in filenames if possible.
@@ -669,10 +663,10 @@ argument as a pattern for matching against files.
 will only perform pattern matching if a metacharacter occurs unquoted and
 literally in the input.
 Thus,
-.Ds
+.EX
 .Cr "foo = '*'"
 .Cr "echo $foo"
-.De
+.EE
 .PP
 will always echo just a star.
 In order for non-literal metacharacters to be expanded, an
@@ -730,9 +724,9 @@ operator is used in
 .I es
 for matching strings against wildcard patterns.
 The command
-.Ds
+.EX
 .Cr "\(ti \fIsubject\fP \fIpattern\fP \fIpattern\fP ..."
-.De
+.EE
 .PP
 returns a true value if and only if the subject matches any of the patterns.
 The matching follows the same rules as wildcard expansion, except that slashes
@@ -742,29 +736,29 @@ are not considered significant, leading dots
 do not have to be matched explicitly,
 and home directory expansion does not occur.
 Thus
-.Ds
+.EX
 .Cr "\(ti foo f*"
-.De
+.EE
 .PP
 returns zero (true), while
-.Ds
+.EX
 .Cr "\(ti (bar baz) f*"
-.De
+.EE
 .PP
 returns one (false).
 The null list is matched by the null list, so
-.Ds
+.EX
 .Cr "\(ti $foo ()"
-.De
+.EE
 .PP
 checks to see whether
 .Cr $foo
 is empty or not.
 This may also be achieved
 by the test
-.Ds
+.EX
 .Cr "\(ti $#foo 0"
-.De
+.EE
 .PP
 Note that inside a
 .Cr \(ti
@@ -781,9 +775,9 @@ However,
 does expand the subject against filenames if it contains
 metacharacters.
 Thus, the command
-.Ds
+.EX
 .Cr "\(ti * ?"
-.De
+.EE
 .PP
 returns true if any of the files in the current directory have a
 single-character name.
@@ -795,9 +789,9 @@ list will cause
 .Cr \(ti
 to return true.
 For example:
-.Ds
+.EX
 .Cr "\(ti (foo goo zoo) z*"
-.De
+.EE
 .PP
 is true.
 .SS "Matching Multiple Patterns"
@@ -817,7 +811,7 @@ exception if no matches for the
 .I subject
 exist:
 .ta 2.5i
-.Ds
+.EX
 .Cr "match \fIsubject\fP ("
 .Cr "    \fIpattern1\fP	{\fIaction1\fP}"
 .Cr "    (\fIpattern2 pattern3\fP)	{\fIaction2\fP}"
@@ -825,7 +819,7 @@ exist:
 .Cr "        echo no matching patterns"
 .Cr "    }"
 .Cr ")"
-.De
+.EE
 .PP
 The body of a
 .Cr match
@@ -848,7 +842,7 @@ For example, the
 command and the
 .Cr if
 command below are equivalent:
-.Ds
+.EX
 .Cr "               bc = bang crack"
 .Cr "               bp = biff plop"
 .Cr "               bw = bam boom wham"
@@ -860,7 +854,7 @@ command below are equivalent:
 .Cr "    false                 false"
 .Cr "  }                     }"
 .Cr ")"
-.De
+.EE
 .PP
 The value of the
 .I subject
@@ -878,14 +872,14 @@ will execute all actions that match and will only execute the wildcard if there
 are no matches.
 .Cr process
 is broadly equivalent to
-.Ds
+.EX
 .Cr "for (l = $list) {"
 .Cr "  match $l ("
 .Cr "    pattern1 { action1 }"
 .Cr "    * { wildaction }"
 .Cr "  )"
 .Cr "}"
-.De
+.EE
 .SS "Pattern Extraction"
 The double-tilde
 .Rc ( \(ti\(ti )
@@ -893,9 +887,9 @@ operator is used in
 .I es
 for extracting the parts of strings that match patterns.
 The command
-.Ds
+.EX
 .Cr "\(ti\(ti \fIsubject\fP \fIpattern\fP \fIpattern\fP ..."
-.De
+.EE
 .PP
 returns the parts of each matching subject which correspond to the
 wildcards.
@@ -910,9 +904,9 @@ character range are extracted, and processing moves on to the next
 subject.  If the subject does not match, the next pattern is tried.
 .PP
 For example, the result of the extraction operation
-.Ds
+.EX
 .Cr "\(ti\(ti (foo.c foo.x bar.h) *.[ch]"
-.De
+.EE
 .PP
 is the list
 .Cr "(foo c bar h)" .
@@ -921,16 +915,16 @@ Regular expressions are available to be used in matches and extractions as an
 alternative to wildcards. See
 .IR pcre2 (3)
 for more information on regular expressions.
-.Ds
+.EX
 .Cr "\(ti $maybe_number %re('^[0-9]+$')"
 .Cr "\(ti $maybe_whitespace %re('^[ \et\er\en]+$')"
-.De
+.EE
 .SS "Command Substitution"
 A list may be formed from the output of a command by using backquote
 substitution:
-.Ds
+.EX
 .Ci "\`{" " command " }
-.De
+.EE
 .PP
 returns a list formed from the standard output of the command in braces.
 The characters stored in the variable
@@ -948,14 +942,14 @@ may be used instead of
 This last feature is useful when defining functions that expand
 to useful argument lists.
 A frequent use is:
-.Ds
+.EX
 .Cr "fn src { echo *.[chy] }"
-.De
+.EE
 .PP
 followed by
-.Ds
+.EX
 .Cr "wc \`src"
-.De
+.EE
 .PP
 (This will print out a word-count of all C and Yacc source files in the current
 directory.)
@@ -963,26 +957,26 @@ directory.)
 In order to override the value of
 .Cr $ifs
 for a single command substitution, use:
-.Ds
+.EX
 .Ci "\`\`" " ifs-list " { " command " }
-.De
+.EE
 .PP
 .Cr $ifs
 will be temporarily ignored and the command's output will be split as specified by
 the list following the double backquote.
 For example:
-.Ds
+.EX
 .Cr "\`\` :\en {cat /etc/passwd}"
-.De
+.EE
 .PP
 splits up
 .Cr /etc/passwd
 into fields.
 .SS "Return Values"
 The return value of a command is obtained with the construct
-.Ds
+.EX
 .Ci "<={" " command " }
-.De
+.EE
 .PP
 The return value of an external program is its exit status
 (which in other shells can be found in special variables such as
@@ -991,14 +985,14 @@ or
 .Cr $status ),
 as either a small integer or the name of signal.
 Thus
-.Ds
+.EX
 .Cr "echo <={test \-f /etc/motd} <={test \-w /vmunix} <=a.out"
-.De
+.EE
 .PP
 might produce the output
-.Ds
+.EX
 .Cr "0 1 sigsegv+core"
-.De
+.EE
 .PP
 along with any output or error messages from the programs.
 .PP
@@ -1017,62 +1011,62 @@ The return value of an assignment operation is the assigned value.
 There are a number of operators in
 .I es
 which depend on the exit status of a command.
-.Ds
+.EX
 .Ic command1 " && " command2
-.De
+.EE
 .PP
 executes the first command and then executes the second command if and only if
 the first command has a \(lq\(lqtrue\(rq\(rq return value.
-.Ds
+.EX
 .Ic command1 " || " command2
-.De
+.EE
 .PP
 executes the first command and then executes the second command if and only if
 the first command has a \(lq\(lqfalse\(rq\(rq return value.
-.Ds
+.EX
 .Ci ! " command"
-.De
+.EE
 .PP
 inverts the truth value of the exit status of a command.
 .SS "Input and output"
 .PP
 The standard output of a command may be redirected to a file with
-.Ds
+.EX
 .Cr "command > file"
-.De
+.EE
 .PP
 and the standard input may be taken from a file with
-.Ds
+.EX
 .Cr "command < file"
-.De
+.EE
 .PP
 File descriptors other than 0 and 1 may be specified also.
 For example, to redirect standard error to a file, use:
-.Ds
+.EX
 .Cr "command >[2] file"
-.De
+.EE
 .PP
 In order to duplicate a file descriptor, use
 .Ci >[ n = m ]\fR.
 Thus to redirect both standard output and standard error
 to the same file, use
-.Ds
+.EX
 .Cr "command > file >[2=1]"
-.De
+.EE
 .PP
 To close a file descriptor that may be open, use
 .Ci >[ n =]\fR.
 For example, to
 close file descriptor 7:
-.Ds
+.EX
 .Cr "command >[7=]"
-.De
+.EE
 .PP
 In order to place the output of a command at the end of an already
 existing file, use:
-.Ds
+.EX
 .Cr "command >> file"
-.De
+.EE
 .PP
 If the file does not exist, then it is created.
 .PP
@@ -1093,9 +1087,9 @@ these operators use file descriptor 1 by default.
 \(lq\(lqHere documents\(rq\(rq are supported as in
 .IR sh (1)
 with the use of
-.Ds
+.EX
 .Cr "command << 'eof-marker'"
-.De
+.EE
 .PP
 If the end-of-file marker is quoted,
 then no variable substitution occurs inside the here document.
@@ -1107,9 +1101,9 @@ and if a
 .Cr ^
 character follows a variable name, it is deleted.
 This allows the unambiguous use of variables adjacent to text, as in
-.Ds
+.EX
 .Cr $variable^follow
-.De
+.EE
 .PP
 To include a literal
 .Cr $
@@ -1121,9 +1115,9 @@ Additionally,
 supports \(lq\(lqhere strings\(rq\(rq, which are like here documents,
 except that input is taken directly from a string on the command line.
 Its use is illustrated here:
-.Ds
+.EX
 .Cr "cat <<< 'this is a here string' | wc"
-.De
+.EE
 .PP
 (This feature enables
 .I es
@@ -1150,23 +1144,23 @@ is a shorthand for
 As an example, to pipe the standard error of a command to
 .IR wc (1),
 use:
-.Ds
+.EX
 .Cr "command |[2] wc"
-.De
+.EE
 .PP
 The exit status of a pipeline is considered true if and only if every
 command in the pipeline exits true.
 .SS "Function Pipes"
 Functions pipes appends the return value of the first function to the end of the
 next functions argument list. Therefore
-.Ds
+.EX
 .Cr "fna |> fnb 1 2 |> fnc 3 4"
-.De
+.EE
 .PP
 will expand into
-.Ds
+.EX
 .Cr "fnc 3 4 <={fnb 1 2 <={fna}}"
-.De
+.EE
 .SS "Input/Output Substitution"
 Some commands, like
 .IR cmp (1)
@@ -1180,9 +1174,9 @@ pipelines so that a command like
 can read the output of two commands at once.
 .I Es
 does it like this:
-.Ds
+.EX
 .Cr "cmp <{command1} <{command2}"
-.De
+.EE
 .PP
 compares the output of the two commands.
 Note: on some systems, this form of
@@ -1199,9 +1193,9 @@ seek on their inputs.
 Data can be sent down a pipe to several commands using
 .IR tee (1)
 and the output version of this notation:
-.Ds
+.EX
 .Cr "echo hi there | tee >{sed 's/^/p1 /'} >{sed 's/^/p2 /'}"
-.De
+.EE
 .SS "Program Fragments"
 .I Es
 allows the intermixing of code with strings.
@@ -1214,40 +1208,40 @@ or written to a file or pipe.
 If a program fragment appears as the first word in a command,
 it is executed, and any arguments are ignored.
 Thus the following all produce the same output:
-.Ds
+.EX
 .Cr "{ echo hello, world }"
 .Cr "{ echo hello, world } foo bar"
 .Cr "es -c { echo hello, world }"
 .Cr "x = { echo hello, world }; $x"
 .Cr "echo { echo hello, world } | es"
 .Cr "echo { echo hello, world } > foo; es < foo"
-.De
+.EE
 .PP
 Since program fragments in the first position in a command are executed,
 braces may be used as a grouping mechanism for commands.
 For example, to run several commands, with output from all of them redirected to
 the same file, one can do
-.Ds
+.EX
 .Cr "{ date; ps agux; who } > snapshot"
-.De
+.EE
 .PP
 In addition, program fragments can continue across multiple physical lines
 without explicit line continuations, so the above command could also be written:
-.Ds
+.EX
 .Cr "{"
 .Cr "     date"
 .Cr "     ps agux"
 .Cr "     who"
 .Cr "} > snapshot"
-.De
+.EE
 .PP
 A
 .I lambda
 is a variant on a program fragment which takes arguments.
 A lambda has the form
-.Ds
+.EX
 .Ci @ " parameters " { " commands " }
-.De
+.EE
 .PP
 The
 .I parameters
@@ -1271,9 +1265,9 @@ is a keyword and not a special character in
 so it must be separated by whitespace from other words.
 .PP
 As a small example,
-.Ds
+.EX
 .Cr "@ { echo $* } hi"
-.De
+.EE
 .PP
 is a complicated way of producing the output
 .Cr hi .
@@ -1283,9 +1277,9 @@ arguments, and the second word is the argument to the function, the word
 .PP
 Lambdas, like other program fragments, can appear anywhere in a list.
 A more complicated example in the same spirit:
-.Ds
+.EX
 .Cr "@ cmd arg { $cmd $arg } @ { echo $* } hi"
-.De
+.EE
 .PP
 This command executes a lambda which runs its first argument, named
 .Cr cmd ,
@@ -1297,23 +1291,23 @@ seen previously, and the second argument is the word
 .Cr hi .
 .PP
 These lambda expressions
-.Ds
+.EX
 .Cr "@ a b c { echo $c $b $a } 1 2"
 .Cr "@ a b c { echo $c $b $a } 1 2 3 4 5"
-.De
+.EE
 .PP
 produce this output:
-.Ds
+.EX
 .Cr "2 1"
 .Cr "3 4 5 2 1"
-.De
+.EE
 .SS Functions
 A function in
 .I es
 is introduced with the syntax
-.Ds
+.EX
 .Ci fn " name parameters " { " commands " } "
-.De
+.EE
 .PP
 If the function name appears as the first word of a command,
 the commands are run, with the named parameters bound to the
@@ -1330,19 +1324,19 @@ variable exists is found in the first position of a command,
 the value of the variable is substituted for the first word.
 The above syntax for creating functions is equivalent to the
 variable assignment
-.Ds
+.EX
 .Ci fn\- name " = @" " parameters " "{ \fIcommands\fP }"
-.De
+.EE
 .PP
 Functions may be deleted with the syntax
-.Ds
+.EX
 .Ci fn " name"
-.De
+.EE
 .PP
 which is equivalent to the assignment
-.Ds
+.EX
 .Ci fn\- name =
-.De
+.EE
 .PP
 If, as the most common case, a function variable is bound to a lambda,
 when the function is invoked, the variable
@@ -1357,16 +1351,16 @@ while simple brace-enclosed groups just ignore theirs.
 Dynamically scoped variable assignments may be made with the
 .Cr local
 construct:
-.Ds
+.EX
 .Cr "local (\fIvar\fP = \fIvalue\fP; \fIvar\fP = \fIvalue ...\fP) \fIcommand\fP"
-.De
+.EE
 .PP
 The command may be a program fragment, so for example:
-.Ds
+.EX
 .Cr "local (path = /bin /usr/bin; ifs = ) {"
 .Cr "     " ...
 .Cr "}"
-.De
+.EE
 .PP
 sets
 .Cr path
@@ -1386,9 +1380,9 @@ programming languages, such as C or Scheme.)
 A lexically scoped variable is introduced with a
 .Cr let
 statement:
-.Ds
+.EX
 .Cr "let (\fIvar\fP = \fIvalue\fP; \fIvar\fP = \fIvalue ...\fP) \fIcommand\fP"
-.De
+.EE
 .PP
 All references to any of the variables defined in a
 .Cr let
@@ -1411,7 +1405,7 @@ and
 is
 .IR es 's
 default prompt.)
-.Ds
+.EX
 .Cr "; x = foo"
 .Cr "; let (x = bar) {"
 .Cr "     echo $x"
@@ -1428,16 +1422,16 @@ default prompt.)
 .Cr "; dynamic"
 .Cr "foo"
 .Cr "; "
-.De
+.EE
 .PP
 Lexically bound variables are not exported into the environment,
 and never cause the invocation of settor functions.
 Function (lambda) parameters are lexically bound to their values.
 .SS "For loops"
 The command
-.Ds
+.EX
 .Cr "for (\fIvar\fP = \fIlist\fP) \fIcommand\fP
-.De
+.EE
 .PP
 Runs the
 .I command
@@ -1454,16 +1448,16 @@ When one list is finished before the others,
 the corresponding variable is bound to the empty list
 for the remaining iterations.
 Thus the loop
-.Ds
+.EX
 .Cr "for (i = a b c; j = x y) echo $#i $i $#j $j"
-.De
+.EE
 .PP
 produces the output
-.Ds
+.EX
 .Cr "1 a 1 x"
 .Cr "1 b 1 y"
 .Cr "1 c 0"
-.De
+.EE
 .SS "Settor Functions"
 A settor function is a variable of the form
 .Ci set- var\fR,
@@ -1483,13 +1477,13 @@ the shell variables
 and
 .Cr HOME
 synchronized.
-.Ds
+.EX
 .Cr "set-HOME = @ {"
 .Cr "    local (set-home = )"
 .Cr "        home = $*"
 .Cr "    result $*"
 .Cr "}"
-.De
+.EE
 .PP
 This settor function is called when any assignment is made to the variable
 .Cr HOME .
@@ -1507,9 +1501,9 @@ Gettors are the inverse of settors. They are invoked on retrieval when a
 variable exists (ie contains something). This causes the variable to return
 the gettor result as opposed to the actual value of the variable. Gettors will
 get the contents of the variable as arguments. They can be created like:
-.Ds
+.EX
 .Cr "get-var = @ args { result $args }"
-.De
+.EE
 .PP
 A number of special variables are defined in terms of gettors.
 .SS Primitives
@@ -1521,9 +1515,9 @@ The set of primitives makes up the run-time library for
 .IR es .
 .PP
 Primitives can be used with the syntax
-.Ds
+.EX
 .Ci $& name
-.De
+.EE
 .PP
 A primitive can be used anywhere a lambda is expected.
 The list of primitives is returned as the result of running
@@ -1769,7 +1763,7 @@ exception.
 For example, to run some commands and make sure some cleanup routine
 is called even if the user interrupts or disconnects during the script,
 one can use the form:
-.Ds
+.EX
 .Cr "local (signals = $signals sighup sigint) {"
 .Cr "     catch @ e {"
 .Cr "          cleanup"
@@ -1778,7 +1772,7 @@ one can use the form:
 .Cr "          " ...
 .Cr "     }"
 .Cr "}"
-.De
+.EE
 .TP
 \&
 A signal name prefixed by a hyphen
@@ -1800,9 +1794,9 @@ occurs.
 By default
 .I es
 starts up with the values
-.Ds
+.EX
 .Cr ".sigint /sigquit /sigterm"
-.De
+.EE
 .TP
 \&
 in
@@ -1853,7 +1847,7 @@ when invoked in this way, the shell prints the internal form of its commands
 rather than executing them.
 .ta 2.3i
 .SS "Control Flow"
-.Ds
+.EX
 .ft \*(Cf
 ! \fIcmd\fP	%not {\fIcmd\fP}
 \fIcmd\fP &	%background {\fIcmd\fP}
@@ -1862,9 +1856,9 @@ rather than executing them.
 \fIcmd1\fP || \fIcmd2\fP	%or {\fIcmd1\fP} {\fIcmd2\fP}
 fn \fIname\fP \fIargs\fP { \fIcmd\fP }	fn-^\fIname\fP = @ \fIargs\fP {\fIcmd\fP}
 .ft R
-.De
+.EE
 .SS "Input/Output Commands"
-.Ds
+.EX
 .ft \*(Cf
 \fIcmd\fP < \fIfile\fP	%open 0 \fIfile\fP {\fIcmd\fP}
 \fIcmd\fP > \fIfile\fP	%create 1 \fIfile\fP {\fIcmd\fP}
@@ -1883,16 +1877,16 @@ fn \fIname\fP \fIargs\fP { \fIcmd\fP }	fn-^\fIname\fP = @ \fIargs\fP {\fIcmd\fP}
 \fIcmd1\fP >{ \fIcmd2\fP }	%writeto \fIvar\fP {\fIcmd2\fP} {\fIcmd1\fP $\fIvar\fP}
 \fIcmd1\fP <{ \fIcmd2\fP }	%readfrom \fIvar\fP {\fIcmd2\fP} {\fIcmd1\fP $\fIvar\fP}
 .ft R
-.De
+.EE
 .SS "Expressions"
-.Ds
+.EX
 .ft \*(Cf
 $#\fIvar\fP	<={%count $\fIvar\fP}
 $^\fIvar\fP	<={%flatten ' ' $\fIvar\fP}
 \`{\fIcmd args\fP}	<={%backquote <={%flatten \(rq\(rq $ifs} {\fIcmd args\fP}}
 \`\`\fIifs\fP {\fIcmd args\fP}	<={%backquote <={%flatten \(rq\(rq \fIifs\fP} {\fIcmd args\fP}}
 .ft R
-.De
+.EE
 .SH BUILTINS
 Builtin commands are shell functions that exist at shell startup time.
 Most builtins are indistinguishable from external commands,
@@ -2030,9 +2024,9 @@ contains only redirections,
 then these redirections apply to the current shell
 and the shell does not exit.
 For example,
-.Ds
+.EX
 .Cr "exec {>[2] err.out}"
-.De
+.EE
 .TP
 \&
 places further output to standard error in the file
@@ -2070,9 +2064,9 @@ of state changing operations such as
 .Cr cd
 and variable assignments.
 For example:
-.Ds
+.EX
 .Cr "fork {cd ..; make}"
-.De
+.EE
 .TP
 \&
 runs
@@ -2127,9 +2121,9 @@ and
 .Cr memoryuse .
 For
 example:
-.Ds
+.EX
 .Cr "limit coredumpsize 0"
-.De
+.EE
 .TP
 \&
 disables core dumps.
@@ -2614,9 +2608,13 @@ may be used by other builtin commands,
 and probably don't make much sense to replace,
 though that is always possible.
 .TP
-.Cr "%apids"
+.Cr "%add-history \fIstrings ...\fP"
+Add strings to the command history
+.TP
+.Cr "%apids \fR[\fP-ad\fR]\fP"
 Returns the process IDs of all background processes that the shell
-has not yet waited for.
+has not yet waited for. -a returns only the alive processes and
+-d returns only the dead processes.
 .TP
 .Cr "%fsplit \fIseparator \fR[\fIargs ...\fR]"
 Splits its arguments into separate strings at every occurrence
@@ -2670,9 +2668,9 @@ but is also useful for users who have otherwise made their
 environment unnecessary but don't want to kill the current shell.
 .PP
 Primitives are referenced with the
-.Ds
+.EX
 .Cr "$&\fIname"
-.De
+.EE
 .PP
 notation.
 In this section, the
@@ -2690,7 +2688,7 @@ characters.
 The following primitives directly implement the
 builtin functions with the same names:
 .ta 1.75i 3.5i
-.Ds
+.EX
 .ft \*(Cf
 access	forever	throw
 catch	fork	umask
@@ -2698,7 +2696,7 @@ echo	if	wait
 exec	newpgrp	
 exit	result	
 .ft R
-.De
+.EE
 .PP
 In addition, the primitive
 .Cr dot
@@ -2725,7 +2723,7 @@ of the same names, with
 .Rc \(lq\(lq % \(rq\(rq
 prefixes:
 .ta 1.75i 3.5i
-.Ds
+.EX
 .ft \*(Cf
 apids	here	read
 close	home	run
@@ -2734,18 +2732,18 @@ dup	openfile	split
 flatten	parse	var
 fsplit	pipe	whatis
 .ft R
-.De
+.EE
 .PP
 The following primitives implement the similar named hook functions,
 with
 .Rc \(lq\(lq % \(rq\(rq
 prefixes and internal hyphens:
 .ta 1.75i 3.5i
-.Ds
+.EX
 .ft \*(Cf
 batchloop	exitonfalse	isinteractive
 .ft R
-.De
+.EE
 .PP
 The
 .Cr background
@@ -2765,18 +2763,18 @@ to it.
 .PP
 The following primitives implement the similarly named settor functions:
 .ta 1.75i 3.5i
-.Ds
+.EX
 .ft \*(Cf
 sethistory	setnoexport	setsignals
 .ft R
-.De
+.EE
 .PP
 Some primitives are included in
 .I es
 conditionally, based on compile-time configuration options.
 Those primitives, and the functions to which they are bound, are
 .ta 2i
-.Ds
+.EX
 .ft \*(Cf
 execfailure	%exec-failure
 limit	limit
@@ -2784,7 +2782,7 @@ readfrom	%readfrom
 time	time
 writeto	%writeto
 .ft R
-.De
+.EE
 .PP
 The primitive
 .Cr resetterminal
@@ -2936,20 +2934,20 @@ rather than something more useful.
 .PP
 Too many creatures have fept in.
 .SH "SEE ALSO"
-history(1),
-rc(1),
-sh(1),
-execve(2),
-getrlimit(2),
-fopen(3),
-getpwent(3),
-pcre2(3),
-pcre2pattern(3),
-pcre2syntax(3),
-re_format(7)
+.MR history 1 ,
+.MR rc 1 ,
+.MR sh 1 ,
+.MR execve 2 ,
+.MR getrlimit 2 ,
+.MR fopen 3 ,
+.MR getpwent 3 ,
+.MR pcre2 3 ,
+.MR pcre2pattern 3 ,
+.MR pcre2syntax 3 ,
+.MR re_format 7
 .PP
 .UR https://github.com/mveety/es
-es-mveety GitHub
+es-mveety repository
 .UE
 .PP
 .UR https://github.com/wryun/es-shell
