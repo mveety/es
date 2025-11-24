@@ -460,6 +460,8 @@ PRIM(time) {
 				}
 			}
 			lp = lp->next;
+			if(lp == nil)
+				fail("$&time", "usage: $&time [-pr] body");
 		} else {
 			break;
 		}
