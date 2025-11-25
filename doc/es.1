@@ -15,9 +15,35 @@
 .nr )P +.5v
 .sp .4v \}
 ..
+.\" cross reference for mandoc
+.if !dMR \{
+.de MR
+\fI\\$1\fP\fR(\\$2)\fP\&\\$3
+..
+.\}
+.de Ex
+.EX
+.sp 1v
+.RS 3
+..
+.de Ee
+.RE
+.sp 1v
+.EE
+..
+.\" stolen from -mdoc
+.de Nm
+\fB\\$1\fR\\$2
+..
+.de Nd
+\fR\(en \\$1
+..
+.\"
+.\"
 .TH ES 1 "20 November 2025"
 .SH NAME
-es \- veety's extensible shell
+.Nm "es"
+.Nd "Veety's Extensible Shell"
 .SH SYNOPSIS
 .SY es
 .OP \-sIAlNpodv
@@ -80,9 +106,9 @@ gives several characters special meaning;
 special characters automatically terminate words.
 The following characters, along with space, tab, and newline, are special:
 .PP
-.EX
+.Ex
 # $ & \' ( ) ; < = > \e ^ \` { | }
-.EE
+.Ee
 .PP
 The single quote (\f(CW\(aq\fP) prevents special treatment
 of any character other than itself. Any characters between single
@@ -93,14 +119,14 @@ is therefore represented by the sequence \f(CW\(aq\(aq\(aq\(aq\fP and
 the empty string is represented by \f(CW\(aq\(aq\fP.
 .br
 Thus:
-.EX
+.Ex
 echo 'What''s the plan, Stan?'
-.EE
+.Ee
 .PP
 prints out
-.EX
+.Ex
 What's the plan, Stan?
-.EE
+.Ee
 .PP
 The backslash (\f(CW\e\fP)
 quotes the immediately following character, if it is
@@ -166,11 +192,11 @@ Lists have no hierarchical structure;
 a list inside another list is expanded so that the
 outer list contains all the elements of the inner list.
 Thus, the following are all equivalent:
-.EX
+.Ex
 one two three
 (one two three)
 ((one) () ((two three)))
-.EE
+.Ee
 .PP
 Note that the null string, \f(CW''\fP,
 and the empty list, \f(CW()\fP,
@@ -181,31 +207,31 @@ operation, but it does not remove its definition.
 .SS Concatenation
 Two lists may be joined by the concatenation operator (\f(CW^\fP).
 A single word is a list of length one, so
-.EX
+.Ex
 echo foo^bar
-.EE
+.Ee
 .PP
 produces the output
-.EX
+.Ex
 foobar
-.EE
+.Ee
 .PP
 For lists of more than one element,
 concatenation produces the cross (Cartesian) product of
 the elements in both lists:
-.EX
+.Ex
 echo (a\- b\- c\-)^(1 2)
-.EE
+.Ee
 .PP
 produces the output
-.EX
+.Ex
 a\-1 a\-2 b\-1 b\-2 c\-1 c\-2
-.EE
+.Ee
 .SS "Variables"
 A list may be assigned to a variable, using the notation:
-.EX
+.Ex
 \fIvar\f(CW = \fIlist\f(CW
-.EE
+.Ee
 .PP
 Any sequence of non-special characters, except a sequence including
 only digits, may be used as a variable name.
@@ -214,29 +240,29 @@ exports all user-defined variables into the environment unless
 it is explicitly told not to.
 .PP
 The value of a variable is referenced with the notation:
-.EX
+.Ex
 \f(CW$\fIvar\f(CW
-.EE
+.Ee
 .PP
 Any variable which has not been assigned a value returns the empty list
 when referenced.
 In addition, multiple references are allowed:
-.EX
+.Ex
 a = foo
 b = a
 echo $$b
-.EE
+.Ee
 .PP
 prints
-.EX
+.Ex
 foo
-.EE
+.Ee
 .PP
 A variable's definition may also be removed by
 assigning the empty list to a variable:
-.EX
+.Ex
 \fIvar\f(CW =
-.EE
+.Ee
 .PP
 Multiple variables may be assigned with a single assignment statement.
 The left hand side of the assignment operation consists of a list of
@@ -247,39 +273,39 @@ If there are fewer variables than elements in the list, the last
 variable is bound to all the remaining list values.
 .PP
 For example,
-.EX
+.Ex
 (a b) = 1 2 3
-.EE
+.Ee
 .PP
 has the same effect as
-.EX
+.Ex
 a = 1
 b = 2 3
-.EE
+.Ee
 .PP
 and
-.EX
+.Ex
 (a b c) = 1 2
-.EE
+.Ee
 .PP
 is the same as
-.EX
+.Ex
 a = 1
 b = 2
 c =
-.EE
+.Ee
 .PP
 Also there is the ignore variable \f(CW$_\fP that can be used anywhere normal variables
 can be used. Any assignment to it is thrown out.
-.EX
+.Ex
 (a _ c) = 1 2 3
-.EE
+.Ee
 .PP
 is the same as
-.EX
+.Ex
 a = 1
 c = 3
-.EE
+.Ee
 .PP
 Note that when assigning values to more than one variable,
 the list of variables must be enclosed in parentheses.
@@ -297,53 +323,53 @@ and underscore (\f(CW\|_\|\fP).
 To reference a variable with other
 characters in its name, quote the variable name.
 Thus:
-.EX
+.Ex
 echo $'we$Ird\Variab!le'
-.EE
+.Ee
 .PP
 A variable name produced by some complex operation,
 such as concatenation, should be enclosed in parentheses:
-.EX
+.Ex
 $(\fIvar\f(CW)
-.EE
+.Ee
 .PP
 Thus:
-.EX
+.Ex
 Good\-Morning = Bonjour
 Guten = Good
 Morgen = Morning
 echo $($Guten^\-^$Morgen)
-.EE
+.Ee
 .PP
 prints
-.EX
+.Ex
 Bonjour
-.EE
+.Ee
 .PP
 Each element of the list in parentheses is treated as an
 independent variable and expanded separately.
 Thus, given the above definitions,
-.EX
+.Ex
 echo $(Guten Morgen)
-.EE
+.Ee
 .PP
 prints
-.EX
+.Ex
 Good Morning
-.EE
+.Ee
 .PP
 To count the number of elements in a variable, use
-.EX
+.Ex
 $#\fIvar\f(CW
-.EE
+.Ee
 .PP
 This returns a single-element list with the number of elements in
 \f(CW$\fIvar\fP.
 .SS Subscripting
 Variables may be indexed with the notation
-.EX
+.Ex
 \f(CW$\fIvar\f(CW(\fIn\f(CW)
-.EE
+.Ee
 .PP
 where
 .I n
@@ -352,30 +378,30 @@ Subscript indexes are based at one.
 The list of subscripts need
 not be in order or even unique.
 Thus, if
-.EX
+.Ex
 a = one two three
-.EE
+.Ee
 .PP
 then
-.EX
+.Ex
 echo $a(3 3 3)
-.EE
+.Ee
 .PP
 prints
-.EX
+.Ex
 three three three
-.EE
+.Ee
 .PP
 Subscript indices which refer to nonexistent elements
 expand to the empty list.  Thus, given the definition above
-.EX
+.Ex
 echo $a(3 1 4 1 5 9 2 6 5)
-.EE
+.Ee
 .PP
 prints
-.EX
+.Ex
 three one one two
-.EE
+.Ee
 .PP
 Subscript ranges are of the form
 \fIlo\f(CW ... \fIhi\fP
@@ -388,9 +414,9 @@ is used as a default value; if
 .I hi
 is omitted, the length of the list is used.
 Thus
-.EX
+.Ex
 * = $*(2 ...)
-.EE
+.Ee
 .PP
 removes the first element of \f(CW*\fP,
 similar to the effect of \f(CWshift\fP
@@ -411,9 +437,9 @@ arguments may be referred to as
 Note that the list of subscripts may be given by any
 .I es
 expression, so
-.EX
+.Ex
 $var(\`{awk 'BEGIN{for(i=1;i<=10;i++)print i;exit }'})
-.EE
+.Ee
 .PP
 returns the first 10 elements of
 .Cr $var .
@@ -422,11 +448,11 @@ returns the first 10 elements of
 inserts carets (concatenation operators) for free in certain situations,
 in order to save some typing on the user's behalf.
 For example, the following are all equivalent:
-.EX
+.Ex
 cc \-O \-g \-c malloc.c alloca.c
 cc \-^(O g c) (malloc alloca)^.c
 opts=O g c; files=malloc alloca; cc \-$opts $files.c
-.EE
+.Ee
 .PP
 .I Es
 inserts a free-caret between the \(lq\f(CW\-\fP\(rq and \f(CW$opts\fP,
@@ -440,28 +466,28 @@ inserts a caret between them.
 .SS "Flattened Lists"
 To create a single-element list from a multi-element list,
 with the components space-separated, use
-.EX
+.Ex
 $^\fIvar\f(CW
-.EE
+.Ee
 .PP
 You can also flatten lists without space separating (useful if you want to generate a string) using
-.EX
+.Ex
 $"\fIvar\f(CW
-.EE
+.Ee
 .PP
 Flattening is useful when the normal list concatenation rules need to be
 bypassed.
 For example, to append a single period at the end of \f(CW$path\fP,
 use:
-.EX
+.Ex
 echo $^path.
-.EE
+.Ee
 .SS "String Lists"
 String lists are lists produced by breaking a string into a list where each element
 is one character. They can be useful for string manipulation tasks. They can be produced with
-.EX
+.Ex
 $:\fIvar
-.EE
+.Ee
 .SS "Wildcard Expansion"
 .I Es
 expands wildcards in filenames if possible.
@@ -476,10 +502,10 @@ argument as a pattern for matching against files.
 will only perform pattern matching if a metacharacter occurs unquoted and
 literally in the input.
 Thus,
-.EX
+.Ex
 foo = '*'
 echo $foo
-.EE
+.Ee
 .PP
 will always echo just a star.
 In order for non-literal metacharacters to be expanded, an
@@ -517,35 +543,35 @@ The tilde (\f(CW\(ti\fP) operator is used in
 .I es
 for matching strings against wildcard patterns.
 The command
-.EX
+.Ex
 \(ti \fIsubject\fP \fIpattern\fP \fIpattern\fP ...
-.EE
+.Ee
 .PP
 returns a true value if and only if the subject matches any of the patterns.
 The matching follows the same rules as wildcard expansion, except that slashes
 (\f(CW/\fP) are not considered significant, leading dots (\f(CW.\fP)
 do not have to be matched explicitly, and home directory expansion does not occur.
 Thus
-.EX
+.Ex
 \(ti foo f*
-.EE
+.Ee
 .PP
 returns zero (true), while
-.EX
+.Ex
 \(ti (bar baz) f*
-.EE
+.Ee
 .PP
 returns one (false).
 The null list is matched by the null list, so
-.EX
+.Ex
 \(ti $foo ()
-.EE
+.Ee
 .PP
 checks to see whether \f(CW$foo\fP is empty or not.
 This may also be achieved by the test
-.EX
+.Ex
 \(ti $#foo 0
-.EE
+.Ee
 .PP
 Note that inside a \f(CW\(ti\fP command
 .I es
@@ -556,9 +582,9 @@ names, so it is not necessary to quote the characters
 does expand the subject against filenames if it contains
 metacharacters.
 Thus, the command
-.EX
+.Ex
 \(ti * ?
-.EE
+.Ee
 .PP
 returns true if any of the files in the current directory have a
 single-character name.
@@ -567,9 +593,9 @@ command is given a list as its first
 argument, then a successful match against any of the elements of that
 list will cause \f(CW\(ti\fP to return true.
 For example:
-.EX
+.Ex
 \(ti (foo goo zoo) z*
-.EE
+.Ee
 .PP
 is true.
 .SS "Matching Multiple Patterns"
@@ -586,13 +612,13 @@ with a matched pattern, or throws an \f(CWerror\fP
 exception if no matches for the
 .I subject
 exist:
-.EX
+.Ex
 match \fIsubject\fP (
     \fIpattern1\fP {\fIaction1\fP}
     (\fIpattern2 pattern3\fP) {\fIaction2\fP}
     * { echo 'no matching patterns' }
 )
-.EE
+.Ee
 .PP
 The body of a \f(CWmatch\fP must be wrapped in parentheses. Each
 .I pattern
@@ -606,7 +632,7 @@ The matching behavior is equivalent to an
 \f(CWif\fP command with multiple \f(CW\(ti\fP
 comparisons. For example, the \f(CWmatch\fP
 command and the \f(CWif\fP command below are equivalent:
-.EX
+.Ex
                bc = bang crack
                bp = biff plop
                bw = bam boom wham
@@ -618,7 +644,7 @@ match $sound (            if {\(ti $sound $bc} {
       false                   false
     }                     }
 )
-.EE
+.Ee
 .PP
 The value of the
 .I subject
@@ -629,22 +655,22 @@ Also available are \f(CWmatchall\fP and \f(CWprocess\fP.
 \f(CWmatchall\fP will execute all actions that match and
 will only execute the wildcard if there are no matches.
 \f(CWprocess\fP is broadly equivalent to
-.EX
+.Ex
 for (l = $list) {
     match $l (
         pattern1 { action1 }
         * { wildaction }
     )
 }
-.EE
+.Ee
 .SS "Pattern Extraction"
 The double-tilde (\f(CW\(ti\(ti\fP) operator is used in
 .I es
 for extracting the parts of strings that match patterns.
 The command
-.EX
+.Ex
 \(ti\(ti \fIsubject\fP \fIpattern\fP \fIpattern\fP ...
-.EE
+.Ee
 .PP
 returns the parts of each matching subject which correspond to the
 wildcards.
@@ -656,9 +682,9 @@ moves on to the next subject.  If the subject does not match, the next
 pattern is tried.
 .PP
 For example, the result of the extraction operation
-.EX
+.Ex
 \(ti\(ti (foo.c foo.x bar.h) *.[ch]
-.EE
+.Ee
 .PP
 is the list \f(CW(foo c bar h)\fP.
 .SS "Regular Expressions"
@@ -666,16 +692,16 @@ Regular expressions are available to be used in matches and extractions as an
 alternative to wildcards. See
 .MR pcre2 3
 for more information on regular expressions.
-.EX
+.Ex
 \(ti $maybe_number %re('^[0-9]+$')
 \(ti $maybe_whitespace %re('^[ \et\er\en]+$')
-.EE
+.Ee
 .SS "Command Substitution"
 A list may be formed from the output of a command by using backquote
 substitution:
-.EX
+.Ex
 \`{ \fIcommand\fP }
-.EE
+.Ee
 .PP
 returns a list formed from the standard output of the command in braces.
 The characters stored in the variable \f(CW$ifs\fP (for \(lqinput field separator\(rq)
@@ -686,50 +712,50 @@ Thus \f(CW\`ls\fP may be used instead of \f(CW\`{ls}\fP.
 This last feature is useful when defining functions that expand
 to useful argument lists.
 A frequent use is:
-.EX
+.Ex
 fn src { echo *.[chy] }
-.EE
+.Ee
 .PP
 followed by
-.EX
+.Ex
 wc \`src
-.EE
+.Ee
 .PP
 (This will print out a word-count of all C and Yacc source files in the current
 directory.)
 .PP
 In order to override the value of \f(CW$ifs\fP for a single command substitution, use:
-.EX
+.Ex
 \`\` \fIifs-list\fP { \fIcommand\fP }
-.EE
+.Ee
 .PP
 \f(CW$ifs\fP will be temporarily ignored and the command's output will be
 split as specified by the list following the double backquote.
 For example:
-.EX
+.Ex
 \`\` :\en {cat /etc/passwd}
-.EE
+.Ee
 .PP
 splits up \f(CW/etc/passwd\fP into fields.
 .SS "Return Values"
 The return value of a command is obtained with the construct
-.EX
+.Ex
 <={ \fIcommand\fP }
-.EE
+.Ee
 .PP
 The return value of an external program is its exit status
 (which in other shells can be found in special variables such as
 \f(CW$?\fP or \f(CW$status\fP ),
 as either a small integer or the name of signal.
 Thus
-.EX
+.Ex
 echo <={test \-f /etc/motd} <={test \-w /vmunix} <=a.out
-.EE
+.Ee
 .PP
 might produce the output
-.EX
+.Ex
 0 1 sigsegv+core
-.EE
+.Ee
 .PP
 along with any output or error messages from the programs.
 .PP
@@ -747,60 +773,60 @@ The return value of an assignment operation is the assigned value.
 There are a number of operators in
 .I es
 which depend on the exit status of a command.
-.EX
+.Ex
 \fIcommand1\fP && \fIcommand2\fP
-.EE
+.Ee
 .PP
 executes the first command and then executes the second command if and only if
 the first command has a \(lqtrue\(rq return value.
-.EX
+.Ex
 \fIcommand1\fP || \fIcommand2\fP
-.EE
+.Ee
 .PP
 executes the first command and then executes the second command if and only if
 the first command has a \(lqfalse\(rq return value.
-.EX
+.Ex
 ! \fIcommand\fP
-.EE
+.Ee
 .PP
 inverts the truth value of the exit status of a command.
 .SS "Input and output"
 .PP
 The standard output of a command may be redirected to a file with
-.EX
+.Ex
 command > file
-.EE
+.Ee
 .PP
 and the standard input may be taken from a file with
-.EX
+.Ex
 command < file
-.EE
+.Ee
 .PP
 File descriptors other than 0 and 1 may be specified also.
 For example, to redirect standard error to a file, use:
-.EX
+.Ex
 command >[2] file
-.EE
+.Ee
 .PP
 In order to duplicate a file descriptor, use
 \f(CW>[\fIn\f(CW=\fIm\f(CW]\fP.
 Thus to redirect both standard output and standard error
 to the same file, use
-.EX
+.Ex
 command > file >[2=1]
-.EE
+.Ee
 .PP
 To close a file descriptor that may be open, use
 \f(CW>[\fIn\f(CW=]\fP. For example, to close file descriptor 7:
-.EX
+.Ex
 command >[7=]
-.EE
+.Ee
 .PP
 In order to place the output of a command at the end of an already
 existing file, use:
-.EX
+.Ex
 command >> file
-.EE
+.Ee
 .PP
 If the file does not exist, then it is created.
 .PP
@@ -814,9 +840,9 @@ these operators use file descriptor 1 by default.
 \(lqHere documents\(rq are supported as in
 .MR sh 1
 with the use of
-.EX
+.Ex
 command << 'eof-marker'
-.EE
+.Ee
 .PP
 If the end-of-file marker is quoted,
 then no variable substitution occurs inside the here document.
@@ -826,9 +852,9 @@ by its space-separated-list value (see
 below),
 and if a \f(CW^\fP character follows a variable name, it is deleted.
 This allows the unambiguous use of variables adjacent to text, as in
-.EX
+.Ex
 $variable^follow
-.EE
+.Ee
 .PP
 To include a literal \f(CW$\fP in a here document created with an
 unquoted end-of-file marker, use \f(CW$$\fP.
@@ -838,9 +864,9 @@ Additionally,
 supports \(lqhere strings\(rq, which are like here documents,
 except that input is taken directly from a string on the command line.
 Its use is illustrated here:
-.EX
+.Ex
 cat <<< 'this is a here string' | wc
-.EE
+.Ee
 .PP
 (This feature enables
 .I es
@@ -858,23 +884,23 @@ of the right process. \f(CW|[\fIn\f(CW]\fP is a shorthand for
 \f(CW|[\fIn\f(CW=0]\fP. As an example, to pipe the standard error of a command to
 .MR wc 1 ,
 use:
-.EX
+.Ex
 command |[2] wc
-.EE
+.Ee
 .PP
 The exit status of a pipeline is considered true if and only if every
 command in the pipeline exits true.
 .SS "Function Pipes"
 Functions pipes appends the return value of the first function to the end of the
 next functions argument list. Therefore
-.EX
+.Ex
 fna |> fnb 1 2 |> fnc 3 4
-.EE
+.Ee
 .PP
 will expand into
-.EX
+.Ex
 fnc 3 4 <={fnb 1 2 <={fna}}
-.EE
+.Ee
 .SS "Input/Output Substitution"
 Some commands, like
 .MR cmp 1
@@ -888,9 +914,9 @@ pipelines so that a command like
 can read the output of two commands at once.
 .I Es
 does it like this:
-.EX
+.Ex
 cmp <{command1} <{command2}
-.EE
+.Ee
 .PP
 compares the output of the two commands.
 Note: on some systems, this form of
@@ -907,9 +933,9 @@ seek on their inputs.
 Data can be sent down a pipe to several commands using
 .MR tee 1
 and the output version of this notation:
-.EX
+.Ex
 echo hi there | tee >{sed 's/^/p1 /'} >{sed 's/^/p2 /'}
-.EE
+.Ee
 .SS "Program Fragments"
 .I Es
 allows the intermixing of code with strings.
@@ -922,40 +948,40 @@ or written to a file or pipe.
 If a program fragment appears as the first word in a command,
 it is executed, and any arguments are ignored.
 Thus the following all produce the same output:
-.EX
+.Ex
 { echo hello, world }
 { echo hello, world } foo bar
 es -c { echo hello, world }
 x = { echo hello, world }; $x
 echo { echo hello, world } | es
 echo { echo hello, world } > foo; es < foo
-.EE
+.Ee
 .PP
 Since program fragments in the first position in a command are executed,
 braces may be used as a grouping mechanism for commands.
 For example, to run several commands, with output from all of them redirected to
 the same file, one can do
-.EX
+.Ex
 { date; ps agux; who } > snapshot
-.EE
+.Ee
 .PP
 In addition, program fragments can continue across multiple physical lines
 without explicit line continuations, so the above command could also be written:
-.EX
+.Ex
 {
     date
     ps agux
     who
 } > snapshot
-.EE
+.Ee
 .PP
 A
 .I lambda
 is a variant on a program fragment which takes arguments.
 A lambda has the form
-.EX
+.Ex
 @ \fIparameters\fP { \fIcommands\fP }
-.EE
+.Ee
 .PP
 The
 .I parameters
@@ -975,9 +1001,9 @@ Note that \f(CW@\fP is a keyword and not a special character
 in \fIes\fP, so it must be separated by whitespace from other words.
 .PP
 As a small example,
-.EX
+.Ex
 @ { echo $* } hi
-.EE
+.Ee
 .PP
 is a complicated way of producing the output \f(CWhi\fP.
 The first word is a function which echoes its
@@ -986,9 +1012,9 @@ word \f(CWhi\fP.
 .PP
 Lambdas, like other program fragments, can appear anywhere in a list.
 A more complicated example in the same spirit:
-.EX
+.Ex
 @ cmd arg { $cmd $arg } @ { echo $* } hi
-.EE
+.Ee
 .PP
 This command executes a lambda which runs its first argument, named
 \f(CWcmd\fP, using its second argument, named \f(CWarg\fP,
@@ -997,25 +1023,25 @@ The first argument of this function is another lambda,
 seen previously, and the second argument is the word \f(CWhi\fP.
 .PP
 These lambda expressions
-.EX
+.Ex
 @ a b c { echo $c $b $a } 1 2
 @ a b c { echo $c $b $a } 1 2 3 4 5
 @ a b c _ { echo $c $b $a } 1 2 3 4 5
-.EE
+.Ee
 .PP
 produce this output:
-.EX
+.Ex
 2 1
 3 4 5 2 1
 3 2 1
-.EE
+.Ee
 .SS Functions
 A function in
 .I es
 is introduced with the syntax
-.EX
+.Ex
 fn \fIname\fP \fIparameters\fP { \fIcommands\fP }
-.EE
+.Ee
 .PP
 If the function name appears as the first word of a command,
 the commands are run, with the named parameters bound to the
@@ -1030,19 +1056,19 @@ variable exists is found in the first position of a command,
 the value of the variable is substituted for the first word.
 The above syntax for creating functions is equivalent to the
 variable assignment
-.EX
+.Ex
 fn\-\fIname\fP = @ \fIparameters\fP { \fIcommands\fP }
-.EE
+.Ee
 .PP
 Functions may be deleted with the syntax
-.EX
+.Ex
 fn \fIname\fP
-.EE
+.Ee
 .PP
 which is equivalent to the assignment
-.EX
+.Ex
 fn\-\fIname\fP =
-.EE
+.Ee
 .PP
 If, as the most common case, a function variable is bound to a lambda,
 when the function is invoked, the variable \f(CW$0\fP
@@ -1054,16 +1080,16 @@ The central difference between the two forms is that lambdas bind their argument
 while simple brace-enclosed groups just ignore theirs.
 .SS "Dynamically Scoped Variables"
 Dynamically scoped variable assignments may be made with the \f(CWlocal\fP construct:
-.EX
+.Ex
 local (\fIvar\fP = \fIvalue\fP; \fIvar\fP = \fIvalue ...\fP) \fIcommand\fP
-.EE
+.Ee
 .PP
 The command may be a program fragment, so for example:
-.EX
+.Ex
 local (path = /bin /usr/bin; ifs = ) {
     \fI...\fP
 }
-.EE
+.Ee
 .PP
 sets \f(CW$path\fP to a minimal useful path and removes \f(CW$ifs\fP
 for the duration of one long compound command.
@@ -1078,9 +1104,9 @@ using let-bound, or \(lqlexically scoped,\(rq variables.
 (Lexical scoping is the form of binding used by most compiled
 programming languages, such as C or Scheme.)
 A lexically scoped variable is introduced with a \f(CWlet\fP statement:
-.EX
+.Ex
 let (\fIvar\fP = \fIvalue\fP; \fIvar\fP = \fIvalue ...\fP) \fIcommand\fP
-.EE
+.Ee
 .PP
 All references to any of the variables defined in a \f(CWlet\fP
 statement by any code located lexically (that is, textually) within the
@@ -1095,7 +1121,7 @@ follow those code fragments around.
 An example best shows the difference between \f(CWlet\fP
 and \f(CWlocal\fP (also known as \(lqdynamic\(rq) binding: (note that
 \(lq\f(CW; \fP\(rq is \fIes\fP's default prompt.)
-.EX
+.Ex
 ; x = foo
 ; let (x = bar) {
     echo $x
@@ -1112,16 +1138,16 @@ bar
 ; dynamic
 foo
 ; 
-.EE
+.Ee
 .PP
 Lexically bound variables are not exported into the environment,
 and never cause the invocation of settor functions.
 Function (lambda) parameters are lexically bound to their values.
 .SS "For loops"
 The command
-.EX
+.Ex
 for (\fIvar\fP = \fIlist\fP) \fIcommand\fP
-.EE
+.Ee
 .PP
 Runs the
 .I command
@@ -1136,16 +1162,16 @@ When one list is finished before the others,
 the corresponding variable is bound to the empty list
 for the remaining iterations.
 Thus the loop
-.EX
+.Ex
 for (i = a b c; j = x y) echo $#i $i $#j $j
-.EE
+.Ee
 .PP
 produces the output
-.EX
+.Ex
 1 a 1 x
 1 b 1 y
 1 c 0
-.EE
+.Ee
 .SS "Settor Functions"
 A settor function is a variable of the form
 \f(CWset-\fIvar\fR,
@@ -1161,13 +1187,13 @@ the assignment.
 .PP
 For example, the following settor function is used to keep
 the shell variables \f(CW$home\fP and \f(CW$HOME\fP synchronized.
-.EX
+.Ex
 set-HOME = @ {
     local (set-home = )
         home = $*
     result $*
 }
-.EE
+.Ee
 .PP
 This settor function is called when any assignment is made to the variable
 \f(CW$HOME\fP. It assigns the new value to the variable \f(CW$home\fP,
@@ -1181,9 +1207,9 @@ Gettors are the inverse of settors. They are invoked on retrieval when a
 variable exists (ie contains something). This causes the variable to return
 the gettor result as opposed to the actual value of the variable. Gettors will
 get the contents of the variable as arguments. They can be created like:
-.EX
+.Ex
 get-var = @ args { result $args }
-.EE
+.Ee
 .PP
 A number of special variables are defined in terms of gettors.
 .SS Primitives
@@ -1194,9 +1220,9 @@ written in the interpreter's language.
 The set of primitives makes up the run-time library for \fIes\fP.
 .PP
 Primitives can be used with the syntax
-.EX
+.Ex
 $&\fIname\fP
-.EE
+.Ee
 .PP
 A primitive can be used anywhere a lambda is expected.
 The list of primitives is returned as the result of running
@@ -1395,7 +1421,8 @@ exception.
 For example, to run some commands and make sure some cleanup routine
 is called even if the user interrupts or disconnects during the script,
 one can use the form:
-.EX
+.Ex
+.RS 6
 local (signals = $signals sighup sigint) {
      catch @ e {
           cleanup
@@ -1404,7 +1431,8 @@ local (signals = $signals sighup sigint) {
            ...
      }
 }
-.EE
+.RE
+.Ee
 .TP
 \&
 A signal name prefixed by a hyphen (\f(CW-\fP) causes that signal to be ignored by
@@ -1460,7 +1488,7 @@ when invoked in this way, the shell prints the internal form of its commands
 rather than executing them.
 .ta 2.3i
 .SS "Control Flow"
-.EX
+.Ex
 .ft \*(Cf
 ! \fIcmd\fP	%not {\fIcmd\fP}
 \fIcmd\fP &	%background {\fIcmd\fP}
@@ -1469,9 +1497,9 @@ rather than executing them.
 \fIcmd1\fP || \fIcmd2\fP	%or {\fIcmd1\fP} {\fIcmd2\fP}
 fn \fIname\fP \fIargs\fP { \fIcmd\fP }	fn-^\fIname\fP = @ \fIargs\fP {\fIcmd\fP}
 .ft R
-.EE
+.Ee
 .SS "Input/Output Commands"
-.EX
+.Ex
 .ft \*(Cf
 \fIcmd\fP < \fIfile\fP	%open 0 \fIfile\fP {\fIcmd\fP}
 \fIcmd\fP > \fIfile\fP	%create 1 \fIfile\fP {\fIcmd\fP}
@@ -1490,16 +1518,16 @@ fn \fIname\fP \fIargs\fP { \fIcmd\fP }	fn-^\fIname\fP = @ \fIargs\fP {\fIcmd\fP}
 \fIcmd1\fP >{ \fIcmd2\fP }	%writeto \fIvar\fP {\fIcmd2\fP} {\fIcmd1\fP $\fIvar\fP}
 \fIcmd1\fP <{ \fIcmd2\fP }	%readfrom \fIvar\fP {\fIcmd2\fP} {\fIcmd1\fP $\fIvar\fP}
 .ft R
-.EE
+.Ee
 .SS "Expressions"
-.EX
+.Ex
 .ft \*(Cf
 $#\fIvar\fP	<={%count $\fIvar\fP}
 $^\fIvar\fP	<={%flatten ' ' $\fIvar\fP}
 \`{\fIcmd args\fP}	<={%backquote <={%flatten '' $ifs} {\fIcmd args\fP}}
 \`\`\fIifs\fP {\fIcmd args\fP}	<={%backquote <={%flatten '' \fIifs\fP} {\fIcmd args\fP}}
 .ft R
-.EE
+.Ee
 .SH BUILTINS
 Builtin commands are shell functions that exist at shell startup time.
 Most builtins are indistinguishable from external commands,
@@ -1612,9 +1640,9 @@ contains only redirections,
 then these redirections apply to the current shell
 and the shell does not exit.
 For example,
-.EX
+.Ex
 \f(CWexec {>[2] err.out}\fP
-.EE
+.Ee
 .TP
 \&
 places further output to standard error in the file
@@ -1645,9 +1673,9 @@ Runs a command in a subshell.
 This insulates the parent shell from the effects
 of state changing operations such as \f(CWcd\fP
 and variable assignments. For example:
-.EX
+.Ex
 fork {cd ..; make}
-.EE
+.Ee
 .TP
 \&
 runs
@@ -1678,9 +1706,9 @@ cause limit to return the limit's value instead of printing it.
 The resources which can be shown or altered are platform dependent.
 For
 example:
-.EX
+.Ex
 limit coredumpsize 0
-.EE
+.Ee
 .TP
 \&
 disables core dumps.
@@ -2081,9 +2109,9 @@ who have otherwise made their environment unnecessary but don't want to kill
 the current shell.
 .PP
 Primitives are referenced with the
-.EX
+.Ex
 \f(CW$&\fIname\fR
-.EE
+.Ee
 .PP
 notation. In this section, the \(lq\f(CW$&\fP\(rq prefixes will be omitted when
 primitive names are mentioned. Note that, by convention, primitive names follow
@@ -2093,7 +2121,7 @@ contain \(lq\f(CW%\fP\(rq and \(lq\f(CW-\fP\(rq characters.
 The following primitives directly implement the
 builtin functions with the same names:
 .ta 1.75i 3.5i
-.EX
+.Ex
 .ft \*(Cf
 access	forever	throw
 catch	fork	umask
@@ -2101,7 +2129,7 @@ echo	if	wait
 exec	newpgrp	
 exit	result	
 .ft R
-.EE
+.Ee
 .PP
 In addition, the primitive \f(CWdot\fP implements the \(lq\f(CW.\fP\(rq builtin
 function.
@@ -2114,7 +2142,7 @@ builtin.
 The following primitives implement the hook functions of the same names,
 with \(lq\f(CW%\fP\(rq prefixes:
 .ta 1.75i 3.5i
-.EX
+.Ex
 .ft \*(Cf
 apids	here	read
 close	home	run
@@ -2123,16 +2151,16 @@ dup	openfile	split
 flatten	parse	var
 fsplit	pipe	whatis
 .ft R
-.EE
+.Ee
 .PP
 The following primitives implement the similar named hook functions,
 with \(lq\f(CW%\fP\(rq prefixes and internal hyphens:
 .ta 1.75i 3.5i
-.EX
+.Ex
 .ft \*(Cf
 batchloop	exitonfalse	isinteractive
 .ft R
-.EE
+.Ee
 .PP
 The \f(CWbackground\fP primitive is used to implement the \f(CW%background\fP
 hook function, but does not print the process ID of the background process or
@@ -2142,17 +2170,17 @@ the first value of its result instead of setting \f(CW$bqstatus\fP to it.
 .PP
 The following primitives implement the similarly named settor functions:
 .ta 1.75i 3.5i
-.EX
+.Ex
 .ft \*(Cf
 sethistory	setnoexport	setsignals
 .ft R
-.EE
+.Ee
 .PP
 Some primitives are included in \fIes\fP conditionally, based on compile-time
 configuration options. Those primitives, and the functions to which they are
 bound, are
 .ta 2i
-.EX
+.Ex
 .ft \*(Cf
 execfailure	%exec-failure
 limit	limit
@@ -2160,7 +2188,7 @@ readfrom	%readfrom
 time	time
 writeto	%writeto
 .ft R
-.EE
+.Ee
 .PP
 The primitive \f(CWresetterminal\fP is vestigal. It is used in the
 implementation of settor functions of the \f(CWTERM\fP and \f(CWTERMCAP\fP
