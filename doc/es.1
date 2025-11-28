@@ -47,9 +47,9 @@
 .SH SYNOPSIS
 .SY es
 .OP \-sIAlNpodv
-.OP \-X "extended argument"
-.OP \-D "debugging flags"
-.OP \-r "run flags"
+.OP \-X "extended \fIargument\fP"
+.OP \-D "debugging \fIflags\fP"
+.OP \-r "run \fIflags\fP"
 .OP \-c command
 .RI [ file
 .RI [ args ... ] ]
@@ -59,7 +59,7 @@ is a command interpreter and programming language which combines
 the features of other Unix shells and the features of a functional
 programming language such as Scheme.
 The syntax is derived from
-.IR rc (1).
+.MR rc 1 .
 .I Es
 is intended for use both as an interactive shell and a programming
 language for scripts.
@@ -876,12 +876,12 @@ Two or more commands may be combined in a pipeline by placing the
 vertical bar (\f(CW\||\|\fP) between them. The standard output (file descriptor 1)
 of the command on the left is tied to the standard input (file
 descriptor 0) of the command on the right.
-The notation \f(CW|[\fIn\f(CW=\fIm\f(CW]\fP indicates that file descriptor
+The notation \f(CW|[\fIn\f(CW=\fIm\f(CW]\fP\fR indicates that file descriptor
 .I n
 of the left process is connected to file descriptor
 .I m
-of the right process. \f(CW|[\fIn\f(CW]\fP is a shorthand for
-\f(CW|[\fIn\f(CW=0]\fP. As an example, to pipe the standard error of a command to
+of the right process. \f(CW|[\fIn\f(CW]\fP\fR is a shorthand for
+\f(CW|[\fIn\f(CW=0]\fP\fR. As an example, to pipe the standard error of a command to
 .MR wc 1 ,
 use:
 .Ex
@@ -905,7 +905,7 @@ fnc 3 4 <={fnb 1 2 <={fna}}
 Some commands, like
 .MR cmp 1
 or
-.MR diff 1,
+.MR diff 1 ,
 take their input from named files on the command
 line, and do not use standard input.
 It is convenient sometimes to build nonlinear
@@ -1298,6 +1298,74 @@ Raised when the built-in utilities get invalid command line options.
 .PP
 See the builtin commands \f(CWcatch\fP and \f(CWthrow\fP
 for details on how to manipulate exceptions.
+.SS "Dictionaries"
+\fIes\fR provides built-in dictionaries or associative arrays. They are an unordered
+series of key-value pairs made up of a string (the key) and a list (the value).
+They can be created using the below syntax:
+.Ex
+%dict(\fIkey\fP => \fIvalue\fP; \fIkey\fP => \fIvalue\fP; \fI...\fP)
+.Ee
+Elements in the \f(CWdict\fR are able to be addressed just like lists using subscripting, but
+an error is thrown if the requested key does not exist in the dict.
+.Ex
+v = %dict(a => 'hello'; b => 'world')
+echo $v(a b)
+.Ee
+will return
+.Ex
+hello world
+.Ee
+\f(CWdicts\fR can be modified using the \f(CW:=\fR operator.
+.Ex
+\fIdict\fP := \fIkey\fP => \fIvalue\fP
+.Ee
+Elements automatically removed when they have no value, so ommitting the \fIvalue\fP when
+using the \f(CW:=\fR operator will remove the element from the \f(CWdict\fR.
+.PP
+There are also a few utility functions available.
+.TP
+\f(CWdictcopy \fIdict\fR
+Create a copy of a dict.
+.TP
+\f(CWdictdump \fIdict\fR
+Returns a printable function that returns the \fIdict\fR when executed.
+.TP
+\f(CWdictforall \fIdict function\fR
+\f(CWdictforall\fR executes \fIfunction\fR on every element on the \fIdict\fR. The function
+gets the element key and value as arguments in that order. The results of the \fIfunction\fR
+are thrown out and \f(CWdictforall\fR returns true if successful.
+.TP
+\f(CWdictget \fIdict key\fR
+Returns the value of the element \fIkey\fR in \fIdict\fR. Throws an error if the element
+addressed by \fIkey\fR does not exist.
+.TP
+\f(CWdicthaskey \fIdict key\fR
+Returns true if \fIdict\fR contains \fIkey\fR, false otherwise.
+.TP
+\f(CWdictiter \fIdict\fR
+Returns a function that, when executed repeatedly, will return the contents of the dict one
+element at a time. The function returns the key and value in that order.
+.TP
+\f(CWdictkeys \fIdict\fR
+Returns a list of all of the keys in \fIdict\fR.
+.TP
+\f(CWdictnew\fR
+Returns a new empty dict.
+.TP
+\f(CWdictput \fIdict key value\fR
+Copies \fIdict\fR, then adds or replaces \fIkey\fR with \fIvalue\fR. Returns the resulting dict.
+.TP
+\f(CWdictremove \fIdict key\fR
+Copies \fIdict\fR, then removes \fIkey\fR from the new dict. Returns the resulting dict.
+.TP
+\f(CWdictsize \fIdict\fR
+Returns the number of elements in \fIdict\fR.
+.TP
+\f(CWdictvalues \fIdict\fR
+Returns a list of the values of all of the elements of the dict.
+.\"
+.\"
+.\"
 .SH "SPECIAL VARIABLES"
 Several variables are known to
 .I es
@@ -1306,6 +1374,11 @@ Redefining these variables can change interpreter semantics.
 Note that only dynamically bound (top-level or \f(CWlocal\fP-bound)
 variables are interpreted in this way;
 the names of lexically bound variables are unimportant.
+.TP
+\f(CW_\fP
+Ignore. Canonically has a length of 0 (ie \f(CW$#_\fR = \f(CW0\fR). Assignments
+are thrown out and can be used anywhere to ignore assignments (like in argument lists
+and multiple assignments.
 .TP
 \f(CW*\fP
 The argument list of \fIes\fP.
@@ -1325,8 +1398,20 @@ The process ID of the last process started in the background.
 \f(CWapids\fP
 The process IDs of all unwaited background processes.
 .TP
+\f(CWbuildstring\fR
+Contains version and build information for \fIes\fR broken into 6
+space delimited fields. The fields are the shell name, the compiler,
+the branch and commit, the build user, host and build path, the platform,
+and the architecture. The buildstring is also returned by \f(CWes -v\fR.
+.TP
+\f(CWeval-depth\fR
+Current eval depth of the shell. Each time a function is called (broadly) the
+\f(CWeval-depth\fR is incremented by one then decremented by one on exit. An
+exception is thrown when \f(CWeval-depth\fR becomes greater than or equal to
+\f(CWmax-eval-depth\fR.
+.TP
 \f(CWditto\fP
-Contains the last input line. !! in commands will be replaced by $ditto
+Contains the last input line. \f(CW!!\fR in commands will be replaced by $ditto
 .TP
 \f(CWhistory\fP
 The name of a file to which commands are appended as
@@ -1364,6 +1449,10 @@ By default
 sets it to \f(CW$XDG_CONFIG_HOME/es-mveety\fP or, if \f(CW$XDG_CONFIG_HOME\fP is not set,
 to \f(CW$home/.config/es-mveety\fP. If that directory does not exist it will try \f(CW$home/eslib\fP
 (if it exists) then finally set it to \f(CW()\fP (if not).
+.TP
+\f(CWmax-eval-depth\fR
+The set limit for \f(CWeval-depth\fR. Calculated automatically on start up using \f(CWlimit\fR if
+available. Defaults to 680.
 .TP
 \f(CWnoexport\fP
 A list of variables which
@@ -1453,6 +1542,18 @@ sigvtalrm /sigprof .sigwinch siginfo sigusr1 sigusr2)\fP
 in \f(CW$signals\fP ; other values will be on the list if the shell starts up with
 some signals ignored.
 .TP
+\f(CWunixtime\fR
+Returns the current time in seconds as returned by
+.MR time 3 .
+.TP
+\f(CWunixtime_ns\fR
+Returns the current time in nanoseconds as returned by
+.MR clock_gettime 2 
+using \f(CWCLOCK_REALTIME\fR.
+.TP
+\f(CWversion\fP
+Contains the build's branch and commit.
+.TP
 \f(CW*_conf_*\fP
 These variables are used by the shell for configuration. They can be managed using \f(CWconf\fP.
 .IE
@@ -1491,11 +1592,12 @@ rather than executing them.
 .Ex
 .ft \*(Cf
 ! \fIcmd\fP	%not {\fIcmd\fP}
-\fIcmd\fP &	%background {\fIcmd\fP}
+\fIcmd\fP &	%bghook {\fIcmd\fP}
 \fIcmd1\fP ; \fIcmd2\fP	%seq {\fIcmd1\fP} {\fIcmd2\fP}
 \fIcmd1\fP && \fIcmd2\fP	%and {\fIcmd1\fP} {\fIcmd2\fP}
 \fIcmd1\fP || \fIcmd2\fP	%or {\fIcmd1\fP} {\fIcmd2\fP}
 fn \fIname\fP \fIargs\fP { \fIcmd\fP }	fn-^\fIname\fP = @ \fIargs\fP {\fIcmd\fP}
+{ \fIcmd\fP } onerror { \fIcmd\fP }	%onerror {\fIcmd\fP} {\fIcmd\fP}
 .ft R
 .Ee
 .SS "Input/Output Commands"
@@ -1524,8 +1626,19 @@ fn \fIname\fP \fIargs\fP { \fIcmd\fP }	fn-^\fIname\fP = @ \fIargs\fP {\fIcmd\fP}
 .ft \*(Cf
 $#\fIvar\fP	<={%count $\fIvar\fP}
 $^\fIvar\fP	<={%flatten ' ' $\fIvar\fP}
+$"\fIvar\fP	<={%string $\fIvar\fP}
+$:\fIvar\fP	<={%strlist $\fIvar\fP}
 \`{\fIcmd args\fP}	<={%backquote <={%flatten '' $ifs} {\fIcmd args\fP}}
 \`\`\fIifs\fP {\fIcmd args\fP}	<={%backquote <={%flatten '' \fIifs\fP} {\fIcmd args\fP}}
+<-{\fIcmd args\fP}	<={%stbackquote <={%flatten '' $ifs} {\fIcmd args\fP}}
+.ft R
+.Ee
+.SS "Assignments"
+.Ex
+.ft \*(Cf
+\fIvar\fP += \fIlist\fP	\fIvar\fP = $\fIvar\fP \fIlist\fP
+\fIdict\fP := \fIkey\fP => \fIvalue\fP	\fIdict\fP = <={%dictput $\fIdict\fP '\fIkey\fP' \fIvalue\fP}
+\fIdict\fP := \fIkey\fP =>	\fIdict\fP = <={%dictremove $\fIdict\fP '\fIkey\fP'}
 .ft R
 .Ee
 .SH BUILTINS
@@ -1541,6 +1654,9 @@ users customizing the shell. (This distinction is somewhat fuzzy, and the
 decisions about which functions have \f(CW%\fP-names are somewhat arbitrary.)
 .PP
 All builtins can be redefined and extended by the user.
+.\"
+.\"
+.\"
 .SS "Builtin Commands"
 .TP
 \f(CW. \fR[\fP-einvx\fR]\fP \fIfile\f(CW \fR[\fIargs ...\fR]\fR
@@ -1598,6 +1714,12 @@ Is the file a socket?
 \f(CW\-p\fP
 Is the file a named pipe (FIFO)?
 .IE
+.TP
+\f(CWassert \fItest\fR
+.TQ
+\f(CWassert \fIlocation test\fR
+Executes \fItest\fR. If \fItest\fR returns not true then an assert exception
+containing \fItest\fR or \fIlocation\fR and \fItest\fR is thrown.
 .TP
 \f(CWbreak \fIvalue\fR
 Exits the current loop.
@@ -1683,12 +1805,21 @@ runs
 in the parent directory (\f(CW..\fP),
 but leaves the shell in the current directory.
 .TP
+\f(CWglob \fIglob \fR[\fIlist\fR]\fR
+Run glob against either the filesystem for (if given) \fIlist\fR. The glob must be quoted.
+.TP
 \f(CWif \fR[\fP\fItest then\fR]\fP ... \fR[\fPelse\fR]\fP\fR
 Evaluates the command \fItest\fP. If the result is true, the command
 \fIthen\fP is run and \f(CWif\fP completes.
 If the result of the test is false, the next \fItest-then\fP
 pair is checked, until one where the \fItest\fP is true is
 found. If none of the \fItest\fPs are true, the \fIelse\fP command is run.
+.TP
+\f(CWkeymap \fR[\f(CW\-fv\fR]\f(CW \fR[%dict(\fIkeyname\f(CW => \fIfunction-or-closure\f(CW; ...)\fR]\fR
+Modify the editor's current keymap. Takes a dict of \fIkeyname\fRs as keys and functions
+or closures as values. Returns the modified keymap. \f(CW\-f\fR causes \f(CWkeymap\fR to return the
+available built-in editor functions.
+\f(CW\-v\fR causes \f(CWkeymap\fR to print it's output instead of returning it.
 .TP
 \f(CWlimit \fR[\f(CW\-h\fR]\f(CW \fR[\fIresource \fR[\fIvalue\fR]\fR]\fR
 .TQ
@@ -1730,6 +1861,39 @@ See
 .MR getrlimit 2
 for details on resource limit semantics.
 .TP
+\f(CWmakeerror \fIexception type message ...\fP\fR
+Create an error object containing the arguments. Error objects standard closures
+that have been marked appropriately. They can be passed as values and can be
+passed unmodified to \f(CWthrow\fR.
+.sp 1v
+The resulting \f(CWerrobj\fR can have the following arguments:
+.IS
+.TP
+\f(CW$errobj\fR
+If executed without arguements \f(CW$errobj\fR will return true. Most functions
+that can return an error will return \f(CWfalse\fR as the first element of their
+result. Consequently you can use a simple \f(CWif\fR statement to check and see
+if there is an error to be handled.
+.TP
+\f(CW$errobj error\fR
+Returns the \fIexception\fR argument passed to \f(CWmakeerror\fR.
+.TP
+\f(CW$errobj type\fR
+Returns the \fItype\fR argument passed to \f(CWmakeerror\fR.
+.TP
+\f(CW$errobj msg\fR
+Returns the \fImessage\fR arguments passed to \f(CWmakeerror\fR.
+.TP
+\f(CW$errobj typemsg\fR
+Returns the \fItype\fR and \fImessage\fR arguments passed for \f(CWmakeerror\fR.
+.TP
+\f(CW$errobj info\fR
+Returns all of the arguments passed to \f(CWmakeerror\fR.
+.TP
+\f(CW$errobj throw\fR
+Throws using the arguments passed to \f(CWmakeerror\fR.
+.IE
+.TP
 \f(CWnewpgrp\fP
 Puts
 .I es
@@ -1742,6 +1906,17 @@ that each shell it forks will put itself into a new process group.
 Note that the controlling tty for the process must be on standard error
 (file descriptor 2) when this operation is run.
 .TP
+\f(CWre\(ti \fIsubject regex\fR
+Match \fIsubject\fR against \fIregex\fR. \fIregex\fR can either be a string
+or a proper regex.
+.TP
+\f(CWre\(ti\(ti \fIsubject regex\fR
+Extract out of \fIsubject\fR using \fIregex\fR. \fIregex\fR can either be a string
+or a proper regex.
+.TP
+\f(CWremove-duplicates \fIlist\fR
+Removes duplicate elements from \fIlist\fR while retaining list order.
+.TP
 \f(CWresult \fIvalue ...\fP\fR
 Returns its arguments. This is \fIes\fP's identity function.
 .TP
@@ -1749,9 +1924,21 @@ Returns its arguments. This is \fIes\fP's identity function.
 Causes the current function to exit, returning the named
 \fIvalue\fP.
 .TP
-\f(CWthrow \fIexception arg ...\fP\fR
+\f(CWreverse \fIlist\fR
+Reverses \fIlist\fR.
+.TP
+\f(CWsortlist \fIlist\fR
+Sorts \fIlist\fR.
+.TP
+\f(CWthrow \fIexception type message ...\fP\fR
 Raise the named exception, passing all of the arguments to
-\f(CWthrow\fP to the enclosing exception handler.
+\f(CWthrow\fP to the enclosing exception handler. \f(CWthrow\fR only requres
+the \fIexception\fR as an argument, but traditionally \fItype\fR and \fImessage\fR
+are provided as well.
+.TP
+\f(CWthrow \fIerrobj\fR
+Raise the exception contained within the error object passing the contents
+to the enclosing exception handler.
 .TP
 \f(CWtime \fR[\f(CW\-r\fR] \fIcmd arg ... \fP\fR
 Prints, on the shell's standard error, the real, user, and system time consumed by
@@ -1761,10 +1948,17 @@ status and real, user, and system times in a list.
 \f(CWtrue\fP
 Always returns a true (zero) return value.
 .TP
+\f(CWtry \fIcmd\fR
+Executes \fIcmd\fR and returns either \f(CW(false \fIresult\f(CW)\fR or, if \fIcmd\fR
+throws any exceptions, an error object containing the exception.
+.TP
 \f(CWumask \fI\fR[\fPmask\fR]\fR
 Sets the current umask (see
 .MR umask 2 )
 to the octal \fImask\fP. If no argument is present, the current mask value is printed.
+.TP
+\f(CWunreachable\fR
+Throws an \f(CWassert unreachable\fR exception if executed.
 .TP
 \f(CWunwind-protect \fIbody cleanup\fP\fR
 Runs \fIbody\fP and, when it completes or raises an exception,
@@ -1858,6 +2052,77 @@ data, including possible redirections.  This function reads one
 character at a time in order to not read more data out of a pipe than
 it should.  The terminating newline (if present) is not included in
 the returned string.
+.\"
+.\"
+.\"
+.SS "Math and Numerical Functions"
+.TP
+\f(CWtobase \fIbase\fP \fIn\fR
+Convert a number \fIn\fP from decimal to \fIbase\fP.
+.TP
+\f(CWfrombase \fIbase\fP \fIn\fR
+Convert a number \fIn\fP from \fIbase\fP to decimal.
+.TP
+\f(CWtodecimal \fIfmtn\fR
+Convert a formatted number (i.e. a number using the prefixes \f(CW0x\fP for hexadecimal,
+\f(CW0o\fP for octal, \f(CW0b\fP for binary, and no prefix for decimal) to decimal.
+.TP
+\f(CWfromdecimal \fR[\f(CWhex\fR\||\|\f(CWdec\fR\||\|\f(CWoct\fR\||\|\f(CWbin\fR]\f(CW \fIn\fR
+Convert a number \fIn\fR from decimal to hexadecimal (\f(CWhex\fP), decimal (\f(CWdec\fP),
+octal (\f(CWoct\fP), or binary (\f(CWbin\fP).
+.TP
+\f(CWadd \fIan bn\fR
+.EQ
+Result = an + bn
+.EN
+.sp 0.25
+Integer addition. Able to handle the same prefixed numbers as \f(CWtodecimal\fR.
+.TP
+\f(CWsub \fIan bn\fR
+.EQ
+Result = an - bn
+.EN
+.sp 0.25
+Integer subtraction. Able to handle the same prefixes as \f(CWtodecimal\fR.
+.TP
+\f(CWmul \fIan bn\fR
+.EQ
+Result = an^\[mu]^bn
+.EN
+.sp 0.25
+Integer multiplication. Able to handle the same prefixes as \f(CWtodecimal\fR.
+.TP
+\f(CWdiv \fIan bn\fR
+.EQ
+Result = an over bn
+.EN
+.sp 0.25
+Integer division. Able to handle the same prefixes as \f(CWtodecimal\fR. Throws
+an error when \fIbn\fR is 0 (divide by zero).
+.TP
+\f(CWmod \fIan bn\fR
+.EQ
+Result = an^%^bn
+.EN
+.sp 0.25
+Integer modulo. Returns the remainder. Able to handle the same prefixes as \f(CWtodecimal\fR.
+Throws an error when \fIbn\fR is 0 (divide by zero).
+
+.TP
+\f(CWeq \fIan bn\fR
+.TQ
+\f(CWlt \fIan bn\fR
+.TQ
+\f(CWgt \fIan bn\fR
+.TQ
+\f(CWlte \fIan bn\fR
+.TQ
+\f(CWgte \fIan bn\fR
+Numerical comparison functions (in order) equal, less than, greater than, less than or equal,
+and greater than or equal. They are all able to handle the same prefixes as \f(CWtodecimal\fR.
+.\"
+.\"
+.\"
 .SS "Hook Functions"
 A subset of the
 \f(CW%\fP-named
@@ -1878,11 +2143,6 @@ Runs the command with file descriptor
 .I fd
 set up to append to the \fIfile\fP.
 .TP
-\f(CW%background \fIcmd\fP\fR
-Runs the command in the background. The shell variable \f(CWapid\fP
-contains the process ID of the background process,
-which is printed if the shell is interactive (according to \f(CW%is-interactive\fP).
-.TP
 \f(CW%backquote \fIseparator cmd\fP\fR
 Runs the command in a child process and returns its standard output as a
 list, separated (with the same rules used in \f(CW%split\fP) into elements
@@ -1896,8 +2156,27 @@ it to return. This function is invoked by the shell on startup and from the
 dot (\f(CW.\fP) and \f(CWeval\fP commands, when the input source is not
 interactive. (See also \f(CW%interactive-loop\fP.)
 .TP
+\f(CW%batch-exception-handler \fIerrobj\fR
+This is the exception handler for \f(CW%batch-loop\fR.
+.TP
+\f(CW%bghook \fIcmd\fP\fR
+Function used to rewrite \f(CW&\fP. Wrapper around \f(CW%background\fP that
+automatically calls \f(CW%orphan\fP to keep \f(CW$apids\fR cleaner.
+.TP
+\f(CW%clearkey \fIkey\fR
+Clear all for \fIkey\fR's bindings.
+.TP
 \f(CW%close \fIfd cmd\fP\fR
 Runs the command with the given file descriptor closed.
+.TP
+\f(CW%close_dynlib \fIname\fR
+Releases all resources associated to loaded module \fIname\fR, then if possible
+unloads the module.
+.TP
+\f(CW%complete \fIline partial start end\fR
+Completion hook. Returns a list of possible completions. Takes the command
+line, \fIline\fR without the part being completed, the part, \fIpartial\fR,
+being completed, and the \fIstart\fR and \fIend\fR location of \fIpartial\fR.
 .TP
 \f(CW%count \fIlist\fP\fR
 Returns the number of arguments to the primitive.
@@ -1906,11 +2185,26 @@ Returns the number of arguments to the primitive.
 Runs the command with file descriptor \fIfd\fP set up to write to
 the \fIfile\fP.
 .TP
+\f(CW%dictput \fIdict key value\fR
+Replaces element \fIkey\fR with \fIvalue\fR in \fIdict\fR, returning the new \fIdict\fR
+.TP
+\f(CW%dictremove \fIdict key\fR
+Removes element \fIkey\fR from \fIdict\fR, returning the new \fIdict\fR.
+.TP
 \f(CW%dup \fInewfd oldfd cmd\fP\fR
 Runs the command with the file descriptor
 \fIoldfd\fP copied (via
 .MR dup 2 )
 to file descriptor \fInewfd\fP.
+.TP
+\f(CW%dynlibs\fR
+Returns the currently loaded modules.
+.TP
+\f(CW%dynlib_file \fIname\fR
+Returns the file and path for the loaded module \fIname\fR.
+.TP
+\f(CW%dynlib_prims \fIname\fR
+Returns the list of primitives that the loaded module \fIname\fR defines.
 .TP
 \f(CW%eval-noprint \fIcmd\fP\fR
 Run the command.
@@ -1959,6 +2253,11 @@ descriptor \f(CWfd\fP.
 Returns the home directory of the named user, or \f(CW$home\fP if
 there are no arguments.
 .TP
+\f(CW%initialize\fR
+Executed on start up. \f(CW%initialize\fR runs internal initialization
+functions, sets a number of runtime variables, and finds and executes
+the initialization file.
+.TP
 \f(CW%interactive-loop\fP
 Prompts, parses commands from the current input source and
 passes the commands to the function \fI%dispatch\fP, which
@@ -1967,6 +2266,47 @@ catches the exception \f(CWeof\fP which causes it to return.
 This function is invoked by the shell on startup and from the
 dot (\f(CW.\fP) commands, when the input source is interactive.
 (See also \f(CW%batch-loop\fP.)
+.TP
+\f(CW%interactive\-exception\-handler \fIerrobj\fP \fIresult\fP
+This is the exception handler used by \f(CW%interactive-loop\fP. It exists
+mostly for reuse if the user wishes to create their own handler. This will return
+\fIresult\fP after handling \fIerrobj\fP. Assumes it is executed in the
+exception handler of a \f(CWcatch\fP.
+.TP
+\f(CW%interactive\-hook\-exception\-handler \
+\fR[\f(CWpreexec\fR\||\|\f(CWpostexec\fR\||\|\f(CWprompt\fR]\f(CW \fIerrobj\fR
+This is the exception handler for \f(CW%preexec\fP, \f(CW%postexec\fP, and \f(CW%prompt\fP.
+.TP
+\f(CW%interactive-preexec-hook\fR
+.TQ
+\f(CW%interactive-postexec-hook \fIres\fR
+These hooks execute \f(CW%preexec\fP and \f(CW%postexec\fR respectively.
+.TP
+\f(CW%mapaskey \fIkey srckey\fR
+Bind \fIkey\fR to the function for \fIsrckey\fR from the default keymap.
+.TP
+\f(CW%mapkey \fIkey fun\fR
+Binding \fIkey\fR to \fIes\fR function \fIfun\fR. \fIfun\fR can either be the
+name of a function or a closure. The function get the current buffer as an argument and
+should return false if there is to be no change to the input buffer
+or \f(CW(true \fInew-buffer\f(CW)\fR if the buffer is to be changed.
+.TP
+\f(CW%mathfun \fIfun an bn\fR
+Wrapper function for \f(CWadd\fR, \f(CWsub\fR, \f(CWmul\fR, and \f(CWdiv\fR handling
+conversions to decimal from the prefixed bases.
+.TP
+\f(CW%new_completer \fIlinebuf text start end\fR
+The hook the line editor actually calls. It prepares the \fIlinebuf\fR and \fItext\fR
+for use by \f(CW%complete\fR and adjusts \fIstart\fR and \fIend\fR to and changes
+in \fIlinebuf\fR and offsets them by one for cultural compatibility with \fIes\fR.
+.TP
+\&
+\fBNOTE\fR: \f(CW%new_completer\fR normally should not be used as a hook, use \f(CW%complete\fR
+if you want to replace the completer. It is listed here for completeness only and is
+subject to change.
+.TP
+\f(CW%noconvert_mathfun \fIfun an bn\fR
+Wrapper function equivalent to \f(CW%mathfun\fR but will not convert the result.
 .TP
 \f(CW%noeval-noprint \fIcmd\fP\fR
 Do nothing. (Passed as the argument to \f(CW%batch-loop\fP
@@ -1982,10 +2322,22 @@ the \f(CW\-x\fP and \f(CW\-n\fP options are used.)
 Runs the command and returns false if its exit status was true,
 otherwise returns true.
 .TP
+\f(CW%numcompfun \fIfun an bn\fR
+Wrapper function for the numerical comparisons handling conversions to decimal
+from the prefixed bases.
+.TP
+\f(CW%old-batch-loop\fR
+Implementation of \f(CW%batch-loop\fP using \f(CW$&batchloop\fR.
+.TP
 \f(CW%one \fIlist\fP\fR
 If \fIlist\fP is one element long, \f(CW%one\fP returns its value;
 otherwise it raises an exception. \f(CW%one\fP is used to ensure
 that redirection operations get passed exactly one filename.
+.TP
+\f(CW%onerror \fIbody handler\fR
+Executes \fIbody\fR. If \fIbody\fR throw an exception then \fIhandler\fR is
+executed. Inside of \fIhandler\fR the function \f(CWerror\fR is defined which
+will return the error object that contains the exception.
 .TP
 \f(CW%open \fIfd file cmd\fP\fR
 Runs the command with \fIfile\fP open for reading on file descriptor
@@ -2013,9 +2365,19 @@ modes (\f(CWr\fP, \f(CWw\fP, \f(CWa\fP, \f(CWr+\fP, \f(CWw+\fP, and
 \f(CW%append\fP, \f(CW%create\fP, \f(CW%open\fP, \f(CW%open-append\fP,
 \f(CW%open-create\fP, and \f(CW%open-write\fP.
 .TP
+\f(CW%open_dynlib \fIpath\fR
+Loads a dynamic library at the \fIpath\fR. \fIpath\fR must be an absolute
+or relative path to be successful. See also
+.MR dlopen 3 .
+.TP
 \f(CW%or \fIcmd ...\fP\fR
 Runs the commands in order, stopping after the first one that has a
 true return value. Returns the result of the last command run.
+.TP
+\f(CW%orphan \fR[\fIpid\fR]\fR
+Marks \fIpid\fR as an orphan process meaning \fIes\fR will automatically wait
+for the process. If there is no argument, \f(CW%orphan\fP will orphan the most
+recently \f(CW%background\fPed process.
 .TP
 \f(CW%parse \fIprompt1 prompt2\fP\fR
 Reads input from the current input source, printing
@@ -2023,6 +2385,9 @@ Reads input from the current input source, printing
 \fIprompt2\fP before reading continued lines.
 Returns a code fragment suitable for execution.
 Raises the exception \f(CWeof\fP on end of input.
+.TP
+\f(CW%parsestring \fIstring\fR
+Similar to \f(CW%parse\fR, but takes a string as input.
 .TP
 \f(CW%pathsearch \fIprogram\fP\fR
 Looks for an executable file named \fIprogram\fP in the directories
@@ -2035,19 +2400,58 @@ left-hand process connected by a pipe to the file descriptor \fIinfd\fP
 in the right-hand process. If there are more than two commands,
 a multi-stage pipeline is created.
 .TP
+\f(CW%preexec\fR
+This hook is executed in \f(CW%interactive-loop\fP after the user input is
+read and parsed, but before it is executed. Takes no arguements and the
+return value is ignored.
+.TP
 \f(CW%prompt\fR
 Called by \f(CW%interactive-loop\fP before every call to \f(CW%parse\fI.
 This function allows the user to provide any actions that he or she may
 wish to have executed before being prompted (e.g., updating the value of the
 \f(CWprompt\fP variable to contain all or part of the current working directory).
 .TP
+\f(CW%postexec \fIresult\fR
+This hook is executed by \f(CW%interactive-loop\fP after the user input has been
+executed if no exceptions are thrown. It takes the \fIresult\fP of the user input
+and it's return value is what is returned by \f(CW%interactive-loop\fP.
+.TP
 \f(CW%readfrom \fIvar input cmd\fP\fR
 Runs \fIcmd\fP with the variable \fIvar\fP locally bound
 to the name of a file which contains the output of running
 the command \fIinput\fP.
 .TP
+\f(CW%reap-dead-procs\fR
+Wait for all dead processes as determined by \f(CW%apids -d\fR.
+.TP
+\f(CW%reap-orphans\fR
+Wait for all of the dead processes in \f(CW$orphanpids\fR.
+.TP
 \f(CW%seq \fIcmd ...\fP\fR
 Runs the commands, in order.
+.TP
+\f(CW%stbackquote \fIseparator cmd\fP\fR
+Broadly the same as \f(CW%backquote\fR, but returns a list of the return value and
+\fIcmd\fR's standard input split using the rules of \f(CW%split\fR.
+.TP
+\f(CW%string \fIlist\fR
+Flatten a list without any separators. (Reverse of \f(CW%strlist\fR).
+.TP
+\f(CW%strlist \fIstring\fR
+Break a string up into a list with one character per element to allow for
+string manipulation using list operations.
+.TP
+\f(CW%termtypeof \fIterm\fR
+Returns the name for \fIterm\fR's type. If passed a list, \f(CW%termtypeof\fR will only
+return the type of the first element.
+.TP
+\f(CW%unmapkey \fIkey\fR
+If \Ikey\fR is bound to an \fIes\fR function, return it to it's default mapping.
+.TP
+\f(CW%user-init\fR
+Hook called by \f(CW%initialize\fR after everything else has been initialized. If your
+initialization file requires parts of \fIes\fP that are started by \f(CW%initialize\fR,
+you must put them in \f(CW%user-init\fR.
 .TP
 \f(CW%whatis \fIprogram ...\fP\fR
 For each named \fIprogram\fP, returns the pathname, primitive, lambda,
@@ -2057,6 +2461,9 @@ first word of a command.
 \f(CW%writeto \fIvar output cmd\fP\fR
 Runs \fIcmd\fP with the variable \fIvar\fP locally bound to the name of a
 file which is used as the input for the command \fIoutput\fP.
+.\"
+.\"
+.\"
 .SS "Utility Functions"
 These functions are useful for people customizing the shell,
 may be used by other builtin commands,
@@ -2071,11 +2478,69 @@ Returns the process IDs of all background processes that the shell
 has not yet waited for. \f(CW-a\fP returns only the alive processes and
 \f(CW-d\fP returns only the dead processes.
 .TP
+\f(CW%background \fIcmd\fP\fR
+Runs the command in the background. The shell variable \f(CWapid\fP
+contains the process ID of the background process,
+which is printed if the shell is interactive (according to \f(CW%is-interactive\fP).
+.TP
+\f(CW%block \fIfragment\fR
+Wraps a defer block. Will execute the deferred blocks in the reverse order of definition.
+.IS
+.TP
+\f(CWdefer \fIfragment\fR
+Defines a defer block. The block will get executed when the owning \f(CW%block\fR exists.
+.IE
+.TP
+\f(CW%clear-history\fR
+Clears \fIes\fR's command history.
+.TP
+\f(CW%complete_cmd_hook \fIcommand completer\fR
+Register a custom completion function \fIcompleter\fR for \fIcommand\fR.
+.TP
+\f(CW%complete_cmd_unhook \fIcommand\fR
+Unregister the custom completer for \fIcommand\fR.
+.TP
+\f(CW%elem \fIn list\fR
+Returns element \fIn\fR of \fIlist\fR.
+.TP
+\f(CW%esmglob \fIxglob list\fR
+Returns all elements of \fIlist\fR that match against the es-mveety extended glob \fIxglob\fR.
+The glob must be quoted.
+.TP
+\f(CW%esmglob_match \fIelem xglob\fR
+.TQ
+\f(CW%esm\(ti \fIelem xglob\fR
+Broad equivalent of \f(CW~\fR, but using es-mveety extended globbing. The glob must be quoted.
+.TP
+\f(CW%first \fIlist\fR
+Returns the first element of \fIlist\fR.
+.TP
+\f(CW%fmt \fIthings\fR
+Renders \fIthings\fR as a printable string. Unprintable characters are rendered as escapes.
+.TP
 \f(CW%fsplit \fIseparator \fR[\fIargs ...\fR]\fR
 Splits its arguments into separate strings at every occurrence
 of any of the characters in the string \fIseparator\fP.
 Repeated instances of separator characters cause null strings to
 appear in the result. (This function is used by some builtin settor functions.)
+.TP
+\f(CW%gc\fR
+Force the garbage collector to run.
+.TP
+\f(CW%gcinfo \fR[\f(CW\-r\fR]\fR
+Print out the garbage collector statistics and tuning information. If the new or
+generational collector is in use \f(CW\-r\fR will print out the allocated regions
+the collector is managing.
+.TP
+\f(CW%gcstats\fR
+Returns unstructured garbage collector statistics and tuning.
+.TP
+\f(CW%hidevar \fIname\fR
+.TQ
+\f(CW%hidefunction \fIname\fR
+If the variable \fIname\fR is global or dynamically bound, set the internal flag on the variable.
+\f(CW%hidefunction\fR is just a wrapper around \f(CW%hidevar\fR that prefixes \fIname\fR with
+\f(CWfn\-\fR.
 .TP
 \f(CW%is-interactive\fR
 Returns true if the current interpreter context is interactive;
@@ -2084,8 +2549,20 @@ interactive user.
 More precisely, this is true if the innermost enclosing read-eval-print
 loop is \f(CW%interactive-loop\fP rather than \f(CW%batch-loop\fP.
 .TP
+\f(CW%isvarhidden \fIname\fR
+Return the state of the variable's internal flag.
+.TP
+\f(CW%last \fIlist\fR
+Returns the last element of \fIlist\fR.
+.TP
 \f(CW%newfd\fP
 Returns a file descriptor that the shell thinks is not currently in use.
+.TP
+\f(CW%range \fIstart end\fR
+Returns a list of numbers from \fIstart\fR to \fIend\fR.
+.TP
+\f(CW%rest \fIlist\fR
+Returns \fIlist\fR without the first element.
 .TP
 \f(CW%run \fIprogram argv0 args ...\fP\fR
 Run the named program, which is not searched for in \f(CW$path\fP, with
@@ -2093,10 +2570,22 @@ the argument vector set to the remaining arguments. This builtin can be
 used to set \f(CWargv[0]\fP (by convention, the name of the program)
 to something other than file name.
 .TP
+\f(CW%slice \fIstart end list\fR
+returns \f(CW$\fIlist\f(CW($\fIstart\f(CW ... $\fIend\f(CW)\fR.
+.TP
 \f(CW%split \fIseparator \fR[\fPargs ...\fR]\fR
 Splits its arguments into separate strings at every occurrence of any of
 the characters in the string \fIseparator\fP. Repeated instances of separator
 characters are coalesced. Backquote substitution splits with the same rules.
+.TP
+\f(CW%unfmt \fIstring\fR
+Opposite of \f(CW%fmt\fR, but does not \f(CW%split\fR.
+.TP
+\f(CW%unhidevar \fIname\fR
+.TQ
+\f(CW%unhidefunction \fIname\fR
+Unset the internal flag on variable \fIname\fR. \f(CW%unhidefunction\fR is just
+a wrapper around \f(CW%hidevar\fR to prefix \fIname\fR with \f(CWfn\-\fR.
 .TP
 \f(CW%var \fIvar ...\fP\fR
 For each named variable, returns a string which, if interpreted by \fIes\fP
@@ -2153,6 +2642,19 @@ fsplit	pipe	whatis
 .ft R
 .Ee
 .PP
+The \f(CWdict*\fR primitives are used to implement the dict interface.
+.PP
+The following primitives are used to implement the math functions and friends:
+.ta 1.75i 3.5i
+.Ex
+.ft \*(Cf
+add	sub	mul
+div	mod	eq
+gt	lt
+tobase	frombase
+.ft R
+.Ee
+.PP
 The following primitives implement the similar named hook functions,
 with \(lq\f(CW%\fP\(rq prefixes and internal hyphens:
 .ta 1.75i 3.5i
@@ -2168,11 +2670,14 @@ set \f(CW$apid\fP. The \f(CWbackquote\fP primitive is used to implement the
 \f(CW%backquote\fP hook function, but returns the exit status of the child as
 the first value of its result instead of setting \f(CW$bqstatus\fP to it.
 .PP
-The following primitives implement the similarly named settor functions:
+The following primitives implement the similarly named settor and gettor functions:
 .ta 1.75i 3.5i
 .Ex
 .ft \*(Cf
 sethistory	setnoexport	setsignals
+setditto	setmaxevaldepth	setrunflags
+getditto	getevaldepth	getpid
+getrunflags	unixtime	unixtimens
 .ft R
 .Ee
 .PP
@@ -2197,14 +2702,16 @@ has changed.
 .PP
 Several primitives are not directly associated with other functions.
 They are:
-.TQ
-\f(CW$&gc\fP
 .TP
+\f(CW$&gc\fP
+.TQ
 \f(CW$&collect\fP
 Invokes the garbage collector. The garbage collector in \f(CWes\fP
 runs rather frequently; there should be no reason for a user to issue this command.
 .TP
 \f(CW$&noreturn \fIlambda args ...\fP\fR
+.TQ
+\f(CW$&catch_noreturn \fIlambda args ... \fP\fR
 Call the \fIlambda\fP, but in such a way that it does not catch the
 \f(CWreturn\fP exception. This primitive exists in order that some control-flow
 operations in \fIes\fP (e.g., \f(CWwhile\fP and \f(CW&&\fP) can be implemented as
@@ -2297,7 +2804,7 @@ Whether to enable arena allocator debugging features (if available).
 .IE
 .TP
 \f(CW\-v\fR
-Print $buildstring.
+Print \f(CW$buildstring\fR.
 .TP
 \f(CW\-D \fR[\f(CWGIaEPRAMrhHCtm\fR]\fR
 Debugging Flags.
