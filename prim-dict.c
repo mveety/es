@@ -51,6 +51,7 @@ PRIM(dictput) {
 	v = list->next->next;
 	gcref(&r_v, (void **)&v);
 
+	d = dictcopy(d);
 	d = dictput(d, name, v);
 
 	gcrderef(&r_v);
@@ -73,6 +74,7 @@ PRIM(dictremove) {
 
 	name = getstr(list->next->term);
 
+	d = dictcopy(d);
 	d = dictput(d, name, nil);
 
 	gcrderef(&r_d);
