@@ -2249,6 +2249,12 @@ separated by the string \fIseparator\fP.
 Runs the command with the \fIword\fPs passed as input on file
 descriptor \f(CWfd\fP.
 .TP
+\f(CW%history \fIline\fR
+Called when a command line is input. If \f(CW%history\fR returns
+true \fIes\fR will also add \fIline\fR to \f(CW$history\fR as normal. If
+\f(CW%history\fR returns false \fIes\fR will take no action and not
+add \fIline\fR to \f(CW$history\fR.
+.TP
 \f(CW%home \fR[\fIuser\fR]\fR
 Returns the home directory of the named user, or \f(CW$home\fP if
 there are no arguments.
