@@ -1,0 +1,7 @@
+buildstring	esmlesetwordstart	setmaxevaldepth
+editormatchbraces	getditto	setnoexport
+esmledumpbuiltinfuns	getevaldepth	setrunflags
+esmlegethighlight	getpid	setsignals
+esmlegetterm	getrunflags	unixtime
+esmlegetwordstart	setditto	unixtimens
+esmlesethighlight	sethistory	version

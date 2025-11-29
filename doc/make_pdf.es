@@ -1,4 +1,5 @@
 #!/usr/bin/env es
 
-groff -eTpdf -man es.1 > es.1.pdf
+. macroreplace.es
+macroreplace es.1.src | groff -eTpdf -man > es.1.pdf
 

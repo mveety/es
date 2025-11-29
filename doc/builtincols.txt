@@ -1,0 +1,6 @@
+access	fork	reverse
+catch	if	reverse_noalloc
+echo	newpgrp	sortlist
+exec	reextract	throw
+exit	rematch	umask
+forever	result	wait

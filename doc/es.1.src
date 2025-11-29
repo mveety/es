@@ -1,3 +1,4 @@
+.\" vi: ft=groff
 .\"-------
 .\" IS, IE -- sublist begin and end
 .\"-------
@@ -30,6 +31,14 @@
 .RE
 .sp 1v
 .EE
+..
+.de Ls
+.Ex
+.RS 6
+..
+.de Le
+.RE
+.Ee
 ..
 .\" stolen from -mdoc
 .de Nm
@@ -404,7 +413,7 @@ three one one two
 .Ee
 .PP
 Subscript ranges are of the form
-\fIlo\f(CW ... \fIhi\fP
+\fIlo\f(CW ... \fIhi\fR
 and refer to all the elements between
 \fIlo\fP and \fIhi\fP.
 If
@@ -1335,6 +1344,19 @@ Returns a printable function that returns the \fIdict\fR when executed.
 gets the element key and value as arguments in that order. The results of the \fIfunction\fR
 are thrown out and \f(CWdictforall\fR returns true if successful.
 .TP
+\&
+The below example shows the use of \f(CWdictforall\fR and returns the length of the dict.
+.Ls
+fn dict_length dict {
+	let (len = 0) {
+		dictforall $dict @ key value {
+			len = <={add $len 1}
+		}
+		result $len
+	}
+}
+.Le
+.TP
 \f(CWdictget \fIdict key\fR
 Returns the value of the element \fIkey\fR in \fIdict\fR. Throws an error if the element
 addressed by \fIkey\fR does not exist.
@@ -1510,8 +1532,7 @@ exception.
 For example, to run some commands and make sure some cleanup routine
 is called even if the user interrupts or disconnects during the script,
 one can use the form:
-.Ex
-.RS 6
+.Ls
 local (signals = $signals sighup sigint) {
      catch @ e {
           cleanup
@@ -1520,8 +1541,7 @@ local (signals = $signals sighup sigint) {
            ...
      }
 }
-.RE
-.Ee
+.Le
 .TP
 \&
 A signal name prefixed by a hyphen (\f(CW-\fP) causes that signal to be ignored by
@@ -2618,11 +2638,8 @@ builtin functions with the same names:
 .ta 1.75i 3.5i
 .Ex
 .ft \*(Cf
-access	forever	throw
-catch	fork	umask
-echo	if	wait
-exec	newpgrp	
-exit	result	
+.\" the @@ macro is filled in by macroreplace.es
+@@ builtincols.txt
 .ft R
 .Ee
 .PP
@@ -2639,12 +2656,7 @@ with \(lq\f(CW%\fP\(rq prefixes:
 .ta 1.75i 3.5i
 .Ex
 .ft \*(Cf
-apids	here	read
-close	home	run
-count	newfd	seq
-dup	openfile	split
-flatten	parse	var
-fsplit	pipe	whatis
+@@ hookcols.txt
 .ft R
 .Ee
 .PP
@@ -2654,10 +2666,7 @@ The following primitives are used to implement the math functions and friends:
 .ta 1.75i 3.5i
 .Ex
 .ft \*(Cf
-add	sub	mul
-div	mod	eq
-gt	lt
-tobase	frombase
+@@ mathcols.txt
 .ft R
 .Ee
 .PP
@@ -2680,10 +2689,7 @@ The following primitives implement the similarly named settor and gettor functio
 .ta 1.75i 3.5i
 .Ex
 .ft \*(Cf
-sethistory	setnoexport	setsignals
-setditto	setmaxevaldepth	setrunflags
-getditto	getevaldepth	getpid
-getrunflags	unixtime	unixtimens
+@@ setgetcols.txt
 .ft R
 .Ee
 .PP
@@ -2732,6 +2738,15 @@ platform, and architecture of \fIes\fP. Used to populate \f(CW$buildstring\fP.
 .TP
 \f(CW$&version\fP
 Returns the current version number for \fIes\fP. Used to populate \f(CW$version\fP.
+.TP
+\f(CW$&withbindings \fIlambda args ...\fR
+Similar in use to \f(CW$&noreturn\fR. \f(CW$&withbindings\fR will copy the current lexically
+scoped variables (ie the ones made with \f(CWlet\fR) to the \fIlambda\fR's environment before
+executing. The variables bound with \f(CW$&withbindings\fR are not part of the outside environment.
+.TP
+\&
+\fBNOTE:\fR \f(CW$&withbindings\fR is potentially dangerous and gives powers considered by some to be
+unnatural. \fBUse at your own risk.\fR
 .SH OPTIONS
 .TP
 \f(CW\-c\fP

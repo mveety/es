@@ -62,4 +62,5 @@ config.mk
 test_editor
 es_work
 *.vim
+doc/es.1
 

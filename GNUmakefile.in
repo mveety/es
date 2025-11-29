@@ -52,6 +52,9 @@ es_static : ${OFILES} system.o
 %.so : %.o
 	${CC} ${LDFLAGS} ${MODLDFLAGS} -shared -o $@ $^ ${MODLIBS} ${MODEXTRAAGS}
 
+doc/es.1: es
+	./es -Np -c '{cd doc; ../es make_man.es}'
+
 modules : ${MODULES}
 
 clean	:
@@ -73,7 +76,7 @@ preinstall: es
 es-install: es
 	$(INSTALL) -s $(srcdir)/es $(bindir)
 
-docs-install: es
+docs-install: es doc/es.1
 	$(MKDIR_P) $(mandir)/man1
 	$(INSTALL) $(srcdir)/doc/es.1 $(mandir)/man1
 

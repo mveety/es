@@ -1,0 +1,3 @@
+add	frombase	mod
+div	gt	mul
+eq	lt	sub

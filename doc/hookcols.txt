@@ -1,0 +1,14 @@
+addhistory	fmtvar	parse
+addhistorylist	fsplit	parsestring
+apids	gc	pipe
+clearhistory	gcstats	range
+clearkey	gctuning	read
+close	getkeymap	run
+closedynlib	here	seq
+count	home	split
+dumpregions	listdynlibs	termtypeof
+dup	mapaskey	unmapkey
+dynlibfile	mapkey	var
+dynlibprims	newfd	varhide
+flatten	opendynlib	varishidden
+fmt	openfile	varunhide
