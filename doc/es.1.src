@@ -1741,6 +1741,9 @@ Is the file a named pipe (FIFO)?
 Executes \fItest\fR. If \fItest\fR returns not true then an assert exception
 containing \fItest\fR or \fIlocation\fR and \fItest\fR is thrown.
 .TP
+\f(CWbox \fIlist\fR
+Wraps \fIlist\fR in a specially marked (using \f(CW$&gettermtag\fR) closure.
+.TP
 \f(CWbreak \fIvalue\fR
 Exits the current loop.
 .I Value
@@ -2721,6 +2724,10 @@ They are:
 Invokes the garbage collector. The garbage collector in \f(CWes\fP
 runs rather frequently; there should be no reason for a user to issue this command.
 .TP
+\f(CW$&gettermtag \fIterm\fR
+Returns the tag of \fIterm\fR. Tags are used as a way to mark a term as special to
+\fIes\fR. See also \f(CW$&settermtag\fR.
+.TP
 \f(CW$&noreturn \fIlambda args ...\fP\fR
 .TQ
 \f(CW$&catch_noreturn \fIlambda args ... \fP\fR
@@ -2738,6 +2745,20 @@ platform, and architecture of \fIes\fP. Used to populate \f(CW$buildstring\fP.
 .TP
 \f(CW$&version\fP
 Returns the current version number for \fIes\fP. Used to populate \f(CW$version\fP.
+.TP
+\f(CW$&settermtag \fIterm \fR[\f(CWnone\fR\||\|\f(CWerror\fR\||\|\f(CWbox\fR]\fR
+Used to get the tag on \fIterm\fR. Can be \f(CWnone\fR, \f(CWerror\fR, \f(CWbox\fR.
+.IS
+.TP
+\f(CWnone\fR
+The tag of the vast majority of terms.
+.TP
+\f(CWerror\fR
+The tag used to mark closures as errors. See also \f(CWmakeerror\fR.
+.TP
+\f(CWbox\fR
+The tag used to mark closures are boxes. See also \f(CWbox\fR.
+.IE
 .TP
 \f(CW$&withbindings \fIlambda args ...\fR
 Similar in use to \f(CW$&noreturn\fR. \f(CW$&withbindings\fR will copy the current lexically
