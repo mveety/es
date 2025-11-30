@@ -35,6 +35,7 @@ let (
 		bg_white => <={escape_code '[47m'}
 		bg_default => <={escape_code '[49m'}
 	)
+	%hidevar colors
 
 	attrib = %dict(
 		reset => <={escape_code '[0m'}
@@ -44,6 +45,7 @@ let (
 		blink => <={escape_code '[5m'}
 		inverse => <={escape_code '[7m'}
 	)
+	%hidevar attrib
 
 	fn color256 colordict {
 		let (res = ()) {

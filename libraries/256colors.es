@@ -258,6 +258,7 @@ library 256colors (init libraries esmle colors)
 	Grey89 => 254
 	Grey93 => 255
 )
+%hidevar 256colornames
 
 256colors = %dict(
 	fg_Black => <={color256 %dict(fg=>0)}
@@ -773,6 +774,7 @@ library 256colors (init libraries esmle colors)
 	bg_Grey89 => <={color256 %dict(bg=>254)}
 	bg_Grey93 => <={color256 %dict(bg=>255)}
 )
+%hidevar 256colors
 
 fn 256swatch cname {
 	echo $256colors(fg_^$cname bg_^$cname) 'hello world!' $attrib(reset)
