@@ -60,7 +60,7 @@ checkfd(int fd, OpenKind r)
 }
 
 void
-init_internal_vars(void)
+init_internal_vars(int runflags)
 {
 	int i;
 	static const char *const path[] = {INITIAL_PATH};
@@ -85,12 +85,14 @@ init_internal_vars(void)
 	vardef("__es_extra_esrcfile", nil,
 		   mklist(mkstr(additional_esrc ? str("%s", extraesrc) : ""), nil));
 	vardef("__es_comp_match", nil, mklist(mkstr(comprehensive_matches ? "true" : "false"), nil));
+	vardef("__es_interactive_start", nil,
+			mklist(mkstr((runflags & run_interactive) == run_interactive ? "true" : "false"), nil));
 
 	gcderef(&r_list, (void **)&list);
 }
 
 static int
-runinitialize(void)
+runinitialize(int runflags)
 {
 	List *initialize;
 	List *result = NULL; Root r_result;
@@ -104,7 +106,7 @@ runinitialize(void)
 	gcref(&r_result, (void **)&result);
 
 	ExceptionHandler {
-		result = eval(initialize, NULL, 0);
+		result = eval(initialize, NULL, runflags);
 	} CatchException(e) {
 		if(termeq(e->term, "exit"))
 			esexit(exitstatus(e->next));
@@ -570,12 +572,12 @@ getopt_done:
 
 		runinitial();
 
-		init_internal_vars();
+		init_internal_vars(runflags);
 		initsignals(runflags & run_interactive, allowquit);
 		hidevariables();
 		initenv(environ, protected);
 
-		runinitialize();
+		runinitialize(runflags);
 
 		if(cmd == NULL && !cmd_stdin && optind < ac) {
 			file = av[optind++];

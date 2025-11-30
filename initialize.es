@@ -1,7 +1,7 @@
 #!/usr/bin/env es
 
 noexport += __es_initialize_esrc __es_loginshell __es_readesrc __es_different_esrc
-noexport += __es_esrcfile __es_extra_esrc __es_extra_esrcfile
+noexport += __es_esrcfile __es_extra_esrc __es_extra_esrcfile __es_interactive_start
 
 let (
 	fn __es_esrc_check {
@@ -109,6 +109,43 @@ let (
 					}
 					{ echo >[1=2] '%user-init: uncaught exception:' $err $type $msg }
 				)
+			}
+		}
+
+		if {$__es_interactive_start} {
+			if {! ~ $#fn-%interactive-start 0} {
+				let (e=) {
+					(e _) = <={try %interactive-start}
+					if {! $e} { return <=true }
+					errmatch $e (
+						continue { return <=true }
+						eof { return <=true }
+						exit { exit $type }
+						error {
+							echo >[1=2] '%interactive-start: error:' $type^':' $msg
+							return <=false
+						}
+						assert {
+							echo >[1=2] '%interactive-start: assert:' $type $msg
+							return <=false
+						}
+						usage {
+							if {~ $#msg 0} {
+								echo >[1=2] '%interactive-start:' $type
+							} {
+								echo >[1=2] '%interactive-start:' $msg
+							}
+							return <=false
+						}
+						signal {
+							if {!~ $type sigint sigterm sigquit sigwinch} {
+								echo >[1=2] '%interactive-start: caught unexpected signal:' $type
+							}
+							return <=false
+						}
+						{ echo >[1=2] '%interactive-start: uncaught exception:' $err $type $msg }
+					)
+				}
 			}
 		}
 		return <=true

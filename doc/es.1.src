@@ -2330,6 +2330,11 @@ This is the exception handler for \f(CW%preexec\fP, \f(CW%postexec\fP, and \f(CW
 \f(CW%interactive-postexec-hook \fIres\fR
 These hooks execute \f(CW%preexec\fP and \f(CW%postexec\fR respectively.
 .TP
+\f(CW%interactive-start\fR
+This hook is executed on startup after \f(CW%user-init\fR if the shell
+determines that it will be an interactive session. See also:
+.MR isatty 3 .
+.TP
 \f(CW%mapaskey \fIkey srckey\fR
 Bind \fIkey\fR to the function for \fIsrckey\fR from the default keymap.
 .TP
