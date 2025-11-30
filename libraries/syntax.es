@@ -177,20 +177,13 @@ with-dynlibs mod_syntax {
 		if {$syntax_conf_accelerate} {
 			return <={$&fasthighlighting $^str}
 		}
-		let(
+		lets (
 			lasttok = ''
 			res = ()
 			syncol = $syntax_conf_colors
-			(e toks) = <={try $&basictokenize $str}
-			fn-nexttok=()
-			fn-futuretok=()
-			fn-toksleft=()
-			fn-peektok=()
-		) {
-			if {$e} {
-				return $str
-			}
+			toks = <={$&basictokenize $str onerror return $str}
 			(fn-nexttok fn-futuretok fn-toksleft fn-peektok) = <={toksiterator $toks}
+		) {
 			while {gt <=toksleft 0} {
 				let (tok = <=nexttok) {
 					if {isstring $tok <=peektok} {
