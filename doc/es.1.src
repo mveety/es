@@ -1759,6 +1759,25 @@ Changes the current directory to
 With no argument, \f(CWcd\fP changes the
 current directory to \f(CW$home\fP.
 .TP
+\f(CWconf \fR[\f(CW\-vrX\fR]\f(CW \-p \fIpackage \fR[\fIvar\fR]\fR
+.TQ
+\f(CWconf \fR[\f(CW\-vrX\fR]\f(CW \fIpackage\f(CW:\fR
+.TQ
+\f(CWconf \fR[\f(CW\-vrX\fR]\f(CW \fIpackage\f(CW:\fIvar\fR
+Display the configuration variables referenced by \fIpackage\fR and optionally
+\fIvar\fR. If \f(CW\-X\fR is used \f(CWconf\fR will return the results instead of
+printing them.
+.TP
+\f(CWconf \fR[\f(CW\-v\fR]\f(CW \fR[\f(CW\-A \fR\||\|\f(CW \-P\fR]\f(CW \-p \fIpackage\f(CW \-s \fIvar value\fR
+.TQ
+\f(CWconf \fR[\f(CW\-v\fR]\f(CW \fR[\f(CW\-A \fR\||\|\f(CW \-P\fR]\f(CW \-s \fIpackage\f(CW:\fIvar value\fR
+Set the configuration variable \fIpackage\f(CW:\fIvar\fR to \fIvalue\fR. If \f(CW\-A\fR is used append to the
+existing value and prepend if \f(CW\-P\fR is used.
+.TP
+\f(CWconf \fR[\f(CW\-vrX\fR]\f(CW \-a\fR
+Display all available variables and their values. \f(CW\-r\fR prints their raw name. \f(CW\-X\fR returns
+a dict of all available variables organized by package.
+.TP
 \f(CWecho \fR[\fP-n\fR]\fP \fR[\fP--\fR]\fP \fIargs ...\fR
 Prints its arguments to standard output, terminated by a newline.
 Arguments are separated by spaces.
