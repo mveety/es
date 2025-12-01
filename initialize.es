@@ -30,6 +30,8 @@ let (
 		__es_initgc
 		__es_complete_initialize
 		__es_libraries_initialize
+		__es_iosub_init
+		__es_define_iosub_settor
 		%unhidevar es_internal_symcount
 
 		# run $home/.esrc if applicable
@@ -72,9 +74,6 @@ let (
 				}
 			}
 		}
-
-		# post .esrc setup functions
-		__es_devfd_init
 
 		# run %user-init hook if available
 		if {! ~ $#fn-%user-init 0} {

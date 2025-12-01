@@ -561,14 +561,14 @@ fn-%pipe	= $&pipe
 #		cmd <{input}		%readfrom var {input} {cmd $var}
 #		cmd >{output}		%writeto var {output} {cmd $var}
 
-fn __es_devfd_init {
-	if {~ $es_conf_devfd_impl devfd} {
+fn __es_iosub_init {
+	if {~ $es_conf_iosub-impl devfd} {
 		if {! ~ <=$&primitives readfrom || ! ~ <=$&primitives writeto} {
 			echo >[2=1] 'warning: es_devfd_impl=devfd not supported. defaulting to tmpfile'
-			es_devfd_impl = tmpfile
+			es_conf_iosub-impl = tmpfile
 		}
 	}
-	match $es_conf_devfd_impl (
+	match $es_conf_iosub-impl (
 		devfd {
 			fn-%readfrom = $&readfrom
 			fn-%writeto = $&writeto
@@ -598,7 +598,7 @@ fn __es_devfd_init {
 				}
 			}
 		}
-		sysv {
+		mknod {
 			# These versions of %readfrom and %writeto (contributed by Pete Ho)
 			# support the use of System V FIFO files (aka, named pipes) on systems
 			# that have them.  They seem to work pretty well.  The authors still
@@ -632,10 +632,50 @@ fn __es_devfd_init {
 				}
 			}
 		}
-		* { throw error devfd_init 'invalid implmentation. must be devfd, tmpfile, or sysv' }
+		mkfifo {
+			# These are modifications of the mknod implementation that use
+			# the more modern mkfifo. All of the above still apply.
+			fn %readfrom var cmd body {
+				local ($var = /tmp/es.$var.$pid) {
+					unwind-protect {
+						mkfifo $$var
+						$&background { $cmd > $$var; exit }
+						$body
+					} {
+						rm -f $$var
+					}
+				}
+			}
+			fn %writeto var cmd body {
+				local ($var = /tmp/es.$var.$pid) {
+					unwind-protect {
+						mkfifo $$var p
+						$&background { $cmd < $$var ; exit }
+						$body
+					} {
+						rm -f $$var
+					}
+				}
+			}
+		}
+		* { throw error devfd_init 'invalid implmentation. must be devfd, tmpfile, mknod, or mkfifo' }
 	)
 }
 
+fn __es_define_iosub_settor {
+	set-es_conf_iosub-impl = @ arg _ {
+		local (set-es_conf_iosub-impl=){
+			match $arg (
+				(devfd tmpfile mknod mkfifo) {
+					es_conf_iosub-impl = $arg
+					__es_devfd_init
+					result $arg
+				}
+				* { result $arg }
+			)
+		}
+	}
+}
 #
 # Hook functions
 #

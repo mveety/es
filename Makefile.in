@@ -124,7 +124,7 @@ config.es:
 	echo "corelib = '${datarootdir}/es'" >> $(srcdir)/config.es
 	echo "es_conf_use_new_vars = true" >> $(srcdir)/config.es
 	echo "es_enable_loginshell = ${ENABLE_LOGINSHELL}" >> $(srcdir)/config.es
-	echo "es_conf_devfd_impl = ${DEVFD_IMPL}" >> $(srcdir)/config.es
+	echo "es_conf_iosub-impl = ${DEVFD_IMPL}" >> $(srcdir)/config.es
 	echo "es_conf_dynlibs = ${DYNAMIC_LIBRARIES}" >> $(srcdir)/config.es
 	echo "set-es_conf_dynlibs = @{ result ${DYNAMIC_LIBRARIES} }" >> $(srcdir)/config.es
 	echo "es_conf_dynlib-local-search = false" >> $(srcdir)/config.es
