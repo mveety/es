@@ -562,7 +562,21 @@ extern void unblocksignals(void);
 
 /* open.c */
 
-typedef enum { oOpen, oCreate, oAppend, oReadWrite, oReadCreate, oReadAppend } OpenKind;
+typedef enum {
+	oOpen = 0,
+	oCreate = 1,
+	oAppend = 2,
+	oReadWrite = 3,
+	oReadCreate = 4,
+	oReadAppend = 5,
+	ceOpen = 6,
+	ceCreate = 7,
+	ceAppend = 8,
+	ceReadWrite = 9,
+	ceReadCreate = 10,
+	ceReadAppend = 11,
+} OpenKind;
+
 extern int eopen(char *name, OpenKind k);
 
 /* version.c */

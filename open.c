@@ -1,5 +1,6 @@
 /* open.c -- to insulate <fcntl.h> from the rest of es ($Revision: 1.1.1.1 $) */
 
+#include <fcntl.h>
 #define REQUIRE_FCNTL 1
 
 #include "es.h"
@@ -16,12 +17,18 @@ extern int open(const char *, int, ...);
  */
 
 static int mode_masks[] = {
-	O_RDONLY,					   /* rOpen */
-	O_WRONLY | O_CREAT | O_TRUNC,  /* rCreate */
-	O_WRONLY | O_CREAT | O_APPEND, /* rAppend */
-	O_RDWR | O_CREAT,			   /* oReadWrite */
-	O_RDWR | O_CREAT | O_TRUNC,	   /* oReadCreate */
-	O_RDWR | O_CREAT | O_APPEND,   /* oReadAppend */
+	O_RDONLY,								   /* oOpen */
+	O_WRONLY | O_CREAT | O_TRUNC,			   /* oCreate */
+	O_WRONLY | O_CREAT | O_APPEND,			   /* oAppend */
+	O_RDWR | O_CREAT,						   /* oReadWrite */
+	O_RDWR | O_CREAT | O_TRUNC,				   /* oReadCreate */
+	O_RDWR | O_CREAT | O_APPEND,			   /* oReadAppend */
+	O_RDONLY | O_CLOEXEC,					   /* ceOpen */
+	O_WRONLY | O_CREAT | O_TRUNC | O_CLOEXEC,  /* ceCreate */
+	O_WRONLY | O_CREAT | O_APPEND | O_CLOEXEC, /* ceAppend */
+	O_RDWR | O_CREAT | O_CLOEXEC,			   /* ceReadWrite */
+	O_RDWR | O_CREAT | O_TRUNC | O_CLOEXEC,	   /* ceReadCreate */
+	O_RDWR | O_CREAT | O_APPEND | O_CLOEXEC,   /* ceReadAppend */
 };
 
 extern int
