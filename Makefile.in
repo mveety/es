@@ -54,14 +54,17 @@ es_static : ${OFILES} system.o
 .o.so :
 	${CC} ${LDFLAGS} ${MODLDFLAGS} -shared -o ${.TARGET} ${.ALLSRC} ${MODLIBS} ${MODEXTRAAGS}
 
-doc/es.1: es
+doc/es.1: es doc/es.1.src doc/make_man.es doc/macroreplace.es
 	./es -Np -c '{cd doc; ../es -Np make_man.es}'
+
+doc/es.1.pdf: es doc/es.1.src doc/make_pdf.es doc/macroreplace.es
+	./es -Np -c '{cd doc; ../es -Np make_pdf.es}'
 
 modules : ${MODULES}
 
 clean	:
 	rm -f es es_static ${OFILES} ${GEN} dump.o system.o version.c ${MODOFILES} ${MODULES}
-	rm -f test_editor test_editor.o editor.o
+	rm -f test_editor test_editor.o editor.o doc/es.1 doc/es.1.pdf
 
 distclean:	clean
 	rm -f config.cache config.log config.h Makefile GNUmakefile cscope.out tags TAGS core cs.out config.status ltmain.sh
@@ -95,7 +98,7 @@ syslib-install : es
 	./es -N libinstall.es $(srcdir)/libraries $(datarootdir)/es
 
 
-all : es modules
+all : es modules doc/es.1
 
 test	: estest
 
