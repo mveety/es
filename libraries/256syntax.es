@@ -9,5 +9,6 @@ syntax_conf_colors = %dict(
 	string => $256colors(fg_DodgerBlue1)
 	comment => $256colors(fg_Grey19)
 	primitive => $256colors(fg_Green3)
+	path => $colors(fg_default)
 )
 

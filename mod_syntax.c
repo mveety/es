@@ -71,15 +71,16 @@ regex_t string_regex;
 regex_t comment_regex;
 regex_t whitespace_regex;
 regex_t keywords_regex;
+regex_t path_regex;
 
 int
 dyn_onload(void)
 {
 	if(pcre2_regcomp(&prim_regex, "^\\$&[a-zA-Z0-9\\-_]+$", REMode) != 0)
 		return -1;
-	if(pcre2_regcomp(&var_regex, "^\\$+[#\\^\":]?[a-zA-Z0-9\\-_:%]+$", REMode) != 0)
+	if(pcre2_regcomp(&var_regex, "^\\$+[#\\^\":]?[a-zA-Z0-9\\-_%][a-zA-Z0-9\\-_:%]*$", REMode) != 0)
 		return -2;
-	if(pcre2_regcomp(&basic_regex, "^[a-zA-Z0-9\\-_:%]+$", REMode) != 0)
+	if(pcre2_regcomp(&basic_regex, "^[a-zA-Z0-9\\-_%][a-zA-Z0-9\\-_.:%]*$", REMode) != 0)
 		return -3;
 	if(pcre2_regcomp(&number_regex, "^([0-9]+|0x[0-9a-fA-F]+|0b[01]+|0o[0-7]+)$", REMode) != 0)
 		return -4;
@@ -94,6 +95,8 @@ dyn_onload(void)
 		   "^(~|~~|local|let|lets|for|fn|%closure|match|matchall|process|%dict|%re|onerror)$",
 		   REMode) != 0)
 		return -8;
+	if(pcre2_regcomp(&path_regex, "^.*/.*$", REMode) != 0)
+		return -9;
 
 	return 0;
 }
@@ -111,6 +114,7 @@ dyn_onunload(void)
 	pcre2_regfree(&comment_regex);
 	pcre2_regfree(&whitespace_regex);
 	pcre2_regfree(&keywords_regex);
+	pcre2_regfree(&path_regex);
 
 	return 0;
 }
@@ -225,7 +229,6 @@ _issymbol(char c, int inatom)
 	case '<':
 	case '>':
 	case '=':
-	case '/':
 	case ';':
 	case '|':
 	case '^':
@@ -273,7 +276,7 @@ basictokenize(char *tokstr, Arena *arena)
 	char *tmp = nil;
 	size_t s = 0, i = 0, e = 0;
 	enum { Start, Run, End } op = Start;
-	enum { Whitespace, Atom, Symbol, String, Comment, Initialize } state = Initialize;
+	enum { Whitespace, Atom, Symbol, String, Comment, Path, Initialize } state = Initialize;
 	TokenResults results;
 
 	memset(&results, 0, sizeof(results));
@@ -311,6 +314,9 @@ basictokenize(char *tokstr, Arena *arena)
 		case Initialize:
 			dprint("Initialize");
 			break;
+		case Path:
+			dprint("Path");
+			break;
 		}
 		dprint("\n");
 #endif
@@ -328,6 +334,8 @@ basictokenize(char *tokstr, Arena *arena)
 				state = Comment;
 			else if(_validatom(instr[i], 0))
 				state = Atom;
+			else if(instr[i] == '/')
+				state = Path;
 			else if(instr[i] == '\'') {
 				state = String;
 				op = Start;
@@ -358,7 +366,9 @@ basictokenize(char *tokstr, Arena *arena)
 				else if(instr[i] == '\'') {
 					state = String;
 					op = Start;
-				} else
+				} else if(instr[i] == '/')
+					state = Path;
+				else
 					goto fail;
 				continue;
 			}
@@ -404,6 +414,8 @@ basictokenize(char *tokstr, Arena *arena)
 					state = Atom;
 				else if(_iswhitespace(instr[i]))
 					state = Whitespace;
+				else if(instr[i] == '/')
+					state = Path;
 				else
 					goto fail;
 				break;
@@ -431,11 +443,17 @@ basictokenize(char *tokstr, Arena *arena)
 					state = Whitespace;
 				else if(instr[i] == '#')
 					state = Comment;
+				else if(instr[i] == '/')
+					state = Path;
 				else if(instr[i] == '\'') {
 					state = String;
 					op = Start;
 				} else
 					goto fail;
+				continue;
+			}
+			if(instr[i] == '/') {
+				state = Path;
 				continue;
 			}
 			i++;
@@ -454,7 +472,6 @@ basictokenize(char *tokstr, Arena *arena)
 			case ')':
 			case '\\':
 			case ';':
-			case '/':
 			case '^':
 			case '[':
 			case ']':
@@ -551,6 +568,8 @@ basictokenize(char *tokstr, Arena *arena)
 				state = Comment;
 			else if(_validatom(instr[i], 0))
 				state = Atom;
+			else if(instr[i] == '/')
+				state = Path;
 			else if(instr[i] == '\'') {
 				state = String;
 				op = Start;
@@ -567,6 +586,32 @@ basictokenize(char *tokstr, Arena *arena)
 			results.imp[results.impi++].len = strlen(tmp);
 			i = instrsz;
 			s = i;
+			break;
+		case Path:
+			if(_iswhitespace(instr[i]) || instr[i] == '#') {
+				e = i;
+				assert(e >= s);
+				if(e - s > 0) {
+					tmp = arena_ndup(arena, &instr[s], e - s);
+					if(results.impi >= results.impsz) {
+						results.impsz *= 2;
+						results.imp =
+							arena_reallocate(arena, results.imp, sizeof(Token) * results.impsz);
+					}
+					results.imp[results.impi].str = tmp;
+					results.imp[results.impi++].len = e - s;
+					assert(tmp);
+				}
+				s = i;
+				if(_iswhitespace(instr[i]))
+					state = Whitespace;
+				else if(instr[i] == '#')
+					state = Comment;
+				else
+					goto fail;
+				continue;
+			}
+			i++;
 			break;
 		}
 	}
@@ -633,6 +678,21 @@ syn_iswhitespace(char *teststr)
 	regmatch_t pmatch[1];
 
 	if(pcre2_regexec(&whitespace_regex, teststr, 0, pmatch, 0) == 0)
+		return 1;
+	return 0;
+}
+
+int
+syn_ispath(char *tok, char *nexttok, char *nextnexttok)
+{
+	regmatch_t pmatch[1];
+
+	if(pcre2_regexec(&path_regex, tok, 0, pmatch, 0) == 0)
+		return 1;
+	if(nexttok != nil && streq(tok, ".") && pcre2_regexec(&path_regex, nexttok, 0, pmatch, 0) == 0)
+		return 1;
+	if(nexttok != nil && nextnexttok != nil && streq(tok, ".") && streq(nexttok, ".") &&
+	   pcre2_regexec(&path_regex, nextnexttok, 0, pmatch, 0) == 0)
 		return 1;
 	return 0;
 }
@@ -716,6 +776,7 @@ es_fast_highlighting(char *buffer, size_t bufend)
 	String colorcomment = {0, nil};
 	String colorprimitive = {0, nil};
 	String colorreset = {.len = 4, .data = "\x1b[0m"};
+	String colorpath = {0, nil};
 
 	if(syntax_arena == nil) {
 		syntax_arena = newarena(4 * 1024);
@@ -748,6 +809,8 @@ es_fast_highlighting(char *buffer, size_t bufend)
 		colorcomment = getString(tmp->term);
 	if((tmp = dictget(synhighlights, "primitive")) != nil)
 		colorprimitive = getString(tmp->term);
+	if((tmp = dictget(synhighlights, "path")) != nil)
+		colorpath = getString(tmp->term);
 
 	line = arena_ndup(syntax_arena, buffer, bufend);
 	results = basictokenize(line, syntax_arena);
@@ -764,6 +827,12 @@ es_fast_highlighting(char *buffer, size_t bufend)
 				soutbuf_append_color(syntax_arena, obuf, colorcomment.data, colorcomment.len);
 			soutbuf_append(syntax_arena, obuf, results.imp[i].str, results.imp[i].len);
 			if(colorcomment.data)
+				soutbuf_append_color(syntax_arena, obuf, colorreset.data, colorreset.len);
+		} else if(syn_ispath(results.imp[i].str, nil, nil)) {
+			if(colorpath.data)
+				soutbuf_append_color(syntax_arena, obuf, colorpath.data, colorpath.len);
+			soutbuf_append(syntax_arena, obuf, results.imp[i].str, results.imp[i].len);
+			if(colorpath.data)
 				soutbuf_append_color(syntax_arena, obuf, colorreset.data, colorreset.len);
 		} else if(syn_isatom(results.imp[i].str)) {
 			for(ii = i + 1, futuretok = nil; ii < results.impi; ii++)
@@ -817,7 +886,23 @@ es_fast_highlighting(char *buffer, size_t bufend)
 			if(colored)
 				soutbuf_append_color(syntax_arena, obuf, colorreset.data, colorreset.len);
 		} else {
-			soutbuf_append(syntax_arena, obuf, results.imp[i].str, results.imp[i].len);
+			if(i + 2 < results.impi &&
+			   syn_ispath(results.imp[i].str, results.imp[i + 1].str, results.imp[i + 2].str)) {
+				if(colorpath.data)
+					soutbuf_append_color(syntax_arena, obuf, colorpath.data, colorpath.len);
+				soutbuf_append(syntax_arena, obuf, results.imp[i].str, results.imp[i].len);
+				if(colorpath.data)
+					soutbuf_append_color(syntax_arena, obuf, colorreset.data, colorreset.len);
+			} else if(i + 2 < results.impi && syn_ispath(results.imp[i].str, results.imp[i + 1].str,
+														 results.imp[i + 2].str)) {
+				if(colorpath.data)
+					soutbuf_append_color(syntax_arena, obuf, colorpath.data, colorpath.len);
+				soutbuf_append(syntax_arena, obuf, results.imp[i].str, results.imp[i].len);
+				if(colorpath.data)
+					soutbuf_append_color(syntax_arena, obuf, colorreset.data, colorreset.len);
+			} else {
+				soutbuf_append(syntax_arena, obuf, results.imp[i].str, results.imp[i].len);
+			}
 		}
 		if(!syn_iswhitespace(results.imp[i].str))
 			lasttok = results.imp[i].str;
@@ -944,6 +1029,21 @@ PRIM(syn_iswhitespace) {
 	return list_false;
 }
 
+PRIM(syn_ispath) {
+	if(list == nil)
+		fail("$&syn_ispath", "missing argument");
+
+	if(list->next != nil && list->next->next != nil)
+		if(syn_ispath(getstr(list->term), getstr(list->next->term), getstr(list->next->next->term)))
+			return list_true;
+	if(list->next != nil)
+		if(syn_ispath(getstr(list->term), getstr(list->next->term), nil))
+			return list_true;
+	if(syn_ispath(getstr(list->term), nil, nil))
+		return list_true;
+	return list_false;
+}
+
 PRIM(syn_atom_type) {
 	if(list == nil)
 		fail("$&syn_atom_type", "missing $1, $2, and $3");
@@ -1006,6 +1106,7 @@ MODULE(mod_syntax) = {
 	DX(syn_iscomment),
 	DX(syn_isstring),
 	DX(syn_iswhitespace),
+	DX(syn_ispath),
 	DX(syn_atom_type),
 	DX(fasthighlighting),
 	DX(enablefasthighlighting),
