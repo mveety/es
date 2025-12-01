@@ -1156,11 +1156,12 @@ unbind_es_function(char *keyname)
 		default_map = default_keymap->ext_keys[key - ExtKeyOffset];
 		current_map = editor->keymap->ext_keys[key - ExtKeyOffset];
 	} else
-		return -2;
+		unreachable();
 
 	if((void *)current_map.hook != (void *)&line_editor_hook)
 		return -3;
 
+	efree(current_map.aux);
 	bindmapping(editor, key, default_map);
 	return 0;
 }
@@ -1182,7 +1183,7 @@ map_as_key(char *keyname, char *srckeyname)
 	} else if(srckey >= ExtKeyOffset && srckey < ExtKeyMax) {
 		default_map = default_keymap->ext_keys[srckey - ExtKeyOffset];
 	} else
-		return -3;
+		unreachable();
 
 	bindmapping(editor, key, default_map);
 	return 0;
@@ -1192,13 +1193,22 @@ int
 clear_key_mapping(char *keyname)
 {
 	int key = 0;
+	Mapping current_map;
 	Mapping clear_mapping;
 
 	if((key = name2key(keyname)) < 0)
 		return -1;
+	if(key > KeyNull && key < KeyMax)
+		current_map = editor->keymap->base_keys[key];
+	else if(key >= ExtKeyOffset && key < ExtKeyMax)
+		current_map = editor->keymap->ext_keys[key - ExtKeyOffset];
+	else
+		unreachable();
+
+	if((void*)current_map.hook == (void*)&line_editor_hook)
+		efree(current_map.aux);
 
 	memset(&clear_mapping, 0, sizeof(Mapping));
-
 	bindmapping(editor, key, clear_mapping);
 	return 0;
 }
