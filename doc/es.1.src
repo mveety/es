@@ -3011,7 +3011,7 @@ Line numbers in error messages refer to the last line parsed,
 rather than something more useful.
 .PP
 Too many creatures have fept in.
-.SH History
+.SH HISTORY
 \fIes\fR was originally written by Paul Haahr and Byron Rakitzis. This fork branched off of
 version 0.9.1 in 2016 or 2017. It moved from Bitbucket to GitHub in 2021 and laid mostly fallow.
 Development restarted in 2024.
