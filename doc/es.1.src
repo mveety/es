@@ -52,7 +52,7 @@
 .TH ES 1 "20 November 2025"
 .SH NAME
 .Nm "es"
-.Nd "Veety's Extensible Shell"
+.Nd "Veety's fork of the Extensible Shell"
 .SH SYNOPSIS
 .SY es
 .OP \-sIAlNpodv
@@ -1948,6 +1948,36 @@ that each shell it forks will put itself into a new process group.
 Note that the controlling tty for the process must be on standard error
 (file descriptor 2) when this operation is run.
 .TP
+\f(CWparseargs \fIargfun arguments ...\fR
+.TQ
+\f(CWparseargs \fIargfun usagefun arguments ...\fR
+\f(CWparseargs\fR breaks up the \fIarguments\fR into a canoncical format and iterates over each
+argument executing \fIargfun\fR each iteration. \fIargfun\fR gets the current argument element
+as its only argument, and also defines some utility functions and variables:
+.IS
+.TP
+\f(CW$flagarg\fR
+The current argument's argument. Accessing \f(CW$flagarg\fR with an argument without an argument is an
+error and \f(CWparseargs\fR executes \fIusagefun\fR if available.
+.TP
+\f(CWhas_argument\fR
+This function returns true if the current argument has an argument, false otherwise.
+.TP
+\f(CWusage\fR
+Causes \f(CWparseargs\fR to execute \fIusagefun\fR and return false.
+.TP
+\f(CWdone\fR
+Causes \f(CWparseargs\fR to exit, returning true and the current and remaining arguments.
+.IE
+.TP
+\&
+Most exceptions called within \f(CWparseargs\fR are passed through except for \f(CWparseargs_error\fR
+and \f(CWparseargs_done\fR. \f(CWparseargs_error\fR is the same as calling \f(CWusage\fR,
+and \f(CWparseargs_done\fR is the same as calling \f(CWdone\fR. \f(CWparseargs\fR will return
+true on success and false on error, plus any remaining arguments (if applicable). See also:
+.MR getopt 1 and
+.MR getopt 3 .
+.TP
 \f(CWre\(ti \fIsubject regex\fR
 Match \fIsubject\fR against \fIregex\fR. \fIregex\fR can either be a string
 or a proper regex.
@@ -2961,6 +2991,8 @@ Similar to \f(CW-rx\fP but outputs using S-Expressions. (lisptrees)
 Enable extra assertions. (same as -Da).
 .IE
 .SH BUGS
+Job control is functionally non-existent.
+.PP
 Lexical scope which is shared by two variables (or closures) in a parent shell
 is split in child shells.
 .PP
@@ -2979,6 +3011,10 @@ Line numbers in error messages refer to the last line parsed,
 rather than something more useful.
 .PP
 Too many creatures have fept in.
+.SH History
+\fIes\fR was originally written by Paul Haahr and Byron Rakitzis. This fork branched off of
+version 0.9.1 in 2016 or 2017. It moved from Bitbucket to GitHub in 2021 and laid mostly fallow.
+Development restarted in 2024.
 .SH "SEE ALSO"
 .MR history 1 ,
 .MR rc 1 ,
@@ -2997,7 +3033,7 @@ es-mveety repository
 .UE
 .PP
 .UR https://github.com/wryun/es-shell
-The mothership
+Current \fIes\fR repository
 .UE
 .PP
 Paul Haahr and Byron Rakitzis,
