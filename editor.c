@@ -597,6 +597,7 @@ initialize_editor(EditorState *state, int ifd, int ofd)
 		.buffer = ealloc(EDITINITIALBUFSZ),
 		.bufsz = EDITINITIALBUFSZ,
 		.bufpos = 0,
+		.fixed_bufpos = 0,
 		.bufend = 0,
 		.lastbufpos = 0,
 		.position = (Position){.lines = 1, .cols = 0},
@@ -714,6 +715,7 @@ reset_editor(EditorState *state)
 
 	memset(state->buffer, 0, state->bufsz);
 	state->bufpos = 0;
+	state->fixed_bufpos = 0;
 	state->bufend = 0;
 	state->lastbufpos = 0;
 	state->position = (Position){.lines = 1, .cols = 0};
@@ -2752,6 +2754,7 @@ line_editor(EditorState *state)
 		}
 
 		dprint("\ngot key %s\n", key2name(key));
+		state->fixed_bufpos = 0;
 		r = runmapping(state, key);
 		switch(status(r)) {
 		default:
@@ -2779,7 +2782,8 @@ line_editor(EditorState *state)
 				memset(state->buffer, 0, state->bufend);
 				memcpy(state->buffer, str, strlen(str));
 				state->bufend = strlen(str);
-				state->bufpos = state->bufend;
+				if(!state->fixed_bufpos)
+					state->bufpos = state->bufend;
 				efree(str);
 			}
 			break;

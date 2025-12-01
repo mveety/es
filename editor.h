@@ -179,6 +179,7 @@ struct EditorState {
 	char *buffer;
 	size_t bufsz;
 	size_t bufpos;
+	int fixed_bufpos;
 	size_t bufend;
 	size_t lastbufpos;
 	int initialized;

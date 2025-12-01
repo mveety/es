@@ -1038,14 +1038,19 @@ line_editor_hook(EditorState *state, int key, void *aux)
 	List *hook = nil; Root r_hook;
 	List *args = nil; Root r_args;
 	List *res = nil; Root r_res;
+	Dict *resdict = nil; Root r_resdict;
+	List *new_bufpos = nil;
+	List *new_resstr = nil;
 	char *resstr = nil;
 	char *curline = nil;
+	size_t newpos = 0;
 
 	fnname = aux;
 
 	gcref(&r_hook, (void **)&hook);
 	gcref(&r_args, (void **)&args);
 	gcref(&r_res, (void **)&res);
+	gcref(&r_resdict, (void **)&resdict);
 
 	if((hook = varlookup2("fn-", fnname, nil)) == nil)
 		goto fail;
@@ -1056,7 +1061,9 @@ line_editor_hook(EditorState *state, int key, void *aux)
 	}
 
 	curline = getcurrentline(state);
-	args = mklist(mkstr(str("%s", curline)), nil);
+	args = mklist(mkstr(str("%d", state->bufpos)), args);
+	args = mklist(mkstr(str("%d", strlen(curline))), args);
+	args = mklist(mkstr(str("%s", curline)), args);
 	hook = append(hook, args);
 	rawmode_off(state);
 	res = eval(hook, nil, 0);
@@ -1065,17 +1072,46 @@ line_editor_hook(EditorState *state, int key, void *aux)
 	if(res == nil)
 		goto fail;
 
-	if(res->next == nil)
-		goto fail;
-
-	if(termeq(res->term, "0"))
+	if(termeq(res->term, "0") && res->next != nil)
 		resstr = estrdup(getstr(res->next->term));
+	else if(termeq(res->term, "dict")) {
+		if(res->next->term->kind != tkDict)
+			goto fail;
+		resdict = getdict(res->next->term);
+		if(resdict == nil)
+			goto fail;
+
+		new_resstr = dictget(resdict, "buffer");
+		if(new_resstr != nil)
+			resstr = estrdup(getstr(new_resstr->term));
+
+		new_bufpos = dictget(resdict, "position");
+		if(new_bufpos != nil){
+			errno = 0;
+			newpos = (size_t)strtoul(getstr(new_bufpos->term), nil, 10);
+			if(newpos == 0){
+				switch(errno) {
+				case EINVAL:
+				case ERANGE:
+					goto fail;
+				}
+			}
+			if(newpos < strlen(resstr)){
+				state->bufpos = newpos;
+				state->fixed_bufpos = 1;
+			} else if(newpos <= state->bufend) {
+				state->bufpos = newpos;
+				state->fixed_bufpos = 1;
+			}
+		}
+	}
 
 fail:
 	if(curline)
 		efree(curline);
 	if(gcblocked)
 		gcdisable();
+	gcrderef(&r_resdict);
 	gcrderef(&r_res);
 	gcrderef(&r_args);
 	gcrderef(&r_hook);

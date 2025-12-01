@@ -117,7 +117,7 @@ fn __atuin_enable {
 		}
 	}
 
-	fn atuin-ctrlup-hook cmdline {
+	fn atuin-ctrlup-hook cmdline _ {
 		let (
 			atuin_tmpfile = /tmp/es_atuin.$pid
 			atuin_data =
