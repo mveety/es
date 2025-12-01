@@ -41,8 +41,19 @@ with-dynlibs mod_syntax {
 	set-syntax_conf_accelerate = @ arg _ {
 		match $arg (
 			(true false) { result $arg }
-			* { result $set-syntax_conf_accelerate }
+			* { result $syntax_conf_accelerate }
 		)
+	}
+
+	defconf syntax var-hook false
+	let (old-%var = $fn-%var) {
+		set-syntax_conf_var-hook = @ arg _ {
+			match $arg (
+				true { fn %var { $&var $* |> %syntax_highlight }; result $arg }
+				false { fn-%var = $old-%var; result $arg }
+				* { result $syntax_conf_var-hook }
+			)
+		}
 	}
 
 	_es_syntax_defs = %dict(
@@ -222,6 +233,6 @@ with-dynlibs mod_syntax {
 	noexport += syntax_conf_debugging syntax_conf_colors syntax_conf_enable
 	noexport += set-syntax_conf_enable
 	noexport += fn-isatom fn-iscomment fn-isstring fn-atom_type fn-iswhitespace
-	noexport += fn-toksiterator fn-%syntax_highlight
+	noexport += fn-toksiterator fn-%syntax_highlight fn-%var
 }
 
