@@ -945,6 +945,11 @@ and the output version of this notation:
 .Ex
 echo hi there | tee >{sed 's/^/p1 /'} >{sed 's/^/p2 /'}
 .Ee
+.PP
+See also:
+.MR fd 4
+and
+.MR proc_pid_fd 5 .
 .SS "Program Fragments"
 .I Es
 allows the intermixing of code with strings.
