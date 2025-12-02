@@ -1,25 +1,32 @@
 library complete_make (init completion)
 
-_complete_make_lastcwd = ''
-_complete_make_lastmd5 = ''
-_complete_make_last_targets = ''
+fn complete_make_bin_exists bin {
+	(e _) = <={try access -n $bin -1e -xf $path}
+	if {$e} { return <=false }
+	return <=true
+}
 
-fn complete_make_get_targets {
-	if {! access -r Makefile } { throw error complete_make no_makefile }
+fn complete_make_type bin {
+	if {! complete_make_bin_exists $bin} {
+		return notmake
+	}
+	if {~ ``(\n){ $bin -v >[2] /dev/null | head -n 1 } 'GNU Make'^*} {
+		return gnumake
+	}
+	return bsdmake
+}
+
+fn complete_make_get_targets file {
+	if {! access -r $file } { throw error complete_make no_makefile }
 	let(targs=) {
-		targs = ``(\n) {cat Makefile | awk 'BEGIN{ FS=":" } /^[-_a-zA-Z0-9.]+[[:space:]]*:.*$/ { print $1 }'}
+		targs = ``(\n) {cat $file | awk 'BEGIN{ FS=":" } /^([^.%]|[-_a-zA-Z0-9~\/])[-_a-zA-Z0-9.~\/]+[[:space:]]*:.*$/ { print $1 }'}
 		result <={process $targs ( * { es_complete_trim $matchexpr } )}
 	}
 }
 
-fn complete_make_get_md5sum {
-	if {! access -r Makefile } { throw error complete_make no_makefile }
-	result `{md5sum Makefile | awk '{print $1}'}
-}
-
-fn complete_make_filter_targets partial {
+fn complete_make_filter_targets file partial {
 	let(res=) {
-		for(i = $_complete_make_last_targets){ 
+		for (i = <={complete_make_get_targets $file}){
 			if {~ $i $partial^*} {
 				res = $res $i
 			}
@@ -28,35 +35,35 @@ fn complete_make_filter_targets partial {
 	}
 }
 
-fn complete_make_update_data {
-	_complete_make_lastcwd = `{pwd}
-	_complete_make_lastmd5 = <={complete_make_get_md5sum}
-	_complete_make_last_targets = <={complete_make_get_targets}
+fn complete_make_hook maketype curline partial {
+	match $maketype (
+		bsdmake { result <={complete_make_filter_targets Makefile $partial} }
+		gnumake {
+			if {access -rf GNUmakefile} {
+				return <={complete_make_filter_targets GNUmakefile $partial}
+			} {
+				return <={complete_make_filter_targets Makefile $partial}
+			}
+		}
+		* { result () }
+	)
 }
 
-fn complete_make_hook curline partial {
-	if {! access -r Makefile } {
-		_complete_make_lastcwd = ''
-		_complete_make_lastmd5 = ''
-		return ()
+let (maketype = <={complete_make_type make}) {
+	if {! ~ $maketype notmake} {
+		%complete_cmd_hook make @ curline partial {
+			complete_make_hook $maketype $curline $partial
+		}
 	}
-	if {! ~ $_complete_make_lastcwd `{pwd}} {
-		complete_make_update_data
-	}
-	if {! ~ $_complete_make_lastmd5 <={complete_make_get_md5sum}} {
-		complete_make_update_data
-	}
-
-	complete_make_filter_targets $partial
-}
-
-%complete_cmd_hook make @ curline partial {
-	complete_make_hook $curline $partial
 }
 
 if {eq <={access -1 -n gmake $path |> %count} 1} {
-	%complete_cmd_hook gmake @ curline partial {
-		complete_make_hook $curline $partial
+	let (maketype = <={complete_make_type gmake}) {
+		if {! ~ $maketype notmake} {
+			%complete_cmd_hook gmake @ curline partial {
+				complete_make_hook $maketype $curline $partial
+			}
+		}
 	}
 }
 
