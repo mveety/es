@@ -202,11 +202,11 @@ glob0(List *list, StrList *quote)
 
 /* expandhome -- do tilde expansion by calling fn %home */
 static char *
-expandhome(char *s, StrList *qp)
+expandhome(char *s, StrList *qp, Binding *binding)
 {
 	int c;
 	size_t slash;
-	List *fn = varlookup("fn-%home", NULL);
+	List *fn = varlookup("fn-%home", binding);
 
 	assert(*s == '~');
 	assert(qp->str == UNQUOTED || *qp->str == 'r');
@@ -268,7 +268,7 @@ expandhome(char *s, StrList *qp)
 
 /* glob -- globbing prepass (glob if we need to, and dispatch for tilde expansion) */
 extern List *
-glob(List *list, StrList *quote)
+glob(List *list, StrList *quote, Binding *binding)
 {
 	List *lp;
 	StrList *qp;
@@ -285,7 +285,7 @@ glob(List *list, StrList *quote)
 				Ref(List *, lr, lp);
 				Ref(StrList *, q0, quote);
 				Ref(StrList *, qr, qp);
-				str = expandhome(str, qp);
+				str = expandhome(str, qp, binding);
 				lr->term = mkstr(str);
 				lp = lr;
 				qp = qr;

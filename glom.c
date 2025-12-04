@@ -557,7 +557,7 @@ glom(Tree *tree, Binding *binding, Boolean globit)
 		Ref(List *, list, NULL);
 		Ref(StrList *, quote, NULL);
 		list = glom2(tree, binding, &quote);
-		list = glob(list, quote);
+		list = glob(list, quote, binding);
 		RefEnd(quote);
 		RefReturn(list);
 	} else
