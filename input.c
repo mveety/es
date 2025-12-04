@@ -1075,6 +1075,8 @@ line_editor_hook(EditorState *state, int key, void *aux)
 	if(termeq(res->term, "0") && res->next != nil)
 		resstr = estrdup(getstr(res->next->term));
 	else if(termeq(res->term, "dict")) {
+		if(!res->next)
+			goto fail;
 		if(res->next->term->kind != tkDict)
 			goto fail;
 		resdict = getdict(res->next->term);
@@ -1096,7 +1098,7 @@ line_editor_hook(EditorState *state, int key, void *aux)
 					goto fail;
 				}
 			}
-			if(newpos < strlen(resstr)){
+			if(resstr && newpos < strlen(resstr)){
 				state->bufpos = newpos;
 				state->fixed_bufpos = 1;
 			} else if(newpos <= state->bufend) {
