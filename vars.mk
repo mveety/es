@@ -43,3 +43,6 @@ SYSLIB = initial.es config.es conf.es macros.es dict.es applymap.es \
 		 keymap.es initialize.es
 GEN	= esdump y.tab.c y.tab.h y.output token.h sigmsgs.c system.c config.es
 
+DOCFILES = doc/es.1.src doc/macroreplace.es doc/builtincols.txt doc/hookcols.txt \
+		   doc/mathcols.txt doc/setgetcols.txt
+

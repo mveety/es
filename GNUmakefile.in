@@ -52,10 +52,10 @@ es_static : ${OFILES} system.o
 %.so : %.o
 	${CC} ${LDFLAGS} ${MODLDFLAGS} -shared -o $@ $^ ${MODLIBS} ${MODEXTRAAGS}
 
-doc/es.1: es doc/es.1.src doc/make_man.es doc/macroreplace.es
+doc/es.1: es ${DOCFILES} doc/make_man.es
 	./es -Np -c '{cd doc; ../es -Np make_man.es}'
 
-doc/es.1.pdf: es doc/es.1.src doc/make_pdf.es doc/macroreplace.es
+doc/es.1.pdf: es ${DOCFILES} doc/make_pdf.es
 	./es -Np -c '{cd doc; ../es -Np make_pdf.es}'
 
 modules : ${MODULES}

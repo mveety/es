@@ -2293,10 +2293,19 @@ Runs the command with file descriptor \fIfd\fP set up to write to
 the \fIfile\fP.
 .TP
 .BK \f(CW%dictput \fIdict key value\fR
-Replaces element \fIkey\fR with \fIvalue\fR in \fIdict\fR, returning the new \fIdict\fR
+Replaces element \fIkey\fR with \fIvalue\fR in \fIdict\fR, returning the old \fIdict\fR
+with the new value.
+.TP
+\&
+\fBNOTE:\fR This does not copy like \f(CWdictput\fR and is not considered
+safe to be used on it's own.
 .TP
 .BK \f(CW%dictremove \fIdict key\fR
-Removes element \fIkey\fR from \fIdict\fR, returning the new \fIdict\fR.
+Removes element \fIkey\fR from \fIdict\fR, returning the old \fIdict\fR.
+.TP
+\&
+\fBNOTE:\fR This does not copy like \f(CWdictremove\fR and is not considered
+safe to be used on it's own.
 .TP
 .BK \f(CW%dup \fInewfd oldfd cmd\fP\fR
 Runs the command with the file descriptor

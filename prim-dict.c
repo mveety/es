@@ -60,6 +60,33 @@ PRIM(dictput) {
 	return mklist(mkdictterm(d), nil);
 }
 
+PRIM(dictput_nocopy) {
+	Dict *d = nil; Root r_d;
+	char *name = nil; Root r_name;
+	List *v = nil; Root r_v;
+
+	if(!list || !list->next || !list->next->next)
+		fail("$&dictput", "missing arguments");
+
+	d = getdict(list->term);
+	if(!d)
+		fail("$&dictput", "term not valid dict");
+	gcref(&r_d, (void **)&d);
+	gcref(&r_name, (void **)&name);
+
+	name = getstr(list->next->term);
+	v = list->next->next;
+	gcref(&r_v, (void **)&v);
+
+	d = dictput(d, name, v);
+
+	gcrderef(&r_v);
+	gcrderef(&r_name);
+	gcrderef(&r_d);
+	return mklist(mkdictterm(d), nil);
+}
+
+
 PRIM(dictremove) {
 	Dict *d = nil; Root r_d;
 	char *name;
@@ -80,6 +107,27 @@ PRIM(dictremove) {
 	gcrderef(&r_d);
 	return mklist(mkdictterm(d), nil);
 }
+
+PRIM(dictremove_nocopy) {
+	Dict *d = nil; Root r_d;
+	char *name;
+
+	if(!list || !list->next)
+		fail("$&dictremove", "missing arguments");
+
+	d = getdict(list->term);
+	if(!d)
+		fail("$&dictremove", "term not valid dict");
+	gcref(&r_d, (void **)&d);
+
+	name = getstr(list->next->term);
+
+	d = dictput(d, name, nil);
+
+	gcrderef(&r_d);
+	return mklist(mkdictterm(d), nil);
+}
+
 
 typedef struct {
 	Term *function;
@@ -268,7 +316,9 @@ initprims_dict(Dict *primdict)
 	X(dictnew);
 	X(dictget);
 	X(dictput);
+	X(dictput_nocopy);
 	X(dictremove);
+	X(dictremove_nocopy);
 	X(dictforall);
 	X(dictsize);
 	X(termtypeof);
