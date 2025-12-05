@@ -1581,8 +1581,9 @@ local (signals = $signals sighup sigint) {
 \&
 A signal name prefixed by a hyphen (\f(CW-\fP) causes that signal to be ignored by
 .I es
-and all of its child processes, unless one of them resets its handler.
-A signal prefixed by a slash (\f(CW/\fP)
+and all of its child processes, unless one of them resets its handler. A signal name
+prefixed by a plus (\f(CW+\fP) will get caught and converted into an exception, which
+is immediately thrown. A signal prefixed by a slash (\f(CW/\fP)
 is ignored in the current shell, but retains default behavior in
 child processes. In addition, the signals \f(CWsigint\fP and \f(CWsigwinch\fP
 may be preceded by the prefix (\f(CW.\fP)
