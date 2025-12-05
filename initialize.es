@@ -64,7 +64,9 @@ let (
 						}
 					}
 				}
-				. $__es_esrcfile
+				if {access -r $__es_esrcfile} {
+					. $__es_esrcfile
+				}
 				if {$__es_extra_esrc} {
 					if {access -r $__es_extra_esrcfile} {
 						. $__es_extra_esrcfile
