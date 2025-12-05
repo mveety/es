@@ -192,6 +192,8 @@ getterm(void)
 	char *env_term;
 
 	env_term = getenv("TERM");
+	if(!env_term)
+		return estrdup("unknown");
 	return estrdup(env_term);
 }
 

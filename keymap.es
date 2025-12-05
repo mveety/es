@@ -7,24 +7,43 @@ esmle_conf_terminal = 'unknown'
 get-esmle_conf_terminal = $&esmlegetterm
 
 esmle_conf_word-start = ''
-get-esmle_conf_word-start = $&esmlegetwordstart
+get-esmle_conf_word-start = @{
+	let ((e s) = <={try $&esmlegetwordstart}) {
+		if {$e} { return none }
+		return $s
+	}
+}
 set-esmle_conf_word-start = @ x {
-	match $x (
-		(first-letter first-break last-break) { $&esmlesetwordstart $x }
-		* { $&esmlegetwordstart }
-	)
+	catch @ {
+		return 'none'
+	} {
+		match $x (
+			(first-letter first-break last-break) { $&esmlesetwordstart $x }
+			* { $&esmlegetwordstart }
+		)
+	}
 }
 
 esmle_conf_highlight = \e^'[46m'^\e^'[39m'
 # esmle:highlight is stored formatted in es land so relay that to
 # conf. the actual highlight data is stored inside of the editor
 esmle_conffmt_highlight = 'formatted'
-get-esmle_conf_highlight = $&esmlegethighlight
+get-esmle_conf_highlight = @{
+	let ((e s) = <={try $&esmlegethighlight}) {
+		if {$e} { return '' }
+		return $s
+	}
+}
+
 set-esmle_conf_highlight = @ arg {
-	if {~ $arg none || ~ $#arg 0} {
-		$&esmlesethighlight
+	catch @ {
+		return ''
 	} {
-		$&esmlesethighlight <={%string $arg}
+		if {~ $arg none || ~ $#arg 0} {
+			$&esmlesethighlight
+		} {
+			$&esmlesethighlight <={%string $arg}
+		}
 	}
 }
 
