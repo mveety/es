@@ -167,7 +167,7 @@ glob1(const char *pattern, const char *quote)
 	matched = (*pattern == '/') ? mklist(mkstr(dir), NULL) : dirmatch("", ".", dir, qdir);
 	do {
 		size_t slashcount;
-		SIGCHK();
+		sigchk();
 		for(slashcount = 0; *s == '/'; s++, q++)
 			slashcount++; /* skip slashes */
 		for(p = pat, qp = qpat; *s != '/' && *s != '\0';)

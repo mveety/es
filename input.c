@@ -322,7 +322,7 @@ call_editor(int which_prompt)
 	slow = FALSE;
 	if(res.str == nil)
 		errno = EINTR;
-	SIGCHK();
+	sigchk();
 	return res;
 }
 
@@ -633,7 +633,7 @@ edit_start:
 	} else
 		do {
 			nread = eread(in->fd, (char *)in->bufbegin, in->buflen);
-			SIGCHK();
+			sigchk();
 		} while(nread == -1 && errno == EINTR);
 
 	if(nread <= 0) {

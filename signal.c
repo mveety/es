@@ -341,8 +341,10 @@ sigchk(void)
 		unreachable();
 		break;
 	case sig_special:
-		assert(sig == SIGINT || sig == SIGWINCH);
-		if(sig == SIGINT) {
+		switch(sig){
+		default:
+			unreachable();
+		case SIGINT:
 			/* this is the newline you see when you hit ^C while typing a command */
 			if(sigint_newline)
 				eprint("\n");
@@ -351,12 +353,14 @@ sigchk(void)
 				gcenable();
 			throw(e);
 			unreachable();
-		} else {
+			break;
+		case SIGWINCH:
 			if(in_editor == TRUE) {
 				sigwinch_resize = TRUE;
 				update_size(editor);
 				editor_ctx = save_editor_context(editor);
 			}
+			break;
 		}
 		break;
 	case sig_noop:

@@ -1,9 +1,11 @@
 CompileFlags:
   Add: [
+    "-I/usr/include",
     "-I/usr/local/include",
     "-I.",
     "-DEditorDebug=1",
     "-D_DEFAULT_SOURCE=1",
     "-D_XOPEN_SOURCE=800",
+    "-D__BSD_VISIBLE",
   ]
 

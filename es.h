@@ -544,8 +544,15 @@ extern int signumber(const char *name);
 extern char *signame(int sig);
 extern char *sigmessage(int sig);
 
-#define SIGCHK() sigchk()
-typedef enum { sig_nochange, sig_catch, sig_default, sig_ignore, sig_noop, sig_special } Sigeffect;
+typedef enum {
+	sig_nochange,
+	sig_catch,
+	sig_default,
+	sig_ignore,
+	sig_noop,
+	sig_special,
+} Sigeffect;
+
 extern Sigeffect esignal(int sig, Sigeffect effect);
 extern void setsigeffects(const Sigeffect effects[]);
 extern void getsigeffects(Sigeffect effects[]);

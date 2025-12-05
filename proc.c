@@ -169,7 +169,7 @@ top:
 						reap(deadpid, proc->status, wait_rusage);
 					else if(errno == EINTR) {
 						if(interruptible)
-							SIGCHK();
+							sigchk();
 						seen_eintr = TRUE;
 					} else if(errno == ECHILD && seen_eintr)
 						/* TODO: not clear on why this is necessary
@@ -202,7 +202,7 @@ top:
 			if(errno != EINTR)
 				fail("es:ewait", "wait: %s", esstrerror(errno));
 			if(interruptible)
-				SIGCHK();
+				sigchk();
 		}
 		reap(pid, status, wait_rusage);
 		goto top;

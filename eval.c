@@ -48,10 +48,10 @@ forkexec(char *file, List *list, Boolean inchild)
 	status = ewaitfor(pid);
 	if((status & 0xff) == 0) {
 		sigint_newline = FALSE;
-		SIGCHK();
+		sigchk();
 		sigint_newline = TRUE;
 	} else
-		SIGCHK();
+		sigchk();
 	printstatus(0, status);
 	return mklist(mkterm(mkstatus(status), nil), nil);
 }
@@ -352,7 +352,7 @@ forloop(Tree *defn0, Tree *body0, Binding *binding, int evalflags)
 			list = &MULTIPLE;
 		}
 		RefEnd3(list, vars, assign);
-		SIGCHK();
+		sigchk();
 	}
 	looping = reversebindings(looping);
 	RefEnd(defn);
@@ -396,7 +396,7 @@ forloop(Tree *defn0, Tree *body0, Binding *binding, int evalflags)
 			} EndExceptionHandler;
 
 			RefEnd(bp);
-			SIGCHK();
+			sigchk();
 		}
 	} CatchException (e) {
 		if(!termeq(e->term, "break"))
@@ -529,7 +529,7 @@ walk(Tree *tree0, Binding *binding0, int flags)
 	Tree *volatile tree = tree0;
 	Binding *volatile binding = binding0;
 
-	SIGCHK();
+	sigchk();
 
 top:
 	if(tree == NULL)

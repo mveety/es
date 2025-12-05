@@ -337,7 +337,7 @@ bqinput(const char *sep, int fd)
 restart:
 	while((n = eread(fd, in, sizeof in)) > 0)
 		splitstring(in, n, FALSE);
-	SIGCHK();
+	sigchk();
 	if(n == -1) {
 		if(errno == EINTR)
 			goto restart;
@@ -373,7 +373,7 @@ PRIM(backquote) {
 	gcenable();
 	list = lp;
 	RefEnd2(sep, lp);
-	SIGCHK();
+	sigchk();
 	return list;
 }
 
@@ -391,7 +391,7 @@ read1(int fd)
 	unsigned char buf;
 	do {
 		nread = eread(fd, (char *)&buf, 1);
-		SIGCHK();
+		sigchk();
 	} while(nread == -1 && errno == EINTR);
 	if(nread == -1)
 		fail("$&read", esstrerror(errno));

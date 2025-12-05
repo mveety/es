@@ -187,20 +187,20 @@ PRIM(batchloop) {
 	Ref(List *, result, list_true);
 	Ref(List *, dispatch, NULL);
 
-	SIGCHK();
+	sigchk();
 
 	ExceptionHandler {
 		for(;;) {
 			List *parser, *cmd;
 			parser = varlookup("fn-%parse", NULL);
 			cmd = (parser == NULL) ? prim("parse", NULL, NULL, 0) : eval(parser, NULL, 0);
-			SIGCHK();
+			sigchk();
 			dispatch = varlookup("fn-%dispatch", NULL);
 			if(cmd != NULL) {
 				if(dispatch != NULL)
 					cmd = append(dispatch, cmd);
 				result = eval(cmd, NULL, evalflags);
-				SIGCHK();
+				sigchk();
 			}
 		}
 	} CatchException (e) {

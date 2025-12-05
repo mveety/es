@@ -169,7 +169,7 @@ ewrite(int fd, const char *buf, size_t n)
 		slow = FALSE;
 	}
 	slow = FALSE;
-	SIGCHK();
+	sigchk();
 }
 
 extern long
@@ -190,7 +190,7 @@ eread(int fd, char *buf, size_t n)
 		errno = EINTR;
 		r = -1;
 	}
-	SIGCHK();
+	sigchk();
 	return r;
 }
 

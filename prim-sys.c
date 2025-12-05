@@ -52,7 +52,7 @@ PRIM(fork) {
 	if(pid == 0)
 		esexit(exitstatus(eval(list, NULL, evalflags | eval_inchild)));
 	status = ewaitfor(pid);
-	SIGCHK();
+	sigchk();
 	printstatus(0, status);
 	return mklist(mkstr(mkstatus(status)), NULL);
 }
@@ -476,7 +476,7 @@ PRIM(time) {
 	s = ewait(pid, FALSE, &r);
 	status = s.status;
 	clock_gettime(CLOCK_MONOTONIC, &after);
-	SIGCHK();
+	sigchk();
 	printstatus(0, status);
 	after.tv_sec -= before.tv_sec;
 	after.tv_nsec -= before.tv_nsec;
