@@ -12,6 +12,8 @@ let (
 		}
 	}
 ) {
+	fn %interactive-shell { return $__es_interactive_start }
+
 	fn %initialize {
 		# run any setup functions that need to be run in es land, but before the
 		# .esrc is run.
