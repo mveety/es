@@ -50,9 +50,11 @@ fn run_test_parser {
 	assert {~ <={%parsestring 'x += 1 2 3 4'} '{x=$x 1 2 3 4}'}
 	assert {~ <={%parsestring '%re(''h.*'')'} '{%re(''h.*'')}'}
 	assert {~ <={%parsestring '<-{test}'} '{<={%stbackquote <={%flatten '''' $ifs} {test}}}'}
-	assert {~ <={%parsestring 'match $a (1 { cmd1 } ; (2 3) { cmd2 } ; (4 5 6) { cmd 3 } ; * { cmd 4 })'} '{let(matchexpr=$a){$&if {~ $matchexpr 1} {cmd1} {~ $matchexpr 2 3} {cmd2} {~ $matchexpr 4 5 6} {cmd 3} {~ $matchexpr *} {cmd 4}}}'}
+	assert {~ <={%parsestring 'match $a (1 { cmd1 } ; (2 3) { cmd2 } ; (4 5 6) { cmd 3 } ; * { cmd 4 })'} '{let(matchexpr=$a){$&if {~ $matchexpr 1} {cmd1} {~ $matchexpr 2 3} {cmd2} {~ $matchexpr 4 5 6} {cmd 3} {cmd 4}}}'}
+	assert {~ <={%parsestring 'match $a (* { hello })'} '{let(matchexpr=$a){hello}}'}
 	assert {~ <={%parsestring 'matchall $a (1 { cmd1 } ; (2 3) { cmd2 } ; (4 5 6) { cmd 3 } ; * { cmd 4 })'} '{let(matchexpr=$a;resexpr=;__es_no_matches=true){%seq {resexpr=$resexpr <={$&if {~ $matchexpr 1} {%seq {__es_no_matches=false} {cmd1}} {result}}} {resexpr=$resexpr <={$&if {~ $matchexpr 2 3} {%seq {__es_no_matches=false} {cmd2}} {result}}} {resexpr=$resexpr <={$&if {~ $matchexpr 4 5 6} {%seq {__es_no_matches=false} {cmd 3}} {result}}} {$&if {$__es_no_matches} {resexpr=<={cmd 4}}} {result $resexpr}}}'}
-	assert {~ <={%parsestring 'process $a (1 { cmd1 } ; (2 3) { cmd2 } ; (4 5 6) { cmd 3 } ; * { cmd 4 })'} '{let(__es_process_result=)%seq {for(matchelement=$a){__es_process_result=$__es_process_result <={let(matchexpr=$matchelement){$&if {~ $matchexpr 1} {cmd1} {~ $matchexpr 2 3} {cmd2} {~ $matchexpr 4 5 6} {cmd 3} {~ $matchexpr *} {cmd 4}}}}} {result $__es_process_result}}'}
+	assert {~ <={%parsestring 'process $a (1 { cmd1 } ; (2 3) { cmd2 } ; (4 5 6) { cmd 3 } ; * { cmd 4 })'} '{let(__es_process_result=)%seq {for(matchelement=$a){__es_process_result=$__es_process_result <={let(matchexpr=$matchelement){$&if {~ $matchexpr 1} {cmd1} {~ $matchexpr 2 3} {cmd2} {~ $matchexpr 4 5 6} {cmd 3} {cmd 4}}}}} {result $__es_process_result}}'}
+	assert {~ <={%parsestring 'process $a (* { hello })'} '{let(__es_process_result=)%seq {for(matchelement=$a){__es_process_result=$__es_process_result <={let(matchexpr=$matchelement){hello}}}} {result $__es_process_result}}'}
 	assert {~ <={%parsestring 'a -b --c --d=e'} '{a -b ''--c'' ''--d=e''}'}
 }
 

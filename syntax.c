@@ -327,21 +327,29 @@ mkmatch(Tree *subj, Tree *cases)
 	const char *varname = "matchexpr";
 	Tree *sass, *svar, *matches = NULL;
 	Tree *pattlist, *cmd, *match;
-	Tree *wildcard = nil, *wildpattern = nil;
-	int is_wild = 0, has_wild = 0;
+	Tree *wildcard = nil;
+	int is_wild = 0, has_wild = 0, has_opts = 0;
 
 	sass = treecons2(mk(nAssign, mk(nWord, varname), subj), NULL);
 	svar = mk(nVar, mk(nWord, varname));
 
 	if(comprehensive_matches) {
+		/* it might not be a bad idea to generate an unreachable assert if there's
+		 * no wildcard case. I like the idea of comprehensive matches, but I don't
+		 * know how badly that would screw up everyone's code.
+		 */
+
 		wildcard =
 			treecons(mk(nConcat, mk(nQword, "$matchexpr = "), mk(nVar, mk(nWord, varname))), nil);
 		wildcard = treecons(mk(nWord, "unreachable"), wildcard);
 		wildcard = treecons(mk(nWord, "assert"), wildcard);
 		wildcard = treecons(mk(nWord, "throw"), wildcard);
 		wildcard = treecons(thunkify(wildcard), nil);
+		has_wild = 1;
 	}
 
+	if(cases == nil)
+		fail("$&parse", "match has no cases");
 	for(; cases != NULL; cases = cases->CDR) {
 		pattlist = cases->CAR->CAR;
 		cmd = cases->CAR->CDR;
@@ -356,26 +364,30 @@ mkmatch(Tree *subj, Tree *cases)
 			pattlist = mk(nMatch, svar, pattlist);
 		} else
 			pattlist = mk(nMatch, svar, pattlist);
+
 		if(!is_wild) {
 			match = treecons(thunkify(pattlist), treecons(cmd, NULL));
 			matches = treeappend(matches, match);
+			has_opts = 1;
 		} else if(is_wild && has_wild) {
 			fail("$&parse", "more than one wildcard in match");
 		} else if(is_wild) {
-			wildpattern = mk(nMatch, svar, treecons(mk(nWord, "*"), nil));
-			wildcard = treecons(thunkify(wildpattern), treecons(cmd, nil));
+			// wildpattern = mk(nMatch, svar, treecons(mk(nWord, "*"), nil));
+			// wildcard = treecons(thunkify(wildpattern), treecons(cmd, nil));
+			wildcard = treecons(cmd, nil);
 			has_wild = 1;
 		} else {
 			unreachable();
 		}
 	}
-	/* it might not be a bad idea to generate an unreachable assert if there's
-	 * no wildcard case. I like the idea of comprehensive matches, but I don't
-	 * know how badly that would screw up everyone's code.
-	 */
-	if(has_wild || comprehensive_matches)
+
+	if(has_wild)
 		matches = treeappend(matches, wildcard);
-	matches = thunkify(treecons(mk(nPrim, "if"), matches));
+
+	if(!has_opts && has_wild)
+		matches = wildcard;
+	else
+		matches = thunkify(treecons(mk(nPrim, "if"), matches));
 
 	return mk(nLet, sass, matches);
 }
