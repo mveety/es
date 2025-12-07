@@ -29,6 +29,10 @@ PRIM(count) {
 	return mklist(mkstr(str("%d", length(list))), NULL);
 }
 
+PRIM(listcount) {
+	return mklist(mkstr(str("%d", length(list))), nil);
+}
+
 PRIM(setnoexport) {
 	Ref(List *, lp, list);
 	setnoexport(lp);
@@ -343,14 +347,19 @@ PRIM(resetterminal) {
  */
 
 Primitive prim_etc[] = {
-	DX(echo),		  DX(count),		   DX(exec),
-	DX(dot),		  DX(flatten),		   DX(whatis),
-	DX(split),		  DX(fsplit),		   DX(var),
-	DX(parse),		  DX(batchloop),	   DX(collect),
-	DX(home),		  DX(setnoexport),	   DX(vars),
-	DX(internals),	  DX(result),		   DX(isinteractive),
-	DX(exitonfalse),  DX(noreturn),		   DX(catch_noreturn),
-	DX(withbindings), DX(setmaxevaldepth), DX(resetterminal),
+	DX(echo),		   DX(count),
+	DX(listcount),	   DX(exec),
+	DX(dot),		   DX(flatten),
+	DX(whatis),		   DX(split),
+	DX(fsplit),		   DX(var),
+	DX(parse),		   DX(batchloop),
+	DX(collect),	   DX(home),
+	DX(setnoexport),   DX(vars),
+	DX(internals),	   DX(result),
+	DX(isinteractive), DX(exitonfalse),
+	DX(noreturn),	   DX(catch_noreturn),
+	DX(withbindings),  DX(setmaxevaldepth),
+	DX(resetterminal),
 };
 
 extern Dict *

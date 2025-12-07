@@ -1356,7 +1356,7 @@ fn remove-duplicates list {
 }
 
 fn %termtypeof args {
-	if {~ $#args 0} {
+	if {~ <={$&listcount $args} 0} {
 		result nil
 	} {
 		$&termtypeof $args
