@@ -2,11 +2,6 @@
 
 #include "es.h"
 #include "gc.h"
-#include "stdenv.h"
-#include <stdint.h>
-#include <stdio.h>
-#include <fcntl.h>
-#include <string.h>
 
 Boolean gcverbose = FALSE;			/* -G */
 Boolean gcinfo = FALSE;				/* -I */

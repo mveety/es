@@ -175,76 +175,19 @@
  *	please send new configurations to haahr@adobe.com and byron@netapp.com
  */
 
+#ifndef __esconfig_h
+#define __esconfig_h
+
 #include "config.h"
 
 #if HAVE_SIGRELSE && HAVE_SIGHOLD
 #define SYSV_SIGNALS 1
 #endif
 
-/* NeXT defaults */
-
-#if NeXT
-#ifndef USE_SIG_ATOMIC_T
-#define USE_SIG_ATOMIC_T 1
-#endif
-#endif /* NeXT */
-
-/* Irix defaults */
-
-#if sgi
-#ifndef INITIAL_PATH
-#define INITIAL_PATH "/usr/bsd", "/usr/sbin", "/usr/bin", "/bin", ""
-#endif
-#endif /* sgi */
-
-/* HP/UX 9.0.1 -- from rsalz@osf.org (Rich $alz) and haahr*/
-
-#if HPUX
-#define _INCLUDE_POSIX_SOURCE 1
-#define _INCLUDE_XOPEN_SOURCE 1
-#define _INCLUDE_HPUX_SOURCE 1
-#endif
-
-/* SCO Xenix -- from steveo@world.std.com (Steven W Orr) for SCO-ODT-1.1 */
-
-#if sco
-#ifndef USE_SIG_ATOMIC_T
-#define USE_SIG_ATOMIC_T 1
-#endif
-#endif /* sco */
-
-/* OSF/1 -- this is taken from the DEC Alpha */
-
-#if OSF1
-#ifndef INITIAL_PATH
-#define INITIAL_PATH "/usr/bin", ""
-#endif
-#endif /* OSF1 */
-
-/* OSF/1 on HP snakes -- from John Robert LoVerso <loverso@osf.org> */
-
-#ifdef __hp_osf
-#define __NO_FP_VARARGS /* avoid bug compiling print.c */
-#endif
-
-/* DEC Ultrix 4.2 -- from render@massive.uccs.edu (Hal Render) */
-
-#if ultrix
-#ifndef USE_SIG_ATOMIC_T
-#define USE_SIG_ATOMIC_T 1
-#endif
-#endif /* ultrix */
-
-/* 386BSD -- from dbarker@mulga.awadi.com.AU (Dave Barker) */
-
-#if __386BSD__
-#ifndef INITIAL_PATH
-#define INITIAL_PATH "/usr/sbin", "/sbin", "/usr/bin", "/bin", ""
-#endif
-#define SIG_ERR BADSIG
-#ifndef REQUIRE_STAT
-#define REQUIRE_STAT 1
-#endif
+#ifdef HAVE_SETRLIMIT
+#define BSD_LIMITS 1
+#else
+#define BSD_LIMITS 0
 #endif
 
 /*
@@ -284,7 +227,14 @@
 #endif
 
 #ifndef INITIAL_PATH
-#define INITIAL_PATH "/usr/ucb", "/usr/bin", "/bin", ""
+#if defined(__FreeBSD__)
+#define INITIAL_PATH \
+	"/sbin", "/bin", "/usr/sbin", "/usr/bin", "/usr/local/sbin", "/usr/local/bin", ""
+#elif defined(__Linux__)
+#define INITIAL_PATH "/usr/bin", "/bin", ""
+#else
+#define INITIAL_PATH "/bin", ""
+#endif
 #endif
 
 #ifndef JOB_PROTECT
@@ -333,4 +283,6 @@
 #if HAVE_SIGACTION
 #undef SYSV_SIGNALS
 #define SYSV_SIGNALS 0
+#endif
+
 #endif

@@ -1,11 +1,8 @@
 /* input.c -- read input from files or strings ($Revision: 1.2 $) */
 /* stdgetenv is based on the FreeBSD getenv */
 
-#include "editor.h"
 #include "es.h"
-#include "stdenv.h"
-#include <stdio.h>
-#include <string.h>
+#include "editor.h"
 #include "gc.h"
 #include "input.h"
 

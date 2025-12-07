@@ -1,8 +1,7 @@
-#include "editor.h"
 #include "es.h"
+#include "editor.h"
 #include "gc.h"
 #include "prim.h"
-#include <stdio.h>
 
 extern Region *regions;
 extern int gc_after;

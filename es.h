@@ -3,7 +3,6 @@
 #ifndef __es_h
 #define __es_h
 
-#include "config.h"
 #include "stdenv.h"
 
 #define nil ((void *)0)

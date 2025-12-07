@@ -1,9 +1,5 @@
 /* access.c -- access testing and path searching ($Revision: 1.2 $) */
 
-#include <string.h>
-#define REQUIRE_STAT 1
-#define REQUIRE_PARAM 1
-
 #include "es.h"
 #include "prim.h"
 

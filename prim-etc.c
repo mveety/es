@@ -1,8 +1,5 @@
 /* prim-etc.c -- miscellaneous primitives ($Revision: 1.2 $) */
 
-#include <stdlib.h>
-#define REQUIRE_PWD 1
-
 #include "es.h"
 #include "prim.h"
 

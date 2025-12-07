@@ -2,7 +2,6 @@
 
 #include "es.h"
 #include "sigmsgs.h"
-#include <sys/signal.h>
 #include "editor.h"
 
 typedef Sigresult (*Sighandler)(int);

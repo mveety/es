@@ -1,7 +1,6 @@
 #include "es.h"
 #include "prim.h"
 #include "gc.h"
-#include <stdio.h>
 LIBRARY(mod_hello);
 
 int

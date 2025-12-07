@@ -1,17 +1,8 @@
 /* prim-sys.c -- system call primitives ($Revision: 1.2 $) */
 
-#include <sys/resource.h>
-#include <unistd.h>
-#define REQUIRE_IOCTL 1
-
 #include "es.h"
 #include "prim.h"
 
-#ifdef HAVE_SETRLIMIT
-#define BSD_LIMITS 1
-#else
-#define BSD_LIMITS 0
-#endif
 
 PRIM(newpgrp) {
 	int pid;

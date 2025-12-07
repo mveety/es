@@ -132,8 +132,10 @@ AC_CACHE_CHECK(for extra CFLAGS for $CC on $host_os, es_cv_ccextras,
 					linux*)
 						case "`basename ${CC}`" in
 							gcc | gcc*)
-								es_cv_ccextras="-Wno-stringop-truncation -D_DEFAULT_SOURCE=1 -D_XOPEN_SOURCE=800"
-								CFLAGS="$CFLAGS -Wno-stringop-truncation -D_DEFAULT_SOURCE=1 -D_XOPEN_SOURCE=800"
+dnl								es_cv_ccextras="-Wno-stringop-truncation -D_DEFAULT_SOURCE=1 -D_XOPEN_SOURCE=800"
+dnl								CFLAGS="$CFLAGS -Wno-stringop-truncation -D_DEFAULT_SOURCE=1 -D_XOPEN_SOURCE=800"
+								es_cv_ccextras="-Wno-stringop-truncation"
+								CFLAGS="$CFLAGS -Wno-stringop-truncation"
 								;;
 							*)
 								es_cv_ccextras="none needed"

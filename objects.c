@@ -2,8 +2,6 @@
 
 #include "es.h"
 #include "prim.h"
-#include <stdint.h>
-#include <string.h>
 
 typedef struct {
 	char *name;

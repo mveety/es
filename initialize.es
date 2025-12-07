@@ -24,10 +24,12 @@ let (
 
 		# tune max-eval-depth based on the systems stacksize
 		# stacksize/1024 seems to be a reasonable number
-		max-eval-depth = <={let (new-eval-depth = <={limit -r stacksize |> @{div $1 1024}}){
-			if {lt $new-eval-depth 680} { new-eval-depth = 680 }
-			result $new-eval-depth
-		}}
+		if {~ <=$&primitives limit} { # limit is available on all supported platforms
+			max-eval-depth = <={let (new-eval-depth = <={limit -r stacksize |> @{div $1 1024}}){
+				if {lt $new-eval-depth 680} { new-eval-depth = 680 }
+				result $new-eval-depth
+			}}
+		}
 
 		__es_initgc
 		__es_complete_initialize

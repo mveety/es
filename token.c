@@ -3,7 +3,6 @@
 #include "es.h"
 #include "input.h"
 #include "syntax.h"
-#include <ctype.h>
 #include "token.h"
 
 #define isodigit(c) ('0' <= (c) && (c) < '8')

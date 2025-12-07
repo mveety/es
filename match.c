@@ -1,8 +1,6 @@
 /* match.c -- pattern matching routines ($Revision: 1.1.1.1 $) */
 
 #include "es.h"
-#include <stdio.h>
-#include <stdlib.h>
 
 enum { RANGE_FAIL = -1, RANGE_ERROR = -2 };
 

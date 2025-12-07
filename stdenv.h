@@ -3,12 +3,18 @@
 #ifndef __es_stdenv
 #define __es_stdenv
 
-// #define _DEFAULT_SOURCE 1
-// #define _XOPEN_SOURCE 800
+#ifdef __Linux__
+#define _DEFAULT_SOURCE 1
+#define _XOPEN_SOURCE 800
+#endif
 
 #include "esconfig.h"
 #ifdef HAVE_SYS_CDEFS_H
 #include <sys/cdefs.h>
+#endif
+
+#ifndef HAVE_UNISTD_H
+#error es-mveety requires unistd.h
 #endif
 
 /*
@@ -36,13 +42,10 @@
 #include <sys/resource.h>
 #endif
 
-#if HAVE_UNISTD_H
-#include <unistd.h>
-#endif
 
-#if REQUIRE_PARAM
+#include <unistd.h>
+
 #include <sys/param.h>
-#endif
 
 #include <string.h>
 #include <stddef.h>
@@ -59,23 +62,16 @@
 #include <signal.h>
 #include <ctype.h>
 
-/* #if REQUIRE_STAT || REQUIRE_IOCTL */
-/* We need sys/types.h for the prototype of gid_t on Linux */
 #include <sys/types.h>
-/* #endif */
 
 #include <sys/ioctl.h>
 
 #include <dirent.h>
 typedef struct dirent Dirent;
 
-#if REQUIRE_PWD
 #include <pwd.h>
-#endif
 
-#if REQUIRE_FCNTL
 #include <fcntl.h>
-#endif
 
 /* stdlib */
 #if __GNUC__
@@ -173,43 +169,6 @@ typedef GETGROUPS_T gidset_t;
 enum { UNREACHABLE = 0 };
 
 #define NOTREACHED STMT(assert(UNREACHABLE))
-
-/*
- * system calls -- can we get these from some standard header uniformly?
- */
-
-#ifndef HAVE_UNISTD_H
-#error es-mveety requires unistd.h
-/*
-extern int chdir(const char *dirname);
-extern int close(int fd);
-extern int dup(int fd);
-extern int dup2(int srcfd, int dstfd);
-extern int execve(char *name, char **argv, char **envp);
-extern int fork(void);
-extern int getegid(void);
-extern int geteuid(void);
-extern int getpagesize(void);
-extern int getpid(void);
-extern int pipe(int p[2]);
-extern int read(int fd, void *buf, size_t n);
-extern int setpgrp(int pid, int pgrp);
-extern int umask(int mask);
-extern int write(int fd, const void *buf, size_t n);
-
-#if REQUIRE_IOCTL
-extern int ioctl(int fd, int cmd, void *arg);
-#endif
-
-#if REQUIRE_STAT
-extern int stat(const char *, struct stat *);
-#endif
-
-#ifdef NGROUPS
-extern int getgroups(int, int *);
-#endif
-*/
-#endif /* !HAVE_UNISTD_H */
 
 /*
  * hacks to present a standard system call interface

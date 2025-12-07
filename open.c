@@ -1,13 +1,6 @@
 /* open.c -- to insulate <fcntl.h> from the rest of es ($Revision: 1.1.1.1 $) */
 
-#include <fcntl.h>
-#define REQUIRE_FCNTL 1
-
 #include "es.h"
-
-#if NeXT
-extern int open(const char *, int, ...);
-#endif
 
 /*
  * Opens a file with the necessary flags.  Assumes the following order:

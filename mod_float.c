@@ -1,6 +1,5 @@
 #include "es.h"
 #include "prim.h"
-#include <stdlib.h>
 #include "float_util.h"
 LIBRARY(mod_float);
 

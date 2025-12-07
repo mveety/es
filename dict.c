@@ -2,7 +2,6 @@
 
 #include "es.h"
 #include "gc.h"
-#include <stdint.h>
 
 #define INIT_DICT_SIZE 2
 #define REMAIN(n) (((n) * 2) / 3)

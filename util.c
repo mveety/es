@@ -1,8 +1,6 @@
 /* util.c -- the kitchen sink ($Revision: 1.2 $) */
 
 #include "es.h"
-#include <stdint.h>
-#include <sys/signal.h>
 
 int forcetty = 0;
 
