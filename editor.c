@@ -4,10 +4,11 @@
  * into es.
  */
 
-#include <stdint.h>
-#include <locale.h>
-#include <wchar.h>
+
 #ifdef STANDALONE
+#ifdef __linux__
+#define _XOPEN_SOURCE 800
+#endif
 #include <termios.h>
 #include <unistd.h>
 #include <stdlib.h>
@@ -21,11 +22,14 @@
 #include <sys/ioctl.h>
 #include <assert.h>
 #include <unistd.h>
+#include <stdint.h>
 #else
 #include "es.h"
 #include "gc.h"
 #endif
 #include "editor.h"
+#include <locale.h>
+#include <wchar.h>
 
 #ifndef EditorDebug
 #define EditorDebug 0

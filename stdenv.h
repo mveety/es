@@ -3,7 +3,7 @@
 #ifndef __es_stdenv
 #define __es_stdenv
 
-#ifdef __Linux__
+#ifdef __linux__
 #define _DEFAULT_SOURCE 1
 #define _XOPEN_SOURCE 800
 #endif
