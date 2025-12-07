@@ -2,9 +2,6 @@
 
 #define PRIMSMAX 500
 
-#define	PRIM(name)	static List *CONCAT(prim_,name)( List * list, Binding * binding, int evalflags)
-#define X(name) (primdict = dictput(primdict, STRING(name), (void *)CONCAT(prim_, name)))
-
 #define LIBNAME(name) char dynlibname[] = STRING(name)
 #define LIBAPI(n) int64_t dynlibapi = n
 #define LIBRARY(name)                 \
@@ -17,6 +14,7 @@
 	int64_t dynlibapi = DynLibApi;    \
 	Primitive dynprims[]
 
+#define PRIM(name) static List *CONCAT(prim_,name)( List * list, Binding * binding, int evalflags)
 #define DX(name) {STRING(name), CONCAT(&prim_, name)}
 #define PRIMSEND {0, 0}
 
@@ -42,11 +40,6 @@ typedef struct DynamicLibrary DynamicLibrary;
 /* we need to mirror a bit of dlfcn.h here */
 typedef void (*DynFunction)(void *);
 
-struct Primitive {
-	char *name;
-	List *(*symbol)(List *, Binding *, int);
-};
-
 struct DynamicLibrary {
 	char *fname;
 	char *name;
@@ -57,6 +50,11 @@ struct DynamicLibrary {
 	int (*onload)(void);
 	int (*onunload)(void);
 	DynamicLibrary *next;
+};
+
+struct Primitive {
+	char *name;
+	List *(*symbol)(List *, Binding *, int);
 };
 
 extern Dict *initprims_controlflow(Dict *primdict); /* prim-ctl.c */

@@ -284,10 +284,18 @@ PRIM(wait) {
 	return mklist(mkstr(str("%d", s.pid)), mklist(mkstr(mkstatus(s.status)), NULL));
 }
 
+Primitive prim_proc[] = {
+	DX(apids),
+	DX(wait),
+};
+
 extern Dict *
 initprims_proc(Dict *primdict)
 {
-	X(apids);
-	X(wait);
+	size_t i = 0;
+
+	for(i = 0; i < nelem(prim_proc); i++)
+		primdict = dictput(primdict, prim_proc[i].name, (void *)prim_proc[i].symbol);
+
 	return primdict;
 }

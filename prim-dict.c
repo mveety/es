@@ -128,7 +128,6 @@ PRIM(dictremove_nocopy) {
 	return mklist(mkdictterm(d), nil);
 }
 
-
 typedef struct {
 	Term *function;
 	Binding *binding;
@@ -309,20 +308,19 @@ PRIM(dictreadonly) {
 	return mklist(mkstr(str("%d", res)), nil);
 }
 
+Primitive prim_dict[] = {
+	DX(dictnew),	DX(dictget),		   DX(dictput),		 DX(dictput_nocopy),
+	DX(dictremove), DX(dictremove_nocopy), DX(dictforall),	 DX(dictsize),
+	DX(termtypeof), DX(dictcopy),		   DX(dictreadonly),
+};
+
 Dict *
 initprims_dict(Dict *primdict)
 {
-	X(dictnew);
-	X(dictget);
-	X(dictput);
-	X(dictput_nocopy);
-	X(dictremove);
-	X(dictremove_nocopy);
-	X(dictforall);
-	X(dictsize);
-	X(termtypeof);
-	X(dictcopy);
-	X(dictreadonly);
+	size_t i = 0;
+
+	for(i = 0; i < nelem(prim_dict); i++)
+		primdict = dictput(primdict, prim_dict[i].name, (void *)prim_dict[i].symbol);
 
 	return primdict;
 }

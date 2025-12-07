@@ -894,10 +894,10 @@ PRIM(esmledumpbuiltinfuns) {
 	List *res = nil; Root r_res;
 	int i = 0;
 
-	gcref(&r_res, (void**)&res);
+	gcref(&r_res, (void **)&res);
 
 	for(i = 0; i <= LastEditorFn; i++)
-		if (i != FnInvalid && i != FnEsFunction)
+		if(i != FnInvalid && i != FnEsFunction)
 			res = mklist(mkstr(str("%s", edfn2name(i))), res);
 
 	gcrderef(&r_res);
@@ -944,55 +944,62 @@ PRIM(debugecho) {
 	return list_true;
 }
 
+Primitive prim_mv[] = {
+	DX(version),
+	DX(buildstring),
+	DX(addhistory),
+	DX(addhistorylist),
+	DX(clearhistory),
+	DX(sethistory),
+	DX(getevaldepth),
+	DX(range),
+	DX(reverse),
+	DX(reverse_noalloc),
+	DX(unixtime),
+	DX(unixtimens),
+	DX(getrunflags),
+	DX(setrunflags),
+	DX(settermtag),
+	DX(gettermtag),
+	DX(varhide),
+	DX(varunhide),
+	DX(varishidden),
+	DX(gcstats),
+	DX(gc),
+	DX(dumpregions),
+	DX(gctuning),
+	DX(parsestring),
+	DX(fmtvar),
+	DX(setditto),
+	DX(getditto),
+	DX(isalist),
+	DX(rematch),
+	DX(reextract),
+	DX(sortlist),
+	DX(mapkey),
+	DX(unmapkey),
+	DX(mapaskey),
+	DX(clearkey),
+	DX(getkeymap),
+	DX(editormatchbraces),
+	DX(esmlegetterm),
+	DX(esmlegetwordstart),
+	DX(esmlesetwordstart),
+	DX(esmlesethighlight),
+	DX(esmlegethighlight),
+	DX(esmledumpbuiltinfuns),
+	DX(fmt),
+	DX(panic),
+	DX(debugecho),
+};
+
 Dict *
 initprims_mv(Dict *primdict)
 {
-	X(version);
-	X(buildstring);
-	X(addhistory);
-	X(addhistorylist);
-	X(clearhistory);
-	X(sethistory);
-	X(getevaldepth);
-	X(range);
-	X(reverse);
-	X(reverse_noalloc);
-	X(unixtime);
-	X(unixtimens);
-	X(getrunflags);
-	X(setrunflags);
-	X(settermtag);
-	X(gettermtag);
-	X(varhide);
-	X(varunhide);
-	X(varishidden);
-	X(gcstats);
-	X(gc);
-	X(dumpregions);
-	X(gctuning);
-	X(parsestring);
-	X(fmtvar);
-	X(setditto);
-	X(getditto);
-	X(isalist);
-	X(rematch);
-	X(reextract);
-	X(sortlist);
-	X(mapkey);
-	X(unmapkey);
-	X(mapaskey);
-	X(clearkey);
-	X(getkeymap);
-	X(editormatchbraces);
-	X(esmlegetterm);
-	X(esmlegetwordstart);
-	X(esmlesetwordstart);
-	X(esmlesethighlight);
-	X(esmlegethighlight);
-	X(esmledumpbuiltinfuns);
-	X(fmt);
-	X(panic);
-	X(debugecho);
+	size_t i = 0;
+
+	for(i = 0; i < nelem(prim_mv); i++)
+		primdict = dictput(primdict, prim_mv[i].name, (void *)prim_mv[i].symbol);
 
 	return primdict;
 }

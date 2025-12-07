@@ -7,6 +7,7 @@
 #include "stdenv.h"
 
 #define nil ((void *)0)
+#define nelem(obj) (sizeof(obj) / sizeof((obj)[0]))
 
 /*
  * meta-information for exported environment strings

@@ -258,10 +258,18 @@ PRIM(access) {
 	return result;
 }
 
+Primitive prims_access[] = {
+	DX(access),
+};
+
 extern Dict *
 initprims_access(Dict *primdict)
 {
-	X(access);
+	size_t i = 0;
+
+	for(i = 0; i < nelem(prims_access); i++)
+		primdict = dictput(primdict, prims_access[i].name, (void *)prims_access[i].symbol);
+
 	return primdict;
 }
 

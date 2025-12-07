@@ -450,16 +450,19 @@ PRIM(closedynlib) {
 	return result;
 }
 
+Primitive prim_dynlib[] = {
+	DX(listdynlibs), DX(dynlibprims), DX(dynlibfile), DX(opendynlib), DX(closedynlib),
+};
+
 Dict *
 initprims_dynlib(Dict *primdict)
 {
+	size_t i = 0;
+
 	loaded_libs = nil;
 
-	X(listdynlibs);
-	X(dynlibprims);
-	X(dynlibfile);
-	X(opendynlib);
-	X(closedynlib);
+	for(i = 0; i < nelem(prim_dynlib); i++)
+		primdict = dictput(primdict, prim_dynlib[i].name, (void *)prim_dynlib[i].symbol);
 
 	return primdict;
 }

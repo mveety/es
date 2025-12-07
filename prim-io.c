@@ -421,20 +421,21 @@ PRIM(read) {
 	}
 }
 
+Primitive prim_io[] = {
+	DX(openfile), DX(close),   DX(dup), DX(pipe), DX(backquote), DX(newfd), DX(here),
+#if HAVE_DEV_FD
+	DX(readfrom), DX(writeto),
+#endif
+	DX(read),
+};
+
 extern Dict *
 initprims_io(Dict *primdict)
 {
-	X(openfile);
-	X(close);
-	X(dup);
-	X(pipe);
-	X(backquote);
-	X(newfd);
-	X(here);
-#if HAVE_DEV_FD
-	X(readfrom);
-	X(writeto);
-#endif
-	X(read);
+	size_t i = 0;
+
+	for(i = 0; i < nelem(prim_io); i++)
+		primdict = dictput(primdict, prim_io[i].name, (void *)prim_io[i].symbol);
+
 	return primdict;
 }

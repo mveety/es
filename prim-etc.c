@@ -342,32 +342,24 @@ PRIM(resetterminal) {
  * initialization
  */
 
+Primitive prim_etc[] = {
+	DX(echo),		  DX(count),		   DX(exec),
+	DX(dot),		  DX(flatten),		   DX(whatis),
+	DX(split),		  DX(fsplit),		   DX(var),
+	DX(parse),		  DX(batchloop),	   DX(collect),
+	DX(home),		  DX(setnoexport),	   DX(vars),
+	DX(internals),	  DX(result),		   DX(isinteractive),
+	DX(exitonfalse),  DX(noreturn),		   DX(catch_noreturn),
+	DX(withbindings), DX(setmaxevaldepth), DX(resetterminal),
+};
+
 extern Dict *
 initprims_etc(Dict *primdict)
 {
-	X(echo);
-	X(count);
-	X(exec);
-	X(dot);
-	X(flatten);
-	X(whatis);
-	X(split);
-	X(fsplit);
-	X(var);
-	X(parse);
-	X(batchloop);
-	X(collect);
-	X(home);
-	X(setnoexport);
-	X(vars);
-	X(internals);
-	X(result);
-	X(isinteractive);
-	X(exitonfalse);
-	X(noreturn);
-	X(catch_noreturn);
-	X(withbindings);
-	X(setmaxevaldepth);
-	X(resetterminal);
+	size_t i = 0;
+
+	for(i = 0; i < nelem(prim_etc); i++)
+		primdict = dictput(primdict, prim_etc[i].name, (void *)prim_etc[i].symbol);
+
 	return primdict;
 }

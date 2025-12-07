@@ -85,13 +85,17 @@ PRIM(catch) {
 	RefReturn(result);
 }
 
+Primitive prim_ctl[] = {
+	DX(seq), DX(if), DX(throw), DX(forever), DX(catch),
+};
+
 extern Dict *
 initprims_controlflow(Dict *primdict)
 {
-	X(seq);
-	X(if);
-	X(throw);
-	X(forever);
-	X(catch);
+	size_t i = 0;
+
+	for(i = 0; i < nelem(prim_ctl); i++)
+		primdict = dictput(primdict, prim_ctl[i].name, (void *)prim_ctl[i].symbol);
+
 	return primdict;
 }

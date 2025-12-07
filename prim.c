@@ -33,9 +33,15 @@ PRIM(primitives) {
 	return primlist;
 }
 
+Primitive prim_prim[] = {
+	DX(primitives),
+};
+
 extern void
 initprims(void)
 {
+	size_t i = 0;
+
 	prims = mkdict();
 	globalroot(&prims);
 
@@ -52,14 +58,17 @@ initprims(void)
 	prims = initprims_dynlib(prims);
 #endif
 
-#define primdict prims
-	X(primitives);
+	for(i = 0; i < nelem(prim_prim); i++)
+		prims = dictput(prims, prim_prim[i].name, (void *)prim_prim[i].symbol);
 }
 
 void
 add_prim(char *name, List *(*primfn)(List *, Binding *, int))
 {
 	char *gcname = nil; Root r_gcname;
+
+	if(name == nil || primfn == nil)
+		return;
 
 	gcref(&r_gcname, (void **)&gcname);
 	gcdisable();

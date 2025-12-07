@@ -601,26 +601,27 @@ PRIM(getpid) {
 	return res;
 }
 
+Primitive prim_sys[] = {
+	DX(newpgrp),	 DX(background), DX(umask), DX(cd), DX(fork), DX(run), DX(setsignals),
+#if BSD_LIMITS
+	DX(limit),
+#endif
+#if BUILTIN_TIME
+	DX(time),
+#endif
+#if !KERNEL_POUNDBANG
+	DX(execfailure),
+#endif /* !KERNEL_POUNDBANG */
+	DX(getpid),
+};
+
 extern Dict *
 initprims_sys(Dict *primdict)
 {
-	X(newpgrp);
-	X(background);
-	X(umask);
-	X(cd);
-	X(fork);
-	X(run);
-	X(setsignals);
-#if BSD_LIMITS
-	X(limit);
-#endif
-#if BUILTIN_TIME
-	X(time);
-#endif
-#if !KERNEL_POUNDBANG
-	X(execfailure);
-#endif /* !KERNEL_POUNDBANG */
+	size_t i = 0;
 
-	X(getpid);
+	for(i = 0; i < nelem(prim_sys); i++)
+		primdict = dictput(primdict, prim_sys[i].name, (void *)prim_sys[i].symbol);
+
 	return primdict;
 }

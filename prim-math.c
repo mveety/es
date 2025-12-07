@@ -399,19 +399,17 @@ PRIM(frombase) {
 	return mklist(mkstr(str("%ld", num)), NULL);
 }
 
+Primitive prim_math[] = {
+	DX(add), DX(sub), DX(mul), DX(div), DX(mod), DX(eq), DX(gt), DX(lt), DX(tobase), DX(frombase),
+};
+
 Dict *
 initprims_math(Dict *primdict)
 {
-	X(add);
-	X(sub);
-	X(mul);
-	X(div);
-	X(mod);
-	X(eq);
-	X(gt);
-	X(lt);
-	X(tobase);
-	X(frombase);
+	size_t i = 0;
+
+	for(i = 0; i < nelem(prim_math); i++)
+		primdict = dictput(primdict, prim_math[i].name, (void *)prim_math[i].symbol);
 
 	return primdict;
 }
