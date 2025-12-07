@@ -286,6 +286,8 @@ vardef(char *name, Binding *binding, List *defn)
 		var = mkvar(defn);
 		if(name[0] == '_')
 			var->flags |= var_isinternal;
+		if(hasprefix(name, "fn-_"))
+			var->flags |= var_isinternal;
 		vars = dictput(vars, name, var);
 	}
 

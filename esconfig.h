@@ -228,12 +228,15 @@
 
 #ifndef INITIAL_PATH
 #if defined(__FreeBSD__)
+/* from /etc/login.conf sans ~/bin */
 #define INITIAL_PATH \
 	"/sbin", "/bin", "/usr/sbin", "/usr/bin", "/usr/local/sbin", "/usr/local/bin", ""
-#elif defined(__Linux__)
-#define INITIAL_PATH "/usr/bin", "/bin", ""
+#elif defined(__linux__)
+/* I'm not certain but I think ths is ecumenical as of 2025 */
+#define INITIAL_PATH "/sbin", "/bin", "/usr/sbin", "/usr/bin"
 #else
-#define INITIAL_PATH "/bin", ""
+/* I can be certain /sbin and /bin will be there */
+#define INITIAL_PATH "/sbin", "/bin"
 #endif
 #endif
 
