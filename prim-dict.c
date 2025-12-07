@@ -183,23 +183,22 @@ PRIM(dictforall) {
 	if(!list || !list->next)
 		fail("$&dictforall", "missing arguments");
 
-	gcdisable();
-	lp = list;
 	gcref(&r_lp, (void **)&lp);
+	gcref(&r_dict, (void **)&d);
+	gcref(&r_binding, (void **)&args.binding);
+	gcref(&r_function, (void **)&args.function);
+
+	lp = list;
 	d = getdict(lp->term);
 	if(!d)
 		fail("$&dictforall", "term not valid dict");
-	gcref(&r_dict, (void **)&d);
 	lp = lp->next;
 
-	gcref(&r_binding, (void **)&args.binding);
-	gcref(&r_function, (void **)&args.function);
 	args = (DictForAllArgs){
 		.function = lp->term,
 		.evalflags = evalflags,
 		.binding = binding,
 	};
-	gcenable();
 
 	ExceptionHandler {
 		dictforall(d, &dicteval, &args);
