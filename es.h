@@ -473,6 +473,7 @@ extern int64_t ok_int(Result r);
 extern double ok_float(Result r);
 extern char *ok_str(Result r);
 extern Result result(void *ptr, int status);
+extern Result sresult(void *ptr, char *errstr);
 extern Result result_int(int64_t i, int status);
 extern Result result_float(double f, int status);
 extern Result result_str(char *str, int status);
@@ -609,7 +610,7 @@ extern int object_is_type(Object *obj, char *name);
 extern char *stringify(Object *obj);
 extern Result result_obj(Object *obj, int status);
 extern Object *ok_obj(Result r);
-extern Result objectify(char *str);
+extern Result objectify(char *type, char *str);
 
 /* gc api */
 extern void refobject(Object *obj);

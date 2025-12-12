@@ -266,9 +266,11 @@ getobject(Term *term)
 	case tkObject:
 		return term->obj;
 	case tkString:
-		res = objectify(getstr(term));
+		res = objectify(nil, getstr(term));
 		switch(status(res)) {
 		default:
+			if(res.errstr)
+				fail("es:objectify", "%s", res.errstr);
 			fail("es:objectify", "other error: %d", res.status);
 			break;
 		case ObjectifyOk:
@@ -279,6 +281,8 @@ getobject(Term *term)
 		case ObjectifyInvalidType:
 			fail("es:objectify", "invalid type");
 			break;
+		case ObjectifyInvalidObjectFormat:
+			fail("es:objectify", "invalid object format");
 		case ObjectifyInvalidFormat:
 			fail("es:objectify", "invalid format");
 			break;

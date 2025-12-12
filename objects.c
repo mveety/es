@@ -2,6 +2,7 @@
 
 #include "es.h"
 #include "prim.h"
+#include "stdenv.h"
 
 typedef struct {
 	char *name;
@@ -310,7 +311,7 @@ ok_obj(Result r)
 }
 
 Result
-objectify(char *str)
+objectify(char *type, char *str)
 {
 	Result res;
 	Typedef *objtype;
@@ -322,65 +323,79 @@ objectify(char *str)
 	char *objstr = nil;
 	enum { StateNormal, StateInQuote } state = StateNormal;
 
-	strsize = strlen(str);
-	if(strsize < 9)
-		return result(nil, ObjectifyInvalidObjectFormat);
+	if(hasprefix(str, "%obj:")) {
+		/* the %obj:TYPE prefix overrides the given type */
+		strsize = strlen(str);
+		if(strsize < 9)
+			return result(nil, ObjectifyInvalidObjectFormat);
 
-	memset(&bufstr[0], 0, sizeof(bufstr));
-	for(i = 5; i < strsize && i < sizeof(bufstr); i++) {
-		if(str[i] == '(')
-			break;
-		bufstr[i - 5] = str[i];
-	}
-
-	if((typeidx = gettypeindex(bufstr)) < 0)
-		return result(nil, ObjectifyInvalidType);
-
-	assert(objtype = typedefs[typeidx]);
-
-	if(objtype->objectify == nil)
-		return result(nil, ObjectifyOk);
-
-	i++;
-	if(str[i] != '\'')
-		return result(nil, ObjectifyInvalidFormat);
-	i++;
-
-	if(str[strsize - 1] != ')')
-		return result(nil, ObjectifyInvalidFormat);
-	if(str[strsize - 2] != '\'')
-		return result(nil, ObjectifyInvalidFormat);
-
-	databuf = ealloc(strsize);
-
-	for(j = 0; i < (strsize - 2); i++) {
-		switch(state) {
-		default:
-			unreachable();
-			break;
-		case StateNormal:
-			if(str[i] == '\'') {
-				state = StateInQuote;
-				j++;
-				continue;
-			}
-			databuf[j] = str[i];
-			j++;
-			break;
-		case StateInQuote:
-			if(str[i] != '\'') {
-				efree(databuf);
-				return result(nil, ObjectifyInvalidFormat);
-			}
-			databuf[j] = '\'';
-			state = StateNormal;
-			j++;
-			break;
+		memset(&bufstr[0], 0, sizeof(bufstr));
+		for(i = 5; i < strsize && i < sizeof(bufstr); i++) {
+			if(str[i] == '(')
+				break;
+			bufstr[i - 5] = str[i];
 		}
-	}
 
-	objstr = estrdup(databuf);
-	efree(databuf);
+		if((typeidx = gettypeindex(bufstr)) < 0)
+			return result(nil, ObjectifyInvalidType);
+
+		assert(objtype = typedefs[typeidx]);
+
+		if(objtype->objectify == nil)
+			return result(nil, ObjectifyOk);
+
+		i++;
+		if(str[i] != '\'')
+			return result(nil, ObjectifyInvalidFormat);
+		i++;
+
+		if(str[strsize - 1] != ')')
+			return result(nil, ObjectifyInvalidFormat);
+		if(str[strsize - 2] != '\'')
+			return result(nil, ObjectifyInvalidFormat);
+
+		databuf = ealloc(strsize);
+
+		for(j = 0; i < (strsize - 2); i++) {
+			switch(state) {
+			default:
+				unreachable();
+				break;
+			case StateNormal:
+				if(str[i] == '\'') {
+					state = StateInQuote;
+					j++;
+					continue;
+				}
+				databuf[j] = str[i];
+				j++;
+				break;
+			case StateInQuote:
+				if(str[i] != '\'') {
+					efree(databuf);
+					return result(nil, ObjectifyInvalidFormat);
+				}
+				databuf[j] = '\'';
+				state = StateNormal;
+				j++;
+				break;
+			}
+		}
+
+		objstr = estrdup(databuf);
+		efree(databuf);
+	} else if(type != nil) {
+		assert(str != nil);
+		if((typeidx = gettypeindex(type))< 0)
+			return result(nil, ObjectifyInvalidType);
+		assert(objtype = typedefs[typeidx]);
+
+		if(objtype->objectify == nil)
+			return result(nil, ObjectifyOk);
+
+		objstr = estrdup(str);
+	} else
+		return result(nil, ObjectifyInvalidFormat);
 	res = objtype->objectify(objstr);
 	efree(objstr);
 	return res;

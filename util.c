@@ -255,23 +255,29 @@ ok_str(Result r)
 Result
 result(void *ptr, int status)
 {
-	return (Result){{.ptr = ptr}, status};
+	return (Result){{.ptr = ptr}, status, nil};
+}
+
+Result
+sresult(void *ptr, char *errstr)
+{
+	return (Result){{.ptr = ptr}, -1, errstr};
 }
 
 Result
 result_int(int64_t i, int status)
 {
-	return (Result){{.i = i}, status};
+	return (Result){{.i = i}, status, nil};
 }
 
 Result
 result_float(double f, int status)
 {
-	return (Result){{.f = f}, status};
+	return (Result){{.f = f}, status, nil};
 }
 
 Result
 result_str(char *str, int status)
 {
-	return (Result){{.str = str}, status};
+	return (Result){{.str = str}, status, nil};
 }

@@ -12,6 +12,7 @@ struct Result {
 		void *ptr;
 	};
 	int status;
+	char *errstr;
 };
 
 #endif
