@@ -3,7 +3,7 @@
 #include "es.h"
 #include "gc.h"
 
-#define INIT_DICT_SIZE 2
+#define INIT_DICT_SIZE 8
 #define REMAIN(n) (((n) * 2) / 3)
 #define GROW(n) ((n) * 2)
 
@@ -17,34 +17,24 @@
 HashFunction hashfunction = HaahrHash;
 
 uint32_t
-fnv1a_strhash2_len(const char *s1, size_t s1len, const char *s2, size_t s2len)
+fnv1a_strhash2(const char *s1, const char *s2)
 {
 	size_t i;
 	uint32_t hash = FNV1A_HashStart;
 
-	for(i = 0; i < s1len; i++) {
-		hash ^= (uint8_t)s1[i];
-		hash *= FNV1A_HashIncr;
-	}
-	for(i = 0; i < s2len; i++) {
-		hash ^= (uint8_t)s2[i];
-		hash *= FNV1A_HashIncr;
-	}
+	if(s1 != nil)
+		for(i = 0; s1[i] != '\0'; i++) {
+			hash ^= (uint8_t)s1[i];
+			hash *= FNV1A_HashIncr;
+		}
+
+	if(s2 != nil)
+		for(i = 0; s2[i] != '\0'; i++) {
+			hash ^= (uint8_t)s2[i];
+			hash *= FNV1A_HashIncr;
+		}
 
 	return hash;
-}
-
-uint32_t
-fnv1a_strhash2(const char *s1, const char *s2)
-{
-	size_t len1 = 0, len2 = 0;
-
-	if(s1 != nil)
-		len1 = strlen(s1);
-	if(s2 != nil)
-		len2 = strlen(s2);
-
-	return fnv1a_strhash2_len(s1, len1, s2, len2);
 }
 
 uint32_t
@@ -134,8 +124,125 @@ strhash(const char *str)
 
 DefineTag(Dict, static);
 
+static inline size_t
+bloomsize(size_t size)
+{
+	size_t res;
+
+	if(size % 8 == 0)
+		res = size/8;
+	else
+		res = (size/8)+1;
+
+	return res;
+	if(res <= 2)
+		return 2;
+	return res/2;
+}
+
+static inline uint64_t
+bloominsert(Dict *dict, char *name)
+{
+	uint64_t fnv1a_hash = 0;
+	size_t fnv1a_bit = 0;
+	uint64_t haahr_hash = 0;
+	size_t haahr_bit = 0;
+	size_t bloomsz = bloomsize(dict->size);
+
+	fnv1a_hash = fnv1a_strhash(name);
+	fnv1a_bit = fnv1a_hash % bloomsz;
+	haahr_hash = haahr_strhash(name);
+	haahr_bit = haahr_hash % bloomsz;
+
+	dict->bloom[fnv1a_bit/8] |= 1 << (fnv1a_bit%8);
+	dict->bloom[haahr_bit/8] |= 1 << (haahr_bit%8);
+
+	switch(hashfunction) {
+	default:
+		unreachable();
+		break;
+	case HaahrHash:
+		return haahr_hash;
+	case FNV1AHash:
+		return fnv1a_hash;
+	}
+}
+
+typedef struct BloomResult {
+	Boolean exists;
+	uint64_t hash;
+} BloomResult;
+
+static inline BloomResult
+bloomcheck(Dict *dict, const char *name)
+{
+	BloomResult res = {FALSE, 0};
+	uint64_t fnv1a_hash = 0;
+	size_t fnv1a_bit = 0;
+	uint64_t haahr_hash = 0;
+	size_t haahr_bit = 0;
+	size_t bloomsz = bloomsize(dict->size);
+
+	fnv1a_hash = fnv1a_strhash(name);
+	fnv1a_bit = fnv1a_hash % bloomsz;
+	haahr_hash = haahr_strhash(name);
+	haahr_bit = haahr_hash % bloomsz;
+
+	switch(hashfunction) {
+	default:
+		unreachable();
+		break;
+	case HaahrHash:
+		res.hash = haahr_hash;
+		break;
+	case FNV1AHash:
+		res.hash = fnv1a_hash;
+		break;
+	}
+
+	if(((dict->bloom[fnv1a_bit/8] & (1 << (fnv1a_bit%8))) != 0) &&
+			((dict->bloom[haahr_bit/8] & (1 << (haahr_bit%8))) != 0))
+		res.exists = TRUE;
+
+	return res;
+}
+
+static inline BloomResult
+bloomcheck2(Dict *dict, const char *name1, const char *name2)
+{
+	BloomResult res = {FALSE, 0};
+	uint64_t fnv1a_hash = 0;
+	size_t fnv1a_bit = 0;
+	uint64_t haahr_hash = 0;
+	size_t haahr_bit = 0;
+	size_t bloomsz = bloomsize(dict->size);
+
+	fnv1a_hash = fnv1a_strhash2(name1, name2);
+	fnv1a_bit = fnv1a_hash % bloomsz;
+	haahr_hash = haahr_strhash2(name1, name2);
+	haahr_bit = haahr_hash % bloomsz;
+
+	switch(hashfunction) {
+	default:
+		unreachable();
+		break;
+	case HaahrHash:
+		res.hash = haahr_hash;
+		break;
+	case FNV1AHash:
+		res.hash = fnv1a_hash;
+		break;
+	}
+
+	if(((dict->bloom[fnv1a_bit/8] & (1 << (fnv1a_bit%8))) != 0) &&
+			((dict->bloom[haahr_bit/8] & (1 << (haahr_bit%8))) != 0))
+		res.exists = TRUE;
+
+	return res;
+}
+
 static Dict *
-mkdict0(int size)
+mkdict0(size_t size)
 {
 	size_t len = offsetof(Dict, table[size]);
 	Dict *dict = gcalloc(len, tDict);
@@ -143,6 +250,7 @@ mkdict0(int size)
 	dict->readonly = 0;
 	dict->size = size;
 	dict->remain = REMAIN(size);
+	dict->bloom = gcmalloc(bloomsize(size));
 	return dict;
 }
 
@@ -161,6 +269,7 @@ DictScan(void *p)
 {
 	Dict *dict = p;
 	int i;
+	dict->bloom = forward(dict->bloom);
 	for(i = 0; i < dict->size; i++) {
 		Assoc *ap = &dict->table[i];
 		ap->name = forward(ap->name);
@@ -196,11 +305,22 @@ static Assoc *
 get(Dict *dict, const char *name)
 {
 	Assoc *ap;
-	unsigned long n = strhash(name), mask = dict->size - 1;
-	for(; (ap = &dict->table[n & mask])->name != NULL; n++)
+	uint64_t hash = 0;
+	uint64_t mask = dict->size - 1;
+	BloomResult bloomres = {FALSE, 0};
+
+	if(dict->size > 100) {
+		bloomres = bloomcheck(dict, name);
+		if(bloomres.exists == FALSE)
+			return nil;
+		hash = bloomres.hash;
+	} else
+		hash = strhash(name);
+
+	for(; (ap = &dict->table[hash & mask])->name != NULL; hash++)
 		if(ap->name != DEAD && streq(name, ap->name))
 			return ap;
-	return NULL;
+	return nil;
 }
 
 static void putwrapper(void *, char *, void *); // shut up clang
@@ -208,7 +328,7 @@ static void putwrapper(void *, char *, void *); // shut up clang
 static Dict *
 put(Dict *dict, char *name, void *value)
 {
-	unsigned long n, mask;
+	uint64_t n, mask;
 	Assoc *ap;
 	Dict *old = NULL; Root r_old;
 	char *np = NULL; Root r_np;
@@ -238,7 +358,7 @@ put(Dict *dict, char *name, void *value)
 		gcderef(&r_old, (void **)&old);
 	}
 
-	n = strhash(name);
+	n = bloominsert(dict, name);
 	mask = dict->size - 1;
 	for(; (ap = &dict->table[n & mask])->name != DEAD; n++)
 		if(ap->name == NULL) {
@@ -338,11 +458,22 @@ extern void *
 dictget2(Dict *dict, const char *name1, const char *name2)
 {
 	Assoc *ap;
-	unsigned long n = strhash2(name1, name2), mask = dict->size - 1;
-	for(; (ap = &dict->table[n & mask])->name != NULL; n++)
+	uint64_t hash = 0;
+	uint64_t mask = dict->size - 1;
+	BloomResult bloomres = {FALSE, 0};
+
+	if(dict->size > 100){
+		bloomres = bloomcheck2(dict, name1, name2);
+		if(bloomres.exists == FALSE)
+			return nil;
+		hash = bloomres.hash;
+	} else
+		hash = strhash2(name1, name2);
+
+	for(; (ap = &dict->table[hash & mask])->name != NULL; hash++)
 		if(ap->name != DEAD && streq2(ap->name, name1, name2))
 			return ap->value;
-	return NULL;
+	return nil;
 }
 
 Dict *

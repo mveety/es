@@ -128,6 +128,7 @@ struct Assoc {
 struct Dict {
 	int readonly;
 	int size, remain;
+	char *bloom;
 	Assoc table[1];
 };
 
@@ -647,6 +648,7 @@ typedef struct Tag Tag;
 extern void *gcalloc(size_t n, int t);		  /* allocate n with collection tag t */
 extern char *gcdup(const char *s);			  /* copy a 0-terminated string into gc space */
 extern char *gcndup(const char *s, size_t n); /* copy a counted string into gc space */
+extern void *gcmalloc(size_t sz); /* garbage collected malloc */
 /* these are same as the above but work with the parser arena */
 extern void *aalloc(size_t sz, int tag);
 extern char *andup(const char *str, size_t n);

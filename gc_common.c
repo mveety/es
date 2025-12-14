@@ -379,6 +379,7 @@ gcmalloc(size_t sz)
 
 	gcdisable();
 	p = gcalloc(sz, tAnonymous);
+	memset(p, 0, sz);
 	gcenable();
 	return p;
 }
