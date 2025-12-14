@@ -12,7 +12,7 @@ with-dynlibs mod_float {
 		fn-old_add = $fn-add
 		fn-old_sub = $fn-sub
 		fn-old_mul = $fn-mul
-		fn-old_div = $fn_div
+		fn-old_div = $fn-div
 		fn normalize n {
 			if {is-float $n} {
 				result $n
