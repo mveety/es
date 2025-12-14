@@ -51,6 +51,7 @@ typedef enum {
 typedef enum {
 	HaahrHash,
 	FNV1AHash,
+	JenkinsOATHash
 } HashFunction;
 
 struct Term {

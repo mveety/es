@@ -37,12 +37,6 @@ fnv1a_strhash2(const char *s1, const char *s2)
 	return hash;
 }
 
-uint32_t
-fnv1a_strhash(const char *str)
-{
-	return fnv1a_strhash2(str, nil);
-}
-
 /* strhash2 -- the (probably too slow) haahr hash function */
 static unsigned long
 haahr_strhash2(const char *str1, const char *str2)
@@ -79,12 +73,30 @@ haahr_strhash2(const char *str1, const char *str2)
 	return n;
 }
 
-/* strhash -- hash a single string */
-static unsigned long
-haahr_strhash(const char *str)
+uint32_t
+jenkins_oat_strhash2(const char *s1, const char *s2)
 {
-	return haahr_strhash2(str, NULL);
+	size_t i = 0;
+	uint32_t res = 0;
+
+	if(s1 != nil)
+		for(i = 0; s1[i] != '\0'; i++){
+			res += s1[i];
+			res += (res << 10);
+			res ^= (res >> 6);
+		}
+
+	if(s2 != nil)
+		for(i = 0; s2[i] != '\0'; i++){
+			res += s2[i];
+			res += (res << 10);
+			res ^= (res >> 6);
+		}
+
+	return res;
 }
+
+/* interface */
 
 uint64_t
 strhash2(const char *str1, const char *str2)
@@ -97,6 +109,8 @@ strhash2(const char *str1, const char *str2)
 		return haahr_strhash2(str1, str2);
 	case FNV1AHash:
 		return fnv1a_strhash2(str1, str2);
+	case JenkinsOATHash:
+		return jenkins_oat_strhash2(str1, str2);
 	}
 	unreachable();
 	return 0;
@@ -110,9 +124,11 @@ strhash(const char *str)
 		unreachable();
 		break;
 	case HaahrHash:
-		return haahr_strhash(str);
+		return haahr_strhash2(str, nil);
 	case FNV1AHash:
-		return fnv1a_strhash(str);
+		return fnv1a_strhash2(str, nil);
+	case JenkinsOATHash:
+		return jenkins_oat_strhash2(str, nil);
 	}
 	unreachable();
 	return 0;
@@ -147,15 +163,21 @@ bloominsert(Dict *dict, char *name)
 	size_t fnv1a_bit = 0;
 	uint64_t haahr_hash = 0;
 	size_t haahr_bit = 0;
+	uint64_t jenkins_hash = 0;
+	size_t jenkins_bit = 0;
 	size_t bloomsz = bloomsize(dict->size);
 
-	fnv1a_hash = fnv1a_strhash(name);
+	fnv1a_hash = fnv1a_strhash2(name, nil);
 	fnv1a_bit = fnv1a_hash % bloomsz;
-	haahr_hash = haahr_strhash(name);
+	haahr_hash = haahr_strhash2(name, nil);
 	haahr_bit = haahr_hash % bloomsz;
+	jenkins_hash = jenkins_oat_strhash2(name, nil);
+	jenkins_bit = jenkins_hash % bloomsz;
+
 
 	dict->bloom[fnv1a_bit/8] |= 1 << (fnv1a_bit%8);
 	dict->bloom[haahr_bit/8] |= 1 << (haahr_bit%8);
+	dict->bloom[jenkins_bit/8] |= 1 << (jenkins_bit%8);
 
 	switch(hashfunction) {
 	default:
@@ -165,6 +187,8 @@ bloominsert(Dict *dict, char *name)
 		return haahr_hash;
 	case FNV1AHash:
 		return fnv1a_hash;
+	case JenkinsOATHash:
+		return jenkins_hash;
 	}
 }
 
@@ -174,40 +198,6 @@ typedef struct BloomResult {
 } BloomResult;
 
 static inline BloomResult
-bloomcheck(Dict *dict, const char *name)
-{
-	BloomResult res = {FALSE, 0};
-	uint64_t fnv1a_hash = 0;
-	size_t fnv1a_bit = 0;
-	uint64_t haahr_hash = 0;
-	size_t haahr_bit = 0;
-	size_t bloomsz = bloomsize(dict->size);
-
-	fnv1a_hash = fnv1a_strhash(name);
-	fnv1a_bit = fnv1a_hash % bloomsz;
-	haahr_hash = haahr_strhash(name);
-	haahr_bit = haahr_hash % bloomsz;
-
-	switch(hashfunction) {
-	default:
-		unreachable();
-		break;
-	case HaahrHash:
-		res.hash = haahr_hash;
-		break;
-	case FNV1AHash:
-		res.hash = fnv1a_hash;
-		break;
-	}
-
-	if(((dict->bloom[fnv1a_bit/8] & (1 << (fnv1a_bit%8))) != 0) &&
-			((dict->bloom[haahr_bit/8] & (1 << (haahr_bit%8))) != 0))
-		res.exists = TRUE;
-
-	return res;
-}
-
-static inline BloomResult
 bloomcheck2(Dict *dict, const char *name1, const char *name2)
 {
 	BloomResult res = {FALSE, 0};
@@ -215,12 +205,17 @@ bloomcheck2(Dict *dict, const char *name1, const char *name2)
 	size_t fnv1a_bit = 0;
 	uint64_t haahr_hash = 0;
 	size_t haahr_bit = 0;
+	uint64_t jenkins_hash = 0;
+	size_t jenkins_bit = 0;
 	size_t bloomsz = bloomsize(dict->size);
 
 	fnv1a_hash = fnv1a_strhash2(name1, name2);
 	fnv1a_bit = fnv1a_hash % bloomsz;
 	haahr_hash = haahr_strhash2(name1, name2);
 	haahr_bit = haahr_hash % bloomsz;
+	jenkins_hash = jenkins_oat_strhash2(name1, name2);
+	jenkins_bit = jenkins_hash % bloomsz;
+
 
 	switch(hashfunction) {
 	default:
@@ -232,13 +227,23 @@ bloomcheck2(Dict *dict, const char *name1, const char *name2)
 	case FNV1AHash:
 		res.hash = fnv1a_hash;
 		break;
+	case JenkinsOATHash:
+		res.hash = jenkins_hash;
+		break;
 	}
 
 	if(((dict->bloom[fnv1a_bit/8] & (1 << (fnv1a_bit%8))) != 0) &&
-			((dict->bloom[haahr_bit/8] & (1 << (haahr_bit%8))) != 0))
+			((dict->bloom[haahr_bit/8] & (1 << (haahr_bit%8))) != 0) &&
+			((dict->bloom[jenkins_bit/8] & (1 << (jenkins_bit%8))) != 0))
 		res.exists = TRUE;
 
 	return res;
+}
+
+static inline BloomResult
+bloomcheck(Dict *dict, const char *name)
+{
+	return bloomcheck2(dict, name, nil);
 }
 
 static Dict *
@@ -308,18 +313,24 @@ get(Dict *dict, const char *name)
 	uint64_t hash = 0;
 	uint64_t mask = dict->size - 1;
 	BloomResult bloomres = {FALSE, 0};
+	Root r_dict;
 
+	gcref(&r_dict, (void**)&dict);
 	if(dict->size > 100) {
 		bloomres = bloomcheck(dict, name);
 		if(bloomres.exists == FALSE)
-			return nil;
+			goto fail;
 		hash = bloomres.hash;
 	} else
 		hash = strhash(name);
 
 	for(; (ap = &dict->table[hash & mask])->name != NULL; hash++)
-		if(ap->name != DEAD && streq(name, ap->name))
+		if(ap->name != DEAD && streq(name, ap->name)){
+			gcrderef(&r_dict);
 			return ap;
+		}
+fail:
+	gcrderef(&r_dict);
 	return nil;
 }
 

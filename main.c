@@ -161,9 +161,9 @@ void
 debug_flag_usage(void)
 { /* this is a mess */
 #ifdef DYNAMIC_LIBRARIES
-	dprintf(2, "debug flags: es -D [GIaEPRAMrhHCtm]\n%s",
+	dprintf(2, "debug flags: es -D [GIaEPRAMrhHJCtm]\n%s",
 #else
-	dprintf(2, "debug flags: es -D [GIaEPRAMrhHCt]\n%s",
+	dprintf(2, "debug flags: es -D [GIaEPRAMrhHJCt]\n%s",
 #endif
 			"	? -- show this message\n"
 			"	G -- gcverbose\n"
@@ -178,6 +178,7 @@ debug_flag_usage(void)
 			"	r -- verbose_rangematch\n"
 			"	h -- HaahrHash\n"
 			"	H -- FNV1AHash\n"
+			"	J -- JenkinsOATHash\n"
 			"	C -- comprehensive_matches\n"
 			"	t -- forcetty\n"
 			"	e -- force_fallback_editor\n"
@@ -413,6 +414,9 @@ main(int argc, char *argv[])
 					break;
 				case 'H':
 					hashfunction = FNV1AHash;
+					break;
+				case 'J':
+					hashfunction = JenkinsOATHash;
 					break;
 				case 'C':
 					comprehensive_matches = TRUE;

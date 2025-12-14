@@ -13,14 +13,13 @@ PRIM(dictget) {
 	if(!list || !list->next)
 		fail("$&dictget", "missing arguments");
 
-	res = nil;
 	gcref(&r_res, (void **)&res);
+	gcref(&r_d, (void **)&d);
+	gcref(&r_name, (void **)&name);
 
 	d = getdict(list->term);
 	if(!d)
 		fail("$&dictget", "term not valid dict");
-	gcref(&r_d, (void **)&d);
-	gcref(&r_name, (void **)&name);
 	name = getstr(list->next->term);
 
 	res = dictget(d, name);
@@ -41,15 +40,16 @@ PRIM(dictput) {
 	if(!list || !list->next || !list->next->next)
 		fail("$&dictput", "missing arguments");
 
+	gcref(&r_d, (void **)&d);
+	gcref(&r_name, (void **)&name);
+	gcref(&r_v, (void **)&v);
+
 	d = getdict(list->term);
 	if(!d)
 		fail("$&dictput", "term not valid dict");
-	gcref(&r_d, (void **)&d);
-	gcref(&r_name, (void **)&name);
 
 	name = getstr(list->next->term);
 	v = list->next->next;
-	gcref(&r_v, (void **)&v);
 
 	d = dictcopy(d);
 	d = dictput(d, name, v);
@@ -68,15 +68,16 @@ PRIM(dictput_nocopy) {
 	if(!list || !list->next || !list->next->next)
 		fail("$&dictput", "missing arguments");
 
+	gcref(&r_d, (void **)&d);
+	gcref(&r_name, (void **)&name);
+	gcref(&r_v, (void **)&v);
+
 	d = getdict(list->term);
 	if(!d)
 		fail("$&dictput", "term not valid dict");
-	gcref(&r_d, (void **)&d);
-	gcref(&r_name, (void **)&name);
 
 	name = getstr(list->next->term);
 	v = list->next->next;
-	gcref(&r_v, (void **)&v);
 
 	d = dictput(d, name, v);
 
@@ -94,10 +95,11 @@ PRIM(dictremove) {
 	if(!list || !list->next)
 		fail("$&dictremove", "missing arguments");
 
+	gcref(&r_d, (void **)&d);
+
 	d = getdict(list->term);
 	if(!d)
 		fail("$&dictremove", "term not valid dict");
-	gcref(&r_d, (void **)&d);
 
 	name = getstr(list->next->term);
 
@@ -115,10 +117,11 @@ PRIM(dictremove_nocopy) {
 	if(!list || !list->next)
 		fail("$&dictremove", "missing arguments");
 
+	gcref(&r_d, (void **)&d);
+
 	d = getdict(list->term);
 	if(!d)
 		fail("$&dictremove", "term not valid dict");
-	gcref(&r_d, (void **)&d);
 
 	name = getstr(list->next->term);
 
@@ -223,12 +226,14 @@ PRIM(dictsize) {
 	if(!list)
 		fail("$&dictsize", "missing argument");
 
-	lp = list;
+
 	gcref(&r_lp, (void **)&lp);
+	gcref(&r_d, (void **)&d);
+
+	lp = list;
 	d = getdict(lp->term);
 	if(!d)
 		fail("$&dictforall", "term not valid dict");
-	gcref(&r_d, (void **)&d);
 
 	dictforall(d, &dictsize, &sz);
 
@@ -269,13 +274,12 @@ PRIM(dictcopy) {
 	if(!list)
 		fail("$&dictcopy", "missing arguments");
 
-	res = nil;
 	gcref(&r_res, (void **)&res);
+	gcref(&r_d, (void **)&d);
 
 	d = getdict(list->term);
 	if(!d)
 		fail("$&dictcopy", "term not valid dict");
-	gcref(&r_d, (void **)&d);
 
 	d = dictcopy(d);
 	res = mklist(mkdictterm(d), nil);
@@ -297,11 +301,11 @@ PRIM(dictreadonly) {
 	d = getdict(list->term);
 	if(!d)
 		fail("$&dictreadonly", "term not valid dict");
-	res = d->readonly;
 	if(d->readonly)
 		d->readonly = 0;
 	else
 		d->readonly = 1;
+	res = d->readonly;
 
 	gcrderef(&r_d);
 
