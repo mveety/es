@@ -329,7 +329,7 @@ fn run_one_test single_test {
 fn get-git-rev dir {
 	let (cwd = `{pwd}; rev=) {
 		cd $dir
-		rev = `{git log -n1 '--format=%h'}
+		rev = `{git rev-parse --verify --short=12 HEAD >[2]/dev/null}
 		cd $cwd
 		result $rev
 	}
