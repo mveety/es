@@ -19,6 +19,9 @@ case "$PLATFORM" in
 	Linux)
 		CC=gcc ./configure --prefix=/usr --enable-modules
 		;;
+	Haiku)
+		./configure --prefix=/boot/home/config/non-packages --enable-modules
+		;;
 	*)
 		echo "warning: es has not been tested on your platform"
 		# just let configure work out the best defaults

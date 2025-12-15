@@ -1,19 +1,25 @@
 This is my modifications to es to make it easier to live with.
 use configure and make/gmake as normal to build and install.
 
-I've tested it on FreeBSD and Arch Linux, and it's likely to build
+I've tested it on FreeBSD, Arch Linux, and Haiku, and it's likely to build
 everywhere sane.
 
+Required packages: autoconf automake libtool libpcre2-posix libpcre2-8
+Optional packages: cJSON (https://github.com/DaveGamble/cJSON, available on
+	the Arch and FreeBSD repos, but not on HaikuDepot).
 
-Building with modules:
+On Haiku you will need the *_devel packages.
+
+Building with your platform's defaults:
 	user% ./build.sh
 	root% make install
 	root% make syslib-install # if you want libs installed globally
 	user% make userlib-install # or only in ~/.config/es-mveety
 
-Building without modules:
+Building on other platforms:
 	user% ./setup-autoconf.sh
-	user% ./configure
+	without modules: user% ./configure
+	with modules: user% ./configure --enable-modules
 	user% make
 	root% make install
 	root% make syslib-install # if you want libs installed globally
@@ -24,6 +30,6 @@ If your system installed software in /usr/local you're good to go without
 using --prefix on configure. If your system installs things somewhere else
 (or you want it somewhere else) use --prefix=/your/install/path.
 
-Sorry about the lack of docs. the old manpage is still a good primer.
-
+The manpage get's built and installed in doc/. run make doc/es.1.pdf if you
+want a typeset version of the manual.
 
