@@ -328,7 +328,7 @@ then
 		[
 		 MODOFILES="$MODOFILES \$(MODJSON_OFILES)"
 		 MODULES="$MODULES \$(MODJSON)"
-		],[])
+		],[es_no_cjson="true"])
 fi
 
 if test "$sys_wait_w_forms" = "yes"
