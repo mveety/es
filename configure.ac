@@ -180,6 +180,19 @@ AC_CACHE_CHECK(for extra LDFLAGS for $CC on $host_os, es_cv_ldextras,
 				esac
 				])
 
+AC_CACHE_CHECK(for extra LIBS on $host_os, es_cv_libs,
+			   [
+				case "$host_os" in
+					haiku)
+						LIBS="$LIBS -lbsd"
+						es_cv_libs="-lbsd"
+						;;
+					*)
+						es_cv_libs="none needed"
+						;;
+				esac
+				])
+
 dnl CFLAGS="$CFLAGS $saved_CFLAGS"
 
 if test "$DYNLIBS" = "true"
