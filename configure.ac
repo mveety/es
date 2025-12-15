@@ -265,7 +265,10 @@ dnl ----------------------------
 AC_CACHE_CHECK(for /dev/fd filesystem, es_cv_sys_dev_fd,
 [test -d /dev/fd && es_cv_sys_dev_fd=yes || es_cv_sys_dev_fd=no])
 if test $es_cv_sys_dev_fd = yes; then
-  AC_DEFINE(HAVE_DEV_FD)
+	AC_DEFINE(HAVE_DEV_FD)
+	DEVFD_IMPL="devfd"
+else
+	DEVFD_IMPL="mkfifo"
 fi
 
 AC_SYS_INTERPRETER
