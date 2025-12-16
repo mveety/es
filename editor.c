@@ -4,7 +4,6 @@
  * into es.
  */
 
-
 #ifdef STANDALONE
 #ifdef __linux__
 #define _XOPEN_SOURCE 800
@@ -1701,7 +1700,7 @@ get_next_completion(EditorState *state, Wordpos pos)
 	if(state->completions == nil)
 		return nil;
 
-	if(state->complete_direction == Backward){
+	if(state->complete_direction == Backward) {
 		if(state->completionsi < state->completionssz)
 			state->completionsi++;
 		else if(state->completionsi >= state->completionssz)
@@ -1990,6 +1989,8 @@ runmapping(EditorState *state, int key)
 void
 create_default_mapping(Keymap *map)
 {
+	int i = 0;
+
 	memset(&map->base_keys[0], 0, sizeof(Mapping) * BaseKeys);
 	memset(&map->ext_keys[0], 0, sizeof(Mapping) * ExtendedKeys);
 
@@ -1998,11 +1999,14 @@ create_default_mapping(Keymap *map)
 		.base_hook = nil,
 		.input_finished = 1,
 	};
-	map->base_keys[KeySpace] = (Mapping){
-		.hook = &pass_key,
-		.base_hook = nil,
-		.reset_completion = 1,
-	};
+
+	for(i = KeySpace; i < BaseKeys; i++)
+		map->base_keys[i] = (Mapping){
+			.hook = &pass_key,
+			.base_hook = nil,
+			.reset_completion = 1,
+		};
+
 	map->base_keys[KeyCtrlC] = (Mapping){
 		.hook = nil,
 		.base_hook = nil,
@@ -2112,35 +2116,131 @@ create_default_mapping(Keymap *map)
 
 // clang-format off
 char *keynames[] = {
-	[KeyNull]	= "(null)",
-	[KeyCtrlA]	= "CtrlA",
-	[KeyCtrlB]	= "CtrlB",
-	[KeyCtrlC]	= "CtrlC",
-	[KeyCtrlD]	= "CtrlD",
-	[KeyCtrlE]	= "CtrlE",
-	[KeyCtrlF]	= "CtrlF",
-	[KeyCtrlG]	= "CtrlG",
-	[KeyCtrlH]	= "CtrlH",
-	[KeyTab]	= "Tab",
-	[KeyCtrlJ]	= "CtrlJ",
-	[KeyCtrlK]	= "CtrlK",
-	[KeyCtrlL]	= "CtrlL",
-	[KeyEnter]	= "Enter",
-	[KeyCtrlN]	= "CtrlN",
-	[KeyCtrlO]	= "CtrlO",
-	[KeyCtrlP]	= "CtrlP",
-	[KeyCtrlQ]	= "CtrlQ",
-	[KeyCtrlR]	= "CtrlR",
-	[KeyCtrlS]	= "CtrlS",
-	[KeyCtrlT]	= "CtrlT",
-	[KeyCtrlU]	= "CtrlU",
-	[KeyCtrlV]	= "CtrlV",
-	[KeyCtrlW]	= "CtrlW",
-	[KeyCtrlX]	= "CtrlX",
-	[KeyCtrlY]	= "CtrlY",
-	[KeyCtrlZ]	= "CtrlZ",
-	[KeySpace]	= "Space",
-	[KeyEscape]	= "Escape",
+	[KeyNull] = "(null)",
+	[KeyCtrlA] = "CtrlA",
+	[KeyCtrlB] = "CtrlB",
+	[KeyCtrlC] = "CtrlC",
+	[KeyCtrlD] = "CtrlD",
+	[KeyCtrlE] = "CtrlE",
+	[KeyCtrlF] = "CtrlF",
+	[KeyCtrlG] = "CtrlG",
+	[KeyCtrlH] = "CtrlH",
+	[KeyTab] = "Tab",
+	[KeyCtrlJ] = "CtrlJ",
+	[KeyCtrlK] = "CtrlK",
+	[KeyCtrlL] = "CtrlL",
+	[KeyEnter] = "Enter",
+	[KeyCtrlN] = "CtrlN",
+	[KeyCtrlO] = "CtrlO",
+	[KeyCtrlP] = "CtrlP",
+	[KeyCtrlQ] = "CtrlQ",
+	[KeyCtrlR] = "CtrlR",
+	[KeyCtrlS] = "CtrlS",
+	[KeyCtrlT] = "CtrlT",
+	[KeyCtrlU] = "CtrlU",
+	[KeyCtrlV] = "CtrlV",
+	[KeyCtrlW] = "CtrlW",
+	[KeyCtrlX] = "CtrlX",
+	[KeyCtrlY] = "CtrlY",
+	[KeyCtrlZ] = "CtrlZ",
+	[KeySpace] = "Space",
+	[KeyEscape] = "Escape",
+	[KeyBackspace] = "Backspace",
+
+	[KeyExclaimation] = "Exclaimation",
+	[KeyDoubleQuote] = "DoubleQuote",
+	[KeyNumberSign] = "NumberSign",
+	[KeyDollar] = "Dollar",
+	[KeyPercent] = "Percent",
+	[KeyAmpersand] = "Ampersand",
+	[KeySingleQuote] = "SingleQuote",
+	[KeyOpenParen] = "OpenParen",
+	[KeyCloseParen] = "CloseParen",
+	[KeyAsterisk] = "Asterisk",
+	[KeyPlus] = "Plus",
+	[KeyComma] = "Comma",
+	[KeyHyphen] = "Hyphen",
+	[KeyPeriod] = "Period",
+	[KeySlash] = "Slash",
+	[Key0] = "0",
+	[Key1] = "1",
+	[Key2] = "2",
+	[Key3] = "3",
+	[Key4] = "4",
+	[Key5] = "5",
+	[Key6] = "6",
+	[Key7] = "7",
+	[Key8] = "8",
+	[Key9] = "9",
+	[KeyColon] = "Colon",
+	[KeySemicolon] = "Semicolon",
+	[KeyLessThan] = "LessThan",
+	[KeyEquals] = "Equals",
+	[KeyGreaterThan] = "GreaterThan",
+	[KeyQuestion] = "Question",
+	[KeyAt] = "At",
+	[KeyA] = "A",
+	[KeyB] = "B",
+	[KeyC] = "C",
+	[KeyD] = "D",
+	[KeyE] = "E",
+	[KeyF] = "F",
+	[KeyG] = "G",
+	[KeyH] = "H",
+	[KeyI] = "I",
+	[KeyJ] = "J",
+	[KeyK] = "K",
+	[KeyL] = "L",
+	[KeyM] = "M",
+	[KeyN] = "N",
+	[KeyO] = "O",
+	[KeyP] = "P",
+	[KeyQ] = "Q",
+	[KeyR] = "R",
+	[KeyS] = "S",
+	[KeyT] = "T",
+	[KeyU] = "U",
+	[KeyV] = "V",
+	[KeyW] = "W",
+	[KeyX] = "X",
+	[KeyY] = "Y",
+	[KeyZ] = "Z",
+	[KeyOpenBracket] = "OpenBracket",
+	[KeyBackslash] = "Backslash",
+	[KeyCloseBracket] = "CloseBracket",
+	[KeyCaret] = "Caret",
+	[KeyUnderscore] = "Underscore",
+	[KeyGrave] = "Grave",
+	[Keya] = "a",
+	[Keyb] = "b",
+	[Keyc] = "c",
+	[Keyd] = "d",
+	[Keye] = "e",
+	[Keyf] = "f",
+	[Keyg] = "g",
+	[Keyh] = "h",
+	[Keyi] = "i",
+	[Keyj] = "j",
+	[Keyk] = "k",
+	[Keyl] = "l",
+	[Keym] = "m",
+	[Keyn] = "n",
+	[Keyo] = "o",
+	[Keyp] = "p",
+	[Keyq] = "q",
+	[Keyr] = "r",
+	[Keys] = "s",
+	[Keyt] = "t",
+	[Keyu] = "u",
+	[Keyv] = "v",
+	[Keyw] = "w",
+	[Keyx] = "x",
+	[Keyy] = "y",
+	[Keyz] = "z",
+	[KeyOpenBrace] = "OpenBrace",
+	[KeyPipe] = "Pipe",
+	[KeyCloseBrace] = "CloseBrace",
+	[KeyTilde] = "Tilde",
 };
 
 char *extkeynames[] = {
@@ -2229,13 +2329,10 @@ char *extkeynames[] = {
 char *
 key2name(int key)
 {
-	if(key == KeyBackspace)
-		return "Backspace";
-
-	if(key == KeySpace)
-		return keynames[KeySpace];
-
 	if(key >= KeyNull && key <= KeyEscape)
+		return keynames[key];
+
+	if(key >= KeySpace && key < KeyMax)
 		return keynames[key];
 
 	if(key >= ExtKeyOffset && key < ExtKeyMax)
@@ -2249,15 +2346,10 @@ name2key(char *name)
 {
 	int i;
 
-	if(strcmp(name, "Backspace") == 0)
-		return KeyBackspace;
-
-	if(strcmp(name, keynames[KeySpace]) == 0)
-		return KeySpace;
-
-	for(i = 0; i <= KeyEscape; i++)
-		if(strcmp(name, keynames[i]) == 0)
-			return i;
+	for(i = KeyCtrlA; i < KeyMax; i++)
+		if(i < KeyInvalidFS || i > KeyInvalidUS)
+			if(strcmp(name, keynames[i]) == 0)
+				return i;
 
 	for(i = ExtKeyOffset; i < ExtKeyMax; i++)
 		if(strcmp(name, extkeynames[i - ExtKeyOffset]) == 0)
@@ -2435,7 +2527,7 @@ fail:
 Result
 line_editor(EditorState *state)
 {
-	char c;
+	uint8_t c;
 	char seq[6];
 	enum { StateRead, StateDone, StateCancel } readstate = StateRead;
 	int key = 0;
@@ -2460,11 +2552,8 @@ line_editor(EditorState *state)
 		dprint("read 1...");
 		if(read(state->ifd, &c, 1) < 0)
 			goto fail;
-		if(c > ' ' && c <= '~') {
-			dprint("\n");
-			insert_char(state, c);
-			completion_reset(state);
-			continue;
+		if(c >= KeySpace && c < BaseKeys) {
+			key = c;
 		} else if((c & 0b11000000) == 0b11000000) {
 			/* utf-8 stuff */
 			seq[0] = c;
@@ -2488,12 +2577,8 @@ line_editor(EditorState *state)
 			 * just skip until we get something sensible
 			 */
 			continue;
-		} else if(c == KeySpace) {
-			key = KeySpace;
 		} else if(c == KeyEnter) {
 			key = KeyEnter;
-		} else if(c == KeyBackspace) {
-			key = KeyBackspace;
 		} else if(c == KeyEscape) {
 			dprint("escape read...");
 			if(read(state->ifd, &seq[0], 1) < 0)

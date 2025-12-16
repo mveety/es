@@ -766,9 +766,17 @@ PRIM(getkeymap) {
 		if(fn == FnEsFunction) {
 			res = mklist(mkstr(str("%s", editor->keymap->base_keys[i].aux)), res);
 		} else {
-			res = mklist(mkstr(str("%s", edfn2name(fn))), res);
+			if(i >= KeyExclaimation && i <= KeyTilde){
+				if(fn != FnPassKey)
+					res = mklist(mkstr(str("%s", edfn2name(fn))), res);
+			} else
+				res = mklist(mkstr(str("%s", edfn2name(fn))), res);
 		}
-		res = mklist(mkstr(str("%s", key2name(i))), res);
+		if(i >= KeyExclaimation && i <= KeyTilde){
+			if(fn != FnPassKey)
+				res = mklist(mkstr(str("%s", key2name(i))), res);
+		} else
+			res = mklist(mkstr(str("%s", key2name(i))), res);
 	}
 
 	for(i = (ExtendedKeys - 1); i >= 0; i--) {
