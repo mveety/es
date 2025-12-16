@@ -1562,7 +1562,8 @@ initinput(void)
 	editor = ealloc(sizeof(EditorState));
 	if(initialize_editor(editor, 0, 1) == 0) {
 		editor_debugging(editor, editor_debugfd);
-		editor->force_fallback = force_fallback_editor;
+		if(force_fallback_editor)
+			editor->indriver = DriverFallback;
 		set_prompt1(editor, "% ");
 		set_prompt2(editor, "_% ");
 		set_complete_hook(editor, &es_complete_hook);

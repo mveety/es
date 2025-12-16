@@ -576,7 +576,21 @@ supported_term(char *term)
 	return 0;
 }
 
-int
+void
+basic_editor_initialization(EditorState *state, int ifd, int ofd)
+{
+	/* this sets things up for the fallback editor */
+	state->ifd = ifd;
+	state->ofd = ofd;
+	state->prompt1 = nil;
+	state->prompt2 = nil;
+	state->buffer = ealloc(EDITINITIALBUFSZ);
+	state->bufsz = EDITINITIALBUFSZ;
+	state->initialized = 1;
+	state->indriver = DriverFallback;
+}
+
+int /* only do this once! */
 initialize_editor(EditorState *state, int ifd, int ofd)
 {
 	char *term = nil;
@@ -587,10 +601,13 @@ initialize_editor(EditorState *state, int ifd, int ofd)
 	state->prompt1 = nil;
 	state->initialized = 0;
 
-	if(!eisatty(ifd) || !eisatty(ofd))
+	if(!eisatty(ifd) || !eisatty(ofd)){
+		basic_editor_initialization(state, ifd, ofd);
 		return -1;
+	}
 	term = getterm();
 	if(!supported_term(term)) {
+		basic_editor_initialization(state, ifd, ofd);
 		efree(term);
 		return -2;
 	}
@@ -630,17 +647,18 @@ initialize_editor(EditorState *state, int ifd, int ofd)
 		.match_braces = 1,
 		.braces = nil,
 		.nbraces = 0,
-		.force_fallback = 0,
 		.word_start = FirstLetter,
 		.noreset = 0,
 		.highlight_formatting = nil,
 		.syntax_highlight_hook = nil,
+		.indriver = DriverVT100,
+		.outdriver = DriverVT100,
+		.keymap = ealloc(sizeof(Keymap)),
 	};
 	memset(state->outbuf, 0, sizeof(OutBuf));
 	rawmode_on(state);
 	state->size = gettermsize(state);
 	rawmode_off(state);
-	state->keymap = ealloc(sizeof(Keymap));
 	create_default_mapping(state->keymap);
 	setlocale(LC_ALL, "");
 	return 0;
@@ -661,7 +679,8 @@ free_editor(EditorState *state)
 	if(!state->initialized)
 		return;
 
-	efree(state->term);
+	if(state->term)
+		efree(state->term);
 	efree(state->buffer);
 	if(state->prompt1)
 		efree(state->prompt1);
@@ -670,10 +689,13 @@ free_editor(EditorState *state)
 	state->prompt1sz = 0;
 	state->prompt2sz = 0;
 	state->initialized = 0;
-	buf = state->outbuf;
-	if(buf->str)
-		efree(buf->str);
-	efree(state->outbuf);
+
+	if(state->outbuf){
+		buf = state->outbuf;
+		if(buf->str)
+			efree(buf->str);
+		efree(state->outbuf);
+	}
 
 	cur = state->history;
 	if(cur) {
@@ -691,7 +713,8 @@ free_editor(EditorState *state)
 		efree(cur->str);
 		efree(cur);
 	}
-	efree(state->keymap);
+	if(state->keymap)
+		efree(state->keymap);
 	if(state->braces)
 		efree(state->braces);
 	if(state->highlight_formatting)
@@ -941,7 +964,7 @@ set_syntax_highlight_hook(EditorState *state, char *(*hook)(char *, size_t))
 }
 
 void /* I really think this could use work */
-refresh(EditorState *state)
+vt100_refresh(EditorState *state)
 {
 	OutBuf *buf = nil;
 	char snbuf[64];
@@ -1061,6 +1084,18 @@ refresh(EditorState *state)
 	dprint("buf->size = %lu, buf->len = %lu\n", buf->size, buf->len);
 	outbuf_clean(buf);
 	state->lastbufpos = state->bufpos;
+}
+
+void
+refresh(EditorState *state)
+{
+	switch(state->outdriver){
+	default:
+		unreachable();
+	case DriverVT100:
+		vt100_refresh(state);
+		break;
+	}
 }
 
 void
@@ -2374,38 +2409,34 @@ fallback_editor(EditorState *state)
 	 * do that for you.
 	 */
 
-	char *buffer = nil;
 	char *res = nil;
 	size_t i = 0;
 
-	buffer = ealloc(EDITINITIALBUFSZ);
+	/* in case this is called directly */
+	if(!state->initialized)
+		unreachable();
 
 	if(state->prompt1)
 		write(state->ofd, state->prompt1, strlen(state->prompt1));
-	read(state->ifd, buffer, EDITINITIALBUFSZ - 2);
+	memset(state->buffer, 0, state->bufsz);
+	read(state->ifd, state->buffer, EDITINITIALBUFSZ - 2);
 	for(i = 0; i < EDITINITIALBUFSZ; i++)
-		if(buffer[i] == '\n') {
-			buffer[i] = '\0';
+		if(state->buffer[i] == '\n') {
+			state->buffer[i] = '\0';
 			break;
 		}
-	res = estrdup(buffer);
-	efree(buffer);
+	res = estrdup(state->buffer);
 	return res;
 }
 
 char * /* budget readline */
-basic_editor(EditorState *state)
+vt100_basic_editor(EditorState *state)
 {
 	char c;
 	char *res;
 	char seq[6];
 	enum { StateRead, StateDone } readstate = StateRead;
 	size_t readn = 0;
-
-	if(!state->initialized)
-		return fallback_editor(state);
-	if(state->force_fallback)
-		return fallback_editor(state);
 
 	rawmode_on(state);
 	if(reset_editor(state) < 0)
@@ -2517,6 +2548,23 @@ fail:
 	return nil;
 }
 
+char *
+basic_editor(EditorState *state)
+{
+	if(!state->initialized)
+		unreachable();
+
+	switch(state->indriver){
+	default:
+		unreachable();
+	case DriverFallback:
+		return fallback_editor(state);
+	case DriverVT100:
+	case DriverKitty:
+		return vt100_basic_editor(state);
+	}
+}
+
 /*
  * line_editor is the terminal keycode -> internal keycode converter
  * It will insert everything printable, and passes everything else to the keymap.
@@ -2525,7 +2573,7 @@ fail:
  * valuable for es, but if this has life outside of here it might be of value.
  */
 Result
-line_editor(EditorState *state)
+vt100_line_editor(EditorState *state)
 {
 	uint8_t c;
 	char seq[6];
@@ -2534,11 +2582,6 @@ line_editor(EditorState *state)
 	Result r;
 	char *str;
 	size_t readn = 0;
-
-	if(!state->initialized)
-		return result(fallback_editor(state), 0);
-	if(state->force_fallback)
-		return result(fallback_editor(state), 0);
 
 	rawmode_on(state);
 	if(reset_editor(state) < 0)
@@ -2898,3 +2941,21 @@ fail:
 	rawmode_off(state);
 	return result(nil, -2);
 }
+
+Result
+line_editor(EditorState *state)
+{
+	if(!state->initialized)
+		unreachable();
+
+	switch(state->indriver){
+	default:
+		unreachable();
+	case DriverFallback:
+		return result(fallback_editor(state), 0);
+	case DriverVT100:
+	case DriverKitty:
+		return vt100_line_editor(state);
+	}
+}
+

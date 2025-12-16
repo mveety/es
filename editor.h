@@ -263,6 +263,12 @@ struct Wordpos {
 	size_t end;
 };
 
+typedef enum {
+	DriverFallback,
+	DriverVT100,
+	DriverKitty,
+} EditorDriver;
+
 struct EditorState {
 	int ifd;
 	int ofd;
@@ -288,8 +294,9 @@ struct EditorState {
 	void *outbuf;
 	int clear_screen;
 	int done_reading;
-	int force_fallback;
 	WordStart word_start;
+	EditorDriver indriver;
+	EditorDriver outdriver;
 	int noreset;
 	// syntax highlighting
 	int match_braces;
@@ -343,7 +350,7 @@ struct Mapping {
 };
 
 struct Keymap {
-	Mapping base_keys[128];
+	Mapping base_keys[BaseKeys];
 	Mapping ext_keys[ExtendedKeys];
 };
 
