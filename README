@@ -1,5 +1,4 @@
-This is my modifications to es to make it easier to live with.
-use configure and make/gmake as normal to build and install.
+Use ./build.sh or configure+make/gmake as normal to build and install.
 
 I've tested it on FreeBSD, Arch Linux, and Haiku, and it's likely to build
 everywhere sane.
@@ -26,10 +25,10 @@ Building on other platforms:
 	user% make userlib-install # or only in ~/.config/es-mveety
 
 
-If your system installed software in /usr/local you're good to go without
+If your system installs software in /usr/local you're good to go without
 using --prefix on configure. If your system installs things somewhere else
 (or you want it somewhere else) use --prefix=/your/install/path.
 
-The manpage get's built and installed in doc/. run make doc/es.1.pdf if you
+The manpage gets built and installed in doc/. run make doc/es.1.pdf if you
 want a typeset version of the manual.
 
