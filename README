@@ -1,11 +1,12 @@
 Use ./build.sh or configure+make/gmake as normal to build and install.
 
-I've tested it on FreeBSD, Arch Linux, and Haiku, and it's likely to build
+I've tested it on FreeBSD, Arch Linux, Haiku, OpenIndiana, and it's likely to build
 everywhere sane.
 
 Required packages: autoconf automake libtool libpcre2-posix libpcre2-8
+	on OpenIndiana: build-essential
 Optional packages: cJSON (https://github.com/DaveGamble/cJSON, available on
-	the Arch and FreeBSD repos, but not on HaikuDepot).
+	the Arch and FreeBSD repos, but not on HaikuDepot or the OI repos).
 
 On Haiku you will need the *_devel packages.
 
