@@ -48,6 +48,14 @@ create_library(char *fname, char *errstr, size_t errstrlen)
 	}
 
 	module = dlsym(lib->handle, "module_info");
+	if(module == nil){
+		if(errstr)
+			snprintf(&errstr[0], errstrlen, "module api is too old! (es is %d, module is ancient)\n", DynLibApi);
+		dlclose(lib->handle);
+		efree(lib->fname);
+		efree(lib);
+		return nil;
+	}
 
 	if(module->apiversion != DynLibApi) {
 		if(module->apiversion > DynLibApi && errstr)
