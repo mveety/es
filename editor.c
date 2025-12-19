@@ -2825,14 +2825,21 @@ vt100_line_editor(EditorState *state)
 					continue;
 				switch(seq[1]) {
 				default:
-					if(seq[1] >= 'A' && seq[1] <= 'L') {
-						key = KeyPF1 + (seq[1] - 'A');
-					} else {
-						dprint("\ngot unknown code %c%c\n", seq[0], seq[1]);
-						continue;
-					}
-					break;
+					dprint("\ngot unknown code %c%c\n", seq[0], seq[1]);
+					continue;
 				case ' ': /* sun application space */
+					break;
+				case 'A':
+					key = KeyArrowUp;
+					break;
+				case 'B':
+					key = KeyArrowDown;
+					break;
+				case 'C':
+					key = KeyArrowRight;
+					break;
+				case 'D':
+					key = KeyArrowLeft;
 					break;
 				case 'I':
 					key = KeyTab;
