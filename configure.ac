@@ -147,8 +147,8 @@ dnl								CFLAGS="$CFLAGS -Wno-stringop-truncation -D_DEFAULT_SOURCE=1 -D_XOPEN
 							gcc)
 								case `basename "${CC%/*/*}"` in
 									gcc13 | gcc14 | gcc15)
-										es_cv_ccextras="-I/usr/pkg/include -Wno-stringop-truncation -Wchar-subscripts"
-										CFLAGS="$CFLAGS -I/usr/pkg/include -Wno-stringop-truncation -Wchar-subscripts"
+										es_cv_ccextras="-I/usr/pkg/include -Wno-stringop-truncation -Wno-char-subscripts"
+										CFLAGS="$CFLAGS -I/usr/pkg/include -Wno-stringop-truncation -Wno-char-subscripts"
 										;;
 									*)
 										es_cv_ccextras=`basename "${CC%/*/*}"`
@@ -157,8 +157,8 @@ dnl								CFLAGS="$CFLAGS -Wno-stringop-truncation -D_DEFAULT_SOURCE=1 -D_XOPEN
 								esac
 								;;
 							clang)
-								es_cv_ccextras="-I/usr/pkg/include -Wchar-subscripts"
-								CFLAGS="$CFLAGS -I/usr/pkg/include -Wchar-subscripts"
+								es_cv_ccextras="-I/usr/pkg/include -Wno-char-subscripts"
+								CFLAGS="$CFLAGS -I/usr/pkg/include -Wno-char-subscripts"
 								;;
 						esac
 						;;
