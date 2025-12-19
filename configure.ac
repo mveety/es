@@ -145,13 +145,14 @@ dnl								CFLAGS="$CFLAGS -Wno-stringop-truncation -D_DEFAULT_SOURCE=1 -D_XOPEN
 					netbsd*)
 						case "`basename ${CC}`" in
 							gcc)
-								case `basename "${path%/*/*}"` in
+								case `basename "${CC%/*/*}"` in
 									gcc13 | gcc14 | gcc15)
 										es_cv_ccextras="-I/usr/pkg/include -Wno-stringop-truncation"
 										CFLAGS="$CFLAGS -I/usr/pkg/include -Wno-stringop-truncation"
 										;;
 									*)
-										AC_MSG_ERROR([`basename "${path%/*/*}"` is unsupported])
+										es_cv_ccextras=`basename "${CC%/*/*}"`
+										AC_MSG_ERROR([($es_cv_ccextras) is unsupported])
 										;;
 								esac
 								;;
@@ -202,7 +203,8 @@ AC_CACHE_CHECK(for extra LDFLAGS for $CC on $host_os, es_cv_ldextras,
 										CFLAGS="$CFLAGS -L/usr/pkg/`basename ${CC%/*/*}`/lib"
 										;;
 									*)
-										AC_MSG_ERROR([`basename "${path%/*/*}"` is unsupported])
+										es_cv_ldextras=`basename "${path%/*/*}"`
+										AC_MSG_ERROR([($es_cv_ldextras) is unsupported])
 										;;
 								esac
 								;;
