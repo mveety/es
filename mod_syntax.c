@@ -74,7 +74,7 @@ regex_t keywords_regex;
 regex_t path_regex;
 
 int
-dyn_onload(void)
+syntax_onload(void)
 {
 	if(pcre2_regcomp(&prim_regex, "^\\$&[a-zA-Z0-9\\-_]+$", REMode) != 0)
 		return -1;
@@ -102,7 +102,7 @@ dyn_onload(void)
 }
 
 int
-dyn_onunload(void)
+syntax_onunload(void)
 {
 	arena_destroy(syntax_arena);
 	set_syntax_highlight_hook(editor, nil);
@@ -1095,7 +1095,7 @@ PRIM(enablefasthighlighting) {
 	return list_true;
 }
 
-MODULE(mod_syntax) = {
+MODULE(mod_syntax)
 	// core
 	DX(basictokenize),
 	DX(enablehighlighting),
@@ -1112,4 +1112,5 @@ MODULE(mod_syntax) = {
 	DX(enablefasthighlighting),
 
 	PRIMSEND,
-};
+ENDMODULE(mod_syntax, &syntax_onload, &syntax_onunload)
+

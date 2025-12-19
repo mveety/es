@@ -298,7 +298,7 @@ detach_json_object(Object *obj, char *key, int index)
 }
 
 int
-dyn_onload(void)
+json_onload(void)
 {
 	if(define_type("json", &json_deallocate, &json_refdeps) < 0)
 		return ErrorModuleNotLoaded;
@@ -308,7 +308,7 @@ dyn_onload(void)
 }
 
 int
-dyn_onunload(void)
+json_onunload(void)
 {
 	if(undefine_type("json"))
 		return ErrorModuleInUse;
@@ -748,7 +748,7 @@ PRIM(json_getobjectnames) {
 	return res;
 }
 
-MODULE(mod_json) = {
+MODULE(mod_json)
 	DX(json_dumpobject),
 	DX(json_decode),
 	DX(json_encode),
@@ -760,6 +760,6 @@ MODULE(mod_json) = {
 	DX(json_detachobject),
 	DX(json_getdata),
 	DX(json_getobjectnames),
-
 	PRIMSEND,
-};
+ENDMODULE(mod_json, &json_onload, &json_onunload)
+

@@ -1,6 +1,5 @@
 #include "es.h"
 #include "prim.h"
-#include "gc.h"
 #include <dlfcn.h>
 #include <stdio.h>
 
@@ -21,6 +20,7 @@ char *dynliberrors[] = {
 	[ErrorModuleNotLoaded] = "required module not loaded",
 	[ErrorModuleMissingSymbol] = "symbol not found",
 	[ErrorModuleInUse] = "module in use",
+	[ErrorModuleBuiltin] = "module built-in",
 };
 
 DynamicLibrary *
@@ -28,15 +28,14 @@ create_library(char *fname, char *errstr, size_t errstrlen)
 {
 	DynamicLibrary *lib;
 	char *dlerrstr;
-	DynCallback onload;
-	DynCallback onunload;
 	int status = 0;
 	char errbuf[1024];
 	size_t i;
-	int64_t *apiversion = nil;
+	Module *module = nil;
 
 	memset(errstr, 0, errstrlen);
 	lib = ealloc(sizeof(DynamicLibrary));
+	lib->builtin = 0;
 	lib->fname = estrdup(fname);
 	lib->handle = dlopen(fname, RTLD_NOW);
 	if(!lib->handle) {
@@ -48,26 +47,24 @@ create_library(char *fname, char *errstr, size_t errstrlen)
 		return nil;
 	}
 
-	apiversion = dlsym(lib->handle, "dynlibapi");
+	module = dlsym(lib->handle, "module_info");
 
-	if(!apiversion || *apiversion > DynLibApi) {
-		if(apiversion) {
-			if(errstr)
-				snprintf(&errstr[0], errstrlen, "module's api is too new! (es is %d, lib is %ld)",
-						 DynLibApi, *apiversion);
-		} else {
-			if(errstr)
-				snprintf(&errstr[0], errstrlen, "module api too old!");
-		}
+	if(module->apiversion != DynLibApi) {
+		if(module->apiversion > DynLibApi && errstr)
+			snprintf(&errstr[0], errstrlen, "module api is too new! (es is %d, module is %ld)",
+					 DynLibApi, module->apiversion);
+		if(module->apiversion < DynLibApi && errstr)
+			snprintf(&errstr[0], errstrlen, "module api is too old! (es is %d, lib module %ld)",
+					 DynLibApi, module->apiversion);
 		dlclose(lib->handle);
 		efree(lib->fname);
 		efree(lib);
 		return nil;
 	}
 
-	lib->apiversion = *apiversion;
-	lib->name = dlsym(lib->handle, "dynlibname");
-	lib->prims = dlsym(lib->handle, "dynprims");
+	lib->module = module;
+	lib->name = module->name;
+	lib->prims = module->primitives;
 
 	for(i = 0; i < PRIMSMAX; i++)
 		if(lib->prims[i].name == nil)
@@ -85,10 +82,8 @@ create_library(char *fname, char *errstr, size_t errstrlen)
 		return nil;
 	}
 
-	onload.ptr = dlsym(lib->handle, "dyn_onload");
-	onunload.ptr = dlsym(lib->handle, "dyn_onunload");
-	lib->onload = onload.fptr;
-	lib->onunload = onunload.fptr;
+	lib->onload = module->onload;
+	lib->onunload = module->onunload;
 
 	if(lib->onload) {
 		memset(&errbuf[0], 0, sizeof(errbuf));
@@ -169,6 +164,12 @@ destroy_library(DynamicLibrary *lib, char *errstr, size_t errstrlen)
 {
 	char *dlerrstr;
 	int res = 0;
+
+	if(lib->builtin){
+		if(errstr)
+			snprintf(errstr, errstrlen, "%s", dynliberrors[ErrorModuleBuiltin]);
+		return -1;
+	}
 
 	if(lib->onunload) {
 		switch(lib->onunload()) {
@@ -282,6 +283,12 @@ open_library(char *fname, char *errstr, size_t errstrlen)
 int
 close_library(DynamicLibrary *lib, char *errstr, size_t errstrlen)
 {
+	if(lib->builtin){
+		if(errstr)
+			snprintf(errstr, errstrlen, "%s", dynliberrors[ErrorModuleBuiltin]);
+		return -3;
+	}
+
 	if(lib_remove_from_list(lib->name) != lib)
 		return -2;
 	if(destroy_library(lib, errstr, errstrlen) < 0) {

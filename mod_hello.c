@@ -1,7 +1,5 @@
 #include "es.h"
 #include "prim.h"
-#include "gc.h"
-LIBRARY(mod_hello);
 
 int
 hello_deallocate(Object *object)
@@ -44,7 +42,7 @@ teststring_objectify(char *str)
 }
 
 int
-dyn_onload(void)
+hello_onload(void)
 {
 	dprintf(2, "mod_hello's dyn_onload was called!\n");
 	if(define_type("hellotype", &hello_deallocate, nil) < 0) {
@@ -62,7 +60,7 @@ dyn_onload(void)
 }
 
 int
-dyn_onunload(void)
+hello_onunload(void)
 {
 	dprintf(2, "mod_hello's dyn_onunload was called!\n");
 	undefine_type("hellotype");
@@ -199,9 +197,9 @@ PRIM(dump_bindings) {
 	return list_true;
 }
 
-DYNPRIMS() = {
+MODULE(mod_hello)
 	{"hellotest", &hellotest}, DX(make_helloobject),  DX(object_gcmanage),
 	DX(object_freeable),	   DX(object_initialize), DX(object_closeonfork),
 	DX(object_onforkcallback), DX(dump_bindings),
 	PRIMSEND,
-};
+ENDMODULE(mod_hello, &hello_onload, &hello_onunload);

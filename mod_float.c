@@ -1,7 +1,6 @@
 #include "es.h"
 #include "prim.h"
 #include "float_util.h"
-LIBRARY(mod_float);
 
 List *
 prim_addf(List *list, Binding *binding, int evalflags)
@@ -238,10 +237,10 @@ prim_flte(List *list, Binding *binding, int evalflags)
 }
 
 
-DYNPRIMS() = {
+MODULE(mod_float)
 	{"addf", &prim_addf}, {"subf", &prim_subf},
 	{"mulf", &prim_mulf}, {"divf", &prim_divf},
 	{"feq", &prim_feq},	  {"fgt", &prim_fgt},
 	{"fgte", &prim_fgte}, {"flt", &prim_flt},
 	{"flte", &prim_flte}, {0, 0},
-};
+ENDMODULE(mod_float, nil, nil)

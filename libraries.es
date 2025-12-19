@@ -176,7 +176,6 @@ fn havelib name {
 }
 
 if {~ <=$&primitives opendynlib} {
-
 	if {~ $#es_conf_dynlib-automatic-reload 0} {
 		es_conf_dynlib-automatic-reload = false
 		set-es_conf_dynlib-automatic-reload = @ arg args {
