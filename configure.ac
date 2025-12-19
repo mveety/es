@@ -142,6 +142,25 @@ dnl								CFLAGS="$CFLAGS -Wno-stringop-truncation -D_DEFAULT_SOURCE=1 -D_XOPEN
 								;;
 						esac
 						;;
+					netbsd*)
+						case "`basename ${CC}`" in
+							gcc)
+								case `basename "${path%/*/*}"` in
+									gcc13 | gcc14 | gcc15)
+										es_cv_ccextras="-I/usr/pkg/include -Wno-stringop-truncation"
+										CFLAGS="$CFLAGS -I/usr/pkg/include -Wno-stringop-truncation"
+										;;
+									*)
+										AC_MSG_ERROR([`basename "${path%/*/*}"` is unsupported])
+										;;
+								esac
+								;;
+							clang)
+								es_cv_ccextras="-I/usr/pkg/include"
+								CFLAGS="$CFLAGS -I/usr/pkg/include"
+								;;
+						esac
+						;;
 					*)
 						case "`basename ${CC}`" in
 							gcc | gcc*)
@@ -168,6 +187,24 @@ AC_CACHE_CHECK(for extra LDFLAGS for $CC on $host_os, es_cv_ldextras,
 							gcc1*)
 								es_cv_ldextras="-Wl,-rpath=/usr/local/lib/${CC}"
 								LDFLAGS="-Wl,-rpath=/usr/local/lib/${CC}"
+								;;
+							*)
+								es_cv_ldextras="none needed"
+								;;
+						esac
+						;;
+					netbsd*)
+						case "`basename ${CC}`" in
+							gcc)
+								case `basename "${CC%/*/*}"` in
+									gcc13 | gcc14 | gcc15)
+										es_cv_ldextras="-L/usr/pkg/`basename ${CC%/*/*}`/lib"
+										CFLAGS="$CFLAGS -L/usr/pkg/`basename ${CC%/*/*}`/lib"
+										;;
+									*)
+										AC_MSG_ERROR([`basename "${path%/*/*}"` is unsupported])
+										;;
+								esac
 								;;
 							*)
 								es_cv_ldextras="none needed"
