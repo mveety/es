@@ -36,6 +36,10 @@ case "$PLATFORM" in
 		./configure --prefix=/usr --enable-modules
 		gmake all
 		;;
+	NetBSD)
+		CC=clang ./configure --prefix=/usr/pkg --enable-modules
+		make all
+		;;
 	*)
 		echo "warning: es has not been tested on your platform and won't be automatically built"
 		echo "run 'make all' or 'gmake all' to finish if configure succeeds."
