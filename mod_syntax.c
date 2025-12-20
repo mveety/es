@@ -1095,7 +1095,7 @@ PRIM(enablefasthighlighting) {
 	return list_true;
 }
 
-MODULE(mod_syntax)
+MODULE(mod_syntax) {
 	// core
 	DX(basictokenize),
 	DX(enablehighlighting),
@@ -1112,5 +1112,4 @@ MODULE(mod_syntax)
 	DX(enablefasthighlighting),
 
 	PRIMSEND,
-ENDMODULE(mod_syntax, &syntax_onload, &syntax_onunload)
-
+} ENDMODULE(mod_syntax, &syntax_onload, &syntax_onunload)

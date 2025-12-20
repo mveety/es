@@ -34,7 +34,7 @@ PRIM(if) {
 PRIM(forever) {
 	Ref(List *, body, list);
 	for(;;)
-		eval(body, NULL, evalflags & (eval_exitonfalse|run_sandbox));
+		eval(body, NULL, evalflags & (eval_exitonfalse | run_sandbox));
 	RefEnd(body);
 	return nil;
 }

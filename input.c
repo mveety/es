@@ -1090,17 +1090,17 @@ line_editor_hook(EditorState *state, int key, void *aux)
 			resstr = estrdup(getstr(new_resstr->term));
 
 		new_bufpos = dictget(resdict, "position");
-		if(new_bufpos != nil){
+		if(new_bufpos != nil) {
 			errno = 0;
 			newpos = (size_t)strtoul(getstr(new_bufpos->term), nil, 10);
-			if(newpos == 0){
+			if(newpos == 0) {
 				switch(errno) {
 				case EINVAL:
 				case ERANGE:
 					goto fail;
 				}
 			}
-			if(resstr && newpos < strlen(resstr)){
+			if(resstr && newpos < strlen(resstr)) {
 				state->bufpos = newpos;
 				state->fixed_bufpos = 1;
 			} else if(newpos <= state->bufend) {
@@ -1209,7 +1209,7 @@ clear_key_mapping(char *keyname)
 	else
 		unreachable();
 
-	if((void*)current_map.hook == (void*)&line_editor_hook)
+	if((void *)current_map.hook == (void *)&line_editor_hook)
 		efree(current_map.aux);
 
 	memset(&clear_mapping, 0, sizeof(Mapping));

@@ -434,10 +434,10 @@ mkmatchall(Tree *subj, Tree *cases)
 			ifbody = mkseq("%seq",
 						   thunkify(mk(nAssign, mk(nWord, hasmatched), mk(nWord, falsestr))), cmd);
 			ifbody = thunkify(ifbody);
-			match =
-				treecons(mk(nCall, thunkify(treecons(mk(nPrim, "if"), treecons(thunkify(pattlist),
+			match = treecons(mk(nCall, thunkify(treecons(mk(nPrim, "if"),
+														 treecons(thunkify(pattlist),
 																  treecons(ifbody, resultnil))))),
-						 NULL);
+							 NULL);
 			match = mk(nList, resvar, match);
 			match = thunkify(mk(nAssign, mk(nWord, resname), match));
 			ifs = mkseq("%seq", ifs, match);
@@ -446,7 +446,8 @@ mkmatchall(Tree *subj, Tree *cases)
 		} else {
 			wildmatch = treecons(mk(nCall, cmd), NULL);
 			wildmatch = thunkify(mk(nAssign, mk(nWord, resname), wildmatch));
-			wildmatch = treecons(mk(nPrim, "if"), treecons(thunkify(matchvar), treecons(wildmatch, NULL)));
+			wildmatch =
+				treecons(mk(nPrim, "if"), treecons(thunkify(matchvar), treecons(wildmatch, NULL)));
 			has_wild = 1;
 		}
 	}

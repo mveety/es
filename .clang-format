@@ -34,6 +34,7 @@ SpacesInParensOptions:
 PointerAlignment: Right
 ColumnLimit: 100
 WhitespaceSensitiveMacros: ['PRIM', 'ExceptionHandler', 'CatchExceptionIf',
-                            'CatchException', 'EndExceptionHandler', 'REDIR']
-OneLineFormatOffRegex: "(Root|PRIM|REDIR|ExceptionHandler|CatchException|CatchExceptionIf|EndExceptionHandler)"
+                            'CatchException', 'EndExceptionHandler', 'REDIR',
+                            'MODULE', 'ENDMODULE']
+OneLineFormatOffRegex: "(Root|PRIM|REDIR|ExceptionHandler|CatchException|CatchExceptionIf|EndExceptionHandler|MODULE|ENDMODULE)"
 

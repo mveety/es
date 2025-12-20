@@ -48,9 +48,10 @@ create_library(char *fname, char *errstr, size_t errstrlen)
 	}
 
 	module = dlsym(lib->handle, "module_info");
-	if(module == nil){
+	if(module == nil) {
 		if(errstr)
-			snprintf(&errstr[0], errstrlen, "module api is too old! (es is %d, module is ancient)\n", DynLibApi);
+			snprintf(&errstr[0], errstrlen,
+					 "module api is too old! (es is %d, module is ancient)\n", DynLibApi);
 		dlclose(lib->handle);
 		efree(lib->fname);
 		efree(lib);
@@ -173,7 +174,7 @@ destroy_library(DynamicLibrary *lib, char *errstr, size_t errstrlen)
 	char *dlerrstr;
 	int res = 0;
 
-	if(lib->builtin){
+	if(lib->builtin) {
 		if(errstr)
 			snprintf(errstr, errstrlen, "%s", dynliberrors[ErrorModuleBuiltin]);
 		return -1;
@@ -291,7 +292,7 @@ open_library(char *fname, char *errstr, size_t errstrlen)
 int
 close_library(DynamicLibrary *lib, char *errstr, size_t errstrlen)
 {
-	if(lib->builtin){
+	if(lib->builtin) {
 		if(errstr)
 			snprintf(errstr, errstrlen, "%s", dynliberrors[ErrorModuleBuiltin]);
 		return -3;

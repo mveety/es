@@ -2,21 +2,24 @@
 
 #define PRIMSMAX 500
 
-#define MODULE(Name) \
-	static Primitive CONCAT(primsdef_, Name)[] = {
+#define MODULE(Name) static Primitive CONCAT(primsdef_, Name)[] = 
 
 #define ENDMODULE(Name, Onload, Onunload) \
-	}; \
-	Module module_info = (Module){ \
-		.name = STRING(Name), \
-		.onload = Onload, \
-		.onunload = Onunload, \
-		.apiversion = DynLibApi, \
-		.primitives = CONCAT(primsdef_, Name), \
+	;                                                                \
+	Module module_info = (Module){                                   \
+		.name = STRING(Name),                                        \
+		.onload = Onload,                                            \
+		.onunload = Onunload,                                        \
+		.apiversion = DynLibApi,                                     \
+		.primitives = CONCAT(primsdef_, Name),                       \
 	};
 
 #define PRIM(name) static List *CONCAT(prim_,name)( List * list, Binding * binding, int evalflags)
-#define DX(name) (Primitive){STRING(name), CONCAT(&prim_, name)}
+#define DX(name)                           \
+	(Primitive)                            \
+	{                                      \
+		STRING(name), CONCAT(&prim_, name) \
+	}
 #define PRIMSEND {0, 0}
 
 enum {
@@ -28,8 +31,8 @@ enum {
 	ErrorModuleMissingSymbol = 2,
 
 	// unloading errors
-	ErrorModuleInUse = 3, // if the module is in use
-	ErrorModuleBuiltin = 4,	// if the module is compiled into es
+	ErrorModuleInUse = 3,	// if the module is in use
+	ErrorModuleBuiltin = 4, // if the module is compiled into es
 
 	// other errors
 	ErrorOther = -126,

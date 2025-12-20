@@ -42,7 +42,6 @@
 #include <sys/resource.h>
 #endif
 
-
 #include <unistd.h>
 
 #include <sys/param.h>

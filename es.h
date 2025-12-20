@@ -18,26 +18,26 @@
 /* runflags */
 
 enum {
-	eval_inchild = (1<<0),
-	eval_exitonfalse = (1<<1), /* e */
+	eval_inchild = (1 << 0),
+	eval_exitonfalse = (1 << 1), /* e */
 	eval_flags = (eval_inchild | eval_exitonfalse),
 
 	/* basic runflags */
-	run_interactive = (1<<2), /* i or $0[0] = '-' */
-	run_noexec = (1<<3),	  /* n */
-	run_echoinput = (1<<4),  /* v */
-	run_printcmds = (1<<5),  /* x */
-	run_lisptrees = (1<<6),  /* L */
+	run_interactive = (1 << 2), /* i or $0[0] = '-' */
+	run_noexec = (1 << 3),		/* n */
+	run_echoinput = (1 << 4),	/* v */
+	run_printcmds = (1 << 5),	/* x */
+	run_lisptrees = (1 << 6),	/* L */
 
 	/* sandboxing flags */
-	run_noforkexec = (1<<7), /* X */
-	run_noreadfile = (1<<8), /* R */
-	run_nowritefile = (1<<9), /* W */
-	run_nochdir = (1<<10), /* C */
-	run_fatalflagset = (1<<11), /* F */
+	run_noforkexec = (1 << 7),	  /* X */
+	run_noreadfile = (1 << 8),	  /* R */
+	run_nowritefile = (1 << 9),	  /* W */
+	run_nochdir = (1 << 10),	  /* C */
+	run_fatalflagset = (1 << 11), /* F */
 
-	run_sandbox = (run_noforkexec|run_noreadfile|
-			run_nowritefile|run_nochdir|run_fatalflagset),
+	run_sandbox =
+		(run_noforkexec | run_noreadfile | run_nowritefile | run_nochdir | run_fatalflagset),
 };
 
 /*
@@ -73,11 +73,13 @@ typedef enum {
 	ttRegex = 3,
 } Termtag;
 
+// clang-format off
 typedef enum {
 	HaahrHash,
 	FNV1AHash,
 	JenkinsOATHash
 } HashFunction;
+// clang-format on
 
 struct Term {
 	TermKind kind;
@@ -663,7 +665,7 @@ typedef struct Tag Tag;
 extern void *gcalloc(size_t n, int t);		  /* allocate n with collection tag t */
 extern char *gcdup(const char *s);			  /* copy a 0-terminated string into gc space */
 extern char *gcndup(const char *s, size_t n); /* copy a counted string into gc space */
-extern void *gcmalloc(size_t sz); /* garbage collected malloc */
+extern void *gcmalloc(size_t sz);			  /* garbage collected malloc */
 /* these are same as the above but work with the parser arena */
 extern void *aalloc(size_t sz, int tag);
 extern char *andup(const char *str, size_t n);

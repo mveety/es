@@ -237,10 +237,10 @@ prim_flte(List *list, Binding *binding, int evalflags)
 }
 
 
-MODULE(mod_float)
+MODULE(mod_float) {
 	{"addf", &prim_addf}, {"subf", &prim_subf},
 	{"mulf", &prim_mulf}, {"divf", &prim_divf},
 	{"feq", &prim_feq},	  {"fgt", &prim_fgt},
 	{"fgte", &prim_fgte}, {"flt", &prim_flt},
 	{"flte", &prim_flte}, {0, 0},
-ENDMODULE(mod_float, nil, nil)
+} ENDMODULE(mod_float, nil, nil)

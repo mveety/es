@@ -386,7 +386,7 @@ objectify(char *type, char *str)
 		efree(databuf);
 	} else if(type != nil) {
 		assert(str != nil);
-		if((typeidx = gettypeindex(type))< 0)
+		if((typeidx = gettypeindex(type)) < 0)
 			return result(nil, ObjectifyInvalidType);
 		assert(objtype = typedefs[typeidx]);
 

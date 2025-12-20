@@ -226,7 +226,6 @@ PRIM(dictsize) {
 	if(!list)
 		fail("$&dictsize", "missing argument");
 
-
 	gcref(&r_lp, (void **)&lp);
 	gcref(&r_d, (void **)&d);
 

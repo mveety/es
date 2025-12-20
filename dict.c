@@ -80,14 +80,14 @@ jenkins_oat_strhash2(const char *s1, const char *s2)
 	uint32_t res = 0;
 
 	if(s1 != nil)
-		for(i = 0; s1[i] != '\0'; i++){
+		for(i = 0; s1[i] != '\0'; i++) {
 			res += s1[i];
 			res += (res << 10);
 			res ^= (res >> 6);
 		}
 
 	if(s2 != nil)
-		for(i = 0; s2[i] != '\0'; i++){
+		for(i = 0; s2[i] != '\0'; i++) {
 			res += s2[i];
 			res += (res << 10);
 			res ^= (res >> 6);
@@ -146,14 +146,14 @@ bloomsize(size_t size)
 	size_t res;
 
 	if(size % 8 == 0)
-		res = size/8;
+		res = size / 8;
 	else
-		res = (size/8)+1;
+		res = (size / 8) + 1;
 
 	return res;
 	if(res <= 2)
 		return 2;
-	return res/2;
+	return res / 2;
 }
 
 static inline uint64_t
@@ -174,10 +174,9 @@ bloominsert(Dict *dict, char *name)
 	jenkins_hash = jenkins_oat_strhash2(name, nil);
 	jenkins_bit = jenkins_hash % bloomsz;
 
-
-	dict->bloom[fnv1a_bit/8] |= 1 << (fnv1a_bit%8);
-	dict->bloom[haahr_bit/8] |= 1 << (haahr_bit%8);
-	dict->bloom[jenkins_bit/8] |= 1 << (jenkins_bit%8);
+	dict->bloom[fnv1a_bit / 8] |= 1 << (fnv1a_bit % 8);
+	dict->bloom[haahr_bit / 8] |= 1 << (haahr_bit % 8);
+	dict->bloom[jenkins_bit / 8] |= 1 << (jenkins_bit % 8);
 
 	switch(hashfunction) {
 	default:
@@ -216,7 +215,6 @@ bloomcheck2(Dict *dict, const char *name1, const char *name2)
 	jenkins_hash = jenkins_oat_strhash2(name1, name2);
 	jenkins_bit = jenkins_hash % bloomsz;
 
-
 	switch(hashfunction) {
 	default:
 		unreachable();
@@ -232,9 +230,9 @@ bloomcheck2(Dict *dict, const char *name1, const char *name2)
 		break;
 	}
 
-	if(((dict->bloom[fnv1a_bit/8] & (1 << (fnv1a_bit%8))) != 0) &&
-			((dict->bloom[haahr_bit/8] & (1 << (haahr_bit%8))) != 0) &&
-			((dict->bloom[jenkins_bit/8] & (1 << (jenkins_bit%8))) != 0))
+	if(((dict->bloom[fnv1a_bit / 8] & (1 << (fnv1a_bit % 8))) != 0) &&
+	   ((dict->bloom[haahr_bit / 8] & (1 << (haahr_bit % 8))) != 0) &&
+	   ((dict->bloom[jenkins_bit / 8] & (1 << (jenkins_bit % 8))) != 0))
 		res.exists = TRUE;
 
 	return res;
@@ -315,7 +313,7 @@ get(Dict *dict, const char *name)
 	BloomResult bloomres = {FALSE, 0};
 	Root r_dict;
 
-	gcref(&r_dict, (void**)&dict);
+	gcref(&r_dict, (void **)&dict);
 	if(dict->size > 100) {
 		bloomres = bloomcheck(dict, name);
 		if(bloomres.exists == FALSE)
@@ -325,7 +323,7 @@ get(Dict *dict, const char *name)
 		hash = strhash(name);
 
 	for(; (ap = &dict->table[hash & mask])->name != NULL; hash++)
-		if(ap->name != DEAD && streq(name, ap->name)){
+		if(ap->name != DEAD && streq(name, ap->name)) {
 			gcrderef(&r_dict);
 			return ap;
 		}
@@ -473,7 +471,7 @@ dictget2(Dict *dict, const char *name1, const char *name2)
 	uint64_t mask = dict->size - 1;
 	BloomResult bloomres = {FALSE, 0};
 
-	if(dict->size > 100){
+	if(dict->size > 100) {
 		bloomres = bloomcheck2(dict, name1, name2);
 		if(bloomres.exists == FALSE)
 			return nil;

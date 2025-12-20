@@ -340,7 +340,7 @@ sigchk(void)
 		unreachable();
 		break;
 	case sig_special:
-		switch(sig){
+		switch(sig) {
 		default:
 			unreachable();
 		case SIGINT:

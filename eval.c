@@ -396,7 +396,7 @@ forloop(Tree *defn0, Tree *body0, Binding *binding, int evalflags)
 			}
 
 			ExceptionHandler {
-				result = walk(body, bp, evalflags & (run_sandbox|eval_exitonfalse));
+				result = walk(body, bp, evalflags & (run_sandbox | eval_exitonfalse));
 			} CatchException (e) {
 				if(!termeq(e->term, "continue"))
 					throw(e);

@@ -316,7 +316,7 @@ struct EditorState {
 	char **completions;
 	size_t completionsi;
 	size_t completionssz;
-	enum {None, Forward, Backward} complete_direction;
+	enum { None, Forward, Backward } complete_direction;
 	char **(*completions_hook)(char *, int, int);
 	// completer state
 	char *completebuf;

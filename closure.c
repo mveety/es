@@ -147,7 +147,7 @@ extract(Tree *tree0, Binding *bindings0)
 				case nThunk:
 					term = mkterm(nil, mkclosure(word, bindings));
 					break;
-				case nDict: // not great.
+				case nDict:		// not great.
 					gcenable(); // this mess might need proper runflags support
 					term = mkdictterm(parsedict(word, bindings, 0));
 					gcdisable();

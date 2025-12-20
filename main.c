@@ -81,7 +81,7 @@ init_internal_vars(int runflags)
 		   mklist(mkstr(additional_esrc ? str("%s", extraesrc) : ""), nil));
 	vardef("__es_comp_match", nil, mklist(mkstr(comprehensive_matches ? "true" : "false"), nil));
 	vardef("__es_interactive_start", nil,
-			mklist(mkstr((runflags & run_interactive) == run_interactive ? "true" : "false"), nil));
+		   mklist(mkstr((runflags & run_interactive) == run_interactive ? "true" : "false"), nil));
 
 	gcderef(&r_list, (void **)&list);
 }
@@ -200,8 +200,7 @@ run_flag_usage(void)
 			"	v -- echoinput\n"
 			"	x -- printcmds\n"
 			"	L -- lisptrees\n"
-			"	X -- noforkexec\n"
-			);
+			"	X -- noforkexec\n");
 	exit(2);
 }
 

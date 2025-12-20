@@ -601,7 +601,7 @@ initialize_editor(EditorState *state, int ifd, int ofd)
 	state->prompt1 = nil;
 	state->initialized = 0;
 
-	if(!eisatty(ifd) || !eisatty(ofd)){
+	if(!eisatty(ifd) || !eisatty(ofd)) {
 		basic_editor_initialization(state, ifd, ofd);
 		return -1;
 	}
@@ -690,7 +690,7 @@ free_editor(EditorState *state)
 	state->prompt2sz = 0;
 	state->initialized = 0;
 
-	if(state->outbuf){
+	if(state->outbuf) {
 		buf = state->outbuf;
 		if(buf->str)
 			efree(buf->str);
@@ -1089,7 +1089,7 @@ vt100_refresh(EditorState *state)
 void
 refresh(EditorState *state)
 {
-	switch(state->outdriver){
+	switch(state->outdriver) {
 	default:
 		unreachable();
 	case DriverVT100:
@@ -2554,7 +2554,7 @@ basic_editor(EditorState *state)
 	if(!state->initialized)
 		unreachable();
 
-	switch(state->indriver){
+	switch(state->indriver) {
 	default:
 		unreachable();
 	case DriverFallback:
@@ -2955,7 +2955,7 @@ line_editor(EditorState *state)
 	if(!state->initialized)
 		unreachable();
 
-	switch(state->indriver){
+	switch(state->indriver) {
 	default:
 		unreachable();
 	case DriverFallback:
@@ -2965,4 +2965,3 @@ line_editor(EditorState *state)
 		return vt100_line_editor(state);
 	}
 }
-

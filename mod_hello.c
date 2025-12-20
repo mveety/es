@@ -197,9 +197,9 @@ PRIM(dump_bindings) {
 	return list_true;
 }
 
-MODULE(mod_hello)
+MODULE(mod_hello) {
 	{"hellotest", &hellotest}, DX(make_helloobject),  DX(object_gcmanage),
 	DX(object_freeable),	   DX(object_initialize), DX(object_closeonfork),
 	DX(object_onforkcallback), DX(dump_bindings),
 	PRIMSEND,
-ENDMODULE(mod_hello, &hello_onload, &hello_onunload);
+} ENDMODULE(mod_hello, &hello_onload, &hello_onunload);
