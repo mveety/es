@@ -541,7 +541,7 @@ dictappend(Dict *desta, Dict *srca, Boolean overwrite)
 }
 
 Dict *
-parsedict(Tree *tree0, Binding *binding0)
+parsedict(Tree *tree0, Binding *binding0, int flags)
 {
 	Tree *tree = nil; Root r_tree;
 	Binding *binding = nil; Root r_binding;
@@ -567,8 +567,8 @@ parsedict(Tree *tree0, Binding *binding0)
 	for(inner = tree->u[0].p; inner != nil; inner = inner->u[1].p) {
 		assoc = inner->u[0].p;
 		assert(assoc->kind = nAssoc);
-		name = glom1(assoc->u[0].p, binding);
-		value = glom(assoc->u[1].p, binding, TRUE);
+		name = glom1(assoc->u[0].p, binding, flags);
+		value = glom(assoc->u[1].p, binding, flags, TRUE);
 		if(name == nil)
 			continue;
 		namestr = getstr(name->term);

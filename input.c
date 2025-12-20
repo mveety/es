@@ -746,7 +746,7 @@ resetparser(void)
 extern List *
 runinput(Input *in, int runflags)
 {
-	volatile int flags = runflags;
+	int flags = runflags;
 	List *volatile result = NULL;
 	List *repl, *dispatch;
 	Push push;
@@ -757,7 +757,7 @@ runinput(Input *in, int runflags)
 		"fn-%noeval-print",
 	};
 
-	flags &= ~eval_inchild;
+	flags = (runflags & ~eval_inchild);
 	in->runflags = flags;
 	in->get = (flags & run_echoinput) ? getverbose : get;
 	in->prev = input;
@@ -960,6 +960,8 @@ getrunflags(char *s, size_t sz)
 		s[i++] = 'x';
 	if(input->runflags & run_lisptrees)
 		s[i++] = 'L';
+	if(input->runflags & run_noforkexec)
+		s[i++] = 'X';
 
 	if(i == 0)
 		s[0] = '-';
@@ -1013,6 +1015,9 @@ setrunflags(char *s, size_t sz)
 			break;
 		case 'L':
 			nextflag = run_lisptrees;
+			break;
+		case 'X':
+			nextflag = run_noforkexec;
 			break;
 		}
 		if(state)

@@ -44,10 +44,10 @@ PRIM(dot) {
 	int c, fd;
 	Push zero, star;
 	volatile int runflags = (evalflags & eval_inchild);
-	const char *const usage = ". [-einvxL] file [arg ...]";
+	const char *const usage = ". [-einvxLX] file [arg ...]";
 
 	esoptbegin(list, "$&dot", usage);
-	while((c = esopt("einvxL")) != EOF)
+	while((c = esopt("einvxLX")) != EOF)
 		switch(c) {
 		case 'e':
 			runflags |= eval_exitonfalse;
@@ -66,6 +66,9 @@ PRIM(dot) {
 			break;
 		case 'L':
 			runflags |= run_lisptrees;
+			break;
+		case 'X':
+			runflags |= run_noforkexec;
 			break;
 		}
 

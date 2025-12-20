@@ -192,7 +192,7 @@ debug_flag_usage(void)
 void
 run_flag_usage(void)
 {
-	dprintf(2, "run flags: es -r [einVxL]\n%s",
+	dprintf(2, "run flags: es -r [einVxLX]\n%s",
 			"	? -- show this message\n"
 			"	e -- exitonfalse\n"
 			"	i -- interactive\n"
@@ -200,7 +200,8 @@ run_flag_usage(void)
 			"	v -- echoinput\n"
 			"	x -- printcmds\n"
 			"	L -- lisptrees\n"
-			"	a -- assertions\n");
+			"	X -- noforkexec\n"
+			);
 	exit(2);
 }
 
@@ -463,8 +464,8 @@ main(int argc, char *argv[])
 				case 'L':
 					runflags |= run_lisptrees;
 					break;
-				case 'a':
-					assertions = TRUE;
+				case 'X':
+					runflags |= run_noforkexec;
 					break;
 				case '?':
 					run_flag_usage();

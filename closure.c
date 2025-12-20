@@ -148,8 +148,8 @@ extract(Tree *tree0, Binding *bindings0)
 					term = mkterm(nil, mkclosure(word, bindings));
 					break;
 				case nDict: // not great.
-					gcenable();
-					term = mkdictterm(parsedict(word, bindings));
+					gcenable(); // this mess might need proper runflags support
+					term = mkdictterm(parsedict(word, bindings, 0));
 					gcdisable();
 					break;
 				default:

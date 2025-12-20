@@ -15,6 +15,31 @@
 #define ENV_SEPARATOR '\017' /* control-O */
 #define ENV_ESCAPE '\016'	 /* control-N */
 
+/* runflags */
+
+enum {
+	eval_inchild = (1<<0),
+	eval_exitonfalse = (1<<1), /* e */
+	eval_flags = (eval_inchild | eval_exitonfalse),
+
+	/* basic runflags */
+	run_interactive = (1<<2), /* i or $0[0] = '-' */
+	run_noexec = (1<<3),	  /* n */
+	run_echoinput = (1<<4),  /* v */
+	run_printcmds = (1<<5),  /* x */
+	run_lisptrees = (1<<6),  /* L */
+
+	/* sandboxing flags */
+	run_noforkexec = (1<<7), /* X */
+	run_noreadfile = (1<<8), /* R */
+	run_nowritefile = (1<<9), /* W */
+	run_nochdir = (1<<10), /* C */
+	run_fatalflagset = (1<<11), /* F */
+
+	run_sandbox = (run_noforkexec|run_noreadfile|
+			run_nowritefile|run_nochdir|run_fatalflagset),
+};
+
 /*
  * the fundamental es data structures.
  */
@@ -333,7 +358,7 @@ extern Binding *reversebindings(Binding *binding);
 /* eval.c */
 
 extern Binding *bindargs(Tree *params, List *args, Binding *binding);
-extern List *forkexec(char *file, List *list, Boolean inchild);
+extern List *forkexec(char *file, List *list, int flags);
 extern List *walk(Tree *tree, Binding *binding, int flags);
 extern List *eval(List *list, Binding *binding, int flags);
 extern List *eval1(Term *term, int flags);
@@ -343,15 +368,11 @@ extern unsigned long evaldepth, maxevaldepth;
 #define MINmaxevaldepth 100
 #define MAXmaxevaldepth 0xffffffffU
 
-#define eval_inchild 1
-#define eval_exitonfalse 2
-#define eval_flags (eval_inchild | eval_exitonfalse)
-
 /* glom.c */
 
-extern List *glom(Tree *tree, Binding *binding, Boolean globit);
-extern List *glom1(Tree *tree, Binding *binding);
-extern List *glom2(Tree *tree, Binding *binding, StrList **quotep);
+extern List *glom(Tree *tree, Binding *binding, int flags, Boolean globit);
+extern List *glom1(Tree *tree, Binding *binding, int flags);
+extern List *glom2(Tree *tree, Binding *binding, int flags, StrList **quotep);
 
 /* glob.c */
 
@@ -425,7 +446,7 @@ extern Dict *dictput(Dict *dict, char *name, void *value);
 extern void *dictget2(Dict *dict, const char *name1, const char *name2);
 extern Dict *dictcopy(Dict *oda);
 extern Dict *dictappend(Dict *dest, Dict *src, Boolean overwrite);
-extern Dict *parsedict(Tree *tree0, Binding *binding0);
+extern Dict *parsedict(Tree *tree0, Binding *binding0, int flags);
 
 /* conv.c */
 
@@ -514,13 +535,6 @@ extern Mapping name2mapping(char *name);
 extern int bind_base_function(char *keyname, char *function);
 extern int configure_word_start(char *str);
 extern char *get_word_start(void);
-
-/* eval_* flags are also understood as runflags */
-#define run_interactive 4 /* -i or $0[0] = '-' */
-#define run_noexec 8	  /* -n */
-#define run_echoinput 16  /* -v */
-#define run_printcmds 32  /* -x */
-#define run_lisptrees 64  /* -L and defined(LISPTREES) */
 
 /* opt.c */
 

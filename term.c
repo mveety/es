@@ -232,8 +232,8 @@ getdict(Term *term)
 		t = term;
 		parsed = parsestring(t->str);
 		if(!parsed)
-			goto done;
-		glommed = glom(parsed, nil, FALSE);
+			goto done; // might need to pass getdict the runflags
+		glommed = glom(parsed, nil, FALSE, 0);
 		if(glommed == nil || glommed->next != nil)
 			goto done;
 		dict = getdict(glommed->term);

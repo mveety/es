@@ -54,7 +54,7 @@ PRIM(run) {
 		fail("$&run", "usage: %%run file argv0 argv1 ...");
 	Ref(List *, lp, list);
 	file = getstr(lp->term);
-	lp = forkexec(file, lp->next, (evalflags & eval_inchild) != 0);
+	lp = forkexec(file, lp->next, evalflags);
 	RefReturn(lp);
 }
 

@@ -279,7 +279,7 @@ mid_range:
 
 /* glom1 -- glom when we don't need to produce a quote list */
 List *
-glom1(Tree *tree, Binding *binding)
+glom1(Tree *tree, Binding *binding, int flags)
 {
 	Ref(List *, result, NULL);
 	Ref(List *, tail, NULL);
@@ -326,7 +326,7 @@ glom1(Tree *tree, Binding *binding)
 			tp = NULL;
 			break;
 		case nRegex:
-			list = glom1(tp->u[0].p, binding);
+			list = glom1(tp->u[0].p, binding, flags);
 			list->term->kind = tkRegex;
 			tp = NULL;
 			break;
@@ -342,7 +342,7 @@ glom1(Tree *tree, Binding *binding)
 		case nVar:
 			gcref(&r_var, (void **)&var);
 
-			var = glom1(tp->u[0].p, bp);
+			var = glom1(tp->u[0].p, bp, flags);
 			tp = NULL;
 			for(; var != NULL; var = var->next) {
 				list = listcopy(varlookup(getstr(var->term), bp));
@@ -364,14 +364,14 @@ glom1(Tree *tree, Binding *binding)
 			gcref(&r_sub, (void **)&sub);
 			gcref(&r_templist, (void **)&templist);
 
-			templist = glom1(tp->u[0].p, bp);
+			templist = glom1(tp->u[0].p, bp, flags);
 			if(templist == NULL)
 				fail("es:glom", "null variable name in subscript");
 			if(templist->next != NULL)
 				fail("es:glom", "multi-word variable name in subscript");
 			namestr = getstr(templist->term);
 			templist = varlookup(namestr, bp);
-			sub = glom1(tp->u[1].p, bp);
+			sub = glom1(tp->u[1].p, bp, flags);
 			if(templist != NULL && templist->term->kind == tkDict && templist->next == NULL) {
 				gcref(&r_dict, (void **)&dict);
 				gcref(&r_subnamestr, (void **)&subnamestr);
@@ -402,19 +402,19 @@ glom1(Tree *tree, Binding *binding)
 			gcrderef(&r_namestr);
 			break;
 		case nCall:
-			list = listcopy(walk(tp->u[0].p, bp, 0));
+			list = listcopy(walk(tp->u[0].p, bp, flags));
 			tp = NULL;
 			break;
 		case nList:
-			list = glom1(tp->u[0].p, bp);
+			list = glom1(tp->u[0].p, bp, flags);
 			tp = tp->u[1].p;
 			break;
 		case nConcat:
 			gcref(&r_l, (void **)&l);
 			gcref(&r_r, (void **)&r);
 
-			l = glom1(tp->u[0].p, bp);
-			r = glom1(tp->u[1].p, bp);
+			l = glom1(tp->u[0].p, bp, flags);
+			r = glom1(tp->u[1].p, bp, flags);
 			tp = NULL;
 			list = concat(l, r);
 
@@ -434,8 +434,8 @@ glom1(Tree *tree, Binding *binding)
 			for(inner = tp->u[0].p; inner != NULL; inner = inner->u[1].p) {
 				assoc = inner->u[0].p;
 				assert(assoc->kind = nAssoc);
-				name = glom1(assoc->u[0].p, bp);
-				value = glom(assoc->u[1].p, bp, TRUE);
+				name = glom1(assoc->u[0].p, bp, flags);
+				value = glom(assoc->u[1].p, bp, flags, TRUE);
 				if(name == NULL)
 					continue;
 				namestr = getstr(name->term);
@@ -471,7 +471,7 @@ glom1(Tree *tree, Binding *binding)
 
 /* glom2 -- glom and produce a quoting list */
 extern List *
-glom2(Tree *tree, Binding *binding, StrList **quotep)
+glom2(Tree *tree, Binding *binding, int flags, StrList **quotep)
 {
 	Ref(List *, result, NULL);
 	Ref(List *, tail, NULL);
@@ -499,7 +499,7 @@ glom2(Tree *tree, Binding *binding, StrList **quotep)
 			tp = NULL;
 			break;
 		case nList:
-			list = glom2(tp->u[0].p, bp, &qlist);
+			list = glom2(tp->u[0].p, bp, flags, &qlist);
 			tp = tp->u[1].p;
 			break;
 		case nConcat:
@@ -507,8 +507,8 @@ glom2(Tree *tree, Binding *binding, StrList **quotep)
 			Ref(List *, r, NULL);
 			Ref(StrList *, ql, NULL);
 			Ref(StrList *, qr, NULL);
-			l = glom2(tp->u[0].p, bp, &ql);
-			r = glom2(tp->u[1].p, bp, &qr);
+			l = glom2(tp->u[0].p, bp, flags, &ql);
+			r = glom2(tp->u[1].p, bp, flags, &qr);
 			if(isvaliddict(l) || isvaliddict(r)) {
 				list = concat(l, r);
 				qlist = mkstrlist(UNQUOTED, NULL);
@@ -519,7 +519,7 @@ glom2(Tree *tree, Binding *binding, StrList **quotep)
 			tp = NULL;
 			break;
 		default:
-			list = glom1(tp, bp);
+			list = glom1(tp, bp, flags);
 			Ref(List *, lp, list);
 			for(; lp != NULL; lp = lp->next)
 				qlist = mkstrlist(QUOTED, qlist);
@@ -551,15 +551,15 @@ glom2(Tree *tree, Binding *binding, StrList **quotep)
 
 /* glom -- top level glom dispatching */
 extern List *
-glom(Tree *tree, Binding *binding, Boolean globit)
+glom(Tree *tree, Binding *binding, int flags, Boolean globit)
 {
 	if(globit) {
 		Ref(List *, list, NULL);
 		Ref(StrList *, quote, NULL);
-		list = glom2(tree, binding, &quote);
+		list = glom2(tree, binding, flags, &quote);
 		list = glob(list, quote, binding);
 		RefEnd(quote);
 		RefReturn(list);
 	} else
-		return glom1(tree, binding);
+		return glom1(tree, binding, flags);
 }
