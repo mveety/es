@@ -55,7 +55,7 @@ AC_ARG_ENABLE(modules,
 
 AC_ARG_ENABLE(development,
 [  --enable-development	Extras for development],
-[CFLAGS="-g -O0 -DEditorDebug=1"; development=true])
+[CFLAGS="-g -O0"; development=true;EDITORDEBUG=true])
 
 AC_ARG_ENABLE(addrsan,
 [  --enable-addrsan	Enable llvm address sanitizer],
@@ -69,13 +69,17 @@ AC_ARG_ENABLE(ubsan,
 [  --enable-ubsan	Enable llvm undefined behavior sanitizer],
 [SANITIZER='ubsan'])
 
-AC_ARG_ENABLE(editordebug,
-[  --enable-editordebug	Enable editor debugging],
-[EDITORDEBUG=true])
-
 AC_ARG_ENABLE(syntaxdebug,
 [  --enable-syntaxdebug	Enable mod_syntax debugging],
 [SYNTAXDEBUG=true])
+
+AC_ARG_ENABLE(editordebug,
+[  --enable-editordebug	Enable line editor debugging output],
+[	if test "x$enableval" = "yes"; then
+		EDITORDEBUG=true
+	else
+		EDITORDEBUG=false
+	fi])
 
 AC_SUBST(ENABLE_LOGINSHELL)
 AC_SUBST(DEVFD_IMPL)
@@ -244,7 +248,7 @@ then
 	LDFLAGS="$LDFLAGS -rdynamic"
 fi
 
-if test "$EDITORDEBUG" = "true" && test "$development" = "false"
+if test "$EDITORDEBUG" = "true"
 then
 	CFLAGS="$CFLAGS -DEditorDebug=1"
 fi
