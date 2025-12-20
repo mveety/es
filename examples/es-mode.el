@@ -8,12 +8,11 @@
 (add-to-list 'auto-mode-alist '("\\.es\\'" . es-mode))
 
 (defvar es-font-lock-keywords
-  '(
-    
-    ("\\<\\(let\\|if\\|for\\|while\\|fn\\)\\>" . 'font-lock-keyword-face)
-    ("\\<\\(access\\|break\\|catch\\|cd\\|echo\\|eval\\|exec\\|exit\\|false\\|forever\\|fork\\|if\\|limit\\|newpgrp\\|result\\|return\\|throw\\|time\\|true\\|umask\\|unwind-protect\\|var\\|vars\\|wait\\|whatis\\|while\\|%read\\|add\\|sub\\|mul\\|div\\|mod\\|lt\\|gt\\|eq\\lets\\|tobase\\|frombase\\|reverse\\|assert\\|assert2\\|gensym\\|apply\\|bqmap\\|fbqmap\\|map\\|macro\\|import\\|library\\|whatis\\|panic\\|option\\|match\\|matchall\\|process\\|try\\)\\>" . 'font-lock-builtin-face)
+  '(("\\<\\(let\\|local\\|lets\\|if\\|for\\|while\\|fn\\|%closure\\|match\\|matchall\\|process\\|%dict\\|%re\\|onerror\\)\\>" . 'font-lock-keyword-face)
+    ("\\<\\(access\\|break\\|catch\\|cd\\|echo\\|eval\\|exec\\|exit\\|false\\|forever\\|fork\\|if\\|limit\\|newpgrp\\|result\\|return\\|throw\\|time\\|true\\|umask\\|unwind-protect\\|var\\|vars\\|wait\\|whats\\|while\\|add\\|sub\\|mul\\|div\\|mod\\|lt\\|gt\\|lte\\|gte\\|eq\\|tobase\\|frombase\\|reverse\\|waitfor\\|assert\\|assert2\\|gensym\\|apply\\|bqmap\\|fbqmap\\|map\\|macro\\|import\\|library\\|whatis\\|panic\\|option\\|try\\|iterator\\|iterator2\\|do\\|do2\\|accumulate\\|accumulate2\\|dolist\\|glob\\|parseargs\\|makeerror\\|errmatch\\|iserror\\|continue\\|dictnew\\|dictget\\|dictput\\|dictremove\\|dictsize\\|dictforall\\|dictnames\\|dictvalues\\|dictdump\\|dictiter\\|conf\\|box\\|defconf\\|defconfalias\\|dictcopy\\|dicthaskey\\|dictkeys\\)\\>
+" . 'font-lock-builtin-face)
     ("'[^']*'" . 'font-lock-string-face)
-    ("`{[^}]*}" . 'font-lock-variable-name-face)
+    ;;("`{[^}]*}" . 'font-lock-variable-name-face)
     ("\\<-\\w*\\>" . 'font-lock-reference-face)
     ("\$\\w*" . 'font-lock-reference-face)
     ))
