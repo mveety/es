@@ -9,6 +9,10 @@
 #define TokenizerDebug 0
 #endif
 
+#ifdef dprint
+#undef dprint
+#endif
+
 #if TokenizerDebug == 1
 #define dprint(args...)                    \
 	do {                                   \

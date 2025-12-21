@@ -425,8 +425,8 @@ addtolist(void *arg, char *key, void *value)
 	gcref(&r_term, (void **)&term);
 
 	listp = arg;
-	/* dprintf(2, "addtolist: key = %p, ", key);
-	dprintf(2, "*key = \"%s\"\n", key); */
+	/* dprint("addtolist: key = %p, ", key);
+	dprint("*key = \"%s\"\n", key); */
 	term = mkstr(key);
 	*listp = mklist(term, *listp);
 

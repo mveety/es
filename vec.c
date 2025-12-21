@@ -64,16 +64,16 @@ vectorize(List *list)
 	v = mkvector(n);
 	v->count = n;
 
-	/* dprintf(2, "vectorize start\n"); */
+	/* dprint("vectorize start\n"); */
 	for(i = 0; lp != NULL; lp = lp->next, i++) {
 		assert(lp->term->kind != tkRegex);
 		s = getstr(lp->term); /* must evaluate before v->vector[i] */
-		/* dprintf(2, "s = %p, ", s);
-		dprintf(2, "*s = \"%s\"\n", s); */
+		/* dprint("s = %p, ", s);
+		dprint("*s = \"%s\"\n", s); */
 		assert(s != nil);
 		v->vector[i] = s;
 	}
-	/* dprintf(2, "vectorize end\n"); */
+	/* dprint("vectorize end\n"); */
 	gcrderef(&r_s);
 	gcrderef(&r_lp);
 	gcrderef(&r_v);

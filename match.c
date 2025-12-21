@@ -25,7 +25,7 @@ int
 isquoted(const char *q, size_t qi, size_t quotelen)
 {
 	if(verbose_rangematch)
-		dprintf(2, "isquoted: q = \"%s\", qi = %lu, quotelen = %lu\n", q, qi, quotelen);
+		dprint("isquoted: q = \"%s\", qi = %lu, quotelen = %lu\n", q, qi, quotelen);
 	if(q == QUOTED)
 		return 1;
 	if(q == UNQUOTED)
@@ -61,7 +61,7 @@ rangematch(const char *p, const char *q, char c)
 	/* it doesn't work without the dprintf's (at least on freebsd with clang -O2) */
 	/* i think it's fixed now? */
 	if(verbose_rangematch)
-		dprintf(2, "rangematch: p = \"%s\", q = \"%s\", c = %c\n", p, q, c);
+		dprint("rangematch: p = \"%s\", q = \"%s\", c = %c\n", p, q, c);
 	if(*p == '~' && !isquoted(q, qi, quotelen)) {
 		p++;
 		if(q != UNQUOTED && q != QUOTED)
@@ -77,9 +77,9 @@ rangematch(const char *p, const char *q, char c)
 	}
 	for(; *p != ']' || (iq = isquoted(q, qi, quotelen)); p++, qi++) {
 		if(verbose_rangematch) {
-			dprintf(2, "rangematch: p = \"%s\", q = \"%s\", qi = %lu, c = %c", p, q, qi, c);
-			dprintf(2, ", matched = %s", matched == TRUE ? "true" : "false");
-			dprintf(2, ", isquoted = %d\n", iq);
+			dprint("rangematch: p = \"%s\", q = \"%s\", qi = %lu, c = %c", p, q, qi, c);
+			dprint(", matched = %s", matched == TRUE ? "true" : "false");
+			dprint(", isquoted = %d\n", iq);
 		}
 		if(*p == '\0')
 			return RANGE_ERROR; /* bad syntax */
@@ -471,11 +471,11 @@ regexextract(RegexStatus *status, Term *subject0, Term *pattern0)
 		if(strlen(copybuf) == 0)
 			continue;
 		if(regex_debug == TRUE) {
-			dprintf(2, "pmatch[%d].rm_so = %lu, pmatch[%d].rm_eo = %lu, ", i,
+			dprint("pmatch[%d].rm_so = %lu, pmatch[%d].rm_eo = %lu, ", i,
 					(uint64_t)pmatch[i].rm_so, i, (uint64_t)pmatch[i].rm_eo);
-			dprintf(2, "pmatch[%d].rm_eo - pmatch[%d].rm_so = %lu, ", i, i,
+			dprint("pmatch[%d].rm_eo - pmatch[%d].rm_so = %lu, ", i, i,
 					(uint64_t)(pmatch[i].rm_eo - pmatch[i].rm_so));
-			dprintf(2, "i = %d, nmatch = %lu, copybuf = %s\n", i, nmatch, copybuf);
+			dprint("i = %d, nmatch = %lu, copybuf = %s\n", i, nmatch, copybuf);
 		}
 		substrs = mklist(mkstr(str("%s", copybuf)), substrs);
 	}

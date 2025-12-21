@@ -124,9 +124,9 @@ dump_prims_lib(DynamicLibrary *lib)
 {
 	size_t i = 0;
 
-	dprintf(2, "Library %s (%s)\n", lib->name, lib->fname);
+	dprint("Library %s (%s)\n", lib->name, lib->fname);
 	for(i = 0; i < lib->primslen; i++)
-		dprintf(2, "\t%lu: primitive %s\n", i, lib->prims[i].name);
+		dprint("\t%lu: primitive %s\n", i, lib->prims[i].name);
 }
 
 void
@@ -159,10 +159,10 @@ unload_prims_lib(DynamicLibrary *lib)
 	for(i = 0; i < lib->primslen; i++) {
 		prim = &lib->prims[i];
 		if(dynlib_verbose)
-			dprintf(2, "unloading %s from %s...", prim->name, lib->name);
+			dprint("unloading %s from %s...", prim->name, lib->name);
 		remove_prim(prim->name);
 		if(dynlib_verbose)
-			dprintf(2, "done.\n");
+			dprint("done.\n");
 	}
 
 	return 0;

@@ -8,6 +8,12 @@
 #define nil ((void *)0)
 #define nelem(obj) (sizeof(obj) / sizeof((obj)[0]))
 
+#define dprint(args...) \
+	do { \
+		if(editor_debugfd > 0) \
+			dprintf(editor_debugfd, args); \
+	} while (0)
+
 /*
  * meta-information for exported environment strings
  */

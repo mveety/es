@@ -272,7 +272,7 @@ input_resettokstatus(void)
 
 	s = input_dumptokstatus();
 	if(verbose_parser == TRUE)
-		dprintf(2, "input %s(%p): last tokstatus = \"%s\"\n", input->name, input, s);
+		dprint("input %s(%p): last tokstatus = \"%s\"\n", input->name, input, s);
 	if(input->lasttokstatus != NULL) {
 		efree(input->lasttokstatus);
 		input->lasttokstatus = NULL;

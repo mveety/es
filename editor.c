@@ -34,6 +34,10 @@
 #define EditorDebug 0
 #endif
 
+#ifdef dprint
+#undef dprint
+#endif
+
 #if EditorDebug == 1
 #define dprint(args...)                \
 	do {                               \

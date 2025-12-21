@@ -96,10 +96,10 @@ checklist2(Block *list, int print, void *b)
 		assert(list->next != list);
 		if(print) {
 			if(b)
-				dprintf(2, "%lu: list->prev = %p, list = %p, list->next = %p, p = %p, b = %p\n", i,
+				dprint("%lu: list->prev = %p, list = %p, list->next = %p, p = %p, b = %p\n", i,
 						list->prev, list, list->next, p, b);
 			else
-				dprintf(2, "%lu: list->prev = %p, list = %p, list->next = %p, p = %p\n", i,
+				dprint("%lu: list->prev = %p, list = %p, list->next = %p, p = %p\n", i,
 						list->prev, list, list->next, p);
 		}
 		p = list;
@@ -149,7 +149,7 @@ list_rating(Block *list)
 			sortrating--;
 	}
 	nsortsn++;
-	dprintf(2, "%lu: sortrating = %ld (listlen = %lu)\n", nsortsn, sortrating, nblocks_stats(list));
+	dprint("%lu: sortrating = %ld (listlen = %lu)\n", nsortsn, sortrating, nblocks_stats(list));
 }
 
 BlockArray *
@@ -345,7 +345,7 @@ add_to_freelist(Block *b)
 	used(&len);
 
 	if(gcverbose)
-		dprintf(2, ">>> adding %p to freelist\n", b);
+		dprint(">>> adding %p to freelist\n", b);
 	if(assertions)
 		len = checklist(freelist);
 	b->next = freelist;
@@ -383,7 +383,7 @@ add_to_oldlist(Block *b)
 	used(&len);
 	if(assertions) {
 		len = checklist(oldlist);
-		dprintf(2, "len = %lu\n", len);
+		dprint("len = %lu\n", len);
 	}
 	b->next = oldlist;
 	if(oldlist)
@@ -406,7 +406,7 @@ coalesce1(Block *a, Block *b)
 	if(a->next == nil || b == nil)
 		return -2;
 	if(gcverbose)
-		dprintf(2, "coalesce: a = %p, a->size = %x, a+a->size = %lx, b = %p, b->size = %x\n", a,
+		dprint("coalesce: a = %p, a->size = %x, a+a->size = %lx, b = %p, b->size = %x\n", a,
 				a->size, (size_t)((char *)a) + a->size, b, b->size);
 	if(((char *)a) + a->size != (void *)b)
 		return -3;
@@ -423,7 +423,7 @@ void *
 coalesce(Block *a, Block *b)
 {
 	if(coalesce1(a, b) == 0 && b != nil && gcverbose)
-		dprintf(2, ">>> coalescing blocks %p and %p\n", a, b);
+		dprint(">>> coalescing blocks %p and %p\n", a, b);
 	return a;
 }
 
@@ -601,7 +601,7 @@ gcmark(void *p)
 
 	if(!ismanaged(p)) {
 		if(gcverbose)
-			dprintf(2, ">>> not marking unmanaged ptr %p\n", p);
+			dprint(">>> not marking unmanaged ptr %p\n", p);
 		return;
 	}
 
@@ -609,14 +609,14 @@ gcmark(void *p)
 
 	if(h->tag == tNil) {
 		if(gcverbose)
-			dprintf(2, ">>> marking NULL %p\n", p);
+			dprint(">>> marking NULL %p\n", p);
 		gc_set_mark(h);
 		return;
 	}
 
 	t = gettag(h->tag);
 	if(gcverbose)
-		dprintf(2, ">>>> marking %s %p\n", t->typename, p);
+		dprint(">>>> marking %s %p\n", t->typename, p);
 	(t->mark)(p);
 }
 
@@ -674,7 +674,7 @@ sweeplist(Block *list, Block *oolist, Boolean gensort)
 				olist = cur;
 			} else {
 				if(gcverbose)
-					dprintf(2, ">>> unmarking %p\n", h);
+					dprint(">>> unmarking %p\n", h);
 				gc_unset_mark(h);
 				cur->prev = new_list;
 				cur->next = nil;
@@ -686,7 +686,7 @@ sweeplist(Block *list, Block *oolist, Boolean gensort)
 			}
 		} else {
 			if(gcverbose)
-				dprintf(2, ">>> deallocating %p\n", cur);
+				dprint(">>> deallocating %p\n", cur);
 			bytesused -= cur->size;
 			cur->next = nil;
 			cur->prev = nil;
@@ -734,21 +734,21 @@ gcoldsweep(void)
 void
 gc_print_stats(GcStats *stats)
 {
-	dprintf(2, "tfree = %lu, rfree = %lu\n", stats->total_free, stats->real_free);
-	dprintf(2, "tused = %lu, rused = %lu\n", stats->total_used, stats->real_used);
-	dprintf(2, "free blocks = %lu, used blocks = %lu\n", stats->free_blocks, stats->used_blocks);
-	dprintf(2, "old blocks = %lu\n", stats->old_blocks);
-	dprintf(2, "nfrees = %lu, nallocs = %lu\n", stats->nfrees, stats->nallocs);
-	dprintf(2, "allocations since last gc = %lu\n", stats->allocations);
-	dprintf(2, "number of gc = %lu\n", stats->ngcs);
-	dprintf(2, "gc_sort_after_n = %d, nsortgc = %d\n", stats->sort_after_n, stats->nsortgc);
-	dprintf(2, "gc_coalesce_after_n = %d, ncoalescegc = %d\n", stats->coalesce_after,
+	dprint("tfree = %lu, rfree = %lu\n", stats->total_free, stats->real_free);
+	dprint("tused = %lu, rused = %lu\n", stats->total_used, stats->real_used);
+	dprint("free blocks = %lu, used blocks = %lu\n", stats->free_blocks, stats->used_blocks);
+	dprint("old blocks = %lu\n", stats->old_blocks);
+	dprint("nfrees = %lu, nallocs = %lu\n", stats->nfrees, stats->nallocs);
+	dprint("allocations since last gc = %lu\n", stats->allocations);
+	dprint("number of gc = %lu\n", stats->ngcs);
+	dprint("gc_sort_after_n = %d, nsortgc = %d\n", stats->sort_after_n, stats->nsortgc);
+	dprint("gc_coalesce_after_n = %d, ncoalescegc = %d\n", stats->coalesce_after,
 			stats->ncoalescegc);
-	dprintf(2, "gc_after = %d\n", stats->gc_after);
-	dprintf(2, "nregions = %lu\n", stats->nregions);
-	dprintf(2, "nsort = %lu\n", stats->nsort);
-	dprintf(2, "ncoalesce = %lu\n", stats->ncoalesce);
-	dprintf(2, "blocksz = %lu\n", stats->blocksz);
+	dprint("gc_after = %d\n", stats->gc_after);
+	dprint("nregions = %lu\n", stats->nregions);
+	dprint("nsort = %lu\n", stats->nsort);
+	dprint("ncoalesce = %lu\n", stats->ncoalesce);
+	dprint("blocksz = %lu\n", stats->blocksz);
 }
 
 void
@@ -759,9 +759,9 @@ ms_initgc(void)
 	int i;
 
 	if(gcverbose || gcinfo)
-		dprintf(2, "Starting mark/sweep GC\n");
+		dprint("Starting mark/sweep GC\n");
 	if((gcverbose || gcinfo) && generational == TRUE)
-		dprintf(2, "GC is generational: oldage = %u\n", gc_oldage);
+		dprint("GC is generational: oldage = %u\n", gc_oldage);
 
 	rangc = 0;
 	for(i = 0; i < reserve_blocks; i++) {
@@ -794,30 +794,30 @@ ms_gc(Boolean full, Boolean inalloc)
 	if(gcblocked > 0)
 		return;
 	if(gcverbose)
-		dprintf(2, "GC starting\n");
+		dprint("GC starting\n");
 
 	if(gcverbose || gcinfo)
 		gc_getstats(&starting);
 
 	if(gcverbose)
-		dprintf(2, ">> Marking\n");
+		dprint(">> Marking\n");
 	if(gcverbose)
-		dprintf(2, ">>> gc_markrootlist(rootlist)\n");
+		dprint(">>> gc_markrootlist(rootlist)\n");
 	gc_markrootlist(rootlist);
 	if(gcverbose)
-		dprintf(2, ">>> gc_markrootlist(globalrootlist)\n");
+		dprint(">>> gc_markrootlist(globalrootlist)\n");
 	gc_markrootlist(globalrootlist);
 	if(gcverbose)
-		dprintf(2, ">>> gc_markrootlist(exceptionrootlist)\n");
+		dprint(">>> gc_markrootlist(exceptionrootlist)\n");
 	gc_markrootlist(exceptionrootlist);
 
 	if(gcverbose)
-		dprintf(2, ">> Sweeping\n");
+		dprint(">> Sweeping\n");
 	gcsweep();
 
 	if(nsortgc >= gc_sort_after_n || full) {
 		if(gcverbose)
-			dprintf(2, ">> Sorting freelist\n");
+			dprint(">> Sorting freelist\n");
 		// list_rating(freelist);
 		freelist = sort_list(freelist, nfrees);
 		nsortgc = 0;
@@ -825,14 +825,14 @@ ms_gc(Boolean full, Boolean inalloc)
 	}
 	if(ncoalescegc >= gc_coalesce_after_n || full) {
 		if(gcverbose)
-			dprintf(2, ">> Coalescing blocks\n");
+			dprint(">> Coalescing blocks\n");
 		freelist = coalesce_list(freelist);
 		ncoalescegc = 0;
 		ncoalesce++;
 	}
 	if(noldsweep >= gc_oldsweep_after || full) {
 		if(gcverbose)
-			dprintf(2, ">> Sweeping geriatric blocks\n");
+			dprint(">> Sweeping geriatric blocks\n");
 		gcoldsweep();
 		noldsweep = 0;
 	}
@@ -844,16 +844,16 @@ ms_gc(Boolean full, Boolean inalloc)
 
 	if(gcverbose || gcinfo) {
 		gc_getstats(&ending);
-		dprintf(2, "Starting stats:\n");
+		dprint("Starting stats:\n");
 		gc_print_stats(&starting);
-		dprintf(2, "Ending stats:\n");
+		dprint("Ending stats:\n");
 		gc_print_stats(&ending);
 	}
 
 	allocations = 0;
 	rangc = 1;
 	if(gcverbose)
-		dprintf(2, "GC finished\n");
+		dprint("GC finished\n");
 }*/
 
 void
