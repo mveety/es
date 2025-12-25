@@ -66,6 +66,9 @@ let (
 	}
 
 	fn esconf_havevar confdict pkg varname {
+		if {! dicthaskey $confdict $pkg} {
+			return <=false
+		}
 		let (
 			pkgvars = <={dictget $confdict $pkg}
 		) {
@@ -158,15 +161,17 @@ let (
 	fn esconf_printusage {
 		echo >[1=2] 'usage: conf [-vrX] -p package [var]'
 		echo >[1=2] '       conf [-vrX] package:[var]'
-		echo >[1=2] '       conf [-v] [-A | -P] -p package -s var value'
-		echo >[1=2] '       conf [-v] [-A | -P] -s package:var value'
+		echo >[1=2] '       conf [-vrd] [-A | -P] -p package -s var value'
+		echo >[1=2] '       conf [-vrd] [-A | -P] -s package:var value'
+		echo >[1=2] '       conf [-vr] -p package -R var'
+		echo >[1=2] '       conf [-vr] -R package:var'
 		echo >[1=2] '       conf [-vrX] -a'
 		echo >[1=2] '       conf [-X] -p'
 	}
 ) {
 	fn conf args {
 		let (
-			mode = print # if -s then set, if -h then help
+			mode = print # if -s then set, -R then remove if -h then help
 			all = false # -a
 			package = __es_none # -p [package]
 			raw = false # -r
@@ -178,6 +183,7 @@ let (
 			setmode = set # -P is prepend, -A is append
 			confdict = <={es_get_confvars |> es_sort_confvars}
 			return_results = false
+			define = false
 		) {
 			(_ rest) = <={parseargs @ arg {
 				match $arg (
@@ -192,10 +198,12 @@ let (
 					}
 					(-r) { raw = true }
 					(-s) { mode = set ; done }
+					(-R) { mode = remove ; done }
 					(-v) { verbose = true }
 					(-A) { setmode = append }
 					(-P) { setmode = prepend }
 					(-X) { return_results = true}
+					(-d) { define = true }
 					(-h) { mode = help ; usage }
 					* { usage }
 				)
@@ -215,7 +223,7 @@ let (
 				}
 			}
 
-			if {~ $rest(1) -s} { rest = $rest(2 ...)}
+			if {~ $rest(1) -s -R} { rest = $rest(2 ...)}
 			(varname value) = $rest
 			if {~ $varname *:*} {
 				(package varname) = <={~~ $varname *:*}
@@ -237,8 +245,10 @@ let (
 			}
 
 			if {! esconf_havepackage $confdict $package} {
-				echo >[1=2] 'error: package '^$package^' not found'
-				return <=false
+				if {! ~ $mode set && ! $define} {
+					echo >[1=2] 'error: package '^$package^' not found'
+					return <=false
+				}
 			}
 
 			match $mode (
@@ -274,8 +284,10 @@ let (
 						return <=false
 					}
 					if {! esconf_havevar $confdict $package $varname} {
-						echo >[1=2] 'error var '^$varname^' in '^$package^' not found'
-						return <=false
+						if {! $define} {
+							echo >[1=2] 'error var '^$varname^' in '^$package^' not found'
+							return <=false
+						}
 					}
 					let (v = $package^_conf_^$varname) {
 						match $setmode (
@@ -284,9 +296,35 @@ let (
 							set { $v = $value }
 						)
 						if {$verbose} {
-							echo >[1=2] $v^' = '^<={$&fmtvar $v}
+							if {$raw} {
+								echo >[1=2] $v^' = '^<={$&fmtvar $v}
+							} {
+								echo >[1=2] $package^':'^$varname^' = '^<={$&fmtvar $v}
+							}
 						}
 
+					}
+					return <=true
+				}
+				(remove) {
+					if {~ $#varname 0} {
+						echo >[1=2] 'error: missing variable name'
+						esconf_printusage
+						return <=false
+					}
+					if {! esconf_havevar $confdict $package $varname} {
+						echo >[1=2] 'error var '^$varname^' in '^$package^' not found'
+						return <=false
+					}
+					let (v = $package^_conf_^$varname) {
+						$v =
+						if {$verbose} {
+							if {$raw} {
+								echo >[1=2] 'removed '^$v
+							} {
+								echo >[1=2] 'removed '^$package^':'^$varname
+							}
+						}
 					}
 					return <=true
 				}
