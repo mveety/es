@@ -6,10 +6,6 @@ if {~ $#libraries 0 } {
 	throw error autoinit '$libraries must be set appropriately'
 }
 
-if {~ $#autoinit_echo_load 0} {
-	autoinit_echo_load = false
-}
-
 if {~ $#esrcd_debugging 0} {
 	esrcd_debugging = false
 }
@@ -19,8 +15,22 @@ if {~ $#autoloaded 0} {
 	autoloaded = (autoinit)
 }
 
-if {~ $#autoinit_start_automatically 0} {
-	autoinit_start_automatically = false
+defconf autoinit echo-load false
+set-autoinit_conf_echo-load = @ arg _ {
+	if {~ $arg true false} {
+		result $arg
+	} {
+		result $autoinit_conf_echo-load
+	}
+}
+
+defconf autoinit start-automatically false
+set-autoinit_conf_start-automatically = @ arg _ {
+	if {~ $arg true false} {
+		result $arg
+	} {
+		result $autoinit_conf_start-automatically
+	}
 }
 
 fn esrcd_getall {
@@ -188,7 +198,7 @@ fn autoinit command arg {
 					arg = $arg(2 ...)
 					result true
 				} {
-					result $autoinit_echo_load
+					result $autoinit_conf_echo-load
 				}
 			}
 			force_load = false
