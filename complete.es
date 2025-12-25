@@ -178,6 +178,28 @@ fn complete_primitives prefix partial {
 	}
 }
 
+fn complete_var_path partial {
+	let (
+		(vname rest) = <={~~ $partial '$'^*^'/'^*}
+		varconts=
+		completions=
+		res=
+	) {
+		if {~ $#rest 0} {rest = ''}
+		varconts = <={eval 'result $'^$vname}
+		if {~ $#varconts 0} { return '' }
+		for (v = $varconts) {
+			completions = <={complete_files $v^'/'^$rest}
+			for (c = $completions) {
+				let (t = <={~~ $c $v^'/'^*}) {
+					res += '$'^$vname^'/'^$t
+				}
+			}
+		}
+		result $res
+	}
+}
+
 fn es_complete_strip_leading_whitespace str {
 	local(strl=$:str;i=1){
 		for(c = $strl){
@@ -435,18 +457,6 @@ fn complete_base_complete partial {
 	}
 }
 
-#	process $esmle_conf_complete_order (
-#		executables { result <={complete_executables $partial} }
-#		functions { result <={complete_functions $partial} }
-#		visible_functions { result <={complete_visible_functions $partial} }
-#		hidden_functions { result <={complete_hidden_functions $partial} }
-#		variables { result <={complete_variables '' $partial} }
-#		visible_variables { result <={complete_visible_variables '' $partial} }
-#		hidden_variables { result <={complete_hidden_variables '' $partial} }
-#		* { unreachable }
-#	)
-#}
-
 # %complete returns a list of possible completions based on the context
 # at this time it's pretty simple, completing executables if start is 1
 # and files otherwise.
@@ -456,17 +466,21 @@ fn complete_base_complete partial {
 # indexed starting at 1 for cultural compatibility with es.
 fn %complete curline partial start end {
 	if {~ $partial '$'^*} {
-		match <={%elem 2 $:partial} (
-			('#' '^' '"' ':') {
-				result <={complete_variables '$'^<={%elem 2 $:partial} $partial}
-			}
-			('&') {
-				result <={complete_primitives true $partial}
-			}
-			* {
-				result <={complete_variables '$' $partial}
-			}
-		)
+		if {~ $partial '$'^*^'/'^*} { # path starts with a var
+			result <={complete_var_path $partial}
+		} {
+			match <={%elem 2 $:partial} (
+				('#' '^' '"' ':') {
+					result <={complete_variables '$'^<={%elem 2 $:partial} $partial}
+				}
+				('&') {
+					result <={complete_primitives true $partial}
+				}
+				* {
+					result <={complete_variables '$' $partial}
+				}
+			)
+		}
 	} {~ $curline *^'$&'} {
 		result <={complete_primitives false $partial}
 	} {~ $start 1 || es_complete_is_command $curline} {
@@ -496,6 +510,8 @@ fn %complete curline partial start end {
 # this is a thin layer between %complete and readline that strips whitespace and
 # translates start and end to index by one, then just returns the list producted by
 # %complete.
+# es-mveety no longer uses readline, but the semantics of the completer are the
+# same to the user/customizer.
 
 fn %new_completer linebuf text start end {
 	if {~ $#fn-%complete 0} {
