@@ -626,7 +626,7 @@ PRIM(mapkey) {
 		fail("$&mapkey", "missing argument");
 	if(list->next == nil)
 		fail("$&mapkey", "missing argument");
-	if(!editor->initialized) {
+	if(!editor->initialized || editor->indriver == DriverFallback) {
 		if(isinteractive())
 			fail("$&mapkey", "using fallback editor");
 		else
@@ -659,7 +659,7 @@ PRIM(unmapkey) {
 	if(list == nil)
 		fail("$&unmapkey", "missing argument");
 
-	if(!editor->initialized) {
+	if(!editor->initialized || editor->indriver == DriverFallback) {
 		if(isinteractive())
 			fail("$&unmapkey", "using fallback editor");
 		else
@@ -698,7 +698,7 @@ PRIM(mapaskey) {
 	if(list->next == nil)
 		fail("$&mapaskey", "missing argument");
 
-	if(!editor->initialized) {
+	if(!editor->initialized || editor->indriver == DriverFallback) {
 		if(isinteractive())
 			fail("$&mapaskey", "using fallback editor");
 		else
@@ -733,7 +733,7 @@ PRIM(clearkey) {
 	if(list == nil)
 		fail("$&clearkey", "missing argument");
 
-	if(!editor->initialized) {
+	if(!editor->initialized || editor->indriver == DriverFallback) {
 		if(isinteractive())
 			fail("$&clearkey", "using fallback editor");
 		else
@@ -750,7 +750,7 @@ PRIM(getkeymap) {
 	EditorFunction fn;
 	int i = 0;
 
-	if(!editor->initialized) {
+	if(!editor->initialized || editor->indriver == DriverFallback) {
 		if(isinteractive())
 			fail("$&getkeymap", "using fallback editor");
 		else
@@ -816,7 +816,7 @@ PRIM(esmlegetterm) {
 }
 
 PRIM(esmlegetwordstart) {
-	if(!editor->initialized) {
+	if(!editor->initialized || editor->indriver == DriverFallback) {
 		if(isinteractive())
 			fail("$&esmlegetwordstart", "using fallback editor");
 		else
@@ -829,7 +829,7 @@ PRIM(esmlesetwordstart) {
 	List *lp = nil; Root r_lp;
 	List *res = nil; Root r_res;
 
-	if(!editor->initialized) {
+	if(!editor->initialized || editor->indriver == DriverFallback) {
 		if(isinteractive())
 			fail("$&esmlesetwordstart", "using fallback editor");
 		else
@@ -854,7 +854,7 @@ PRIM(esmlesetwordstart) {
 PRIM(esmlesethighlight) {
 	List *lp = nil; Root r_lp;
 
-	if(!editor->initialized) {
+	if(!editor->initialized || editor->indriver == DriverFallback) {
 		if(isinteractive())
 			fail("$&esmlesethighlight", "using fallback editor");
 		else
@@ -877,7 +877,7 @@ PRIM(esmlesethighlight) {
 PRIM(esmlegethighlight) {
 	List *res = nil; Root r_res;
 
-	if(!editor->initialized) {
+	if(!editor->initialized || editor->indriver == DriverFallback) {
 		if(isinteractive())
 			fail("$&esmlegethighlight", "using fallback editor");
 		else

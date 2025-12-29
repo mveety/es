@@ -592,6 +592,7 @@ basic_editor_initialization(EditorState *state, int ifd, int ofd)
 	state->bufsz = EDITINITIALBUFSZ;
 	state->initialized = 1;
 	state->indriver = DriverFallback;
+	state->term = estrdup("fallback");
 }
 
 int /* only do this once! */
