@@ -97,10 +97,10 @@ checklist2(Block *list, int print, void *b)
 		if(print) {
 			if(b)
 				dprint("%lu: list->prev = %p, list = %p, list->next = %p, p = %p, b = %p\n", i,
-						list->prev, list, list->next, p, b);
+					   list->prev, list, list->next, p, b);
 			else
-				dprint("%lu: list->prev = %p, list = %p, list->next = %p, p = %p\n", i,
-						list->prev, list, list->next, p);
+				dprint("%lu: list->prev = %p, list = %p, list->next = %p, p = %p\n", i, list->prev,
+					   list, list->next, p);
 		}
 		p = list;
 	}
@@ -407,7 +407,7 @@ coalesce1(Block *a, Block *b)
 		return -2;
 	if(gcverbose)
 		dprint("coalesce: a = %p, a->size = %x, a+a->size = %lx, b = %p, b->size = %x\n", a,
-				a->size, (size_t)((char *)a) + a->size, b, b->size);
+			   a->size, (size_t)((char *)a) + a->size, b, b->size);
 	if(((char *)a) + a->size != (void *)b)
 		return -3;
 
@@ -743,7 +743,7 @@ gc_print_stats(GcStats *stats)
 	dprint("number of gc = %lu\n", stats->ngcs);
 	dprint("gc_sort_after_n = %d, nsortgc = %d\n", stats->sort_after_n, stats->nsortgc);
 	dprint("gc_coalesce_after_n = %d, ncoalescegc = %d\n", stats->coalesce_after,
-			stats->ncoalescegc);
+		   stats->ncoalescegc);
 	dprint("gc_after = %d\n", stats->gc_after);
 	dprint("nregions = %lu\n", stats->nregions);
 	dprint("nsort = %lu\n", stats->nsort);

@@ -471,10 +471,10 @@ regexextract(RegexStatus *status, Term *subject0, Term *pattern0)
 		if(strlen(copybuf) == 0)
 			continue;
 		if(regex_debug == TRUE) {
-			dprint("pmatch[%d].rm_so = %lu, pmatch[%d].rm_eo = %lu, ", i,
-					(uint64_t)pmatch[i].rm_so, i, (uint64_t)pmatch[i].rm_eo);
+			dprint("pmatch[%d].rm_so = %lu, pmatch[%d].rm_eo = %lu, ", i, (uint64_t)pmatch[i].rm_so,
+				   i, (uint64_t)pmatch[i].rm_eo);
 			dprint("pmatch[%d].rm_eo - pmatch[%d].rm_so = %lu, ", i, i,
-					(uint64_t)(pmatch[i].rm_eo - pmatch[i].rm_so));
+				   (uint64_t)(pmatch[i].rm_eo - pmatch[i].rm_so));
 			dprint("i = %d, nmatch = %lu, copybuf = %s\n", i, nmatch, copybuf);
 		}
 		substrs = mklist(mkstr(str("%s", copybuf)), substrs);
