@@ -49,6 +49,7 @@ testcore = true
 commit = <={%fsplit ' ' $buildstring |> %elem 3 |> %fsplit '-' |> %last}
 run_one = false
 test_to_run = ()
+keep_test_logs = false
 
 (_ _ restargs) = <={parseargs @ arg {
 	match $arg (
@@ -106,6 +107,7 @@ test_to_run = ()
 			}
 			testlibs = true
 		}
+		(-K) { keep_test_logs = true }
 		(-p) {
 			testpath = <={
 				if {~ $flagarg */} {
@@ -139,6 +141,7 @@ test_to_run = ()
         -s -- default to using subprocesses for tests
         -C -- do not run core tests
         -l -- also test libraries (implicit for -L)
+        -K -- keep test logs
 
         -x [es binary]  -- run estest in a different instance of es
         -R [test,...]   -- run selected tests
@@ -174,6 +177,7 @@ fn run_subproc_test testname testfn test_log tfp libdir {
 	info 'running '^$testname^' in pid '^$pid > $test_log
 	catch @ e {
 		if {~ $e abort} {
+			echo 'got abort'
 			exit 2
 		}
 		if {! $$tfp} {
@@ -307,7 +311,9 @@ fn run_test_file file {
 				}
 			}
 		}
-	rm $test_log
+	if {! $keep_test_logs} {
+		rm $test_log
+	}
 	result $passed
 	}
 }
