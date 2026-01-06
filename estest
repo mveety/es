@@ -50,6 +50,7 @@ commit = <={%fsplit ' ' $buildstring |> %elem 3 |> %fsplit '-' |> %last}
 run_one = false
 test_to_run = ()
 keep_test_logs = false
+disabled_tests = %dict()
 
 (_ _ restargs) = <={parseargs @ arg {
 	match $arg (
@@ -125,10 +126,19 @@ keep_test_logs = false
 				test_to_run = $test_to_run $flagarg
 			}
 		}
+		(-D) {
+			if {~ $flagarg *^','^*} {
+				for (t = <={%split ',' $flagarg}) {
+					disabled_tests := $t => true
+				}
+			} {
+				disabled_tests := $flagarg => true
+			}
+		}
 		* { usage }
 	)
 } @{
-	echo 'usage: '^$dollar0^' [-dvVqyslC] [-x [es binary]] [-S srcdir] [-p path] [-R test,...] [-L libdir] [-A es arguments]'
+	echo 'usage: '^$dollar0^' [-dvVqyslC] [-x [es binary]] [-S srcdir] [-p path] [-R test,...] [-D test,...] [-L libdir] [-A es arguments]'
 	if {$fullhelp} {
 		cat << '%%end'
     flags:
@@ -144,7 +154,8 @@ keep_test_logs = false
         -K -- keep test logs
 
         -x [es binary]  -- run estest in a different instance of es
-        -R [test,...]   -- run selected tests
+        -R test,...     -- run selected tests
+        -D test,...     -- disable selected tests
         -S srcdir       -- es source directory
         -p path         -- test cases path
         -L path         -- libraries path
@@ -233,6 +244,13 @@ fn run_test_file file {
 				result 'test_'^$testname^'_subprocess_arguments'
 			}
 		}
+		tdisabled = <={
+			if {$islibtest} {
+				result 'libtest_'^$testname^'_disable'
+			} {
+				result 'test_'^$testname^'_disable'
+			}
+		}
 	) {
 		. $file
 		if {~ <={%count $$tfp} 0} {
@@ -240,6 +258,13 @@ fn run_test_file file {
 		}
 		if {~ <={%count $$tsp} 0} {
 			$tsp = $subprocess_default
+		}
+		if {~ <={%count $$tdisabled} 0 || ~ $$tdisabled false} {
+			if {dicthaskey $disabled_tests $testname} {
+				$tdisabled = true
+			} {
+				$tdisabled = false
+			}
 		}
 		if {$islibtest} {
 			echo -n 'library test '^$testname^': '
@@ -249,6 +274,10 @@ fn run_test_file file {
 			} {
 				echo -n 'test '^$testname^': '
 			}
+		}
+		if {$$tdisabled} {
+			echo $fmt(redbold)^'disabled'^$fmt(nocolor)
+			return true
 		}
 		catch @ e {
 			if {~ $e abort} {
@@ -358,6 +387,7 @@ if {$runbin} {
 	cmdline = $cmdline '-p' $testpath
 	if {$testlibs} { cmdline = $cmdline '-L' $libdir }
 	if {$run_one} { for (i = $test_to_run) { cmdline = $cmdline '-R' $i } }
+	if {gt $#disabled_tests 0} { cmdline = $cmdline '-D' <={dictkeys $disabled_tests |> %flatten ','} }
 	if {$extra_es_args} { cmdline = $cmdline '-A' $restargs }
 	info 'parent build: '^$buildstring
 	info 'running:' $cmdline
@@ -431,6 +461,9 @@ if {$runbin} {
 		1 { info 'found 1 test' }
 		* { info 'found '^$matchexpr^' tests' }
 	)
+	if {gt $#disabled_tests 0} {
+		info 'temporarily disabled tests: '^<={dictkeys $disabled_tests |> %flatten ' '}
+	}
 	if {$run_one} {
 		run_one_test $test_to_run
 	} {

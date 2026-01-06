@@ -1,7 +1,8 @@
 #!/usr/bin/env es
 
+test_esmle_disable = false
 test_esmle_subprocess = true
-test_esmle_subprocess_arguments = -N -Dte
+test_esmle_subprocess_arguments = -N -Dt
 
 fn run_test_esmle {
 	let (
