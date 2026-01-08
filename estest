@@ -52,6 +52,8 @@ test_to_run = ()
 keep_test_logs = false
 disabled_tests = %dict()
 
+noexport += disabled_tests # there seems to be a bug when importing empty dicts
+
 (_ _ restargs) = <={parseargs @ arg {
 	match $arg (
 		(-h) { fullhelp = true ; usage }
