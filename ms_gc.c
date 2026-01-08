@@ -937,6 +937,7 @@ done:
 	nb->size = sz;
 	nb->refs = 1;
 	allocations++;
+	memset((void*)(((char*)nb)+sizeof(Header)), 0, realsz-sizeof(Header));
 	return (void *)(((char *)nb) + sizeof(Header));
 }
 

@@ -232,9 +232,16 @@ gcisblocked(void)
 void *
 gcalloc(size_t sz, int t)
 {
+	void *p = nil;
+
+	assert(t >= tNil && (size_t)t < (sizeof(tags) / sizeof(Tag *)));
+	assert(tags[t] == nil || tags[t]->magic == TAGMAGIC);
 	if(gctype == NewGc)
-		return ms_gcallocate(sz, t);
-	return old_gcallocate(sz, t);
+		p = ms_gcallocate(sz, t);
+	else
+		p = old_gcallocate(sz, t);
+	assert(header(p)->tag == t);
+	return p;
 }
 
 /*
