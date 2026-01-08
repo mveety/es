@@ -566,7 +566,7 @@ old_gcallocate(size_t nbytes, int t)
 			hp->refs = 1;
 			old_nallocs++;
 			old_allocations++;
-			memset((void*)p, 0, n-sizeof(Header));
+			memset((void *)p, 0, n - sizeof(Header));
 			return (void *)p;
 		}
 		if(minspace < n)
