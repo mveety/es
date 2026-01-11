@@ -5,7 +5,7 @@ fn-%%echo = $&withbindings @ __args {
 		__args = $__args(2 ...)
 		template $^__args |> echo -n
 	} {
-		temaplte $^__args |> echo
+		template $^__args |> echo
 	}
 }
 
