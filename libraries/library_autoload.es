@@ -18,7 +18,7 @@ let (old_pathsearch = $fn-%pathsearch) {
 				) {
 					import $lib
 					if {%is-interactive} {
-						throw autoload_error
+						throw autoload_error $name
 					} {
 						throw error '%pathsearch' 'library '^$lib^' autoloaded'
 					}
@@ -44,12 +44,17 @@ fn %interactive-loop {
 				let (
 					code = <={%parse $prompt}
 					coderan = false
+					retry_autoload = true
 				) {
 					if {!~ $#code 0} {
 						catch @ e r {
-							if {~ $e autoload_error} {
+							if {~ $e autoload_error && $retry_autoload} {
+								retry_autoload = false
 								throw retry
 							} {
+								if {~ $e autoload_error} {
+									throw error '%pathsearch' 'unable to find '^$^r
+								}
 								throw $e $r
 							}
 						} {
