@@ -87,6 +87,7 @@ fn libutil_enumerate_file_functions file {
 	let (
 		filedata = ``(\n){cat $file}
 		functions = ()
+		ignore_functions = %dict()
 	) {
 		for (line = $filedata) {
 			let (
@@ -96,7 +97,7 @@ fn libutil_enumerate_file_functions file {
 				while {~ $sline(1) ''} { sline = $sline(2 ...) }
 				match $sline(1) (
 					'fn' {
-						if {! ~ $sline(2) $functions} {
+						if {! ~ $sline(2) $functions && ! dicthaskey $ignore_functions $sline(2)} {
 							functions = $functions $sline(2)
 						}
 					}
@@ -109,6 +110,12 @@ fn libutil_enumerate_file_functions file {
 						if {! ~ <={~~ $matchexpr fn-*} $functions} {
 							functions = $functions <={~~ $matchexpr fn-*}
 						}
+					}
+					'#@libutil_hint_functions' {
+						functions = <={remove-duplicates $functions $sline(2 ...)}
+					}
+					'#@libutil_hint_ignore_function' {
+						ignore_functions := $sline(2) => true
 					}
 				)
 			}

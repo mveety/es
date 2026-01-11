@@ -1,6 +1,15 @@
 # mod_math depends on symbols in mod_float.
 with-dynlibs mod_float mod_math {
 	library math (init libraries float)
+#@libutil_hint_functions cbrt sqrt hypot sin asin
+#@libutil_hint_functions sinh asinh cos acos cosh
+#@libtuil_hint_functions acosh tan atan tanh atanh
+#@libutil_hint_functions ceil floor log exp log10
+#@libutil_hint_functions log2 exp2 pow intpow
+
+#@libutil_hint_ignore_function undefine-prim-wrapper
+#@libutil_hint_ignore_function define-prim-wrapper
+#@libutil_hint_ignore_function mod_math_get_prims
 
 	let (
 		fn undefine-prim-wrapper prefix prim {
@@ -103,7 +112,7 @@ with-dynlibs mod_float mod_math {
 
 
 		if {~ $#math_conf_prefix-wrappers 0} {
-			math_conf_prefix-wrappers = true
+			math_conf_prefix-wrappers = false
 		}
 
 		if {~ $#math_conf_enable-build 0} {
