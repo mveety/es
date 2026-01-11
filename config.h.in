@@ -145,3 +145,7 @@
 
 /* enable dynamic libraries */
 #undef DYNAMIC_LIBRARIES
+
+/* have getloadavg */
+#undef HAVE_GETLOADAVG
+

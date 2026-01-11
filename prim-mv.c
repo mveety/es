@@ -951,6 +951,34 @@ PRIM(debugecho) {
 	return list_true;
 }
 
+#ifdef HAVE_GETLOADAVG
+
+PRIM(getloadavg) {
+	double loadavg[3];
+	List *res = nil; Root r_res;
+	char tmp[256];
+	int printlen = 0;
+	int i = 2;
+
+	if(getloadavg(loadavg, 3) < 0)
+		fail("$&getloadavg", "unable to get load average");
+
+	gcref(&r_res, (void**)&res);
+
+	for(i = 2; i >= 0; i--) {
+		memset(&tmp[0], 0, sizeof(tmp));
+		printlen = snprintf(&tmp[0], sizeof(tmp), "%.2g", loadavg[i]);
+		if(printlen >= (int)sizeof(tmp))
+			fail("$&getloadavg", "float conversion failed (buffer too short)");
+		res = mklist(mkstr(str("%s", tmp)), res);
+	}
+
+	gcrderef(&r_res);
+	return res;
+}
+
+#endif
+
 Primitive prim_mv[] = {
 	DX(version),
 	DX(buildstring),
@@ -998,6 +1026,9 @@ Primitive prim_mv[] = {
 	DX(fmt),
 	DX(panic),
 	DX(debugecho),
+#ifdef HAVE_GETLOADAVG
+	DX(getloadavg),
+#endif
 };
 
 Dict *
