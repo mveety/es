@@ -1328,10 +1328,26 @@ fn-%onerror = $&noreturn @ protected handler {
 }
 
 fn box list {
-	local (fun = @{ result $list }) {
+	local (
+		fun = <={let(size = $#list){ result @ arg _ {
+			match $arg (
+				* { result $list }
+				size { result $size }
+		)}}}
+	) {
 		$&settermtag box $fun
 		result $fun
 	}
+}
+
+fn isbox b _ {
+	if {! eq $#b 1} {
+		return <=false
+	}
+	if {~ <={$&gettermtag $b} box} {
+		return <=true
+	}
+	return <=false
 }
 
 # based on benchmarks this is the most performant implementation
