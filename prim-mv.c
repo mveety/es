@@ -979,6 +979,43 @@ PRIM(getloadavg) {
 
 #endif
 
+#ifdef PRIM_GETRUSAGE
+
+PRIM(getrusage){
+	List *res = nil; Root r_res;
+	struct rusage usage;
+
+	errno = 0;
+	if(getrusage(RUSAGE_SELF, &usage) < 0){
+		switch(errno){
+		default:
+			unreachable();
+			break;
+		case EINVAL:
+			fail("$&getrusage", "invalid who");
+			break;
+		case EFAULT:
+			fail("$&getrusage", "struct is an invalid address"); // when would this happen?
+			break;
+		}
+	}
+
+	gcref(&r_res, (void**)&res);
+
+	res = mklist(mkstr(str("%ld", usage.ru_maxrss*1024)), res);
+	res = mklist(mkstr(str("%ld", usage.ru_inblock + usage.ru_oublock)), res);
+	res = mklist(mkstr(str("%ld", usage.ru_majflt)), res);
+	res = mklist(mkstr(str("%ld", usage.ru_minflt)), res);
+	res = mklist(mkstr(str("%ld.%03ld", usage.ru_stime.tv_sec, usage.ru_stime.tv_usec / 1000)), res);
+	res = mklist(mkstr(str("%ld.%03ld", usage.ru_utime.tv_sec, usage.ru_utime.tv_usec / 1000)), res);
+
+	gcrderef(&r_res);
+
+	return res;
+}
+
+#endif
+
 Primitive prim_mv[] = {
 	DX(version),
 	DX(buildstring),
@@ -1028,6 +1065,9 @@ Primitive prim_mv[] = {
 	DX(debugecho),
 #ifdef HAVE_GETLOADAVG
 	DX(getloadavg),
+#endif
+#ifdef PRIM_GETRUSAGE
+	DX(getrusage),
 #endif
 };
 

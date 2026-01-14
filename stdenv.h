@@ -40,6 +40,14 @@
 #if BSD_LIMITS || BUILTIN_TIME
 #include <sys/time.h>
 #include <sys/resource.h>
+#define PRIM_GETRUSAGE 1
+#endif
+
+/* we still need these includes for $&getrusage */
+#if HAVE_SYS_TIME_H && !BSD_LIMITS && !BUILTIN_TIME
+#include <sys/time.h>
+#include <sys/resource.h>
+#define PRIM_GETRUSAGE 1
 #endif
 
 #include <unistd.h>
