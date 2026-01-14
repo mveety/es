@@ -348,11 +348,6 @@ PRIM(gcstats) {
 	return res;
 }
 
-PRIM(gc) {
-	gc();
-	return NULL;
-}
-
 PRIM(dumpregions) {
 	List *res = NULL; Root r_res;
 	Region *r;
@@ -960,7 +955,6 @@ Primitive prim_mv[] = {
 	DX(varunhide),
 	DX(varishidden),
 	DX(gcstats),
-	DX(gc),
 	DX(dumpregions),
 	DX(gctuning),
 	DX(parsestring),

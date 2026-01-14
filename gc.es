@@ -34,8 +34,8 @@ fn %gcstats args {
 }
 
 fn %gc {
-	assert {~ gc <=$&primitives}
-	$&gc
+	$&collect
+	result ()
 }
 
 fn %gcinfo {
