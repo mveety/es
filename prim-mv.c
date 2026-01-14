@@ -522,83 +522,6 @@ PRIM(isalist) {
 	return list_false;
 }
 
-PRIM(rematch) {
-	RegexStatus status;
-	char errstr[128];
-	List *lp = list; Root r_lp;
-	Term *subject = nil; Root r_subject;
-	Term *pattern = nil; Root r_pattern;
-
-	if(list == NULL || list->next == NULL)
-		fail("$&rematch", "missing arguments");
-
-	gcref(&r_lp, (void **)&lp);
-	gcref(&r_subject, (void **)&subject);
-	gcref(&r_pattern, (void **)&pattern);
-
-	memset(errstr, 0, sizeof(errstr));
-	status = (RegexStatus){ReNil, FALSE, 0, 0, nil, 0, &errstr[0], sizeof(errstr)};
-	subject = lp->term;
-	pattern = lp->next->term;
-
-	regexmatch(&status, subject, pattern);
-	assert(status.type == ReMatch);
-
-	if(status.compcode)
-		fail("$&rematch", "compilation error: %s", errstr);
-
-	if(status.matchcode != 0 && status.matchcode != REG_NOMATCH)
-		fail("$&rematch", "match error: %s", errstr);
-
-	gcrderef(&r_pattern);
-	gcrderef(&r_subject);
-	gcrderef(&r_lp);
-
-	if(status.matched == TRUE)
-		return list_true;
-	return list_false;
-}
-
-PRIM(reextract) {
-	RegexStatus status;
-	char errstr[128];
-	List *lp = list; Root r_lp;
-	Term *subject = nil; Root r_subject;
-	Term *pattern = nil; Root r_pattern;
-	Root r_st_substrs;
-
-	if(list == NULL || list->next == NULL)
-		fail("$&rematch", "missing arguments");
-
-	status = (RegexStatus){ReNil, FALSE, 0, 0, nil, 0, &errstr[0], sizeof(errstr)};
-	gcref(&r_lp, (void **)&lp);
-	gcref(&r_subject, (void **)&subject);
-	gcref(&r_pattern, (void **)&pattern);
-	gcref(&r_st_substrs, (void **)&status.substrs);
-
-	memset(errstr, 0, sizeof(errstr));
-	subject = lp->term;
-	pattern = lp->next->term;
-
-	regexextract(&status, subject, pattern);
-	assert(status.type == ReExtract);
-
-	if(status.compcode)
-		fail("$&reextract", "compilation error: %s", errstr);
-
-	if(status.matchcode != 0 && status.matchcode != REG_NOMATCH)
-		fail("$&reextract", "match error: %s", errstr);
-
-	gcrderef(&r_st_substrs);
-	gcrderef(&r_pattern);
-	gcrderef(&r_subject);
-	gcrderef(&r_lp);
-
-	if(status.matched == TRUE)
-		return status.substrs;
-	return nil;
-}
-
 PRIM(sortlist) {
 	List *lp = nil; Root r_lp;
 	List *res = nil; Root r_res;
@@ -1045,8 +968,6 @@ Primitive prim_mv[] = {
 	DX(setditto),
 	DX(getditto),
 	DX(isalist),
-	DX(rematch),
-	DX(reextract),
 	DX(sortlist),
 	DX(mapkey),
 	DX(unmapkey),

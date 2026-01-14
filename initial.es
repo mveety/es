@@ -1379,16 +1379,6 @@ fn __es_getbody argsbody {
 	}
 }
 
-if {~ <=$&primitives rematch} {
-	fn re~ subject pattern _ { $&rematch $subject $pattern }
-}
-
-if {~ <=$&primitives reextract} {
-	fn re~~ subject pattern _ {
-		$&reextract $subject $pattern |> %rest
-	}
-}
-
 if {~ <=$&primitives getrunflags} {
 	runflags = ''
 
