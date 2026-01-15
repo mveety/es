@@ -12,7 +12,7 @@ buildpath=`pwd`
 buildsys=`uname`
 buildarch=`uname -m`
 case "$buildsys" in
-	SunOS)
+	SunOS | NetBSD)
 		buildtime=`date -u "+%FT%T+00:00"`
 		;;
 	*)
