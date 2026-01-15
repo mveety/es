@@ -15,6 +15,7 @@ extern Boolean use_array_sort;
 extern Boolean use_list_sz;
 extern int reserve_blocks;
 extern Boolean gcprotect;
+extern int primassert;
 extern size_t minspace;
 volatile Boolean loginshell = FALSE; /* -l or $0[0] == '-' */
 volatile Boolean readesrc = TRUE;
@@ -161,9 +162,9 @@ void
 debug_flag_usage(void)
 { /* this is a mess */
 #ifdef DYNAMIC_LIBRARIES
-	dprintf(2, "debug flags: es -D [GIaEPRAMrhHJCtm]\n%s",
+	dprintf(2, "debug flags: es -D [GIaEPRAMrhHJCtpm]\n%s",
 #else
-	dprintf(2, "debug flags: es -D [GIaEPRAMrhHJCt]\n%s",
+	dprintf(2, "debug flags: es -D [GIaEPRAMrhHJCtp]\n%s",
 #endif
 			"	? -- show this message\n"
 			"	G -- gcverbose\n"
@@ -182,6 +183,7 @@ debug_flag_usage(void)
 			"	C -- comprehensive_matches\n"
 			"	t -- forcetty\n"
 			"	e -- force_fallback_editor\n"
+			"	p -- primassert\n"
 #ifdef DYNAMIC_LIBRARIES
 			"	m -- dynlib_verbose\n"
 #endif
@@ -426,6 +428,9 @@ main(int argc, char *argv[])
 					break;
 				case 'e':
 					force_fallback_editor = 1;
+					break;
+				case 'p':
+					primassert = 1;
 					break;
 #ifdef DYNAMIC_LIBRARIES
 				case 'm':

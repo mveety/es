@@ -2995,6 +2995,9 @@ Forces \fIes\fP to assume that \f(CWstdin\fP, \f(CWstdout\fP, and \f(CWstderr\fP
 \f(CWe\fP
 Forces \fIes\fP to use the fallback editor instead of the line editor.
 .TP
+\f(CWp\fP
+Forces \fIes\fP to panic if there is an attempt to execute a missing primitive.
+.TP
 \f(CWm\fP
 Enable dynamic library debugging and informational messages.
 .IE

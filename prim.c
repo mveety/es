@@ -4,15 +4,18 @@
 #include "prim.h"
 
 static Dict *prims;
+int primassert = 0;
 
 extern List *
 prim(char *s, List *list, Binding *binding, int evalflags)
 {
 	List *(*p)(List *, Binding *, int);
 	p = (List * (*)(List *, Binding *, int)) dictget(prims, s);
-	if(p == NULL)
+	if(p == NULL){
+		if(primassert)
+			panic("unknown primitive: %s", s);
 		fail("es:prim", "unknown primitive: %s", s);
-	else
+	} else
 		return (*p)(list, binding, evalflags);
 }
 
