@@ -80,6 +80,10 @@ typedef struct dirent Dirent;
 
 #include <fcntl.h>
 
+#if defined(__sun) || defined(__illumos__)
+#include <sys/loadavg.h>
+#endif
+
 /* stdlib */
 #if __GNUC__
 typedef volatile void noreturn;
