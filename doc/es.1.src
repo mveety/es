@@ -79,19 +79,19 @@
 ..
 .\"
 .\"
-.TH ES 1 "20 November 2025"
+.TH ES 1 "15 January 2026"
 .SH NAME
 .Nm "es"
 .Nd "Veety's fork of the Extensible Shell"
 .SH SYNOPSIS
 .SY es
 .OP \-sIAlNpodv
-.OP \-X "extended \fIargument\fP"
-.OP \-D "debugging \fIflags\fP"
-.OP \-r "run \fIflags\fP"
+.OP \-X "extended\ \fIargument\fP"
+.OP \-D "Debugging\ \fIflags\fP"
+.OP \-r "run\ \fIflags\fP"
 .OP \-c command
 .RI [ file
-.RI [ args ... ] ]
+.RI [ args ... \& ] \& ]
 .SH DESCRIPTION
 .I Es
 is a command interpreter and programming language which combines
@@ -2013,14 +2013,6 @@ true on success and false on error, plus any remaining arguments (if applicable)
 .MR getopt 1 and
 .MR getopt 3 .
 .TP
-.BK \f(CWre\(ti \fIsubject regex\fR
-Match \fIsubject\fR against \fIregex\fR. \fIregex\fR can either be a string
-or a proper regex.
-.TP
-.BK \f(CWre\(ti\(ti \fIsubject regex\fR
-Extract out of \fIsubject\fR using \fIregex\fR. \fIregex\fR can either be a string
-or a proper regex.
-.TP
 .BK \f(CWremove-duplicates \fIlist\fR
 Removes duplicate elements from \fIlist\fR while retaining list order.
 .TP
@@ -2754,7 +2746,7 @@ builtin.
 .PP
 The following primitives implement the hook functions of the same names,
 with \(lq\f(CW%\fP\(rq prefixes:
-.ta 1.75i 3.5i
+.ta 2.00i 3.75i
 .Ex
 .ft \*(Cf
 @@ hookcols.txt
@@ -2787,7 +2779,7 @@ set \f(CW$apid\fP. The \f(CWbackquote\fP primitive is used to implement the
 the first value of its result instead of setting \f(CW$bqstatus\fP to it.
 .PP
 The following primitives implement the similarly named settor and gettor functions:
-.ta 1.75i 3.5i
+.ta 2.20i 3.95i
 .Ex
 .ft \*(Cf
 @@ setgetcols.txt
