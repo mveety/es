@@ -291,6 +291,7 @@ DictMark(void *p)
 	d = (Dict *)p;
 	gc_set_mark(header(p));
 
+	gcmark(d->bloom);
 	for(i = 0; i < d->size; i++) {
 		a = &d->table[i];
 		gcmark(a->name);
