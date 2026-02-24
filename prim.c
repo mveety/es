@@ -31,9 +31,9 @@ prim(char *s, List *list, Binding *binding, int evalflags)
 	dumpprim_arg arg = {.searched_prim = s, .i = 0};
 
 	p = (List * (*)(List *, Binding *, int)) dictget(prims, s);
-	if(p == NULL){
-		if(primassert){
-			if(dumpprims){
+	if(p == NULL) {
+		if(primassert) {
+			if(dumpprims) {
 				dprintf(2, "primitives: ");
 				dictforall(prims, &dumpprim, &arg);
 				dprintf(2, "\n%d primitives\n", arg.i);
@@ -114,4 +114,3 @@ remove_prim(char *name)
 	prims = dictput(prims, name, nil);
 	gcenable();
 }
-

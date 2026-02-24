@@ -881,7 +881,7 @@ PRIM(getloadavg) {
 	if(getloadavg(loadavg, 3) < 0)
 		fail("$&getloadavg", "unable to get load average");
 
-	gcref(&r_res, (void**)&res);
+	gcref(&r_res, (void **)&res);
 
 	for(i = 2; i >= 0; i--) {
 		memset(&tmp[0], 0, sizeof(tmp));
@@ -904,8 +904,8 @@ PRIM(getrusage){
 	struct rusage usage;
 
 	errno = 0;
-	if(getrusage(RUSAGE_SELF, &usage) < 0){
-		switch(errno){
+	if(getrusage(RUSAGE_SELF, &usage) < 0) {
+		switch(errno) {
 		default:
 			unreachable();
 			break;
@@ -918,14 +918,16 @@ PRIM(getrusage){
 		}
 	}
 
-	gcref(&r_res, (void**)&res);
+	gcref(&r_res, (void **)&res);
 
-	res = mklist(mkstr(str("%ld", usage.ru_maxrss*1024)), res);
+	res = mklist(mkstr(str("%ld", usage.ru_maxrss * 1024)), res);
 	res = mklist(mkstr(str("%ld", usage.ru_inblock + usage.ru_oublock)), res);
 	res = mklist(mkstr(str("%ld", usage.ru_majflt)), res);
 	res = mklist(mkstr(str("%ld", usage.ru_minflt)), res);
-	res = mklist(mkstr(str("%ld.%03ld", usage.ru_stime.tv_sec, usage.ru_stime.tv_usec / 1000)), res);
-	res = mklist(mkstr(str("%ld.%03ld", usage.ru_utime.tv_sec, usage.ru_utime.tv_usec / 1000)), res);
+	res =
+		mklist(mkstr(str("%ld.%03ld", usage.ru_stime.tv_sec, usage.ru_stime.tv_usec / 1000)), res);
+	res =
+		mklist(mkstr(str("%ld.%03ld", usage.ru_utime.tv_sec, usage.ru_utime.tv_usec / 1000)), res);
 
 	gcrderef(&r_res);
 

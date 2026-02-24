@@ -5,12 +5,12 @@
 typedef struct File File;
 
 enum {
-	OREAD = 1<<0,
-	OWRITE = 1<<1,
-	OCREATE = 1<<2,
-	OAPPEND = 1<<3,
+	OREAD = 1 << 0,
+	OWRITE = 1 << 1,
+	OCREATE = 1 << 2,
+	OAPPEND = 1 << 3,
 
-	FOFORK = 1<<0,
+	FOFORK = 1 << 0,
 };
 
 struct File {
@@ -19,10 +19,10 @@ struct File {
 	int mode;
 };
 
-File*
+File *
 file(Object *obj)
 {
-	return (File*)obj->data;
+	return (File *)obj->data;
 }
 
 static int
@@ -30,7 +30,7 @@ modmode2mode(int modmode)
 {
 	int mode = 0;
 
-	if((modmode & (OREAD|OWRITE)) == (OREAD|OWRITE))
+	if((modmode & (OREAD | OWRITE)) == (OREAD | OWRITE))
 		mode |= O_RDWR;
 	else if(modmode & OWRITE)
 		mode |= O_WRONLY;
@@ -72,7 +72,7 @@ fileopen(Object *obj, char *f, int modmode, int flags)
 	return 0;
 }
 
-Object*
+Object *
 file_allocate(void)
 {
 	Object *o;
@@ -104,7 +104,7 @@ file_deallocate(Object *obj)
 int
 file_onfork(Object *obj)
 {
-	if(obj->flags & FOFORK && obj->sysflags & ObjectInitialized){
+	if(obj->flags & FOFORK && obj->sysflags & ObjectInitialized) {
 		close(file(obj)->fd);
 		if(file(obj)->name)
 			free(file(obj)->name);
@@ -116,23 +116,20 @@ file_onfork(Object *obj)
 	return 0;
 }
 
-char*
+char *
 file_stringify(Object *obj)
 {
 	char buf[2048];
 
 	memset(buf, 0, sizeof(buf));
 	if(obj->sysflags & ObjectInitialized)
-		snprintf(&buf[0], sizeof(buf)-1, "%s (fd = %d, %c%c%c%c%s)",
-				file(obj)->name ? file(obj)->name : "(nil)",
-				file(obj)->fd,
-				file(obj)->mode & OREAD ? 'r' : '-',
-				file(obj)->mode & OWRITE ? 'w' : '-',
-				file(obj)->mode & OCREATE ? 'c' : '-',
-				file(obj)->mode & OAPPEND ? 'a' : '-',
-				obj->flags & FOFORK ? ", closeonfork" : "");
+		snprintf(&buf[0], sizeof(buf) - 1, "%s (fd = %d, %c%c%c%c%s)",
+				 file(obj)->name ? file(obj)->name : "(nil)", file(obj)->fd,
+				 file(obj)->mode & OREAD ? 'r' : '-', file(obj)->mode & OWRITE ? 'w' : '-',
+				 file(obj)->mode & OCREATE ? 'c' : '-', file(obj)->mode & OAPPEND ? 'a' : '-',
+				 obj->flags & FOFORK ? ", closeonfork" : "");
 	else
-		snprintf(&buf[0], sizeof(buf)-1, "(nil) (fd = -1, ----, closeonfork)");
+		snprintf(&buf[0], sizeof(buf) - 1, "(nil) (fd = -1, ----, closeonfork)");
 
 	return estrdup(&buf[0]);
 }
@@ -162,7 +159,7 @@ parsemode(char *modestr)
 	int i = 0;
 
 	for(i = 0; modestr[i] != 0; i++)
-		switch(modestr[i]){
+		switch(modestr[i]) {
 		default:
 			return -1;
 		case '-':
@@ -197,8 +194,8 @@ PRIM(file_open){
 	if(list->next->next != nil)
 		fail("$&file_open", "too many arguments");
 
-	gcref(&r_res, (void**)&res);
-	gcref(&r_list, (void**)&list);
+	gcref(&r_res, (void **)&res);
+	gcref(&r_list, (void **)&list);
 
 	fname = getstr(list->term);
 	if(!fname)
@@ -209,7 +206,7 @@ PRIM(file_open){
 	gcdisable();
 	obj = file_allocate();
 	dprint("mod_file: opening %s, mode = %x\n", fname, mode);
-	switch(fileopen(obj, fname, mode, FOFORK)){
+	switch(fileopen(obj, fname, mode, FOFORK)) {
 	case -1:
 		gcenable();
 		fail("$&file_open", "file in use");
@@ -244,10 +241,10 @@ PRIM(file_read){
 	if(length(list) > 2)
 		fail("$&file_read", "too many arguments");
 
-	gcref(&r_list, (void**)&list);
-	gcref(&r_res, (void**)&res);
-	gcref(&r_buf, (void**)&buf);
-	gcref(&r_rstr, (void**)&rstr);
+	gcref(&r_list, (void **)&list);
+	gcref(&r_res, (void **)&res);
+	gcref(&r_buf, (void **)&buf);
+	gcref(&r_rstr, (void **)&rstr);
 
 	obj = getobject(list->term);
 	if(!obj)
@@ -258,7 +255,7 @@ PRIM(file_read){
 	errno = 0;
 	nbytes = strtoll(getstr(list->next->term), nil, 10);
 	if(nbytes == 0)
-		switch(errno){
+		switch(errno) {
 		case EINVAL:
 			fail("$&file_read", "invalid input: $2 = %s", getstr(list->next->term));
 			break;
@@ -273,7 +270,7 @@ PRIM(file_read){
 	nread = read(file(obj)->fd, buf, nbytes);
 	if(nread < 0)
 		fail("$&file_read", "unable to read: errno = %d", errno);
-	if(nread == 0){
+	if(nread == 0) {
 		res = mklist(mkstr(str("0")), nil);
 		gcrderef(&r_rstr);
 		gcrderef(&r_buf);
@@ -281,8 +278,8 @@ PRIM(file_read){
 		gcrderef(&r_list);
 		return res;
 	}
-	rstr = gcalloc(nread+1, tString);
-	memset(rstr, 0, nread+1);
+	rstr = gcalloc(nread + 1, tString);
+	memset(rstr, 0, nread + 1);
 	memcpy(rstr, buf, nread);
 	res = mklist(mkstr(rstr), nil);
 	res = mklist(mkstr(str("%d", nread)), res);
