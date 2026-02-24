@@ -1,0 +1,301 @@
+#include "es.h"
+#include "prim.h"
+#include "stdenv.h"
+
+typedef struct File File;
+
+enum {
+	OREAD = 1<<0,
+	OWRITE = 1<<1,
+	OCREATE = 1<<2,
+	OAPPEND = 1<<3,
+
+	FOFORK = 1<<0,
+};
+
+struct File {
+	char *name;
+	int fd;
+	int mode;
+};
+
+File*
+file(Object *obj)
+{
+	return (File*)obj->data;
+}
+
+static int
+modmode2mode(int modmode)
+{
+	int mode = 0;
+
+	if((modmode & (OREAD|OWRITE)) == (OREAD|OWRITE))
+		mode |= O_RDWR;
+	else if(modmode & OWRITE)
+		mode |= O_WRONLY;
+	else if(modmode & OREAD)
+		mode |= O_RDONLY;
+	else
+		unreachable(); // uh oh
+
+	if(modmode & OCREATE)
+		mode |= O_CREAT;
+	if(modmode & OAPPEND)
+		mode |= O_APPEND;
+
+	return mode;
+}
+
+static int
+fileopen(Object *obj, char *f, int modmode, int flags)
+{
+	int fd = -1;
+	int mode = 0;
+
+	if(obj->sysflags & ObjectInitialized)
+		return -1;
+	if(!f)
+		return -2;
+	if((mode = modmode2mode(modmode)) < 0)
+		return -3;
+	if((fd = open(f, mode)) < 0)
+		return -4;
+
+	file(obj)->name = estrdup(f);
+	file(obj)->fd = fd;
+	file(obj)->mode = modmode;
+	obj->sysflags |= ObjectInitialized;
+	obj->sysflags |= ObjectCallbackOnFork;
+	obj->flags = flags;
+
+	return 0;
+}
+
+Object*
+file_allocate(void)
+{
+	Object *o;
+
+	o = allocate_object("file", sizeof(File));
+	assert(o);
+	memset(file(o), 0, sizeof(File));
+	o->sysflags |= ObjectFreeWhenNoRefs;
+	o->sysflags |= ObjectGcManaged;
+	file(o)->fd = -1;
+	file(o)->name = nil;
+	file(o)->mode = 0;
+
+	return o;
+}
+
+int
+file_deallocate(Object *obj)
+{
+	close(file(obj)->fd);
+	if(file(obj)->name)
+		free(file(obj)->name);
+	file(obj)->fd = -1;
+	file(obj)->name = nil;
+	file(obj)->mode = 0;
+	return 0;
+}
+
+int
+file_onfork(Object *obj)
+{
+	if(obj->flags & FOFORK && obj->sysflags & ObjectInitialized){
+		close(file(obj)->fd);
+		if(file(obj)->name)
+			free(file(obj)->name);
+		obj->sysflags &= ~ObjectInitialized;
+		file(obj)->fd = -1;
+		file(obj)->name = nil;
+		file(obj)->mode = 0;
+	}
+	return 0;
+}
+
+char*
+file_stringify(Object *obj)
+{
+	char buf[2048];
+
+	memset(buf, 0, sizeof(buf));
+	if(obj->sysflags & ObjectInitialized)
+		snprintf(&buf[0], sizeof(buf)-1, "%s (fd = %d, %c%c%c%c%s)",
+				file(obj)->name ? file(obj)->name : "(nil)",
+				file(obj)->fd,
+				file(obj)->mode & OREAD ? 'r' : '-',
+				file(obj)->mode & OWRITE ? 'w' : '-',
+				file(obj)->mode & OCREATE ? 'c' : '-',
+				file(obj)->mode & OAPPEND ? 'a' : '-',
+				obj->flags & FOFORK ? ", closeonfork" : "");
+	else
+		snprintf(&buf[0], sizeof(buf)-1, "(nil) (fd = -1, ----, closeonfork)");
+
+	return estrdup(&buf[0]);
+}
+
+int
+file_onload(void)
+{
+	if(define_type("file", &file_deallocate, nil) < 0) {
+		dprintf(2, "unable to define type file\n");
+		return -1;
+	}
+	define_stringifier("file", &file_stringify);
+	define_onfork_callback("file", &file_onfork);
+	return 0;
+}
+
+int
+file_onunload(void)
+{
+	return undefine_type("file");
+}
+
+int
+parsemode(char *modestr)
+{
+	int mode = 0;
+	int i = 0;
+
+	for(i = 0; modestr[i] != 0; i++)
+		switch(modestr[i]){
+		default:
+			return -1;
+		case '-':
+			continue;
+		case 'r':
+			mode |= OREAD;
+			break;
+		case 'w':
+			mode |= OWRITE;
+			break;
+		case 'c':
+			mode |= OCREATE;
+			break;
+		case 'a':
+			mode |= OAPPEND;
+			break;
+		}
+	return mode;
+}
+
+PRIM(file_open){
+	Object *obj = nil;
+	List *res = nil; Root r_res;
+	Root r_list;
+	char *fname;
+	int mode = 0;
+
+	if(list == nil)
+		fail("$&file_open", "missing arguments");
+	if(list->next == nil)
+		fail("$&file_open", "missing arguments");
+	if(list->next->next != nil)
+		fail("$&file_open", "too many arguments");
+
+	gcref(&r_res, (void**)&res);
+	gcref(&r_list, (void**)&list);
+
+	fname = getstr(list->term);
+	if(!fname)
+		fail("$&file_open", "invalid file name");
+	if((mode = parsemode(getstr(list->next->term))) <= 0)
+		fail("$&file_open", "invalid mode: %s", getstr(list->next->term));
+
+	gcdisable();
+	obj = file_allocate();
+	dprint("mod_file: opening %s, mode = %x\n", fname, mode);
+	switch(fileopen(obj, fname, mode, FOFORK)){
+	case -1:
+		gcenable();
+		fail("$&file_open", "file in use");
+		break;
+	case -2:
+	case -3:
+		unreachable(); // should be handled already
+	case -4:
+		gcenable();
+		fail("$&file_open", "unable to open file: %s", fname);
+		break;
+	}
+
+	res = mklist(mkobject(obj), nil);
+	gcenable();
+	gcrderef(&r_list);
+	gcrderef(&r_res);
+	return res;
+}
+
+PRIM(file_read){
+	char *buf = nil; Root r_buf;
+	char *rstr = nil; Root r_rstr;
+	Object *obj = nil;
+	size_t nbytes = 0;
+	ssize_t nread = 0;
+	List *res = nil; Root r_res;
+	Root r_list;
+
+	if(length(list) < 2)
+		fail("$&file_read", "missing arguments");
+	if(length(list) > 2)
+		fail("$&file_read", "too many arguments");
+
+	gcref(&r_list, (void**)&list);
+	gcref(&r_res, (void**)&res);
+	gcref(&r_buf, (void**)&buf);
+	gcref(&r_rstr, (void**)&rstr);
+
+	obj = getobject(list->term);
+	if(!obj)
+		fail("$&file_read", "must be an object");
+	if(!object_is_type(obj, "file"))
+		fail("$&file_read", "must be a file object");
+
+	errno = 0;
+	nbytes = strtoll(getstr(list->next->term), nil, 10);
+	if(nbytes == 0)
+		switch(errno){
+		case EINVAL:
+			fail("$&file_read", "invalid input: $2 = %s", getstr(list->next->term));
+			break;
+		case ERANGE:
+			fail("$&file_read", "conversion overflow: $2 = %s", getstr(list->next->term));
+			break;
+		}
+
+	buf = gcmalloc(nbytes);
+
+	errno = 0;
+	nread = read(file(obj)->fd, buf, nbytes);
+	if(nread < 0)
+		fail("$&file_read", "unable to read: errno = %d", errno);
+	if(nread == 0){
+		res = mklist(mkstr(str("0")), nil);
+		gcrderef(&r_rstr);
+		gcrderef(&r_buf);
+		gcrderef(&r_res);
+		gcrderef(&r_list);
+		return res;
+	}
+	rstr = gcalloc(nread+1, tString);
+	memset(rstr, 0, nread+1);
+	memcpy(rstr, buf, nread);
+	res = mklist(mkstr(rstr), nil);
+	res = mklist(mkstr(str("%d", nread)), res);
+
+	gcrderef(&r_rstr);
+	gcrderef(&r_buf);
+	gcrderef(&r_res);
+	gcrderef(&r_list);
+	return res;
+}
+
+MODULE(mod_file) {
+	DX(file_open),
+	DX(file_read),
+	PRIMSEND,
+} ENDMODULE(mod_file, &file_onload, &file_onunload);

@@ -114,3 +114,4 @@ remove_prim(char *name)
 	prims = dictput(prims, name, nil);
 	gcenable();
 }
+
