@@ -2,9 +2,9 @@
 
 #define PRIMSMAX 500
 
-#define MODULE(Name) static Primitive CONCAT(primsdef_, Name)[] = 
+#define MODULE1(Name) static Primitive CONCAT(primsdef_, Name)[] = 
 
-#define ENDMODULE(Name, Onload, Onunload) \
+#define ENDMODULE1(Name, Onload, Onunload) \
 	;                                                                \
 	Module module_info = (Module){                                   \
 		.name = STRING(Name),                                        \
@@ -14,8 +14,8 @@
 		.primitives = CONCAT(primsdef_, Name),                       \
 	};
 
-#define DEFMODULE(Name, Onload, Onunload, Prims...) \
-	MODULE(Name) {Prims PRIMSEND,} ENDMODULE(Name, Onload, Onunload);
+#define MODULE(Name, Onload, Onunload, Prims...) \
+	MODULE1(Name) {Prims PRIMSEND,} ENDMODULE1(Name, Onload, Onunload);
 
 #define PRIM(name) static List *CONCAT(prim_,name)( List * list, Binding * binding, int evalflags)
 #define DX(name)                           \

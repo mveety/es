@@ -1099,26 +1099,7 @@ PRIM(enablefasthighlighting) {
 	return list_true;
 }
 
-//MODULE(mod_syntax) {
-//	// core
-//	DX(basictokenize),
-//	DX(enablehighlighting),
-//	DX(disablehighlighting),
-//
-//	// accel
-//	DX(syn_isatom),
-//	DX(syn_iscomment),
-//	DX(syn_isstring),
-//	DX(syn_iswhitespace),
-//	DX(syn_ispath),
-//	DX(syn_atom_type),
-//	DX(fasthighlighting),
-//	DX(enablefasthighlighting),
-//
-//	PRIMSEND,
-//} ENDMODULE(mod_syntax, &syntax_onload, &syntax_onunload)
-
-DEFMODULE(mod_syntax, &syntax_onload, &syntax_onunload,
+MODULE(mod_syntax, &syntax_onload, &syntax_onunload,
 	// core
 	DX(basictokenize),
 	DX(enablehighlighting),

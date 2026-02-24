@@ -150,13 +150,7 @@ PRIM(objectify) {
 	return mklist(mkobject(obj), nil);
 }
 
-//MODULE(mod_objutil) {
-//	DX(objects_dumptypes), DX(printtypes), DX(printobjects),
-//	DX(printobjectstats),  DX(objectify),
-//	PRIMSEND,
-//} ENDMODULE(mod_objutil, nil, nil)
-
-DEFMODULE(mod_objutil, nil, nil,
+MODULE(mod_objutil, nil, nil,
 	DX(objects_dumptypes), DX(printtypes), DX(printobjects),
 	DX(printobjectstats),  DX(objectify),
 );

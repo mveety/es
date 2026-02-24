@@ -748,14 +748,7 @@ PRIM(json_getobjectnames) {
 	return res;
 }
 
-//MODULE(mod_json) {
-//	DX(json_dumpobject),   DX(json_decode),	 DX(json_encode),		  DX(json_encode_formatted),
-//	DX(json_create),	   DX(json_addto),	 DX(json_gettype),		  DX(json_getobject),
-//	DX(json_detachobject), DX(json_getdata), DX(json_getobjectnames),
-//	PRIMSEND,
-//} ENDMODULE(mod_json, &json_onload, &json_onunload)
-
-DEFMODULE(mod_json, &json_onload, &json_onunload,
+MODULE(mod_json, &json_onload, &json_onunload,
 	DX(json_dumpobject),   DX(json_decode),	 DX(json_encode),		  DX(json_encode_formatted),
 	DX(json_create),	   DX(json_addto),	 DX(json_gettype),		  DX(json_getobject),
 	DX(json_detachobject), DX(json_getdata), DX(json_getobjectnames),
