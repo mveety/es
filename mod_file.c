@@ -291,8 +291,9 @@ PRIM(file_read){
 	return res;
 }
 
-MODULE(mod_file) {
+/* lets try out the new module macro */
+DEFMODULE(mod_file, &file_onload, &file_onunload,
 	DX(file_open),
 	DX(file_read),
-	PRIMSEND,
-} ENDMODULE(mod_file, &file_onload, &file_onunload);
+);
+

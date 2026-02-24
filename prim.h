@@ -14,6 +14,9 @@
 		.primitives = CONCAT(primsdef_, Name),                       \
 	};
 
+#define DEFMODULE(Name, Onload, Onunload, Prims...) \
+	MODULE(Name) {Prims PRIMSEND,} ENDMODULE(Name, Onload, Onunload);
+
 #define PRIM(name) static List *CONCAT(prim_,name)( List * list, Binding * binding, int evalflags)
 #define DX(name)                           \
 	(Primitive)                            \

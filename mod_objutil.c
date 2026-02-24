@@ -1,5 +1,6 @@
 #include "es.h"
 #include "prim.h"
+#include <sys/stat.h>
 
 /* from objects.c */
 /* these aren't normally used but are needed for this mod */
@@ -149,8 +150,14 @@ PRIM(objectify) {
 	return mklist(mkobject(obj), nil);
 }
 
-MODULE(mod_objutil) {
+//MODULE(mod_objutil) {
+//	DX(objects_dumptypes), DX(printtypes), DX(printobjects),
+//	DX(printobjectstats),  DX(objectify),
+//	PRIMSEND,
+//} ENDMODULE(mod_objutil, nil, nil)
+
+DEFMODULE(mod_objutil, nil, nil,
 	DX(objects_dumptypes), DX(printtypes), DX(printobjects),
 	DX(printobjectstats),  DX(objectify),
-	PRIMSEND,
-} ENDMODULE(mod_objutil, nil, nil)
+);
+
