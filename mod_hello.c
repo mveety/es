@@ -202,4 +202,3 @@ MODULE(mod_hello, &hello_onload, &hello_onunload,
 	DX(object_freeable),	   DX(object_initialize), DX(object_closeonfork),
 	DX(object_onforkcallback), DX(dump_bindings),
 );
-

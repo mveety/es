@@ -295,4 +295,3 @@ MODULE(mod_file, &file_onload, &file_onunload,
 	DX(file_open),
 	DX(file_read),
 );
-

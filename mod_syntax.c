@@ -1115,4 +1115,3 @@ MODULE(mod_syntax, &syntax_onload, &syntax_onunload,
 	DX(fasthighlighting),
 	DX(enablefasthighlighting),
 );
-

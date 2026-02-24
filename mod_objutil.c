@@ -154,4 +154,3 @@ MODULE(mod_objutil, nil, nil,
 	DX(objects_dumptypes), DX(printtypes), DX(printobjects),
 	DX(printobjectstats),  DX(objectify),
 );
-

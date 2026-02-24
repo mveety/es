@@ -753,4 +753,3 @@ MODULE(mod_json, &json_onload, &json_onunload,
 	DX(json_create),	   DX(json_addto),	 DX(json_gettype),		  DX(json_getobject),
 	DX(json_detachobject), DX(json_getdata), DX(json_getobjectnames),
 );
-

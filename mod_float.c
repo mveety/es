@@ -241,4 +241,3 @@ MODULE(mod_float, nil, nil,
 	DX(feq), DX(fgt), DX(fgte), DX(flt),
 	DX(flte),
 );
-

@@ -430,4 +430,3 @@ MODULE(mod_math, &math_onload, nil,
 	DX(cosh), DX(acosh), DX(tan),	DX(atan), DX(tanh), DX(atanh),	DX(ceil),  DX(floor), DX(log),
 	DX(exp),  DX(log10), DX(log2),	DX(exp2), DX(pow),	DX(intpow),
 );
-
