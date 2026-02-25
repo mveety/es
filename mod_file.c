@@ -256,8 +256,6 @@ PRIM(file_fd) {
 	return res;
 }
 
-
-
 PRIM(file_read) {
 	char *buf = nil; Root r_buf;
 	char *rstr = nil; Root r_rstr;
