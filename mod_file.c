@@ -1,30 +1,7 @@
 #include "es.h"
 #include "prim.h"
 #include "stdenv.h"
-#include <stdio.h>
-
-typedef struct File File;
-
-enum {
-	OREAD = 1 << 0,
-	OWRITE = 1 << 1,
-	OCREATE = 1 << 2,
-	OAPPEND = 1 << 3,
-
-	FOFORK = 1 << 0,
-};
-
-struct File {
-	char *name;
-	int fd;
-	int mode;
-};
-
-File *
-file(Object *obj)
-{
-	return (File *)obj->data;
-}
+#include "mod_file.h"
 
 static int
 modmode2mode(int modmode)
@@ -74,7 +51,7 @@ fileopen(Object *obj, char *f, int modmode, int flags)
 	return 0;
 }
 
-Object *
+static Object *
 file_allocate(void)
 {
 	Object *o;
@@ -91,7 +68,7 @@ file_allocate(void)
 	return o;
 }
 
-int
+static int
 file_deallocate(Object *obj)
 {
 	close(file(obj)->fd);
@@ -103,7 +80,7 @@ file_deallocate(Object *obj)
 	return 0;
 }
 
-int
+static int
 file_onfork(Object *obj)
 {
 	if(obj->flags & FOFORK && obj->sysflags & ObjectInitialized) {
@@ -118,7 +95,7 @@ file_onfork(Object *obj)
 	return 0;
 }
 
-char *
+static char *
 file_stringify(Object *obj)
 {
 	char buf[2048];
@@ -136,7 +113,7 @@ file_stringify(Object *obj)
 	return estrdup(&buf[0]);
 }
 
-int
+static int
 file_onload(void)
 {
 	if(define_type("file", &file_deallocate, nil) < 0) {
@@ -145,16 +122,17 @@ file_onload(void)
 	}
 	define_stringifier("file", &file_stringify);
 	define_onfork_callback("file", &file_onfork);
+	define_allocator("file", &file_allocate);
 	return 0;
 }
 
-int
+static int
 file_onunload(void)
 {
 	return undefine_type("file");
 }
 
-int
+static int
 parsemode(char *modestr)
 {
 	int mode = 0;

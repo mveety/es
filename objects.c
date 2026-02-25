@@ -11,6 +11,7 @@ typedef struct {
 	char *(*stringify)(Object *);
 	int (*onfork)(Object *);
 	Result (*objectify)(char *);
+	Object* (*allocate)(void);
 } Typedef;
 
 size_t typessz = 0;
@@ -175,6 +176,22 @@ define_onfork_callback(char *name, int (*onfork)(Object *))
 	type->onfork = onfork;
 	return 0;
 }
+
+int
+define_allocator(char *name, Object* (*allocator)(void))
+{
+	int index;
+	Typedef *type;
+
+	assert(name);
+	assert((index = gettypeindex(name)) >= 0);
+
+	type = typedefs[index];
+
+	type->allocate = allocator;
+	return 0;
+}
+
 int
 undefine_type(char *name)
 {
@@ -426,6 +443,20 @@ object_refs(Object *obj)
 {
 	assert(obj);
 	return obj->refcount;
+}
+
+Object*
+newobject(char *type)
+{
+	int32_t typeindex;
+	Typedef *objtype;
+
+	typeindex = gettypeindex(type);
+	assert(typeindex >= 0);
+	objtype = typedefs[typeindex];
+	if(objtype->allocate)
+		return objtype->allocate();
+	return nil;
 }
 
 /* to gc objects:

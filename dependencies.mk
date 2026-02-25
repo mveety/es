@@ -65,6 +65,6 @@ mod_json.o : MODCFLAGS=$(MODJSON_CFLAGS)
 mod_json.o : mod_json.c $(ESHFILES) prim.h gc.h float_util.h
 mod_json.so : MODLIBS=$(MODJSON_LIBS)
 mod_json.so : mod_json.o float_util.o
-mod_file.o : mod_file.c $(ESHFILES) prim.h gc.h
+mod_file.o : mod_file.c $(ESHFILES) prim.h gc.h mod_file.h
 mod_file.so : mod_file.o
 
