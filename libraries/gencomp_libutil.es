@@ -10,14 +10,19 @@ fn gclibutil_clean_system {
 	)
 }
 
-fn %libutil_rehash {
-	if {~ $#__gclibutil_clean_system 0} {
-		__gclibutil_clean_system = <={gclibutil_clean_system}
-	}
-	__gclibutil_all_libraries = <={libutil_all_libraries}
-	__gclibutil_all_functions = $__gclibutil_clean_system
-	for (lib = $__gclibutil_all_libraries) {
-		__gclibutil_all_functions = $__gclibutil_all_functions <={libutil_enumerate_functions $lib}
+let (old_%libutil_rehash = $fn-%libutil_rehash) {
+	fn %libutil_rehash {
+		if {~ $#__gclibutil_clean_system 0} {
+			__gclibutil_clean_system = <={gclibutil_clean_system}
+		}
+		__gclibutil_all_libraries = <={libutil_all_libraries}
+		__gclibutil_all_functions = $__gclibutil_clean_system
+		for (lib = $__gclibutil_all_libraries) {
+			__gclibutil_all_functions = $__gclibutil_all_functions <={libutil_enumerate_functions $lib}
+		}
+		if {! ~ $#old_%libutil_rehash 0} {
+			$old_%libutil_rehash
+		}
 	}
 }
 
