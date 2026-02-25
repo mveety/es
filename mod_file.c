@@ -1,6 +1,7 @@
 #include "es.h"
 #include "prim.h"
 #include "stdenv.h"
+#include <stdio.h>
 
 typedef struct File File;
 
@@ -59,6 +60,7 @@ fileopen(Object *obj, char *f, int modmode, int flags)
 		return -2;
 	if((mode = modmode2mode(modmode)) < 0)
 		return -3;
+	errno = 0;
 	if((fd = open(f, mode)) < 0)
 		return -4;
 
@@ -180,7 +182,7 @@ parsemode(char *modestr)
 	return mode;
 }
 
-PRIM(file_open){
+PRIM(file_open) {
 	Object *obj = nil;
 	List *res = nil; Root r_res;
 	Root r_list;
@@ -208,15 +210,12 @@ PRIM(file_open){
 	dprint("mod_file: opening %s, mode = %x\n", fname, mode);
 	switch(fileopen(obj, fname, mode, FOFORK)) {
 	case -1:
-		gcenable();
-		fail("$&file_open", "file in use");
-		break;
 	case -2:
 	case -3:
 		unreachable(); // should be handled already
 	case -4:
 		gcenable();
-		fail("$&file_open", "unable to open file: %s", fname);
+		fail("$&file_open", "unable to open %s: %s", fname, strerror(errno));
 		break;
 	}
 
@@ -227,7 +226,61 @@ PRIM(file_open){
 	return res;
 }
 
-PRIM(file_read){
+PRIM(file_name) {
+	Root r_list;
+	List *res = nil; Root r_res;
+	Object *obj = nil;
+
+	if(list == nil)
+		fail("$&file_name", "invalid argument");
+
+	gcref(&r_list, (void**)&list);
+	gcref(&r_res, (void**)&res);
+	obj = getobject(list->term);
+	if(!obj)
+		fail("$&file_name", "$1 must be an object");
+	if(!object_is_type(obj, "file"))
+		fail("$&file_name", "$1 must be a file object");
+
+	if(obj->sysflags & ObjectInitialized)
+		res = mklist(mkstr(str("%s", file(obj)->name)), nil);
+
+	gcrderef(&r_res);
+	gcrderef(&r_list);
+
+	return res;
+}
+
+PRIM(file_fd) {
+	Root r_list;
+	List *res = nil; Root r_res;
+	Object *obj = nil;
+
+	if(list == nil)
+		fail("$&file_name", "invalid argument");
+
+	gcref(&r_list, (void**)&list);
+	gcref(&r_res, (void**)&res);
+	obj = getobject(list->term);
+	if(!obj)
+		fail("$&file_fd", "$1 must be an object");
+	if(!object_is_type(obj, "file"))
+		fail("$&file_fd", "$1 must be a file object");
+
+	if(obj->sysflags & ObjectInitialized)
+		res = mklist(mkstr(str("%d", file(obj)->fd)), nil);
+	else
+		fail("$&file_fd", "file not initialized");
+
+	gcrderef(&r_res);
+	gcrderef(&r_list);
+
+	return res;
+}
+
+
+
+PRIM(file_read) {
 	char *buf = nil; Root r_buf;
 	char *rstr = nil; Root r_rstr;
 	Object *obj = nil;
@@ -248,9 +301,9 @@ PRIM(file_read){
 
 	obj = getobject(list->term);
 	if(!obj)
-		fail("$&file_read", "must be an object");
+		fail("$&file_read", "$1 must be an object");
 	if(!object_is_type(obj, "file"))
-		fail("$&file_read", "must be a file object");
+		fail("$&file_read", "$1 must be a file object");
 
 	errno = 0;
 	nbytes = strtoll(getstr(list->next->term), nil, 10);
@@ -269,7 +322,7 @@ PRIM(file_read){
 	errno = 0;
 	nread = read(file(obj)->fd, buf, nbytes);
 	if(nread < 0)
-		fail("$&file_read", "unable to read: errno = %d", errno);
+		fail("$&file_read", "unable to read: %s", strerror(errno));
 	if(nread == 0) {
 		res = mklist(mkstr(str("0")), nil);
 		gcrderef(&r_rstr);
@@ -291,7 +344,96 @@ PRIM(file_read){
 	return res;
 }
 
+PRIM(file_write) {
+	Root r_list;
+	char *outstr = nil; Root r_outstr;
+	size_t outstrlen = 0;
+	ssize_t nwritten = 0;
+	Object *obj;
+
+	if(length(list) < 2)
+		fail("$&file_write", "missing arguments");
+	if(length(list) > 2)
+		fail("$&file_write", "too many arguments");
+
+	gcref(&r_list, (void**)&list);
+	gcref(&r_outstr, (void**)&outstr);
+
+	obj = getobject(list->term);
+	if(!obj)
+		fail("$&file_write", "$1 must be an object");
+	if(!object_is_type(obj, "file"))
+		fail("$&file_write", "$1 must be a file object");
+
+	outstr = getstr(list->next->term);
+	outstrlen = strlen(outstr);
+
+	errno = 0;
+	nwritten = write(file(obj)->fd, outstr, outstrlen);
+	if(nwritten < 0)
+		fail("$&file_write", "unable to write: %s", strerror(errno));
+
+	gcrderef(&r_outstr);
+	gcrderef(&r_list);
+
+	return mklist(mkstr(str("%d", nwritten)), nil);
+}
+
+PRIM(file_seek) {
+	Root r_list;
+	off_t newoffset = 0;
+	off_t offset = 0;
+	int whence;
+	Object *obj;
+
+	if(length(list) < 3)
+		fail("$&file_seek", "missing arguments");
+	if(length(list) > 3)
+		fail("$&file_seek", "too many arguments");
+
+	gcref(&r_list, (void**)&list);
+
+	obj = getobject(list->term);
+	if(!obj)
+		fail("$&file_seek", "$1 must be an object");
+	if(!object_is_type(obj, "file"))
+		fail("$&file_seek", "$1 must be a file object");
+
+	errno = 0;
+	offset = strtoll(getstr(list->next->term), nil, 10);
+	if(offset == 0)
+		switch(errno) {
+		case EINVAL:
+			fail("$&file_seek", "invalid input: $2 = %s", getstr(list->next->term));
+			break;
+		case ERANGE:
+			fail("$&file_seek", "conversion overflow: $2 = %s", getstr(list->next->term));
+			break;
+		}
+
+	if(termeq(list->next->next->term, "start"))
+		whence = SEEK_SET;
+	else if(termeq(list->next->next->term, "cur"))
+		whence = SEEK_CUR;
+	else if(termeq(list->next->next->term, "end"))
+		whence = SEEK_END;
+	else
+		fail("$&file_seek", "invalid $3. must be start, cur, or end");
+
+	errno = 0;
+	newoffset = lseek(file(obj)->fd, offset, whence);
+	if(newoffset == -1)
+		fail("$&file_seek", "unable to seek: %s", strerror(errno));
+
+	gcrderef(&r_list);
+	return mklist(mkstr(str("%d", newoffset)), nil);
+}
+
 MODULE(mod_file, &file_onload, &file_onunload,
 	DX(file_open),
+	DX(file_name),
+	DX(file_fd),
 	DX(file_read),
+	DX(file_write),
+	DX(file_seek),
 );
