@@ -63,4 +63,5 @@ test_editor
 es_work
 *.vim
 doc/es.1
+*.esdat
 
