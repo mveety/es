@@ -15,7 +15,14 @@ fn luc_find_writable_libdir {
 fn luc_dump_function_data {
 	let (libdir = <=luc_find_writable_libdir) {
 		if {gt $#__libutil_function_data 0} {
-			dumplist __libutil_function_data > $libdir/library_cache.esdat
+			{
+				dumplist __libutil_function_data
+				if {~ $options gencomp_libutil} {
+					dumplist __gclibutil_clean_system
+					dumplist __gclibutil_all_functions
+					dumplist __gclibutil_all_libraries
+				}
+			} > $libdir/library_cache.esdat
 		}
 	}
 }
@@ -39,14 +46,18 @@ let (
 	fn libutil_rehash {
 		assert2 libtuil {eq <={mod $#_libutil_es_system 2} 0}
 		if {! ~ $#__libutil_function_data 0} {
-			__libutil_function_data = $_libutil_es_system <=libutil_enumerate_all_libs
-			%hidevar __libutil_function_data
-			luc_dump_function_data
+			do_rehash
 			if {! ~ $#fn-%libutil_rehash 0} { %libutil_rehash }
+			luc_dump_function_data
 		} {
-			luc_load_function_data onerror do_rehash
+			luc_load_function_data onerror {
+				do_rehash
+				if {! ~ $#fn-%libutil_rehash 0} { %libutil_rehash }
+				luc_dump_function_data
+			}
 		}
+		%hidevar __libutil_function_data
 		assert2 libutil {eq <={mod $#__libutil_function_data 2} 0}
 	}
-}	
+}
 
