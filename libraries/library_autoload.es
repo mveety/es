@@ -72,3 +72,31 @@ fn %interactive-loop {
 	}
 }
 
+fn %interactive-execute forms {
+	let (result = <=true) {
+		catch @ e {
+			%interactive-exception-handler <={makeerror $e} $result
+		} {
+			let (
+				coderan = false
+				retry_autoload = true
+			) {
+				catch @ e r {
+					if {~ $e autoload_error $retry_autoload} {
+						retry_autoload = false
+						throw retry
+					} {
+						if {~ $e autoload_error} {
+							throw error '%pathsearch' 'unable to find '^$^r
+						}
+						throw $e $r
+					}
+				} {
+					result = <={$forms}
+				}
+			}
+		}
+		return $result
+	}
+}
+

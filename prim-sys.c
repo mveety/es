@@ -426,12 +426,17 @@ PRIM(time) {
 	char *hpfmt = "%ld.%06ld";
 	char *argstr = nil;
 	int i = 0;
+	List *interexec = nil; Root r_interexec;
+	List *execlist = nil; Root r_execlist;
+	char usagemsg[] = "$&time [-ipr] body";
 
 	gcref(&r_lp, (void **)&lp);
+	gcref(&r_interexec, (void**)&interexec);
+	gcref(&r_execlist, (void**)&execlist);
 	lp = list;
 
 	if(lp == NULL)
-		fail("$&time", "usage: $&time [-pr] body");
+		fail("$&time", "usage: %s", usagemsg);
 
 	gcdisable();
 	do {
@@ -440,7 +445,7 @@ PRIM(time) {
 			for(i = 1; argstr[i] != 0; i++) {
 				switch(argstr[i]) {
 				default:
-					fail("$&time", "usage: $&time [-pr] body");
+					fail("$&time", "usage: %s", usagemsg);
 					break;
 				case 'r':
 					quiet = TRUE;
@@ -448,22 +453,31 @@ PRIM(time) {
 				case 'p':
 					highprecision = TRUE;
 					break;
+				case 'i':
+					interexec = varlookup("fn-%interactive-execute", binding);
+					if(interexec == nil)
+						continue;
+					break;
 				}
 			}
 			lp = lp->next;
 			if(lp == nil)
-				fail("$&time", "usage: $&time [-pr] body");
+				fail("$&time", "usage: %s", usagemsg);
 		} else {
 			break;
 		}
 	} while(lp->next != nil);
 	gcenable();
 
+	if(interexec != nil)
+		execlist = append(interexec, lp);
+	else
+		execlist = lp;
 	gc(); /* do a garbage collection first to ensure reproducible results */
 	clock_gettime(CLOCK_MONOTONIC, &before);
 	pid = efork(TRUE, FALSE);
 	if(pid == 0)
-		esexit(exitstatus(eval(lp, NULL, evalflags | eval_inchild)));
+		esexit(exitstatus(eval(execlist, NULL, evalflags | eval_inchild)));
 	s = ewait(pid, FALSE, &r);
 	status = s.status;
 	clock_gettime(CLOCK_MONOTONIC, &after);
@@ -480,6 +494,8 @@ PRIM(time) {
 				   after.tv_nsec / 1000, r.ru_utime.tv_sec, (long)(r.ru_utime.tv_usec),
 				   r.ru_stime.tv_sec, (long)(r.ru_stime.tv_usec), lp, " ");
 
+		gcrderef(&r_execlist);
+		gcrderef(&r_interexec);
 		gcrderef(&r_lp);
 		if(quiet) {
 			gcref(&r_result, (void **)&result);
@@ -498,6 +514,8 @@ PRIM(time) {
 				   after.tv_nsec / 1000000, r.ru_utime.tv_sec, (long)(r.ru_utime.tv_usec / 1000),
 				   r.ru_stime.tv_sec, (long)(r.ru_stime.tv_usec / 1000), lp, " ");
 
+		gcrderef(&r_execlist);
+		gcrderef(&r_interexec);
 		gcrderef(&r_lp);
 		if(quiet) {
 			gcref(&r_result, (void **)&result);

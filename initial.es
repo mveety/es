@@ -854,7 +854,9 @@ fn %interactive-exception-handler errobj result {
 		continue { result <=true }
 		{ echo >[1=2] uncaught exception: $err $type $msg }
 	)
-	throw retry
+	if {~ $#__es_no_retry 0} {
+		throw retry
+	}
 }
 
 fn %interactive-hook-exception-handler hook errobj {
@@ -939,6 +941,18 @@ fn %interactive-loop {
 					}
 				}
 			}
+		}
+	}
+}
+
+fn %interactive-execute forms { # for $&time
+	let (result = <=true) {
+		catch @ e {
+			local (__es_no_retry = true) {
+				%interactive-exception-handler <={makeerror $e} $result
+			}
+		} {
+			$forms
 		}
 	}
 }
