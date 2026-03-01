@@ -159,7 +159,14 @@ file_onload(void)
 static int
 file_onunload(void)
 {
-	return undefine_type("file");
+	int r = 0;
+
+	if((r = undefine_type("file")) != 0)
+		return r;
+	if((r = undefine_type("blob")) != 0)
+		return r;
+
+	return 0;
 }
 
 static int
