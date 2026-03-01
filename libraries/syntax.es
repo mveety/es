@@ -50,7 +50,7 @@ with-dynlibs mod_syntax {
 	let (old-%var = $fn-%var) {
 		set-syntax_conf_var-hook = @ arg _ {
 			match $arg (
-				true { fn %var { $&var $* |> %syntax_highlight }; result $arg }
+				true { fn %var { $&var $* |> %syntax_highlight |> %strip_formatting_marks }; result $arg }
 				false { fn-%var = $old-%var; result $arg }
 				* { result $syntax_conf_var-hook }
 			)
@@ -69,6 +69,10 @@ with-dynlibs mod_syntax {
 		whitespace => %re('^[ \t\r\n]+$')
 		path => %re('^.*/.*$')
 	)
+
+	fn %strip_formatting_marks str _ {
+		$&stripdsdechars $str
+	}
 
 	fn isatom str {
 		if {$syntax_conf_accelerate} {
@@ -251,6 +255,6 @@ with-dynlibs mod_syntax {
 	noexport += syntax_conf_debugging syntax_conf_colors syntax_conf_enable
 	noexport += set-syntax_conf_enable
 	noexport += fn-isatom fn-iscomment fn-isstring fn-atom_type fn-iswhitespace
-	noexport += fn-toksiterator fn-%syntax_highlight fn-%var
+	noexport += fn-toksiterator fn-%syntax_highlight fn-%var fn-%strip_formatting_marks
 }
 

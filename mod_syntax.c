@@ -1099,6 +1099,52 @@ PRIM(enablefasthighlighting) {
 	return list_true;
 }
 
+PRIM(stripdsdechars) {
+	Root r_list;
+	List *res = nil; Root r_res;
+	char *src = nil; Root r_src;
+	size_t srcsz = 0;
+	char *dest = nil; Root r_dest;
+	size_t desti = 0;
+	size_t i = 0;
+
+	if(list == nil)
+		fail("$&stripdsdechars", "missing argument");
+	if(list->next != nil)
+		fail("$&stripdsdechars", "too many arguments");
+
+	gcref(&r_list, (void**)&list);
+	gcref(&r_res, (void**)&res);
+	gcref(&r_src, (void**)&src);
+	gcref(&r_dest, (void**)&dest);
+
+	src = getstr(list->term);
+	srcsz = strlen(src);
+	dest = gcalloc(srcsz+1, tString);
+	memset(dest, 0, srcsz+1);
+
+	for(i = 0; i < srcsz; i++){
+		switch(src[i]) {
+		case '\x01':
+		case '\x02':
+			continue;
+		default:
+			dest[desti] = src[i];
+			desti++;
+			break;
+		}
+	}
+
+	res = mklist(mkstr(dest), nil);
+
+	gcrderef(&r_dest);
+	gcrderef(&r_src);
+	gcrderef(&r_res);
+	gcrderef(&r_list);
+
+	return res;
+}
+
 MODULE(mod_syntax, &syntax_onload, &syntax_onunload,
 	// core
 	DX(basictokenize),
@@ -1114,4 +1160,5 @@ MODULE(mod_syntax, &syntax_onload, &syntax_onunload,
 	DX(syn_atom_type),
 	DX(fasthighlighting),
 	DX(enablefasthighlighting),
+	DX(stripdsdechars),
 );
