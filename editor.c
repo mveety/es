@@ -297,7 +297,7 @@ find_matching_paren(EditorState *state)
 }
 
 void
-outbuf_append_printable(EditorState *state, OutBuf *obuf, char *str, int len, int all)
+outbuf_append_printable(EditorState *state, OutBuf *obuf, char *str, int len, int all, int nohighlight)
 {
 	int64_t i = 0;
 	int64_t pos = 0;
@@ -311,24 +311,26 @@ outbuf_append_printable(EditorState *state, OutBuf *obuf, char *str, int len, in
 	size_t curfmt_end = 0;
 	size_t fmtlen = 0;
 
-	if(state->match_braces && !state->done_reading)
-		highlight = find_matching_paren(state);
+	if(nohighlight == 0){
+		if(state->match_braces && !state->done_reading)
+			highlight = find_matching_paren(state);
 
-	if(state->highlight_formatting == nil)
-		highlight = -1;
-	if(highlight >= 0) {
-		hlfmtlen = strlen(state->highlight_formatting);
-		highlightsz = hlfmtlen + 4;
+		if(state->highlight_formatting == nil)
+			highlight = -1;
+		if(highlight >= 0) {
+			hlfmtlen = strlen(state->highlight_formatting);
+			highlightsz = hlfmtlen + 4;
+		}
+
+		if(highlight >= 0 && state->bufpos == state->bufend) {
+			highlight2 = state->bufpos - 1;
+			highlightsz += highlightsz;
+		}
+
+		dprint("highlight1 = %ld\n", highlight);
+		dprint("highlight2 = %ld\n", highlight2);
+		dprint("highlightsz = %ld\n", highlightsz);
 	}
-
-	if(highlight >= 0 && state->bufpos == state->bufend) {
-		highlight2 = state->bufpos - 1;
-		highlightsz += highlightsz;
-	}
-
-	dprint("highlight1 = %ld\n", highlight);
-	dprint("highlight2 = %ld\n", highlight2);
-	dprint("highlightsz = %ld\n", highlightsz);
 
 	if(obuf->str == nil) {
 		obuf->str = ealloc(len + highlightsz + 2);
@@ -1052,16 +1054,16 @@ vt100_refresh(EditorState *state)
 		}
 	}
 
-	outbuf_append(buf, prompt, strlen(prompt));
+	outbuf_append_printable(state, buf, prompt, strlen(prompt), 1, 1);
 	if(state->syntax_highlight_hook) {
 		dprint("calling syntax highlighting hook\n");
 		highlighted_buffer = state->syntax_highlight_hook(state->buffer, state->bufend);
 		if(highlighted_buffer) {
-			outbuf_append_printable(state, buf, highlighted_buffer, strlen(highlighted_buffer), 1);
+			outbuf_append_printable(state, buf, highlighted_buffer, strlen(highlighted_buffer), 1, 0);
 			efree(highlighted_buffer);
 		}
 	} else
-		outbuf_append_printable(state, buf, state->buffer, state->bufend, 0);
+		outbuf_append_printable(state, buf, state->buffer, state->bufend, 0, 0);
 
 	if(rel_next_end.lines - 1 > 0) {
 		if(rel_next_end.cols > 0)
