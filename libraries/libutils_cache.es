@@ -59,5 +59,6 @@ let (
 		%hidevar __libutil_function_data
 		assert2 libutil {eq <={mod $#__libutil_function_data 2} 0}
 	}
+	%define_rehash_hook libutils @{ libutil_rehash }
 }
 

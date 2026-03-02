@@ -11,13 +11,13 @@
 # we're going to use the defaults now
 # libraries = $home/eslib
 
-libraries = `{pwd}^/libraries $libraries
+libraries = `{pwd}^/libraries
 conf -s es:dynlib-local-search true
 
 # base libraries. most stuff autoloads, but this stuff is required
 match `{hostname} (
-	(silverfox redfox) { import 256syntax prompt autoinit library_autoload atuin_history }
-	thefoundry { import prompt autoinit library_autoload history }
+	(silverfox redfox) { import 256syntax autoinit library_autoload atuin_history }
+	thefoundry { import autoinit library_autoload history }
 
 )
 

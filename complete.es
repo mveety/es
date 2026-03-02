@@ -382,6 +382,7 @@ fn %complete_cmd_hook cmdname completefn {
 
 fn __es_complete_initialize {
 	_es_complete_command_hooks = <=dictnew
+	_es_complete_rehashers = <=dictnew
 }
 
 if {~ $#esmle_conf_complete_order 0} {
@@ -455,6 +456,50 @@ fn complete_base_complete partial {
 			}
 		}
 	}
+}
+
+fn rehash args {
+	let(
+		verbose = false
+		continue = false
+	){
+		parseargs @ a {
+			match $a (
+				(-h) { usage }
+				(-v) { verbose = true }
+				(-c) { continue = true }
+				* { usage }
+			)
+		} @ {
+			throw usage rehash 'usage: rehash [-vc]'
+		} $args
+
+		if {~ $#_es_complete_rehashers 0} {
+			if {$verbose} {
+				echo 'no rehashers registered'
+			}
+			return <=true
+		}
+
+		dictforall $_es_complete_rehashers @ n fun {
+			if {! ~ $#fun 1 } {
+				throw error rehash 'invalid rehasher'
+			}
+			if {$verbose} { echo 'rehashing '^$n^'...' }
+			(e _) = <={try $fun}
+			if {$e && ! $continue} {
+				throw $e
+			}
+		}
+		return <=true
+	}
+}
+
+fn %define_rehash_hook name fun _ {
+	if {! ~ <={%termtypeof $fun} closure} {
+		throw error $0 'must be a function or closure'
+	}
+	_es_complete_rehashers := $name => $fun
 }
 
 # %complete returns a list of possible completions based on the context

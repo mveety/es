@@ -406,6 +406,7 @@ fn libutil_rehash {
 	}
 	assert2 libutil {eq <={mod $#__libutil_function_data 2} 0}
 }
+%define_rehash_hook libutils @{ libutil_rehash }
 
 fn libutil_whereis fun {
 	if {~ $#__libutil_function_data 0} { libutil_rehash }
