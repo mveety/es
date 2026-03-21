@@ -731,6 +731,9 @@ free_editor(EditorState *state)
 int
 reset_editor(EditorState *state)
 {
+	Position curpos;
+	char newline[] = "\r\n";
+
 	if(!state->initialized)
 		return -1;
 
@@ -748,6 +751,12 @@ reset_editor(EditorState *state)
 		return 0;
 	}
 
+	curpos = getposition(state);
+	dprint("curpos = (Position){.lines = %d, .cols = %d}\n", curpos.lines, curpos.cols);
+	if(curpos.cols > 1){
+		dprint("in the middle of a line, resetting and adding a newline\n");
+		write(state->ofd, newline, 2);
+	}
 	memset(state->buffer, 0, state->bufsz);
 	state->bufpos = 0;
 	state->fixed_bufpos = 0;
