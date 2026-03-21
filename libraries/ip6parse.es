@@ -26,12 +26,8 @@ fn ip6expandaddr addr _ {
 				(head tail) = <={~~ $addr *^'::'^*}
 				midfix=
 			) {
-				echovar head
-				echovar tail
 				head = <={%split ':' $head}
 				tail = <={%split ':' $tail}
-				echovar head
-				echovar tail
 				midfix = <={
 					add $#head $#tail |>
 						sub 8 |>
