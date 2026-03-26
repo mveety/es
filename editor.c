@@ -4,6 +4,7 @@
  * into es.
  */
 
+#include "stdenv.h"
 #ifdef STANDALONE
 #ifdef __linux__
 #define _XOPEN_SOURCE 800
@@ -474,6 +475,22 @@ getposition(EditorState *state)
 	char buf[32];
 	int cols, rows;
 	size_t i = 0;
+	char *ttypath = nil;
+
+	// NOTE: this is a hack for FreeBSD vt(4)
+	// it seems to be the case that vt(4) does not respond
+	// to \x1b[6n, causing es to freeze on start up. A workaround
+	// for this is to just return ErrPos when the tty does not
+	// start with /dev/pts.
+	// I think this really only hits FreeBSD and only during early init.
+	// the other case where getposition is used is normally covered
+	// by ioctl.
+
+	ttypath = ttyname(state->ifd);
+	if(!ttypath)
+		return ErrPos;
+	if(!hasprefix(ttypath, "/dev/pts"))
+		return ErrPos;
 
 	if(write(state->ofd, "\x1b[6n", 4) != 4)
 		return ErrPos;
@@ -752,7 +769,7 @@ reset_editor(EditorState *state)
 	}
 
 	curpos = getposition(state);
-	dprint("curpos = (Position){.lines = %d, .cols = %d}\n", curpos.lines, curpos.cols);
+	dprint("firstpos = (Position){.lines = %d, .cols = %d}\n", curpos.lines, curpos.cols);
 	if(curpos.cols > 1){
 		dprint("in the middle of a line, resetting and adding a newline\n");
 		write(state->ofd, newline, 2);
