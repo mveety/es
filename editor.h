@@ -15,6 +15,8 @@
 #define PTY_PREFIX "/dev/pts"
 #elif defined(__HAIKU__)
 #define PTY_PREFIX "/dev/tt"
+#elif defined(__NetBSD__)
+#define PTY_PREFIX "/dev/pty"
 #else
 // #error "PTY_PREFIX is not defined"
 #define PTY_PREFIX "/dev/pts"
