@@ -298,7 +298,8 @@ find_matching_paren(EditorState *state)
 }
 
 void
-outbuf_append_printable(EditorState *state, OutBuf *obuf, char *str, int len, int all, int nohighlight)
+outbuf_append_printable(EditorState *state, OutBuf *obuf, char *str, int len, int all,
+						int nohighlight)
 {
 	int64_t i = 0;
 	int64_t pos = 0;
@@ -312,7 +313,7 @@ outbuf_append_printable(EditorState *state, OutBuf *obuf, char *str, int len, in
 	size_t curfmt_end = 0;
 	size_t fmtlen = 0;
 
-	if(nohighlight == 0){
+	if(nohighlight == 0) {
 		if(state->match_braces && !state->done_reading)
 			highlight = find_matching_paren(state);
 
@@ -783,7 +784,7 @@ reset_editor(EditorState *state)
 
 	curpos = getposition(state);
 	dprint("firstpos = (Position){.lines = %d, .cols = %d}\n", curpos.lines, curpos.cols);
-	if(curpos.cols > 1){
+	if(curpos.cols > 1) {
 		dprint("in the middle of a line, resetting and adding a newline\n");
 		write(state->ofd, newline, 2);
 	}
@@ -1098,7 +1099,8 @@ vt100_refresh(EditorState *state)
 		dprint("calling syntax highlighting hook\n");
 		highlighted_buffer = state->syntax_highlight_hook(state->buffer, state->bufend);
 		if(highlighted_buffer) {
-			outbuf_append_printable(state, buf, highlighted_buffer, strlen(highlighted_buffer), 1, 0);
+			outbuf_append_printable(state, buf, highlighted_buffer, strlen(highlighted_buffer), 1,
+									0);
 			efree(highlighted_buffer);
 		}
 	} else

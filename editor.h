@@ -388,6 +388,11 @@ struct Result {
 	};
 	int status;
 };
+
+extern Result result(void *ptr, int status);
+extern void *ok(Result r);
+extern int status(Result r);
+
 #endif
 
 /* basics */

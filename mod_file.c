@@ -133,7 +133,7 @@ blob_stringify(Object *obj)
 	char buf[2048];
 
 	memset(&buf[0], 0, sizeof(buf));
-	snprintf(&buf[0], sizeof(buf)-1, "size = %lu", obj->size);
+	snprintf(&buf[0], sizeof(buf) - 1, "size = %lu", obj->size);
 	return estrdup(&buf[0]);
 }
 
@@ -249,8 +249,8 @@ PRIM(file_name) {
 	if(list == nil)
 		fail("$&file_name", "invalid argument");
 
-	gcref(&r_list, (void**)&list);
-	gcref(&r_res, (void**)&res);
+	gcref(&r_list, (void **)&list);
+	gcref(&r_res, (void **)&res);
 	obj = getobject(list->term);
 	if(!obj)
 		fail("$&file_name", "$1 must be an object");
@@ -274,8 +274,8 @@ PRIM(file_fd) {
 	if(list == nil)
 		fail("$&file_name", "invalid argument");
 
-	gcref(&r_list, (void**)&list);
-	gcref(&r_res, (void**)&res);
+	gcref(&r_list, (void **)&list);
+	gcref(&r_res, (void **)&res);
 	obj = getobject(list->term);
 	if(!obj)
 		fail("$&file_fd", "$1 must be an object");
@@ -304,9 +304,9 @@ PRIM(blob2string) {
 	if(list->next != nil)
 		fail("$&blob2string", "too many arguments");
 
-	gcref(&r_list, (void**)&list);
-	gcref(&r_newstr, (void**)&newstr);
-	gcref(&r_res, (void**)&res);
+	gcref(&r_list, (void **)&list);
+	gcref(&r_newstr, (void **)&newstr);
+	gcref(&r_res, (void **)&res);
 
 	obj = getobject(list->term);
 	if(!obj)
@@ -314,8 +314,8 @@ PRIM(blob2string) {
 	if(!object_is_type(obj, "blob"))
 		fail("$&blob2string", "must be a blob object");
 
-	newstr = gcalloc(obj->size+1, tString);
-	memset(newstr, 0, obj->size+1);
+	newstr = gcalloc(obj->size + 1, tString);
+	memset(newstr, 0, obj->size + 1);
 	memcpy(newstr, obj->data, obj->size);
 
 	res = mklist(mkstr(newstr), nil);
@@ -339,9 +339,9 @@ PRIM(string2blob) {
 	if(list->next != nil)
 		fail("$&string2blob", "too many arguments");
 
-	gcref(&r_list, (void**)&list);
-	gcref(&r_str, (void**)&str);
-	gcref(&r_res, (void**)&res);
+	gcref(&r_list, (void **)&list);
+	gcref(&r_str, (void **)&str);
+	gcref(&r_res, (void **)&res);
 
 	str = getstr(list->term);
 	if(!str)
@@ -500,8 +500,8 @@ PRIM(file_write) {
 	if(length(list) > 2)
 		fail("$&file_write", "too many arguments");
 
-	gcref(&r_list, (void**)&list);
-	gcref(&r_outstr, (void**)&outstr);
+	gcref(&r_list, (void **)&list);
+	gcref(&r_outstr, (void **)&outstr);
 
 	obj = getobject(list->term);
 	if(!obj)
@@ -534,7 +534,7 @@ PRIM(file_bwrite) {
 	if(length(list) > 2)
 		fail("$&file_bwrite", "too many arguments");
 
-	gcref(&r_list, (void**)&list);
+	gcref(&r_list, (void **)&list);
 
 	obj = getobject(list->term);
 	if(!obj)
@@ -570,7 +570,7 @@ PRIM(file_seek) {
 	if(length(list) > 3)
 		fail("$&file_seek", "too many arguments");
 
-	gcref(&r_list, (void**)&list);
+	gcref(&r_list, (void **)&list);
 
 	obj = getobject(list->term);
 	if(!obj)

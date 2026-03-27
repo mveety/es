@@ -1113,17 +1113,17 @@ PRIM(stripdsdechars) {
 	if(list->next != nil)
 		fail("$&stripdsdechars", "too many arguments");
 
-	gcref(&r_list, (void**)&list);
-	gcref(&r_res, (void**)&res);
-	gcref(&r_src, (void**)&src);
-	gcref(&r_dest, (void**)&dest);
+	gcref(&r_list, (void **)&list);
+	gcref(&r_res, (void **)&res);
+	gcref(&r_src, (void **)&src);
+	gcref(&r_dest, (void **)&dest);
 
 	src = getstr(list->term);
 	srcsz = strlen(src);
-	dest = gcalloc(srcsz+1, tString);
-	memset(dest, 0, srcsz+1);
+	dest = gcalloc(srcsz + 1, tString);
+	memset(dest, 0, srcsz + 1);
 
-	for(i = 0; i < srcsz; i++){
+	for(i = 0; i < srcsz; i++) {
 		switch(src[i]) {
 		case '\x01':
 		case '\x02':

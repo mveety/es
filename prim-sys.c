@@ -431,8 +431,8 @@ PRIM(time) {
 	char usagemsg[] = "$&time [-ipr] body";
 
 	gcref(&r_lp, (void **)&lp);
-	gcref(&r_interexec, (void**)&interexec);
-	gcref(&r_execlist, (void**)&execlist);
+	gcref(&r_interexec, (void **)&interexec);
+	gcref(&r_execlist, (void **)&execlist);
 	lp = list;
 
 	if(lp == NULL)
