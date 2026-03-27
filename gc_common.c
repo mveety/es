@@ -382,12 +382,14 @@ DefineTag(Anonymous, notstatic);
 void *
 gcmalloc(size_t sz)
 {
-	void *p;
+	void *p = nil; Root r_p;
 
+	gcref(&r_p, (void**)&p);
 	gcdisable();
 	p = gcalloc(sz, tAnonymous);
 	memset(p, 0, sz);
 	gcenable();
+	gcrderef(&r_p);
 	return p;
 }
 

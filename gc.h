@@ -30,7 +30,6 @@ enum {
 
 typedef struct Header Header;
 typedef struct GcStats GcStats;
-typedef struct Buffer Buffer;
 typedef struct AnonSpace AnonSpace;
 typedef struct Region Region;
 typedef struct Block Block;
@@ -79,12 +78,6 @@ struct GcStats {
 	Boolean array_sort;
 	Boolean use_size;
 	int gcblocked;
-};
-
-struct Buffer {
-	size_t len;
-	size_t current;
-	char str[1];
 };
 
 struct Region {

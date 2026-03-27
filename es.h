@@ -62,6 +62,8 @@ typedef struct RegexStatus RegexStatus;
 typedef struct AppendContext AppendContext;
 typedef struct Root Root;
 typedef struct Object Object;
+typedef struct Buffer Buffer;
+typedef struct SplitCtx SplitCtx;
 
 typedef enum {
 	tkBad = 0,
@@ -289,6 +291,29 @@ typedef struct {
 	char *name;
 	Mapping map;
 } EditorFnDef;
+
+/* some gc stuff that needed moving */
+
+struct Buffer {
+	size_t len;
+	size_t current;
+	char str[1];
+};
+
+/* fsplit and friends */
+
+struct SplitCtx {
+	Boolean initialized;
+	Boolean coalesce;
+	Boolean splitchars;
+	Buffer *buffer;
+	List *value;
+	Root r_value;
+	Boolean ifsvalid;
+	char ifs[10];
+	char isifs[256];
+};
+
 
 /*
  * our programming environment
@@ -558,9 +583,12 @@ extern void initprims(void);
 
 /* split.c */
 
-extern void startsplit(const char *sep, Boolean coalesce);
-extern void splitstring(char *in, size_t len, Boolean endword);
-extern List *endsplit(void);
+typedef struct SplitCtx SplitCtx;
+
+extern void initsplitctx(SplitCtx *ctx);
+extern void startsplit(SplitCtx *ctx, const char *sep, Boolean coalesce);
+extern void splitstring(SplitCtx *ctx, char *in, size_t len, Boolean endword);
+extern List *endsplit(SplitCtx *ctx);
 extern List *fsplit(const char *sep, List *list, Boolean coalesce);
 
 /* signal.c */

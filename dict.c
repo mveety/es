@@ -248,12 +248,16 @@ static Dict *
 mkdict0(size_t size)
 {
 	size_t len = offsetof(Dict, table[size]);
-	Dict *dict = gcalloc(len, tDict);
+	Dict *dict = nil; Root r_dict;
+
+	gcref(&r_dict, (void**)&dict);
+	dict = gcalloc(len, tDict);
 	memzero(dict, len);
 	dict->readonly = 0;
 	dict->size = size;
 	dict->remain = REMAIN(size);
 	dict->bloom = gcmalloc(bloomsize(size));
+	gcrderef(&r_dict);
 	return dict;
 }
 
@@ -340,22 +344,23 @@ put(Dict *dict, char *name, void *value)
 {
 	uint64_t n, mask;
 	Assoc *ap;
-	Dict *old = NULL; Root r_old;
-	char *np = NULL; Root r_np;
-	void *vp = NULL; Root r_vp;
-	Dict *new;
+	Dict *old = nil; Root r_old;
+	char *np = nil; Root r_np;
+	void *vp = nil; Root r_vp;
+	Dict *new = nil; Root r_new;
 
-	assert(get(dict, name) == NULL);
-	assert(value != NULL);
+	assert(get(dict, name) == nil);
+	assert(value != nil);
 	assert(!dict->readonly);
 
 	if(dict->remain <= 1) {
-		old = dict;
 		gcref(&r_old, (void **)&old);
-		np = name;
 		gcref(&r_np, (void **)&np);
-		vp = value;
 		gcref(&r_vp, (void **)&vp);
+		gcref(&r_new, (void**)&new);
+		old = dict;
+		np = name;
+		vp = value;
 
 		new = mkdict0(GROW(old->size));
 		dictforall(old, &putwrapper, new);
@@ -363,6 +368,7 @@ put(Dict *dict, char *name, void *value)
 		name = np;
 		value = vp;
 
+		gcrderef(&r_new);
 		gcderef(&r_vp, (void **)&vp);
 		gcderef(&r_np, (void **)&np);
 		gcderef(&r_old, (void **)&old);
@@ -371,7 +377,7 @@ put(Dict *dict, char *name, void *value)
 	n = bloominsert(dict, name);
 	mask = dict->size - 1;
 	for(; (ap = &dict->table[n & mask])->name != DEAD; n++)
-		if(ap->name == NULL) {
+		if(ap->name == nil) {
 			--dict->remain;
 			break;
 		}

@@ -3,48 +3,45 @@
 #include "es.h"
 #include "gc.h"
 
-static Boolean coalesce;
-static Boolean splitchars;
-static Buffer *buffer;
-static List *value;
 
-static Boolean ifsvalid = FALSE;
-static char ifs[10], isifs[256];
-
-extern void
-startsplit(const char *sep, Boolean coalescef)
+void
+initsplitctx(SplitCtx *ctx)
 {
-	static Boolean initialized = FALSE;
-	if(!initialized) {
-		initialized = TRUE;
-		globalroot(&value);
-	}
+	memset(ctx, 0, sizeof(SplitCtx));
+	ctx->initialized = FALSE;
+	ctx->ifsvalid = FALSE;
+	ctx->value = nil;
+	gcref(&ctx->r_value, (void**)&ctx->value);
+}
 
-	value = NULL;
-	buffer = NULL;
-	coalesce = coalescef;
-	splitchars = !coalesce && *sep == '\0';
+void
+startsplit(SplitCtx *ctx, const char *sep, Boolean coalescef)
+{
+	ctx->value = NULL;
+	ctx->buffer = NULL;
+	ctx->coalesce = coalescef;
+	ctx->splitchars = !ctx->coalesce && *sep == '\0';
 
-	if(!ifsvalid || !streq(sep, ifs)) {
+	if(!ctx->ifsvalid || !streq(sep, ctx->ifs)) {
 		int c;
-		if(strlen(sep) + 1 < sizeof ifs) {
-			strcpy(ifs, sep);
-			ifsvalid = TRUE;
+		if(strlen(sep) + 1 < sizeof(ctx->ifs)) {
+			strcpy(ctx->ifs, sep);
+			ctx->ifsvalid = TRUE;
 		} else
-			ifsvalid = FALSE;
-		memzero(isifs, sizeof isifs);
-		for(isifs['\0'] = TRUE; (c = (*(unsigned const char *)sep)) != '\0'; sep++)
-			isifs[c] = TRUE;
+			ctx->ifsvalid = FALSE;
+		memzero(ctx->isifs, sizeof(ctx->isifs));
+		for(ctx->isifs['\0'] = TRUE; (c = (*(unsigned const char *)sep)) != '\0'; sep++)
+			ctx->isifs[c] = TRUE;
 	}
 }
 
 extern char *
-stepsplit(char *in, size_t len, Boolean endword)
+stepsplit(SplitCtx *ctx, char *in, size_t len, Boolean endword)
 {
-	Buffer *buf = buffer;
+	Buffer *buf = ctx->buffer;
 	unsigned char *s = (unsigned char *)in, *inend = s + len;
 
-	if(splitchars) {
+	if(ctx->splitchars) {
 		Boolean end;
 		Term *term;
 
@@ -55,79 +52,83 @@ stepsplit(char *in, size_t len, Boolean endword)
 		end = *(s + 1) == '\0';
 
 		term = mkstr(gcndup((char *)s, 1));
-		value = mklist(term, value);
+		ctx->value = mklist(term, ctx->value);
 
 		if(end)
 			return NULL;
 		return (char *)++s;
 	}
 
-	if(!coalesce && buf == NULL)
+	if(!ctx->coalesce && buf == NULL)
 		buf = openbuffer(0);
 
 	while(s < inend) {
 		int c = *s++;
 		if(buf != NULL)
-			if(isifs[c]) {
+			if(ctx->isifs[c]) {
 				Term *term = mkstr(sealcountedbuffer(buf));
-				value = mklist(term, value);
-				buffer = coalesce ? NULL : openbuffer(0);
+				ctx->value = mklist(term, ctx->value);
+				ctx->buffer = ctx->coalesce ? NULL : openbuffer(0);
 				return (char *)s;
 			} else
 				buf = bufputc(buf, c);
-		else if(!isifs[c])
+		else if(!ctx->isifs[c])
 			buf = bufputc(openbuffer(0), c);
 	}
 
 	if(endword && buf != NULL) {
 		Term *term = mkstr(sealcountedbuffer(buf));
-		value = mklist(term, value);
+		ctx->value = mklist(term, ctx->value);
 		buf = NULL;
 	}
-	buffer = buf;
+	ctx->buffer = buf;
 	return NULL;
 }
 
 extern void
-splitstring(char *in, size_t len, Boolean endword)
+splitstring(SplitCtx *ctx, char *in, size_t len, Boolean endword)
 {
 	size_t remainder;
 	char *s = in;
 	do {
 		remainder = len - (s - in);
-		s = stepsplit(s, remainder, endword);
+		s = stepsplit(ctx, s, remainder, endword);
 	} while(s != NULL);
 }
 
 extern List *
-endsplit(void)
+endsplit(SplitCtx *ctx)
 {
 	List *result;
 
-	if(buffer != NULL) {
-		Term *term = mkstr(sealcountedbuffer(buffer));
-		value = mklist(term, value);
-		buffer = NULL;
+	if(ctx->buffer != NULL) {
+		Term *term = mkstr(sealcountedbuffer(ctx->buffer));
+		ctx->value = mklist(term, ctx->value);
+		ctx->buffer = NULL;
 	}
-	result = reverse(value);
-	value = NULL;
+	result = reverse(ctx->value);
+	ctx->value = NULL;
+	gcrderef(&ctx->r_value);
 	return result;
 }
 
 extern List *
 fsplit(const char *sep, List *list, Boolean coalesce)
 {
+	SplitCtx ctx;
+
+	initsplitctx(&ctx);
 	Ref(List *, lp, list);
-	startsplit(sep, coalesce);
+	startsplit(&ctx, sep, coalesce);
 	for(; lp != NULL; lp = lp->next) {
 		char *bs = getstr(lp->term), *s = bs;
 		do {
 			char *ns = getstr(lp->term);
 			s = ns + (s - bs);
 			bs = ns;
-			s = stepsplit(s, strlen(s), TRUE);
+			s = stepsplit(&ctx, s, strlen(s), TRUE);
 		} while(s != NULL);
 	}
 	RefEnd(lp);
-	return endsplit();
+	return endsplit(&ctx);
 }
