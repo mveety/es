@@ -607,6 +607,8 @@ supported_term(char *term)
 		return 1;
 	if(hasprefix(term, "vt5"))
 		return 1;
+	if(hasprefix(term, "wsvt25"))
+		return 1;
 	return 0;
 }
 
