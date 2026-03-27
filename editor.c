@@ -469,13 +469,25 @@ rawmode_off(EditorState *state)
 	return 0;
 }
 
+int
+isavty(EditorState *state)
+{
+	char *ttypath = nil;
+
+	ttypath = ttyname(state->ifd);
+	if(!ttypath)
+		return 0;
+	if(hasprefix(ttypath, PTY_PREFIX))
+		return 1;
+	return 0;
+}
+
 Position
 getposition(EditorState *state)
 {
 	char buf[32];
 	int cols, rows;
 	size_t i = 0;
-	char *ttypath = nil;
 
 	// NOTE: this is a hack for FreeBSD vt(4)
 	// it seems to be the case that vt(4) does not respond
@@ -486,11 +498,10 @@ getposition(EditorState *state)
 	// the other case where getposition is used is normally covered
 	// by ioctl.
 
-	ttypath = ttyname(state->ifd);
-	if(!ttypath)
+#if defined(__FreeBSD__)
+	if(!isavty(state))
 		return ErrPos;
-	if(!hasprefix(ttypath, "/dev/pts"))
-		return ErrPos;
+#endif
 
 	if(write(state->ofd, "\x1b[6n", 4) != 4)
 		return ErrPos;

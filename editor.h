@@ -11,6 +11,15 @@
 
 #define EDITINITIALBUFSZ 4096
 
+#if defined(__FreeBSD__) || defined(__linux__)
+#define PTY_PREFIX "/dev/pts"
+#elif defined(__HAIKU__)
+#define PTY_PREFIX "/dev/tt"
+#else
+// #error "PTY_PREFIX is not defined"
+#define PTY_PREFIX "/dev/pts"
+#endif
+
 enum {
 /* base keys */
 #define BaseKeys 128
