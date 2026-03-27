@@ -2,6 +2,7 @@
 
 #include "es.h"
 #include "gc.h"
+#include "stdenv.h"
 
 Boolean gcverbose = FALSE;			/* -G */
 Boolean gcinfo = FALSE;				/* -I */
@@ -37,6 +38,7 @@ extern Boolean regex_debug;
 extern Boolean dump_tok_status;
 extern Boolean verbose_rangematch;
 extern Boolean comprehensive_matches;
+extern Boolean noassignreturn;
 #ifdef DYNAMIC_LIBRARIES
 extern Boolean dynlib_verbose;
 #endif
@@ -163,9 +165,9 @@ void
 debug_flag_usage(void)
 { /* this is a mess */
 #ifdef DYNAMIC_LIBRARIES
-	dprintf(2, "debug flags: es -D [GIaEPRAMrhHJCtpdm]\n%s",
+	dprintf(2, "debug flags: es -D [GIaEPRAMrhHJCtpdSm]\n%s",
 #else
-	dprintf(2, "debug flags: es -D [GIaEPRAMrhHJCtpd]\n%s",
+	dprintf(2, "debug flags: es -D [GIaEPRAMrhHJCtpdS]\n%s",
 #endif
 			"	? -- show this message\n"
 			"	G -- gcverbose\n"
@@ -186,6 +188,7 @@ debug_flag_usage(void)
 			"	e -- force_fallback_editor\n"
 			"	p -- primassert\n"
 			"	d -- dumpprims\n"
+			"	S -- noassignreturn\n"
 #ifdef DYNAMIC_LIBRARIES
 			"	m -- dynlib_verbose\n"
 #endif
@@ -436,6 +439,9 @@ main(int argc, char *argv[])
 					break;
 				case 'd':
 					dumpprims = 1;
+					break;
+				case 'S':
+					noassignreturn = TRUE;
 					break;
 #ifdef DYNAMIC_LIBRARIES
 				case 'm':

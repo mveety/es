@@ -4,6 +4,7 @@
 
 unsigned long evaldepth = 0, maxevaldepth = MAXmaxevaldepth;
 extern Boolean verbose_match;
+Boolean noassignreturn = FALSE;
 
 void
 failexec(char *file, List *args)
@@ -144,6 +145,8 @@ dictdestructassign(Tree *vardict0, Tree *valueform0, Binding *binding0, int flag
 	gcrderef(&r_valueform);
 	gcrderef(&r_vardict);
 
+	if(noassignreturn)
+		return nil;
 	return valuelist;
 }
 
@@ -203,6 +206,9 @@ assign(Tree *varform, Tree *valueform0, Binding *binding0, int flags)
 	gcderef(&r_binding, (void **)&binding);
 	gcderef(&r_valueform, (void **)&valueform);
 	gcderef(&r_result, (void **)&result);
+
+	if(noassignreturn)
+		return nil;
 	return result;
 }
 
