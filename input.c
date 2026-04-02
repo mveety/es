@@ -101,65 +101,6 @@ getnextlastcmd(void)
 	return nextlastcmd;
 }
 
-/* loghistory -- write the last command out to a file */
-static void
-loghistory(const char *cmd, size_t len)
-{
-	const char *s, *end;
-	unsigned long curtime;
-
-	if(history == NULL || disablehistory)
-		return;
-	if(strnlen(cmd, len) > 1) {
-		if(lastcmd != NULL)
-			efree(lastcmd);
-		if(nextlastcmd != NULL)
-			lastcmd = nextlastcmd;
-		nextlastcmd = ealloc(len + 2);
-		memcpy(nextlastcmd, cmd, len);
-		nextlastcmd[len - 1] = '\0';
-	}
-	if(historyfd == -1) {
-		historyfd = eopen(history, oAppend);
-		if(historyfd == -1) {
-			eprint("history(%s): %s\n", history, esstrerror(errno));
-			vardef("history", NULL, NULL);
-			return;
-		}
-	}
-	/* skip empty lines and comments in history */
-	for(s = cmd, end = s + len; s < end; s++)
-		switch(*s) {
-		case '#':
-		case '\n':
-			return;
-		case ' ':
-		case '\t':
-			break;
-		default:
-			goto writeit;
-		}
-writeit:;
-
-	/*
-	 * we're interested in writing out history in the csh format
-	 * for compatibility reasons.
-	 */
-	curtime = time(NULL);
-	dprintf(historyfd, "#+%lu\n", curtime);
-	/*
-	 * Small unix hack: since read() reads only up to a newline
-	 * from a terminal, then presumably this write() will write at
-	 * most only one input line at a time.
-	 */
-	ewrite(historyfd, cmd, len);
-
-	// we close the history file after using it so that other programs
-	// can use it without causing too many problems
-	close(historyfd);
-	historyfd = -1;
-}
-
 /* sethistory -- change the file for the history log */
 extern void
 sethistory(char *file)
@@ -654,23 +595,15 @@ edit_start:
 			}
 		history_hook = varlookup("fn-%history", NULL);
 		if(!disablehistory) {
-			if(history_hook == NULL) {
-				if(*line_in != '\0')
-					history_add(editor, line_in);
-				loghistory((char *)in->bufbegin, nread);
-			} else {
+			if(history_hook != NULL) {
 				gcref(&r_result, (void **)&result);
 				args = mklist(mkstr(str("%s", line_in)), NULL);
 				history_hook = append(history_hook, args);
 				result = eval(history_hook, NULL, 0);
-
+				
+				// should there be an assert here now?
 				assert(result != NULL);
 
-				if(strcmp("0", getstr(result->term)) == 0) {
-					if(*line_in != '\0')
-						history_add(editor, line_in);
-					loghistory((char *)in->bufbegin, nread);
-				}
 				gcrderef(&r_result);
 			}
 		}

@@ -316,7 +316,6 @@ set-history = @ file {
 		touch $file
 	}
 	local(set-history=; set-history_conf_file=) {
-		$&sethistory $file
 		history = $file
 		history_conf_file = $file
 		if {$history_conf_load-on-change} {

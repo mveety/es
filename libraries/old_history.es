@@ -181,7 +181,6 @@ set-history = @ file {
 		touch $file
 	}
 	local(set-history=) {
-		$&sethistory $file
 		history = $file
 		if {! ~ $#history-reload 0} {
 			%clear-history

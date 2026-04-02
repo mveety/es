@@ -51,16 +51,6 @@ PRIM(clearhistory) {
 	return NULL;
 }
 
-PRIM(sethistory) {
-	if(list == NULL) {
-		sethistory(NULL);
-		return NULL;
-	}
-	Ref(List *, lp, list);
-	sethistory(getstr(lp->term));
-	RefReturn(lp);
-}
-
 PRIM(getevaldepth) {
 	return mklist(mkstr(str("%d", evaldepth)), NULL);
 }
@@ -942,7 +932,6 @@ Primitive prim_mv[] = {
 	DX(addhistory),
 	DX(addhistorylist),
 	DX(clearhistory),
-	DX(sethistory),
 	DX(getevaldepth),
 	DX(range),
 	DX(reverse),

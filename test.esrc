@@ -43,7 +43,7 @@ autoinit load-all
 conf -s history:maxdisplay 10
 conf -s history:reload 100
 conf -s history:load-on-change false
-conf -s history:file '/home/mveety/.history'
+conf -s history:file `{pwd}^'/test.history'
 conf -s prompt:name mveety
 conf -s esmle:match-braces true
 

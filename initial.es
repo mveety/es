@@ -1000,7 +1000,6 @@ set-PATH = @ { local (set-path = ) path = <={%fsplit  : $*}; result $* }
 #	These settor functions call primitives to set data structures used
 #	inside of es.
 
-set-history		= $&sethistory
 set-signals		= $&setsignals
 set-noexport		= $&setnoexport
 set-max-eval-depth	= $&setmaxevaldepth
