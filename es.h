@@ -546,7 +546,6 @@ extern void setnextlastcmd(char *str);
 extern char *getnextlastcmd(void);
 extern Tree *parse(char *esprompt1, char *esprompt2);
 extern Tree *parsestring(const char *str);
-extern void sethistory(char *file);
 extern Boolean isinteractive(void);
 extern int getrunflags(char *, size_t);
 extern int setrunflags(char *, size_t);

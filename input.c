@@ -101,17 +101,6 @@ getnextlastcmd(void)
 	return nextlastcmd;
 }
 
-/* sethistory -- change the file for the history log */
-extern void
-sethistory(char *file)
-{
-	if(historyfd != -1) {
-		close(historyfd);
-		historyfd = -1;
-	}
-	history = file;
-}
-
 /*
  * unget -- character pushback
  */
