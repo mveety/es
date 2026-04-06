@@ -251,12 +251,14 @@ mkdict0(size_t size)
 	Dict *dict = nil; Root r_dict;
 
 	gcref(&r_dict, (void**)&dict);
+	gcdisable();
 	dict = gcalloc(len, tDict);
 	memzero(dict, len);
 	dict->readonly = 0;
 	dict->size = size;
 	dict->remain = REMAIN(size);
 	dict->bloom = gcmalloc(bloomsize(size));
+	gcenable();
 	gcrderef(&r_dict);
 	return dict;
 }
