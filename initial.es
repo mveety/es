@@ -668,7 +668,7 @@ fn __es_define_iosub_settor {
 			match $arg (
 				(devfd tmpfile mknod mkfifo) {
 					es_conf_iosub-impl = $arg
-					__es_devfd_init
+					__es_iosub_init
 					result $arg
 				}
 				* { result $arg }
