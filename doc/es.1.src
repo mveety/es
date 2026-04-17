@@ -51,14 +51,14 @@
 \\$*
 .if \\n[.$] \{\
 .	ds an*subsection-heading \\$1\"
-.	an*bookmark 4 \E*[an*subsection-heading]
+.	an*bookmark 4 "\\*[an*subsection-heading]"
 .\}
 ..
 .\" the above but don't render the text.
 .de QBK
 .if \\n[.$] \{\
 .	ds an*subsection-heading \\$1\"
-.	an*bookmark 4 \E*[an*subsection-heading]
+.	an*bookmark 4 "\\*[an*subsection-heading]"
 .\}
 ..
 
@@ -67,14 +67,14 @@
 \\$*
 .if \\n[.$] \{\
 .	ds an*subsection-heading \\$1\"
-.	an*bookmark 3 \E*[an*subsection-heading]
+.	an*bookmark 3 "\\*[an*subsection-heading]"
 .\}
 ..
 .\" the above but don't render the text.
 .de QBK3
 .if \\n[.$] \{\
 .	ds an*subsection-heading \\$1\"
-.	an*bookmark 3 \E*[an*subsection-heading]
+.	an*bookmark 3 "\\*[an*subsection-heading]"
 .\}
 ..
 .\"
