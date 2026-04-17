@@ -200,6 +200,7 @@ extern int arena_reset(Arena *arena);
 extern int arena_destroy(Arena *arena);
 
 /* arena allocator api? */
+extern void acancel(void);
 extern void *aseal(void *ptr);
 extern char *asealbuffer(Buffer *buf);
 extern char *asealcountedbuffer(Buffer *buf);

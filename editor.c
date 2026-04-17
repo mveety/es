@@ -2636,6 +2636,8 @@ vt100_line_editor(EditorState *state)
 		goto fail;
 
 	while(readstate == StateRead) {
+		assert(readstate == StateRead);
+		dprint("=== top of editor input loop ===\n");
 		key = 0;
 		memset(&seq[0], 0, sizeof(seq));
 		refresh(state);
@@ -2964,6 +2966,7 @@ vt100_line_editor(EditorState *state)
 			break;
 		case -3:
 			readstate = StateCancel;
+			dprint("cancel input\n");
 			break;
 		case 0:
 			if(r.ptr != nil) {

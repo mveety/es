@@ -339,6 +339,14 @@ adup(const char *str)
 	return andup(str, strlen(str));
 }
 
+void
+acancel(void)
+{
+	assert(input->arena);
+	arena_destroy(input->arena);
+	input->arena = nil;
+}
+
 void *
 aseal(void *ptr)
 {

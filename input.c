@@ -43,6 +43,7 @@ extern Atomic sigwinch_resize;
 extern Atomic in_editor;
 EditorContext *editor_ctx = nil;
 char default_highlight_formatting[] = "\x1b[46m\x1b[37m";
+Boolean input_cancelled = FALSE;
 
 #if ABUSED_GETENV
 static char *stdgetenv(const char *);
@@ -535,9 +536,14 @@ fdfill(Input *in)
 	assert(in->buf == in->bufend);
 	assert(in->fd >= 0);
 
+	if(input_cancelled == TRUE)
+		return EOF;
+
 	if(in->runflags & run_interactive && in->fd == 0) {
 		char *rlinebuf = nil;
+		dprint("--- entered fdfill ---\n");
 edit_start:
+		dprint("--- edit_start ---\n");
 		res = call_editor(prompt);
 		if(sigwinch_resize == TRUE) {
 			sigwinch_resize = FALSE;
@@ -548,9 +554,10 @@ edit_start:
 		}
 		in_editor = FALSE;
 		rlinebuf = res.str;
-		if(res.status == -1)
+		if(res.status == -1){
 			nread = -1;
-		else if(rlinebuf == NULL)
+			dprint("got cancelled input\n");
+		} else if(rlinebuf == NULL)
 			nread = 0;
 		else {
 			nread = copybuffer(in, rlinebuf, strlen(rlinebuf)) + 1;
@@ -564,7 +571,10 @@ edit_start:
 		} while(nread == -1 && errno == EINTR);
 
 	if(nread <= 0) {
-		if(res.status == -2) {
+		if(res.status == -1){
+			input_cancelled = TRUE;
+			dprint("input_cancelled = TRUE\n");
+		} else if(res.status == -2) {
 			close(in->fd);
 			in->fd = -1;
 			in->fill = eoffill;
@@ -627,6 +637,8 @@ parse(char *pr1, char *pr2)
 		pr2 = pr1;
 
 	prompt = 0;
+	dprint("=== entering $&parse ===\n");
+	input_cancelled = FALSE;
 	if(input->runflags & run_interactive) {
 		set_prompt1(editor, pr1);
 		set_prompt2(editor, pr2);
@@ -641,6 +653,16 @@ parse(char *pr1, char *pr2)
 	if(result || error != NULL) {
 		char *e;
 		assert(error != NULL);
+		if(input_cancelled == TRUE){
+			if(input->runflags & run_lisptrees)
+				eprint("(nil)\n");
+			dprint("parser: input cancelled\n");
+			gcrderef(&r_res);
+			acancel();
+			parsetree = nil;
+			error = nil;
+			return nil;
+		}
 		e = error;
 		error = NULL;
 		if(dump_tok_status)
