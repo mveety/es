@@ -62,7 +62,7 @@ locate(Input *in, char *s)
 	return (in->runflags & run_interactive) ? s : str("%s:%d: %s", in->name, in->lineno, s);
 }
 
-static char *error = NULL;
+static char *error = nil;
 
 /* yyerror -- yacc error entry point */
 extern void
@@ -73,7 +73,7 @@ yyerror(char *s)
 	if(streq(s, "Syntax error"))
 		s = "syntax error";
 #endif
-	if(error == NULL) /* first error is generally the most informative */
+	if(error == nil) /* first error is generally the most informative */
 		error = locate(input, s);
 }
 
@@ -114,12 +114,12 @@ ungetfill(Input *in)
 	assert(in->ungot > 0);
 	c = in->unget[--in->ungot];
 	if(in->ungot == 0) {
-		assert(in->rfill != NULL);
+		assert(in->rfill != nil);
 		in->fill = in->rfill;
-		in->rfill = NULL;
-		assert(in->rbuf != NULL);
+		in->rfill = nil;
+		assert(in->rbuf != nil);
 		in->buf = in->rbuf;
-		in->rbuf = NULL;
+		in->rbuf = nil;
 	}
 	return c;
 }
@@ -134,10 +134,10 @@ unget(Input *in, int c)
 	} else if(in->bufbegin < in->buf && in->buf[-1] == c && (input->runflags & run_echoinput) == 0)
 		--in->buf;
 	else {
-		assert(in->rfill == NULL);
+		assert(in->rfill == nil);
 		in->rfill = in->fill;
 		in->fill = ungetfill;
-		assert(in->rbuf == NULL);
+		assert(in->rbuf == nil);
 		in->rbuf = in->buf;
 		in->buf = in->bufend;
 		assert(in->ungot == 0);
@@ -204,9 +204,9 @@ input_resettokstatus(void)
 	s = input_dumptokstatus();
 	if(verbose_parser == TRUE)
 		dprint("input %s(%p): last tokstatus = \"%s\"\n", input->name, input, s);
-	if(input->lasttokstatus != NULL) {
+	if(input->lasttokstatus != nil) {
 		efree(input->lasttokstatus);
-		input->lasttokstatus = NULL;
+		input->lasttokstatus = nil;
 	}
 	input->tokstatusi = 0;
 }
@@ -260,14 +260,14 @@ call_editor(int which_prompt)
 static char *
 esgetenv(const char *name)
 {
-	List *value = varlookup(name, NULL);
-	if(value == NULL)
-		return NULL;
+	List *value = varlookup(name, nil);
+	if(value == nil)
+		return nil;
 	else {
 		char *export;
 		static Dict *envdict;
 		static Boolean initialized = FALSE;
-		Ref(char *, string, NULL);
+		Ref(char *, string, nil);
 
 		gcdisable();
 		if(!initialized) {
@@ -277,7 +277,7 @@ esgetenv(const char *name)
 		}
 
 		string = dictget(envdict, name);
-		if(string != NULL)
+		if(string != nil)
 			efree(string);
 
 		export = str("%W", value);
@@ -299,16 +299,16 @@ register const char *name;
 	register const char *np;
 	register char **p, *c;
 
-	if(name == NULL || environ == NULL)
-		return (NULL);
+	if(name == nil || environ == nil)
+		return (nil);
 	for(np = name; *np && *np != '='; ++np)
 		continue;
 	len = np - name;
-	for(p = environ; (c = *p) != NULL; ++p)
+	for(p = environ; (c = *p) != nil; ++p)
 		if(strncmp(c, name, len) == 0 && c[len] == '=') {
 			return (c + len + 1);
 		}
-	return (NULL);
+	return (nil);
 }
 
 extern void
@@ -490,7 +490,7 @@ copybuffer(Input *in, char *linebuf, long nread)
 	long nwrote;
 
 	nwrote = nread;
-	if(nextlastcmd != NULL) {
+	if(nextlastcmd != nil) {
 		if((bbpos = containsbangbang(linebuf, strlen(linebuf))) >= 0)
 			nwrote += (strlen(nextlastcmd) - 2); /* remember we replaced the !! with nextlastcmd */
 	}
@@ -528,7 +528,7 @@ fdfill(Input *in)
 	char *line_in;
 	List *history_hook;
 	List *args;
-	List *result = NULL; Root r_result;
+	List *result = nil; Root r_result;
 	size_t i;
 	const char cr[] = "\r";
 	Result res = (Result){.ptr = nil, .status = -2};
@@ -557,7 +557,7 @@ edit_start:
 		if(res.status == -1){
 			nread = -1;
 			dprint("got cancelled input\n");
-		} else if(rlinebuf == NULL)
+		} else if(rlinebuf == nil)
 			nread = 0;
 		else {
 			nread = copybuffer(in, rlinebuf, strlen(rlinebuf)) + 1;
@@ -580,7 +580,7 @@ edit_start:
 			in->fill = eoffill;
 			in->runflags &= ~run_interactive;
 			if(nread == -1)
-				fail("$&parse", "%s: %s", in->name == NULL ? "es" : in->name, esstrerror(errno));
+				fail("$&parse", "%s: %s", in->name == nil ? "es" : in->name, esstrerror(errno));
 		}
 		return EOF;
 	}
@@ -592,16 +592,16 @@ edit_start:
 				line_in[i] = 0;
 				break;
 			}
-		history_hook = varlookup("fn-%history", NULL);
+		history_hook = varlookup("fn-%history", nil);
 		if(!disablehistory) {
-			if(history_hook != NULL) {
+			if(history_hook != nil) {
 				gcref(&r_result, (void **)&result);
-				args = mklist(mkstr(str("%s", line_in)), NULL);
+				args = mklist(mkstr(str("%s", line_in)), nil);
 				history_hook = append(history_hook, args);
-				result = eval(history_hook, NULL, 0);
+				result = eval(history_hook, nil, 0);
 				
 				// should there be an assert here now?
-				assert(result != NULL);
+				assert(result != nil);
 
 				gcrderef(&r_result);
 			}
@@ -623,13 +623,13 @@ parse(char *pr1, char *pr2)
 {
 	Tree *res = nil; Root r_res;
 	int result;
-	assert(error == NULL);
+	assert(error == nil);
 
 	inityy();
 	emptyherequeue();
 
 	if(ISEOF(input))
-		throw(mklist(mkstr("eof"), NULL));
+		throw(mklist(mkstr("eof"), nil));
 
 	if(pr1 == nil)
 		pr1 = "";
@@ -650,9 +650,9 @@ parse(char *pr1, char *pr2)
 	result = yyparse();
 	//	gcenable();
 
-	if(result || error != NULL) {
+	if(result || error != nil) {
 		char *e;
-		assert(error != NULL);
+		assert(error != nil);
 		if(input_cancelled == TRUE){
 			if(input->runflags & run_lisptrees)
 				eprint("(nil)\n");
@@ -664,7 +664,7 @@ parse(char *pr1, char *pr2)
 			return nil;
 		}
 		e = error;
-		error = NULL;
+		error = nil;
 		if(dump_tok_status)
 			fail("$&parse", "yyparse: %s: \"%s\"", e, input_dumptokstatus());
 		fail("$&parse", "yyparse: %s", e);
@@ -683,7 +683,7 @@ parse(char *pr1, char *pr2)
 extern void
 resetparser(void)
 {
-	error = NULL;
+	error = nil;
 }
 
 /* runinput -- run from an input source */
@@ -691,7 +691,7 @@ extern List *
 runinput(Input *in, int runflags)
 {
 	int flags = runflags;
-	List *volatile result = NULL;
+	List *volatile result = nil;
 	List *repl, *dispatch;
 	Push push;
 	char *dispatcher[] = {
@@ -709,14 +709,14 @@ runinput(Input *in, int runflags)
 
 	ExceptionHandler {
 		dispatch = varlookup(
-			dispatcher[((flags & run_printcmds) ? 1 : 0) + ((flags & run_noexec) ? 2 : 0)], NULL);
+			dispatcher[((flags & run_printcmds) ? 1 : 0) + ((flags & run_noexec) ? 2 : 0)], nil);
 		if(flags & eval_exitonfalse)
 			dispatch = mklist(mkstr("%exit-on-false"), dispatch);
 		varpush(&push, "fn-%dispatch", dispatch);
 
 		repl =
-			varlookup((flags & run_interactive) ? "fn-%interactive-loop" : "fn-%batch-loop", NULL);
-		result = (repl == NULL) ? prim("batchloop", NULL, NULL, flags) : eval(repl, NULL, flags);
+			varlookup((flags & run_interactive) ? "fn-%interactive-loop" : "fn-%batch-loop", nil);
+		result = (repl == nil) ? prim("batchloop", nil, nil, flags) : eval(repl, nil, flags);
 
 		varpop(&push);
 	} CatchException (e) {
@@ -762,7 +762,7 @@ runfd(int fd, const char *name, int flags)
 	in.buflen = BUFSIZE;
 	in.bufbegin = in.buf = ealloc(in.buflen);
 	in.bufend = in.bufbegin;
-	in.name = (name == NULL) ? str("fd %d", fd) : name;
+	in.name = (name == nil) ? str("fd %d", fd) : name;
 
 	RefAdd(in.name);
 	result = runinput(&in, flags);
@@ -796,12 +796,12 @@ runstring(const char *str, const char *name, int flags)
 	List *result;
 	unsigned char *buf;
 
-	assert(str != NULL);
+	assert(str != nil);
 
 	memzero(&in, sizeof(Input));
 	in.fd = -1;
 	in.lineno = 1;
-	in.name = (name == NULL) ? str : name;
+	in.name = (name == nil) ? str : name;
 	in.fill = stringfill;
 	in.buflen = strlen(str);
 	buf = ealloc(in.buflen + 1);
@@ -820,7 +820,7 @@ runstring(const char *str, const char *name, int flags)
 extern Tree *
 parseinput(Input *in)
 {
-	Tree *volatile result = NULL;
+	Tree *volatile result = nil;
 
 	in->prev = input;
 	in->runflags = 0;
@@ -828,7 +828,7 @@ parseinput(Input *in)
 	input = in;
 
 	ExceptionHandler {
-		result = parse(NULL, NULL);
+		result = parse(nil, nil);
 		if(get(in) != EOF)
 			fail("$&parse", "more than one value in term");
 	} CatchException (e) {
@@ -850,7 +850,7 @@ parsestring(const char *str)
 	Tree *result;
 	unsigned char *buf;
 
-	assert(str != NULL);
+	assert(str != nil);
 
 	/* TODO: abstract out common code with runstring */
 
@@ -876,7 +876,7 @@ parsestring(const char *str)
 extern Boolean
 isinteractive(void)
 {
-	return input == NULL ? FALSE : ((input->runflags & run_interactive) != 0);
+	return input == nil ? FALSE : ((input->runflags & run_interactive) != 0);
 }
 
 int
@@ -888,7 +888,7 @@ getrunflags(char *s, size_t sz)
 		return -1;
 	memset(s, 0, sz);
 
-	if(input == NULL)
+	if(input == nil)
 		return 0;
 	if(assertions == TRUE)
 		s[i++] = 'a';
@@ -922,7 +922,7 @@ setrunflags(char *s, size_t sz)
 	int new_runflags = 0;
 	int nextflag = 0;
 
-	if(input == NULL)
+	if(input == nil)
 		return -1;
 	if(sz == 0)
 		return 0;
@@ -1494,7 +1494,7 @@ get_word_start(void)
 extern void
 initinput(void)
 {
-	input = NULL;
+	input = nil;
 
 	/* declare the global roots */
 	globalroot(&history); /* history file */
