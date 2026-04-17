@@ -22,23 +22,23 @@ fi
 case "$PLATFORM" in
 	FreeBSD)
 		CC=clang ./configure --enable-modules
-		make all
+		make $* all
 		;;
 	Linux)
 		CC=gcc ./configure --prefix=/usr --enable-modules
-		make all
+		make $* all
 		;;
 	Haiku)
 		./configure --prefix=/boot/home/config/non-packages --enable-modules
-		make all
+		make $* all
 		;;
 	SunOS)
 		./configure --prefix=/usr --enable-modules
-		gmake all
+		gmake $* all
 		;;
 	NetBSD)
 		CC=clang ./configure --prefix=/usr/pkg --enable-modules
-		make all
+		make $* all
 		;;
 	*)
 		echo "warning: es has not been tested on your platform and won't be automatically built"
