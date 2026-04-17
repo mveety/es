@@ -3,7 +3,6 @@
 #include "es.h"
 #include "gc.h"
 
-
 void
 initsplitctx(SplitCtx *ctx)
 {
@@ -11,7 +10,7 @@ initsplitctx(SplitCtx *ctx)
 	ctx->initialized = FALSE;
 	ctx->ifsvalid = FALSE;
 	ctx->value = nil;
-	gcref(&ctx->r_value, (void**)&ctx->value);
+	gcref(&ctx->r_value, (void **)&ctx->value);
 }
 
 void

@@ -250,7 +250,7 @@ mkdict0(size_t size)
 	size_t len = offsetof(Dict, table[size]);
 	Dict *dict = nil; Root r_dict;
 
-	gcref(&r_dict, (void**)&dict);
+	gcref(&r_dict, (void **)&dict);
 	gcdisable();
 	dict = gcalloc(len, tDict);
 	memzero(dict, len);
@@ -359,7 +359,7 @@ put(Dict *dict, char *name, void *value)
 		gcref(&r_old, (void **)&old);
 		gcref(&r_np, (void **)&np);
 		gcref(&r_vp, (void **)&vp);
-		gcref(&r_new, (void**)&new);
+		gcref(&r_new, (void **)&new);
 		old = dict;
 		np = name;
 		vp = value;

@@ -384,7 +384,7 @@ gcmalloc(size_t sz)
 {
 	void *p = nil; Root r_p;
 
-	gcref(&r_p, (void**)&p);
+	gcref(&r_p, (void **)&p);
 	gcdisable();
 	p = gcalloc(sz, tAnonymous);
 	memset(p, 0, sz);

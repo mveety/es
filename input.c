@@ -554,7 +554,7 @@ edit_start:
 		}
 		in_editor = FALSE;
 		rlinebuf = res.str;
-		if(res.status == -1){
+		if(res.status == -1) {
 			nread = -1;
 			dprint("got cancelled input\n");
 		} else if(rlinebuf == nil)
@@ -571,7 +571,7 @@ edit_start:
 		} while(nread == -1 && errno == EINTR);
 
 	if(nread <= 0) {
-		if(res.status == -1){
+		if(res.status == -1) {
 			input_cancelled = TRUE;
 			dprint("input_cancelled = TRUE\n");
 		} else if(res.status == -2) {
@@ -599,7 +599,7 @@ edit_start:
 				args = mklist(mkstr(str("%s", line_in)), nil);
 				history_hook = append(history_hook, args);
 				result = eval(history_hook, nil, 0);
-				
+
 				// should there be an assert here now?
 				assert(result != nil);
 
@@ -653,7 +653,7 @@ parse(char *pr1, char *pr2)
 	if(result || error != nil) {
 		char *e;
 		assert(error != nil);
-		if(input_cancelled == TRUE){
+		if(input_cancelled == TRUE) {
 			if(input->runflags & run_lisptrees)
 				eprint("(nil)\n");
 			dprint("parser: input cancelled\n");
