@@ -12,32 +12,32 @@ extern int gc_oldsweep_after;
 extern EditorState *editor;
 
 PRIM(version) {
-	return mklist(mkstr((char *)version), NULL);
+	return mklist(mkstr((char *)version), nil);
 }
 
 PRIM(buildstring) {
-	return mklist(mkstr((char *)buildstring), NULL);
+	return mklist(mkstr((char *)buildstring), nil);
 }
 
 
 PRIM(addhistory) {
-	if(list == NULL)
+	if(list == nil)
 		fail("$&addhistory", "usage: $&addhistory [string]");
 	history_add(editor, getstr(list->term));
-	return NULL;
+	return nil;
 }
 
 PRIM(addhistorylist) {
 	Root r_list;
 	List *lp; Root r_lp;
 
-	if(list == NULL)
+	if(list == nil)
 		fail("$&addhistorylist", "usage: $&addhistorylist [list of strings]");
 
 	gcref(&r_list, (void **)&list);
 	gcref(&r_lp, (void **)&lp);
 
-	for(lp = list; lp != NULL; lp = lp->next)
+	for(lp = list; lp != nil; lp = lp->next)
 		history_add(editor, getstr(lp->term));
 
 	gcrderef(&r_lp);
@@ -48,23 +48,23 @@ PRIM(addhistorylist) {
 
 PRIM(clearhistory) {
 	history_clear(editor);
-	return NULL;
+	return nil;
 }
 
 PRIM(getevaldepth) {
-	return mklist(mkstr(str("%d", evaldepth)), NULL);
+	return mklist(mkstr(str("%d", evaldepth)), nil);
 }
 
 PRIM(range) {
 	int start, end;
 	int i;
-	List *res = NULL; Root r_res;
+	List *res = nil; Root r_res;
 
-	if(list == NULL || list->next == NULL)
+	if(list == nil || list->next == nil)
 		fail("$&range", "missing arguments");
 	errno = 0;
 
-	start = (int)strtol(getstr(list->term), NULL, 10);
+	start = (int)strtol(getstr(list->term), nil, 10);
 	if(start == 0) {
 		switch(errno) {
 		case EINVAL:
@@ -76,7 +76,7 @@ PRIM(range) {
 		}
 	}
 
-	end = (int)strtol(getstr(list->next->term), NULL, 10);
+	end = (int)strtol(getstr(list->next->term), nil, 10);
 	if(start == 0) {
 		switch(errno) {
 		case EINVAL:
@@ -103,15 +103,15 @@ PRIM(range) {
 }
 
 PRIM(reverse) {
-	List *l = NULL;
-	List *res = NULL; Root r_res;
+	List *l = nil;
+	List *res = nil; Root r_res;
 
-	if(list == NULL)
-		return NULL;
+	if(list == nil)
+		return nil;
 
 	gcref(&r_res, (void **)&res);
 
-	for(l = list; l != NULL; l = l->next)
+	for(l = list; l != nil; l = l->next)
 		res = mklist(l->term, res);
 
 	gcderef(&r_res, (void **)&res);
@@ -128,8 +128,8 @@ PRIM(reverse_noalloc) {
 PRIM(unixtime) {
 	unsigned long curtime;
 
-	curtime = time(NULL);
-	return mklist(mkstr(str("%lud", curtime)), NULL);
+	curtime = time(nil);
+	return mklist(mkstr(str("%lud", curtime)), nil);
 }
 
 PRIM(unixtimens) {
@@ -139,7 +139,7 @@ PRIM(unixtimens) {
 	clock_gettime(CLOCK_REALTIME, &ts);
 
 	curtime = ((int64_t)ts.tv_sec) * 1000000000LL + ts.tv_nsec;
-	return mklist(mkstr(str("%ld", curtime)), NULL);
+	return mklist(mkstr(str("%ld", curtime)), nil);
 }
 
 PRIM(getrunflags) {
@@ -148,14 +148,14 @@ PRIM(getrunflags) {
 	memset(&rf[0], 0, sizeof(rf));
 	getrunflags(&rf[0], sizeof(rf));
 
-	return mklist(mkstr(str("%s", rf)), NULL);
+	return mklist(mkstr(str("%s", rf)), nil);
 }
 
 PRIM(setrunflags) {
 	char *s;
 	size_t slen;
 
-	if(list == NULL)
+	if(list == nil)
 		fail("$&setrunflags", "missing arguement");
 
 	s = getstr(list->term);
@@ -168,11 +168,11 @@ PRIM(setrunflags) {
 }
 
 PRIM(settermtag) {
-	char *tagname = NULL;
-	List *lp = NULL; Root r_lp;
-	Term *term = NULL; Root r_term;
+	char *tagname = nil;
+	List *lp = nil; Root r_lp;
+	Term *term = nil; Root r_term;
 
-	if(list == NULL || list->next == NULL)
+	if(list == nil || list->next == nil)
 		fail("$&settermtag", "missing arguments");
 
 	gcref(&r_lp, (void **)&lp);
@@ -205,7 +205,7 @@ PRIM(settermtag) {
 }
 
 PRIM(gettermtag) {
-	if(list == NULL)
+	if(list == nil)
 		fail("$&gettermtag", "missing argument");
 
 	switch(list->term->tag) {
@@ -213,20 +213,20 @@ PRIM(gettermtag) {
 		fail("$&gettermtag", "invalid tag %d", list->term->tag);
 		return list_false;
 	case ttNone:
-		return mklist(mkstr(str("none")), NULL);
+		return mklist(mkstr(str("none")), nil);
 	case ttError:
-		return mklist(mkstr(str("error")), NULL);
+		return mklist(mkstr(str("error")), nil);
 	case ttBox:
-		return mklist(mkstr(str("box")), NULL);
+		return mklist(mkstr(str("box")), nil);
 	case ttRegex:
-		return mklist(mkstr(str("regex")), NULL);
+		return mklist(mkstr(str("regex")), nil);
 	}
 }
 
 PRIM(varhide) {
-	Var *v = NULL;
+	Var *v = nil;
 
-	if(list == NULL)
+	if(list == nil)
 		fail("$&varhide", "missing argument");
 
 	gcdisable();
@@ -242,9 +242,9 @@ PRIM(varhide) {
 }
 
 PRIM(varunhide) {
-	Var *v = NULL;
+	Var *v = nil;
 
-	if(list == NULL)
+	if(list == nil)
 		fail("$&varunhide", "missing argument");
 
 	gcdisable();
@@ -263,7 +263,7 @@ PRIM(varishidden) {
 	Var *v;
 	Boolean st;
 
-	if(list == NULL)
+	if(list == nil)
 		fail("$&varishidden", "missing argument");
 
 	gcdisable();
@@ -281,7 +281,7 @@ PRIM(varishidden) {
 }
 
 PRIM(gcstats) {
-	List *res = NULL; Root r_res;
+	List *res = nil; Root r_res;
 	GcStats stats;
 
 	gcref(&r_res, (void **)&res);
@@ -339,7 +339,7 @@ PRIM(gcstats) {
 }
 
 PRIM(dumpregions) {
-	List *res = NULL; Root r_res;
+	List *res = nil; Root r_res;
 	Region *r;
 
 	if(gctype == OldGc)
@@ -347,7 +347,7 @@ PRIM(dumpregions) {
 
 	gcref(&r_res, (void **)&res);
 
-	for(r = regions; r != NULL; r = r->next) {
+	for(r = regions; r != nil; r = r->next) {
 		res = mklist(mkstr(str("%lud", r->size)), res);
 		res = mklist(mkstr(str("%ulx", r->start)), res);
 	}
@@ -357,10 +357,10 @@ PRIM(dumpregions) {
 }
 
 PRIM(gctuning) {
-	List *res = NULL; Root r_res;
+	List *res = nil; Root r_res;
 	int v = 0;
 
-	if(list == NULL) {
+	if(list == nil) {
 		gcref(&r_res, (void **)&res);
 		res = mklist(mkstr(str("%d", gc_oldsweep_after)), res);
 		res = mklist(mkstr(str("%ud", gc_oldage)), res);
@@ -370,11 +370,11 @@ PRIM(gctuning) {
 		gcrderef(&r_res);
 		return res;
 	}
-	if(list->next == NULL)
+	if(list->next == nil)
 		fail("$&gctuning", "missing arguments");
 
 	errno = 0;
-	v = (int)strtol(getstr(list->next->term), NULL, 10);
+	v = (int)strtol(getstr(list->next->term), nil, 10);
 	if(v == 0) {
 		switch(errno) {
 		case EINVAL:
@@ -419,12 +419,12 @@ PRIM(gctuning) {
 }
 
 PRIM(parsestring) {
-	List *result = NULL; Root r_result;
-	List *lp = NULL; Root r_lp;
-	Tree *tree = NULL; Root r_tree;
-	char *str = NULL; Root r_str;
+	List *result = nil; Root r_result;
+	List *lp = nil; Root r_lp;
+	Tree *tree = nil; Root r_tree;
+	char *str = nil; Root r_str;
 
-	if(list == NULL)
+	if(list == nil)
 		fail("$&parsestring", "missing argument");
 
 	gcref(&r_result, (void **)&result);
@@ -434,7 +434,7 @@ PRIM(parsestring) {
 
 	lp = list;
 	str = getstr(lp->term);
-	if(str == NULL) {
+	if(str == nil) {
 		gcrderef(&r_str);
 		gcrderef(&r_tree);
 		gcrderef(&r_lp);
@@ -442,9 +442,9 @@ PRIM(parsestring) {
 		fail("$&parsestring", "invalid term");
 	}
 	tree = parsestring((const char *)str);
-	if(tree == NULL)
+	if(tree == nil)
 		goto done;
-	result = mklist(mkterm(NULL, mkclosure(mk(nThunk, tree), NULL)), NULL);
+	result = mklist(mkterm(nil, mkclosure(mk(nThunk, tree), nil)), nil);
 
 done:
 	gcrderef(&r_str);
@@ -455,12 +455,12 @@ done:
 }
 
 PRIM(fmtvar) {
-	Term *term = NULL; Root r_term;
-	List *res = NULL; Root r_res;
-	char *name = NULL; Root r_name;
-	List *defn = NULL; Root r_defn;
+	Term *term = nil; Root r_term;
+	List *res = nil; Root r_res;
+	char *name = nil; Root r_name;
+	List *defn = nil; Root r_defn;
 
-	if(list == NULL)
+	if(list == nil)
 		fail("$&fmtvar", "missing var");
 
 	gcref(&r_term, (void **)&term);
@@ -471,7 +471,7 @@ PRIM(fmtvar) {
 	name = getstr(list->term);
 	defn = varlookup(name, binding);
 	term = mkstr(str("%V", defn, " "));
-	res = mklist(term, NULL);
+	res = mklist(term, nil);
 
 	gcrderef(&r_defn);
 	gcrderef(&r_name);
@@ -482,7 +482,7 @@ PRIM(fmtvar) {
 }
 
 PRIM(setditto) {
-	if(list == NULL)
+	if(list == nil)
 		fail("$&setditto", "missing term");
 
 	gcdisable();
@@ -497,12 +497,12 @@ PRIM(getditto) {
 
 	s = getnextlastcmd();
 	if(!s)
-		return mklist(mkstr(str("")), NULL);
-	return mklist(mkstr(str("%s", s, " ")), NULL);
+		return mklist(mkstr(str("")), nil);
+	return mklist(mkstr(str("%s", s, " ")), nil);
 }
 
 PRIM(isalist) {
-	if(list != NULL && list->next != NULL)
+	if(list != nil && list->next != nil)
 		return list_true;
 	return list_false;
 }
