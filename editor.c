@@ -1352,8 +1352,6 @@ delete_word(EditorState *state)
 	size_t old_bufend = 0;
 
 	bufferassert();
-	if(state->bufpos == 0)
-		return;
 
 	wordpos = get_word_position(state);
 	dprint("start wordpos = {.start = %lu, .end = %lu}\n", wordpos.start, wordpos.end);
