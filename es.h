@@ -314,7 +314,6 @@ struct SplitCtx {
 	char isifs[256];
 };
 
-
 /*
  * our programming environment
  */
@@ -653,8 +652,8 @@ extern int define_type(char *name, int (*deallocate)(Object *), int (*refdeps)(O
 extern int define_stringifier(char *name, char *(*stringify)(Object *));
 extern int define_objectifier(char *name, Result (*objectify)(char *));
 extern int define_onfork_callback(char *name, int (*onfork)(Object *));
-extern int define_allocator(char *name, Object* (*allocator)(void));
-extern int define_deallocator(char *name, void (*deallocator)(Object*));
+extern int define_allocator(char *name, Object *(*allocator)(void));
+extern int define_deallocator(char *name, void (*deallocator)(Object *));
 extern int undefine_type(char *name);
 extern Object *allocate_object(char *type, size_t size);
 extern void deallocate_object(Object *obj);
