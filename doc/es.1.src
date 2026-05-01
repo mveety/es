@@ -1,5 +1,14 @@
 .\" vi: ft=groff
 .\"
+.\" gnu groff stuff
+.if \n[.g] \{\
+.\" shut up
+.  warn 0
+.\" fix CW removal in groff
+.  if n .ftr CW R
+.  if !n .ftr CW CR
+.\}
+..
 .\" IS, IE -- sublist begin and end
 .de IS
 .ie \n(.g .RS
