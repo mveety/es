@@ -28,6 +28,7 @@ development='false'
 SANITIZER='none'
 EDITORDEBUG=false
 SYNTAXDEBUG=false
+BOUNDSSAFETY=false
 
 AC_ARG_ENABLE(loginshell,
 [  --enable-loginshell	Only load esrc if a login shell],
@@ -55,31 +56,66 @@ AC_ARG_ENABLE(modules,
 
 AC_ARG_ENABLE(development,
 [  --enable-development	Extras for development],
-[CFLAGS="-g -O0"; development=true;EDITORDEBUG=true])
+[	if test "x$enableval" = "xyes"; then
+		CFLAGS="-g -O0"
+		development=true
+		EDITORDEBUG=true
+	fi
+])
 
 AC_ARG_ENABLE(addrsan,
 [  --enable-addrsan	Enable llvm address sanitizer],
-[SANITIZER='asan'])
+[	if test "x$enableval" = "xyes"; then
+		SANITIZER='asan'
+	else
+		SANITIZER='none'
+	fi
+])
 
 AC_ARG_ENABLE(memorysan,
 [  --enable-memorysan	Enable llvm memory sanitizer],
-[SANITIZER='msan'])
+[	if test "x$enableval" = "xyes"; then
+		SANITIZER='msan'
+	else
+		SANITIZER='none'
+	fi
+])
 
-AC_ARG_ENABLE(ubsan,
-[  --enable-ubsan	Enable llvm undefined behavior sanitizer],
-[SANITIZER='ubsan'])
+dnl AC_ARG_ENABLE(ubsan,
+dnl [  --enable-ubsan	Enable llvm undefined behavior sanitizer],
+dnl [	if test "x$enableval" = "xyes"; then
+dnl 		SANITIZER='ubsan'
+dnl 	else
+dnl 		SANITIZER='none'
+dnl 	fi
+dnl ])
 
 AC_ARG_ENABLE(syntaxdebug,
 [  --enable-syntaxdebug	Enable mod_syntax debugging],
-[SYNTAXDEBUG=true])
+[	if test "x$enableval" = "xyes"; then
+		SYNTAXDEBUG=true
+	else
+		SYNTAXDEBUG=false
+	fi
+])
 
 AC_ARG_ENABLE(editordebug,
 [  --enable-editordebug	Enable line editor debugging output],
-[	if test "x$enableval" = "yes"; then
+[	if test "x$enableval" = "xyes"; then
 		EDITORDEBUG=true
 	else
 		EDITORDEBUG=false
-	fi])
+	fi
+])
+
+AC_ARG_ENABLE(bounds-safety,
+[  --enable-bounds-safety	Enable experimental clang -fbounds-safety],
+[	if test "x$enableval" = "xyes"; then
+		BOUNDSSAFETY=true
+	else
+		BOUNDSSAFETY=false
+	fi
+])
 
 AC_SUBST(ENABLE_LOGINSHELL)
 AC_SUBST(DEVFD_IMPL)
@@ -97,9 +133,43 @@ AC_PROG_CC
 AC_PROG_INSTALL
 AC_PROG_MKDIR_P
 dnl AC_PROG_YACC
-AC_ARG_VAR([YACC], [hopefully bison])
 AC_CHECK_PROG([YACC], [bison -y], [bison -y], [no])
 AS_IF([test "x$YACC" = "xno"], [AC_MSG_ERROR([bison not found])])
+
+AC_CACHE_CHECK(for compiler dist name, es_cv_cctype, [
+case "${CC}" in
+	clang*)
+		es_cv_cctype='clang'
+		;;
+	gcc*)
+		es_cv_cctype='gcc'
+		;;
+	cc*)
+		case "`cc --version | head -n 1`" in
+			*clang*)
+				es_cv_cctype='clang'
+				;;
+			*gcc*)
+				es_cv_cctype='gcc'
+				;;
+			*)
+				AC_MSG_ERROR([es only supports clang and gcc])
+				;;
+		esac
+		;;
+esac
+])
+
+AC_CACHE_CHECK($es_cv_cctype version, es_cv_ccversion, [
+case "$es_cv_cctype" in
+	clang*)
+		es_cv_ccversion="`${CC} --version | head -n 1 | grep -oE '[[0-9.]]+' | head -n 1`"
+		;;
+	gcc*)
+		es_cv_ccversion="`${CC} -dumpfullversion`"
+		;;
+esac
+])
 
 AC_CACHE_CHECK(whether $CC accepts -Wno-clobbered, es_cv_no_clobbered, 
 [
@@ -115,27 +185,26 @@ AC_CACHE_CHECK(for extra CFLAGS for $CC on $host_os, es_cv_ccextras,
 			   [
 				case "$host_os" in
 					freebsd*)
-						case "`basename ${CC}`" in
-							clang* | cc)
+						case "$es_cv_cctype" in
+							clang)
 								es_cv_ccextras="-I/usr/local/include"
 								CFLAGS="$CFLAGS -I/usr/local/include"
-								;;
-							gcc1*)
-								es_cv_ccextras="-Wno-stringop-truncation -Wl,-rpath=/usr/local/lib/${CC}"
-								CFLAGS="$CFLAGS -Wno-stringop-truncation -Wl,-rpath=/usr/local/lib/${CC}"
 								;;
 							gcc)
 								es_cv_ccextras="-Wno-stringop-truncation"
 								CFLAGS="$CFLAGS -Wno-stringop-truncation"
-								;;
-							*)
-								es_cv_ccextras="none needed"
+								case "`basename ${CC}`" in
+									gcc1*)	
+										es_cv_ccextras="$es_cv_ccextras -Wl,-rpath=/usr/local/lib/${CC}"
+										CFLAGS="$CFLAGS -Wl,-rpath=/usr/local/lib/${CC}"
+										;;
+								esac
 								;;
 						esac
 						;;
 					linux*)
-						case "`basename ${CC}`" in
-							gcc | gcc*)
+						case "$es_cv_cctype" in
+							gcc)
 dnl								es_cv_ccextras="-Wno-stringop-truncation -D_DEFAULT_SOURCE=1 -D_XOPEN_SOURCE=800"
 dnl								CFLAGS="$CFLAGS -Wno-stringop-truncation -D_DEFAULT_SOURCE=1 -D_XOPEN_SOURCE=800"
 								es_cv_ccextras="-Wno-stringop-truncation"
@@ -147,7 +216,7 @@ dnl								CFLAGS="$CFLAGS -Wno-stringop-truncation -D_DEFAULT_SOURCE=1 -D_XOPEN
 						esac
 						;;
 					netbsd*)
-						case "`basename ${CC}`" in
+						case "$es_cv_cctype" in
 							gcc)
 								case `basename "${CC%/*/*}"` in
 									gcc13 | gcc14 | gcc15)
@@ -167,7 +236,7 @@ dnl								CFLAGS="$CFLAGS -Wno-stringop-truncation -D_DEFAULT_SOURCE=1 -D_XOPEN
 						esac
 						;;
 					*)
-						case "`basename ${CC}`" in
+						case "$es_cv_cctype" in
 							gcc | gcc*)
 								es_cv_ccextras="-Wno-stringop-truncation"
 								CFLAGS="$CFLAGS -Wno-stringop-truncation"
@@ -199,7 +268,7 @@ AC_CACHE_CHECK(for extra LDFLAGS for $CC on $host_os, es_cv_ldextras,
 						esac
 						;;
 					netbsd*)
-						case "`basename ${CC}`" in
+						case "$es_cv_cctype" in
 							gcc)
 								case `basename "${CC%/*/*}"` in
 									gcc13 | gcc14 | gcc15)
@@ -260,10 +329,29 @@ fi
 
 if test "$development" = "true"
 then
+	if test "$BOUNDSSAFETY" = "true"
+	then
+		case "$es_cv_cctype" in
+			clang)
+				case "$es_cv_ccversion" in
+					20.* | 21.* | 22.*)
+						CFLAGS="-Xclang -fexperimental-bounds-safety $CFLAGS"
+						;;
+					*)
+						AC_MSG_ERROR([-fbounds-safety requires clang 20+])
+						;;
+				esac
+				;;
+			*)
+				AC_MSG_ERROR([-fbounds-safety requires clang 20+])
+				;;
+		esac
+	fi
+
 	case "$SANITIZER" in
 		asan)
-			case "`basename ${CC}`" in
-				clang*)
+			case "$es_cv_cctype" in
+				clang)
 					CFLAGS="-fsanitize=address -fno-omit-frame-pointer $CFLAGS"
 					LDFLAGS="-fsanitize=address -fno-omit-frame-pointer $LDFLAGS"
 					;;
@@ -273,8 +361,8 @@ then
 			esac
 			;;
 		msan)
-			case "`basename ${CC}`" in
-				clang*)
+			case "$es_cv_cctype" in
+				clang)
 					CFLAGS="-fsanitize=memory -fsanitize-memory-track-origins -fno-omit-frame-pointer $CFLAGS"
 					LDFLAGS="-fsanitize=memory -fsanitize-memory-track-origins -fno-omit-frame-pointer $LDFLAGS"
 					;;
@@ -284,8 +372,8 @@ then
 			esac
 			;;
 		ubsan)
-			case "`basename ${CC}`" in
-				clang*)
+			case "$es_cv_cctype" in
+				clang)
 					CFLAGS="-fsanitize=undefined -fno-omit-frame-pointer $CFLAGS"
 					LDFLAGS="-fsanitize=undefine -fno-omit-frame-pointer $LDFLAGS"
 					;;
