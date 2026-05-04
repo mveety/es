@@ -610,6 +610,8 @@ supported_term(char *term)
 		return 1;
 	if(hasprefix(term, "wsvt25"))
 		return 1;
+	if(hasprefix(term, "alacritty"))
+		return 1;
 	return 0;
 }
 
