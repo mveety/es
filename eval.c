@@ -342,6 +342,9 @@ List *
 forloop(Tree *defn0, Tree *body0, Binding *binding, int evalflags)
 {
 	static List MULTIPLE = {NULL, NULL};
+	Boolean fastloop = FALSE;
+	uint64_t ntimes = 0;
+	uint64_t iter = 0;
 
 	Ref(List *, result, list_true);
 	Ref(Binding *, outer, binding);
@@ -359,10 +362,16 @@ forloop(Tree *defn0, Tree *body0, Binding *binding, int evalflags)
 		Ref(List *, list, glom(assign->u[1].p, outer, evalflags, TRUE));
 		if(vars == NULL)
 			fail("es:for", "null variable name");
-		for(; vars != NULL; vars = vars->next) {
-			char *var = getstr(vars->term);
-			looping = mkbinding(var, list, looping);
-			list = &MULTIPLE;
+		if(termeq(vars->term, "_") && vars->next == nil){ // this is a fast loop
+			fastloop = TRUE;
+			ntimes = length(list);
+			dprint("detected fast loop: ntimes = %lu\n", ntimes);
+		} else {
+			for(; vars != NULL; vars = vars->next) {
+				char *var = getstr(vars->term);
+				looping = mkbinding(var, list, looping);
+				list = &MULTIPLE;
+			}
 		}
 		RefEnd3(list, vars, assign);
 		sigchk();
@@ -371,45 +380,60 @@ forloop(Tree *defn0, Tree *body0, Binding *binding, int evalflags)
 	RefEnd(defn);
 
 	ExceptionHandler {
-		for(;;) {
-			Boolean allnull = TRUE;
-			Boolean underscore = FALSE;
-			Ref(Binding *, bp, outer);
-			Ref(Binding *, lp, looping);
-			Ref(Binding *, sequence, NULL);
-			for(; lp != NULL; lp = lp->next) {
-				underscore = FALSE;
-				if(strcmp(lp->name, "_") == 0)
-					underscore = TRUE;
-				Ref(List *, value, NULL);
-				if(lp->defn != &MULTIPLE)
-					sequence = lp;
-				assert(sequence != NULL);
-				if(sequence->defn != NULL) {
+		if(fastloop == TRUE) {
+			dprint("executing fast loop\n");
+			for(iter = 0; iter < ntimes; iter++){
+				Ref(Binding*, bp, outer);
+				ExceptionHandler {
+					result = walk(body, bp, evalflags & (run_sandbox | eval_exitonfalse));
+				} CatchException(e) {
+					if(!termeq(e->term, "continue"))
+						throw(e);
+				} EndExceptionHandler;
+				RefEnd(bp);
+				sigchk();
+			}
+		} else {
+			for(;;) {
+				Boolean allnull = TRUE;
+				Boolean underscore = FALSE;
+				Ref(Binding *, bp, outer);
+				Ref(Binding *, lp, looping);
+				Ref(Binding *, sequence, NULL);
+				for(; lp != NULL; lp = lp->next) {
+					underscore = FALSE;
+					if(strcmp(lp->name, "_") == 0)
+						underscore = TRUE;
+					Ref(List *, value, NULL);
+					if(lp->defn != &MULTIPLE)
+						sequence = lp;
+					assert(sequence != NULL);
+					if(sequence->defn != NULL) {
+						if(underscore == FALSE)
+							value = mklist(sequence->defn->term, NULL);
+						sequence->defn = sequence->defn->next;
+						allnull = FALSE;
+					}
 					if(underscore == FALSE)
-						value = mklist(sequence->defn->term, NULL);
-					sequence->defn = sequence->defn->next;
-					allnull = FALSE;
+						bp = mkbinding(lp->name, value, bp);
+					RefEnd(value);
 				}
-				if(underscore == FALSE)
-					bp = mkbinding(lp->name, value, bp);
-				RefEnd(value);
-			}
-			RefEnd2(sequence, lp);
-			if(allnull) {
-				RefPop(bp);
-				break;
-			}
+				RefEnd2(sequence, lp);
+				if(allnull) {
+					RefPop(bp);
+					break;
+				}
 
-			ExceptionHandler {
-				result = walk(body, bp, evalflags & (run_sandbox | eval_exitonfalse));
-			} CatchException (e) {
-				if(!termeq(e->term, "continue"))
-					throw(e);
-			} EndExceptionHandler;
+				ExceptionHandler {
+					result = walk(body, bp, evalflags & (run_sandbox | eval_exitonfalse));
+				} CatchException (e) {
+					if(!termeq(e->term, "continue"))
+						throw(e);
+				} EndExceptionHandler;
 
-			RefEnd(bp);
-			sigchk();
+				RefEnd(bp);
+				sigchk();
+			}
 		}
 	} CatchException (e) {
 		if(!termeq(e->term, "break"))
