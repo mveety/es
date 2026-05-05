@@ -29,6 +29,7 @@ SANITIZER='none'
 EDITORDEBUG=false
 SYNTAXDEBUG=false
 BOUNDSSAFETY=false
+debugging='true'
 
 AC_ARG_ENABLE(loginshell,
 [  --enable-loginshell	Only load esrc if a login shell],
@@ -80,6 +81,18 @@ AC_ARG_ENABLE(memorysan,
 		SANITIZER='none'
 	fi
 ])
+
+AC_ARG_ENABLE(debugging,
+[  --disable-debugging	Disable es built-in debugging],
+[	if test "x$enableval" = "xyes"; then
+		debugging='true'
+	else
+		debugging='false'
+	fi
+])
+
+
+
 
 dnl AC_ARG_ENABLE(ubsan,
 dnl [  --enable-ubsan	Enable llvm undefined behavior sanitizer],
@@ -329,6 +342,8 @@ fi
 
 if test "$development" = "true"
 then
+dnl force debugging on if --enable-development
+	debugging='true'
 	if test "$BOUNDSSAFETY" = "true"
 	then
 		case "$es_cv_cctype" in
@@ -475,6 +490,11 @@ fi
 if test "$DYNLIBS" = "true"
 then
 	AC_DEFINE(DYNAMIC_LIBRARIES)
+fi
+
+if test "$debugging" = "true"
+then
+	AC_DEFINE(DEBUGGING)
 fi
 
 AC_CONFIG_FILES([config.mk Makefile GNUmakefile])

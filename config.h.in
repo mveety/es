@@ -149,3 +149,6 @@
 /* have getloadavg */
 #undef HAVE_GETLOADAVG
 
+/* enable dprint */
+#undef DEBUGGING
+

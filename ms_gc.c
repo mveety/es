@@ -140,6 +140,7 @@ list_rating(Block *list)
 	Block *l;
 	int64_t sortrating = 0;
 
+	used(&sortrating);
 	for(l = list; l != nil; l = l->next) {
 		if(l->prev == nil)
 			continue;

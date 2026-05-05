@@ -138,7 +138,9 @@ usage(void)
 		"	-d         don't ignore SIGQUIT or SIGTERM\n"
 		"	-X extopt  extended options (can be repeated)\n"
 		"	-v         print $buildstring\n"
+#ifdef DEBUGGING
 		"	-D flags   debug flags (? for more info)\n"
+#endif
 		"	-r flags   run flags (? for more info)\n");
 	exit(2);
 }
@@ -360,7 +362,9 @@ main(int argc, char *argv[])
 	int c, fd;
 	volatile int ac;
 	volatile char **av;
+#ifdef DEBUGGING
 	char *ds;
+#endif
 	char *rs;
 	char *file;
 
@@ -385,6 +389,7 @@ main(int argc, char *argv[])
 	// removed IGAPL
 	while((c = getopt(argc, argv, "+I:A:lX:vpodsc:?hND:r:E:")) != EOF)
 		switch(c) {
+#ifdef DEBUGGING
 		case 'D':
 			for(ds = optarg; *ds != 0; ds++) {
 				switch(*ds) {
@@ -463,6 +468,7 @@ main(int argc, char *argv[])
 				}
 			}
 			break;
+#endif
 		case 'r':
 			for(rs = optarg; *rs != 0; rs++) {
 				switch(*rs) {

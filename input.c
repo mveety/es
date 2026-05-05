@@ -199,11 +199,8 @@ input_ungetc(int c)
 void
 input_resettokstatus(void)
 {
-	char *s;
-
-	s = input_dumptokstatus();
 	if(verbose_parser == TRUE)
-		dprint("input %s(%p): last tokstatus = \"%s\"\n", input->name, input, s);
+		dprint("input %s(%p): last tokstatus = \"%s\"\n", input->name, input, input_dumptokstatus());
 	if(input->lasttokstatus != nil) {
 		efree(input->lasttokstatus);
 		input->lasttokstatus = nil;
