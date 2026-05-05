@@ -19,6 +19,7 @@ extern Boolean gcprotect;
 extern int primassert;
 extern int dumpprims;
 extern size_t minspace;
+extern Boolean verboseenv;
 volatile Boolean loginshell = FALSE; /* -l or $0[0] == '-' */
 volatile Boolean readesrc = TRUE;
 Boolean different_esrc = FALSE;	 /* -I */
@@ -189,6 +190,7 @@ debug_flag_usage(void)
 			"	p -- primassert\n"
 			"	d -- dumpprims\n"
 			"	S -- noassignreturn\n"
+			"	V -- verboseenv\n"
 #ifdef DYNAMIC_LIBRARIES
 			"	m -- dynlib_verbose\n"
 #endif
@@ -442,6 +444,9 @@ main(int argc, char *argv[])
 					break;
 				case 'S':
 					noassignreturn = TRUE;
+					break;
+				case 'V':
+					verboseenv = TRUE;
 					break;
 #ifdef DYNAMIC_LIBRARIES
 				case 'm':

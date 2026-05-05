@@ -13,6 +13,7 @@
 #endif
 
 Dict *vars;
+Boolean verboseenv = FALSE;
 static Dict *noexport;
 static Vector *env, *sortenv;
 static int envmin;
@@ -393,6 +394,8 @@ mkenv0(void *dummy, char *key, void *value)
 		memcpy(newenv->vector, env->vector, env->count * sizeof *env->vector);
 		env = newenv;
 	}
+	if(verboseenv)
+		dprint("env: exported var \"%s\"\n", key);
 }
 
 Vector *
@@ -514,6 +517,8 @@ importvar(char *name0, char *value)
 	defn = fsplit(sep, mklist(mkstr(value + 1), NULL), FALSE);
 
 	if(strchr(value, ENV_ESCAPE) != NULL) {
+		if(verboseenv)
+			dprint("env: importing escaped var \"%s\"\n", name);
 		gcdisable();
 		for(list = defn; list != NULL; list = list->next) {
 			offset = 0;
@@ -543,7 +548,10 @@ importvar(char *name0, char *value)
 			}
 		}
 		gcenable();
-	}
+	} else
+		if(verboseenv)
+			dprint("env: importing var \"%s\"\n", name);
+
 	gcref(&r_lp, (void **)&lp);
 	for(lp = defn; lp != NULL; lp = lp->next)
 		if(hasprefix(getstr(lp->term), "%dict"))
