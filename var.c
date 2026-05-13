@@ -22,6 +22,13 @@ static Boolean rebound = TRUE;
 
 DefineTag(Var, static);
 
+typedef struct DeferredSettor DeferredSettor;
+
+struct DeferredSettor {
+char *name;
+	DeferredSettor *next;
+};
+
 static Boolean
 specialvar(const char *name)
 {
@@ -226,6 +233,16 @@ varishidden(Var *v)
 	return FALSE;
 }
 
+List*
+getsettor(char *name)
+{
+	List *settor = nil;
+
+	if(specialvar(name) || (settor = varlookup2("set-", name, NULL)) == NULL)
+		return nil;
+	return settor;
+}
+
 List *
 callsettor(char *name, List *defn)
 {
@@ -234,7 +251,7 @@ callsettor(char *name, List *defn)
 	List *lp = NULL; Root r_lp;
 	List *fn = NULL; Root r_fn;
 
-	if(specialvar(name) || (settor = varlookup2("set-", name, NULL)) == NULL)
+	if(!(settor = getsettor(name)))
 		return defn;
 
 	lp = defn;
@@ -254,24 +271,9 @@ callsettor(char *name, List *defn)
 }
 
 void
-vardef(char *name, Binding *binding, List *defn)
+vardef1(char *name, List *defn)
 {
-	Var *var;
-	Root r_name;
-
-	validatevar(name);
-	for(; binding != NULL; binding = binding->next)
-		if(streq(name, binding->name)) {
-			binding->defn = defn;
-			rebound = TRUE;
-			return;
-		}
-
-	gcref(&r_name, (void **)&name);
-
-	defn = callsettor(name, defn);
-	if(isexported(name))
-		isdirty = TRUE;
+	Var *var = nil;
 
 	var = dictget(vars, name);
 	if(var != NULL)
@@ -291,8 +293,78 @@ vardef(char *name, Binding *binding, List *defn)
 			var->flags |= var_isinternal;
 		vars = dictput(vars, name, var);
 	}
+}
+
+void
+vardef(char *name, Binding *binding, List *defn)
+{
+	Root r_name;
+
+	validatevar(name);
+	for(; binding != NULL; binding = binding->next)
+		if(streq(name, binding->name)) {
+			binding->defn = defn;
+			rebound = TRUE;
+			return;
+		}
+
+	gcref(&r_name, (void **)&name);
+
+	defn = callsettor(name, defn);
+	if(isexported(name))
+		isdirty = TRUE;
+
+	vardef1(name, defn);
 
 	gcderef(&r_name, (void **)&name);
+}
+
+DeferredSettor*
+defer_vardef(Arena *envarena, char *name, Binding *binding, List *defn)
+{
+	DeferredSettor *defset = nil;
+	Root r_name;
+
+	validatevar(name);
+	for(; binding != NULL; binding = binding->next)
+		if(streq(name, binding->name)) {
+			binding->defn = defn;
+			rebound = TRUE;
+			return nil;
+		}
+
+	gcref(&r_name, (void**)&name);
+
+	if(getsettor(name)) {
+		defset = arena_allocate(envarena, sizeof(DeferredSettor));
+		defset->name = arena_dup(envarena, name);
+	}
+
+	vardef1(name, defn);
+	gcrderef(&r_name);
+
+	return defset;
+}
+
+void
+run_deferred_settor(DeferredSettor *defset)
+{
+	char *gcname = nil;
+	Root r_gcname;
+	List *defn = nil;
+	Root r_defn;
+
+	gcref(&r_gcname, (void**)&gcname);
+	gcref(&r_defn, (void**)&defn);
+
+	gcname = gcdup(defset->name);
+	defn = varlookup(gcname, nil);
+	// the var should exist with the args to the settor
+	assert(defn != nil);
+	vardef(gcname, nil, defn);
+
+	gcrderef(&r_defn);
+	gcrderef(&r_gcname);
 }
 
 void
@@ -494,13 +566,14 @@ initvars(void)
 }
 
 /* importvar -- import a single environment variable */
-void
-importvar(char *name0, char *value)
+DeferredSettor*
+importvar(Arena *envarena, char *name0, char *value)
 {
 	char sep[2] = {ENV_SEPARATOR, '\0'};
 	char *str, *str2, *word, *escape;
 	int offset;
 	List *list;
+	DeferredSettor *defset = nil;
 	char *name = NULL; Root r_name;
 	List *defn = NULL; Root r_defn;
 	List *lp = NULL; Root r_lp;
@@ -509,7 +582,7 @@ importvar(char *name0, char *value)
 	defn = NULL;
 
 	if(strcmp(name, "_") == 0)
-		return;
+		return nil;
 
 	gcref(&r_name, (void **)&name);
 	gcref(&r_defn, (void **)&defn);
@@ -557,11 +630,13 @@ importvar(char *name0, char *value)
 		if(hasprefix(getstr(lp->term), "%dict"))
 			getdict(lp->term);
 
-	vardef(name, NULL, defn);
+	defset = defer_vardef(envarena, name, NULL, defn);
 
 	gcderef(&r_lp, (void **)&lp);
 	gcderef(&r_defn, (void **)&defn);
 	gcderef(&r_name, (void **)&name);
+
+	return defset;
 }
 
 /* initenv -- load variables from the environment */
@@ -572,9 +647,15 @@ initenv(char **envp, Boolean protected)
 	size_t bufsize = 1024;
 	size_t nlen;
 	Vector *newenv;
+	Arena *envarena = nil;
+	DeferredSettor *start_defset = nil;
+	DeferredSettor *defset = nil;
+	DeferredSettor *tmpset = nil;
 
-	buf = ealloc(bufsize);
-	for(; (envstr = *envp) != NULL; envp++) {
+	envarena = newarena(3*1024);
+	arena_annotate(envarena, "environment import arena");
+	buf = arena_allocate(envarena, bufsize);
+	for(; (envstr = *envp) != NULL; envp++, tmpset = nil) {
 		eq = strchr(envstr, '=');
 		if(eq == NULL) {
 			env->vector[env->count++] = envstr;
@@ -592,9 +673,21 @@ initenv(char **envp, Boolean protected)
 		buf[nlen] = '\0';
 		name = str(ENV_DECODE, buf);
 		if(!protected || (!hasprefix(name, "fn-") && !hasprefix(name, "set-")))
-			importvar(name, eq);
+			tmpset = importvar(envarena, name, eq);
+		if(tmpset){
+			if(!defset){
+				defset = tmpset;
+				start_defset = defset;
+			} else {
+				defset->next = tmpset;
+				defset = tmpset;
+			}
+		}
 	}
 
+	for(tmpset = start_defset; tmpset != nil; tmpset = tmpset->next)
+		run_deferred_settor(tmpset);
+
 	envmin = env->count;
-	efree(buf);
+	arena_destroy(envarena);
 }
