@@ -338,6 +338,8 @@ defer_vardef(Arena *envarena, char *name, Binding *binding, List *defn)
 	if(getsettor(name)) {
 		defset = arena_allocate(envarena, sizeof(DeferredSettor));
 		defset->name = arena_dup(envarena, name);
+		if(verboseenv)
+			dprint("env: deferring settor execution for \"%s\"\n", name);
 	}
 
 	vardef1(name, defn);
@@ -357,6 +359,8 @@ run_deferred_settor(DeferredSettor *defset)
 	gcref(&r_gcname, (void**)&gcname);
 	gcref(&r_defn, (void**)&defn);
 
+	if(verboseenv)
+		dprint("env: resetting \"%s\" to run settor\n", defset->name);
 	gcname = gcdup(defset->name);
 	defn = varlookup(gcname, nil);
 	// the var should exist with the args to the settor
