@@ -645,6 +645,8 @@ extern int eopen(char *name, OpenKind k);
 
 extern const char *const version;
 extern const char *const buildstring;
+extern const char *const buildtime;
+extern const char *const buildcflags;
 
 /* objects.c */
 

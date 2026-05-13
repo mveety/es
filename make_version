@@ -1,6 +1,7 @@
 #!/bin/sh
 
 compiler=$1
+cflags=$2
 branch=`git rev-parse --abbrev-ref HEAD 2>/dev/null`
 commit=`git rev-parse --verify --short=12 HEAD 2>/dev/null`
 commitcnt=`git rev-list --first-parent --count HEAD 2>/dev/null`
@@ -27,9 +28,11 @@ echo "#include \"es.h\""
 echo "static const char version1[] = \"$versionstring\";"
 echo "static const char buildstring1[] = \"$buildstring\";"
 echo "static const char buildtime1[] = \"$buildtime\";"
+echo "static const char buildcflags1[] = \"$cflags\";"
 echo "static const char sccs_id[] = \"@(#) $buildstring\";"
 echo "const char * const version = version1;"
 echo "const char * const buildstring = buildstring1;"
 echo "const char * const buildtime = buildtime1;"
+echo "const char * const buildcflags = buildcflags1;"
 echo "const char * const sccs_id1 = sccs_id;"
 echo ""
