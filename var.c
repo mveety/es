@@ -273,7 +273,13 @@ callsettor(char *name, List *defn)
 void
 vardef1(char *name, List *defn)
 {
-	Var *var = nil;
+	Var *var = nil; Root r_var;
+	Root r_name;
+	Root r_defn;
+
+	gcref(&r_var, (void**)&var);
+	gcref(&r_name, (void **)&name);
+	gcref(&r_defn, (void**)&defn);
 
 	var = dictget(vars, name);
 	if(var != NULL)
@@ -293,12 +299,17 @@ vardef1(char *name, List *defn)
 			var->flags |= var_isinternal;
 		vars = dictput(vars, name, var);
 	}
+
+	gcderef(&r_defn, (void**)&defn);
+	gcderef(&r_name, (void **)&name);
+	gcderef(&r_var, (void**)&var);
 }
 
 void
 vardef(char *name, Binding *binding, List *defn)
 {
 	Root r_name;
+	Root r_defn;
 
 	validatevar(name);
 	for(; binding != NULL; binding = binding->next)
@@ -309,6 +320,7 @@ vardef(char *name, Binding *binding, List *defn)
 		}
 
 	gcref(&r_name, (void **)&name);
+	gcref(&r_defn, (void**)&defn);
 
 	defn = callsettor(name, defn);
 	if(isexported(name))
@@ -316,6 +328,7 @@ vardef(char *name, Binding *binding, List *defn)
 
 	vardef1(name, defn);
 
+	gcderef(&r_defn, (void**)&defn);
 	gcderef(&r_name, (void **)&name);
 }
 
