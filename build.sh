@@ -22,11 +22,11 @@ fi
 case "$PLATFORM" in
 	FreeBSD)
 		CC=clang ./configure --enable-modules
-		make $* all
+		make -j $(nproc) $* all
 		;;
 	Linux)
 		CC=gcc ./configure --prefix=/usr --enable-modules
-		make $* all
+		make -j $(nproc) $* all
 		;;
 	Haiku)
 		./configure --prefix=/boot/home/config/non-packages --enable-modules
@@ -34,7 +34,7 @@ case "$PLATFORM" in
 		;;
 	SunOS)
 		./configure --prefix=/usr --enable-modules
-		gmake $* all
+		gmake -j $(nproc) $* all
 		;;
 	NetBSD)
 		CC=clang ./configure --prefix=/usr/pkg --enable-modules
