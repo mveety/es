@@ -685,7 +685,7 @@ initenv(char **envp, Boolean protected)
 			continue;
 		}
 		for(nlen = eq - envstr; nlen >= bufsize; bufsize *= 2)
-			buf = erealloc(buf, bufsize);
+			buf = arena_reallocate(envarena, buf, bufsize);
 		memcpy(buf, envstr, nlen);
 		buf[nlen] = '\0';
 		name = str(ENV_DECODE, buf);
