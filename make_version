@@ -1,7 +1,8 @@
 #!/bin/sh
 
 compiler=$1
-cflags=$2
+shift
+cflags="$@"
 branch=`git rev-parse --abbrev-ref HEAD 2>/dev/null`
 commit=`git rev-parse --verify --short=12 HEAD 2>/dev/null`
 commitcnt=`git rev-list --first-parent --count HEAD 2>/dev/null`

@@ -140,7 +140,7 @@ config.h  : config.h.in
 	./configure
 
 version.c : make_version es.h
-	./make_version $(CC) "$(CFLAGS)" > version.c
+	./make_version $(CC) "${CFLAGS} ${MODCFLAGS}" > version.c
 
 etags : ${HFILES} ${CFILES} parse.y
 	etags ${HFILES} ${CFILES} parse.y
