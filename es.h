@@ -15,7 +15,9 @@
 			dprintf(editor_debugfd, args); \
 	} while(0)
 #else
-#define dprint(args...) do { } while(0)
+#define dprint(args...) \
+	do {                \
+	} while(0)
 #endif
 
 /*

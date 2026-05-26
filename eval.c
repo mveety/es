@@ -362,7 +362,7 @@ forloop(Tree *defn0, Tree *body0, Binding *binding, int evalflags)
 		Ref(List *, list, glom(assign->u[1].p, outer, evalflags, TRUE));
 		if(vars == NULL)
 			fail("es:for", "null variable name");
-		if(termeq(vars->term, "_") && vars->next == nil){ // this is a fast loop
+		if(termeq(vars->term, "_") && vars->next == nil) { // this is a fast loop
 			fastloop = TRUE;
 			ntimes = length(list);
 			dprint("detected fast loop: ntimes = %lu\n", ntimes);
@@ -382,8 +382,8 @@ forloop(Tree *defn0, Tree *body0, Binding *binding, int evalflags)
 	ExceptionHandler {
 		if(fastloop == TRUE) {
 			dprint("executing fast loop\n");
-			for(iter = 0; iter < ntimes; iter++){
-				Ref(Binding*, bp, outer);
+			for(iter = 0; iter < ntimes; iter++) {
+				Ref(Binding *, bp, outer);
 				ExceptionHandler {
 					result = walk(body, bp, evalflags & (run_sandbox | eval_exitonfalse));
 				} CatchException(e) {

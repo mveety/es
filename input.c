@@ -200,7 +200,8 @@ void
 input_resettokstatus(void)
 {
 	if(verbose_parser == TRUE)
-		dprint("input %s(%p): last tokstatus = \"%s\"\n", input->name, input, input_dumptokstatus());
+		dprint("input %s(%p): last tokstatus = \"%s\"\n", input->name, input,
+			   input_dumptokstatus());
 	if(input->lasttokstatus != nil) {
 		efree(input->lasttokstatus);
 		input->lasttokstatus = nil;

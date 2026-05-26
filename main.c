@@ -87,8 +87,8 @@ init_internal_vars(int runflags)
 	vardef("__es_comp_match", nil, mklist(mkstr(comprehensive_matches ? "true" : "false"), nil));
 	vardef("__es_interactive_start", nil,
 		   mklist(mkstr((runflags & run_interactive) == run_interactive ? "true" : "false"), nil));
-	vardef("__es_buildtime", nil, mklist(mkstr((char*)buildtime), nil));
-	vardef("__es_cflags", nil, mklist(mkstr((char*)buildcflags), nil));
+	vardef("__es_buildtime", nil, mklist(mkstr((char *)buildtime), nil));
+	vardef("__es_cflags", nil, mklist(mkstr((char *)buildcflags), nil));
 
 	gcderef(&r_list, (void **)&list);
 }
