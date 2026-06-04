@@ -142,7 +142,7 @@ naccess_gen_usage_opts(void)
 	size_t optsi = 0;
 	const char usage_start[] = "naccess [-n name] [-1e] [-rwx] [-fdcb";
 	const char usage_end[] = "] path ...";
-	const char opts_start[] = "bcdefn:rwx1h";
+	const char opts_start[] = "bcdDefn:rwx1h";
 
 	if(naccess_usage == nil) {
 		memset(&usage[0], 0, sizeof(usage));
@@ -187,6 +187,7 @@ PRIM(naccess) {
 	AccessContext ac;
 	Arena *naccess_arena = nil;
 	int error = 0, lasterror = 0;
+	Dict *resdict = nil; Root r_resdict;
 
 	gcdisable();
 	naccess_gen_usage_opts();
@@ -210,6 +211,9 @@ PRIM(naccess) {
 			break;
 		case 'e':
 			exception = TRUE;
+			break;
+		case 'D':
+			resdict = mkdict();
 			break;
 		case 'r':
 			perm |= Read;
@@ -254,6 +258,7 @@ PRIM(naccess) {
 	memset(&ac, 0, sizeof(AccessContext));
 	initialize_accesscontext(&ac);
 	gcref(&r_result, (void**)&result);
+	gcref(&r_resdict, (void**)&resdict);
 
 	for(lp = nil, list = esoptend(); list != nil; list = list->next){
 		char *name = nil;
@@ -279,7 +284,10 @@ PRIM(naccess) {
 			found = TRUE;
 		else
 			lasterror = error;
-		lp = mklist(mkstr(error == 0 ? "0" : esstrerror(error)), lp);
+		if(resdict)
+			resdict = dictput(resdict, gcdup(name), mklist(mkstr(str("%s", error == 0 ? "0" : esstrerror(error))), nil));
+		else
+			lp = mklist(mkstr(error == 0 ? "0" : esstrerror(error)), lp);
 	}
 
 	if(exception && suffix != nil && !found){
@@ -287,8 +295,12 @@ PRIM(naccess) {
 		fail("$&naccess", "%s: %s", suffix, esstrerror(lasterror));
 	}
 
-	result = reverse(lp);
+	if(resdict)
+		result = mklist(mkdictterm(resdict), nil);
+	else
+		result = reverse(lp);
 	gcenable();
+	gcrderef(&r_resdict);
 	gcrderef(&r_result);
 	arena_destroy(naccess_arena);
 	return result;
