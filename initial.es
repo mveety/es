@@ -238,6 +238,13 @@ fn whatis {
 	}
 }
 
+fn exists files {
+	if {~ $#files 0} {
+		throw usage exists 'usage: exists [files...]'
+	}
+	%naccess -e $files
+}
+
 #	The while function is implemented with the forever looping primitive.
 #	While uses $&noreturn to indicate that, while it is a lambda, it
 #	does not catch the return exception.  It does, however, catch break.
