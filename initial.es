@@ -73,6 +73,7 @@ pid = <=$&getpid
 
 fn-.		= $&dot
 fn-access	= $&access
+fn-%naccess	= $&naccess
 fn-break	= $&break
 fn-catch	= $&catch
 fn-echo		= $&echo

@@ -84,6 +84,7 @@ extern Dict *initprims_access(Dict *primdict);		/* access.c */
 extern Dict *initprims_dict(Dict *primdict);		/* prim-dict.c */
 extern Dict *initprims_mv(Dict *primdict);			/* prim-mv.c */
 extern Dict *initprims_math(Dict *primdict);		/* prim-math.c */
+extern Dict *initprims_naccess(Dict *primdict);		/* newaccess.c */
 #ifdef DYNAMIC_LIBRARIES
 extern Dict *initprims_dynlib(Dict *primdict); /* dynlib.c */
 #endif

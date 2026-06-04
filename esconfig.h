@@ -232,7 +232,7 @@
 #define INITIAL_PATH \
 	"/sbin", "/bin", "/usr/sbin", "/usr/bin", "/usr/local/sbin", "/usr/local/bin", ""
 #elif defined(__linux__)
-/* I'm not certain but I think ths is ecumenical as of 2025 */
+/* I'm not certain but I think this is ecumenical as of 2025 */
 #define INITIAL_PATH "/sbin", "/bin", "/usr/sbin", "/usr/bin"
 #else
 /* I can be certain /sbin and /bin will be there */

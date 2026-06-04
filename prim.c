@@ -83,6 +83,7 @@ initprims(void)
 	prims = initprims_math(prims);
 	prims = initprims_mv(prims);
 	prims = initprims_dict(prims);
+	prims = initprims_naccess(prims);
 #ifdef DYNAMIC_LIBRARIES
 	prims = initprims_dynlib(prims);
 #endif

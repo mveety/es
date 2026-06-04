@@ -51,7 +51,8 @@
 #endif
 
 #include <unistd.h>
-
+#include <limits.h>
+#include <sys/syslimits.h>
 #include <sys/param.h>
 
 #include <string.h>

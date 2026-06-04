@@ -5,6 +5,7 @@ ESHFILES = config.h esconfig.h stdenv.h es.h editor.h result.h
 stdenv.h : esconfig.h
 es.h : config.h stdenv.h
 access.o : access.c $(ESHFILES) prim.h
+newaccess.o : newaccess.c $(ESHFILES) prim.h gc.h
 closure.o : closure.c $(ESHFILES) gc.h
 conv.o : conv.c $(ESHFILES) print.h
 dict.o : dict.c $(ESHFILES) gc.h

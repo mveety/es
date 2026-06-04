@@ -98,7 +98,7 @@ pathcat(char *prefix, char *suffix)
 	return pathbuf;
 }
 
-int
+static int
 access_gen_usage_opts(void)
 {
 	char usage[256];
@@ -269,9 +269,10 @@ initprims_access(Dict *primdict)
 	return primdict;
 }
 
-extern char *
+/*char *
 checkexecutable(char *file)
 {
 	int err = testfile(file, EXEC, S_IFREG);
 	return err == 0 ? NULL : esstrerror(err);
-}
+}*/
+
