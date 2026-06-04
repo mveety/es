@@ -242,7 +242,7 @@ fn exists files {
 	if {~ $#files 0} {
 		throw usage exists 'usage: exists [files...]'
 	}
-	%naccess -e $files
+	{ %naccess -e $files; result <=true } onerror { result <=false }
 }
 
 #	The while function is implemented with the forever looping primitive.
