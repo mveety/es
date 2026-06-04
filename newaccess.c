@@ -64,7 +64,7 @@ testperm(AccessContext *ac, Stat *stat, int perm)
 		return (stat->st_mode & ((perm << User) | (perm << Group) | (perm << Other))) ? 0 : EACCES;
 	if(ac->uid == stat->st_uid)
 		return (stat->st_mode & User) ? 0 : EACCES;
-	
+
 	mask = perm << ((ac->gid == stat->st_gid || ingroupset(ac, stat->st_gid)) ? Group : Other);
 	return (stat->st_mode & mask) ? 0 : EACCES;
 }
@@ -76,7 +76,7 @@ testfile(AccessContext *ac, char *path, int perm, unsigned int type)
 
 	assert(ac->initialized == TRUE);
 
-	switch(type){
+	switch(type) {
 	default:
 		if(stat(path, &st) == -1)
 			return errno;
@@ -94,7 +94,7 @@ testfile(AccessContext *ac, char *path, int perm, unsigned int type)
 	return testperm(ac, &st, perm);
 }
 
-char*
+char *
 checkexecutable(char *file)
 {
 	AccessContext ac;
@@ -107,7 +107,7 @@ checkexecutable(char *file)
 	return esstrerror(error);
 }
 
-static char*
+static char *
 pathcat(Arena *arena, char *prefix, char *suffix)
 {
 	char *s = nil;
@@ -129,7 +129,7 @@ pathcat(Arena *arena, char *prefix, char *suffix)
 	s = pathbuf + plen;
 	if(s[-1] != '/')
 		*s++ = '/';
-	memcpy(s, suffix, slen+1);
+	memcpy(s, suffix, slen + 1);
 	return pathbuf;
 }
 
@@ -193,7 +193,7 @@ PRIM(naccess) {
 	naccess_gen_usage_opts();
 	esoptbegin(list, "$&naccess", naccess_usage);
 	while((c = esopt(naccess_opts)) != EOF)
-		switch(c){
+		switch(c) {
 		default:
 			esoptend();
 			fail("$&naccess", "naccess -%c is not supported on this system", c);
@@ -257,16 +257,17 @@ PRIM(naccess) {
 	arena_annotate(naccess_arena, "naccess arena");
 	memset(&ac, 0, sizeof(AccessContext));
 	initialize_accesscontext(&ac);
-	gcref(&r_result, (void**)&result);
-	gcref(&r_resdict, (void**)&resdict);
+	gcref(&r_result, (void **)&result);
+	gcref(&r_resdict, (void **)&resdict);
 
-	for(lp = nil, list = esoptend(); list != nil; list = list->next){
+	for(lp = nil, list = esoptend(); list != nil; list = list->next) {
 		char *name = nil;
 
-		name = suffix != nil ? pathcat(naccess_arena, getstr(list->term), suffix) : arena_dup(naccess_arena, getstr(list->term));
+		name = suffix != nil ? pathcat(naccess_arena, getstr(list->term), suffix)
+							 : arena_dup(naccess_arena, getstr(list->term));
 		error = testfile(&ac, name, perm, type);
 
-		if(first && error == 0){
+		if(first && error == 0) {
 			result = mklist(mkstr(gcdup(name)), nil);
 			gcenable();
 			gcrderef(&r_result);
@@ -274,7 +275,7 @@ PRIM(naccess) {
 			return result;
 		}
 
-		if(exception && suffix == nil && error != 0){
+		if(exception && suffix == nil && error != 0) {
 			char *gcname = gcdup(name); // need to get name out of the arena
 			arena_destroy(naccess_arena);
 			fail("$&naccess", "%s: %s", gcname, esstrerror(error));
@@ -285,12 +286,13 @@ PRIM(naccess) {
 		else
 			lasterror = error;
 		if(resdict)
-			resdict = dictput(resdict, gcdup(name), mklist(mkstr(str("%s", error == 0 ? "0" : esstrerror(error))), nil));
+			resdict = dictput(resdict, gcdup(name),
+							  mklist(mkstr(str("%s", error == 0 ? "0" : esstrerror(error))), nil));
 		else
 			lp = mklist(mkstr(error == 0 ? "0" : esstrerror(error)), lp);
 	}
 
-	if(exception && suffix != nil && !found){
+	if(exception && suffix != nil && !found) {
 		arena_destroy(naccess_arena);
 		fail("$&naccess", "%s: %s", suffix, esstrerror(lasterror));
 	}
@@ -310,14 +312,13 @@ Primitive prims_naccess[] = {
 	DX(naccess),
 };
 
-Dict*
+Dict *
 initprims_naccess(Dict *primdict)
 {
 	size_t i = 0;
 
 	for(i = 0; i < nelem(prims_naccess); i++)
-		primdict = dictput(primdict, prims_naccess[i].name, (void*)prims_naccess[i].symbol);
+		primdict = dictput(primdict, prims_naccess[i].name, (void *)prims_naccess[i].symbol);
 
 	return primdict;
 }
-

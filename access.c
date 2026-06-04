@@ -275,4 +275,3 @@ checkexecutable(char *file)
 	int err = testfile(file, EXEC, S_IFREG);
 	return err == 0 ? NULL : esstrerror(err);
 }*/
-
