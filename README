@@ -4,6 +4,7 @@ I've tested it on FreeBSD, Arch Linux, Haiku, OpenIndiana, and NetBSD, and it's
 likely to build everywhere sane.
 
 Required packages: autoconf automake libtool libpcre2-posix libpcre2-8 pkg-config
+	on Haiku: be sure to install libpcre2_devel and any other *_devel package
 	on OpenIndiana: build-essential
 	on NetBSD: clang (default) or gcc13 and up
 Optional packages:

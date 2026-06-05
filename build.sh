@@ -30,7 +30,7 @@ case "$PLATFORM" in
 		;;
 	Haiku)
 		./configure --prefix=/boot/home/config/non-packages --enable-modules
-		make $* all
+		make -j $(nproc) $* all
 		;;
 	SunOS)
 		./configure --prefix=/usr --enable-modules
