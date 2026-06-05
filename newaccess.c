@@ -297,10 +297,8 @@ PRIM(naccess) {
 		fail("$&naccess", "%s: %s", suffix, esstrerror(lasterror));
 	}
 
-	if(resdict)
-		result = mklist(mkdictterm(resdict), nil);
-	else
-		result = reverse(lp);
+	result = resdict ? mklist(mkdictterm(resdict), nil) : reverse(lp);
+
 	gcenable();
 	gcrderef(&r_resdict);
 	gcrderef(&r_result);
