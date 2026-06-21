@@ -82,7 +82,7 @@ syntax_onload(void)
 {
 	if(pcre2_regcomp(&prim_regex, "^\\$&[a-zA-Z0-9\\-_]+$", REMode) != 0)
 		return -1;
-	if(pcre2_regcomp(&var_regex, "^\\$+[#\\^\":]?[a-zA-Z0-9\\-_%][a-zA-Z0-9\\-_:%]*$", REMode) != 0)
+	if(pcre2_regcomp(&var_regex, "^\\$+[#\\^\":]?(\\*|[a-zA-Z0-9\\-_%][a-zA-Z0-9\\-_:%]*)$", REMode) != 0)
 		return -2;
 	if(pcre2_regcomp(&basic_regex, "^[a-zA-Z0-9\\-_%][a-zA-Z0-9\\-_.:%]*$", REMode) != 0)
 		return -3;

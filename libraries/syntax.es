@@ -59,7 +59,7 @@ with-dynlibs mod_syntax {
 
 	_es_syntax_defs = %dict(
 		prim => %re('^\$&[a-zA-Z0-9\-_]+$')
-		var => %re('^\$+[#\^":]?[a-zA-Z0-9\-_%][a-zA-Z0-9\-_:%]*$')
+		var => %re('^\$+[#\^":]?(\*|[a-zA-Z0-9\-_%][a-zA-Z0-9\-_:%]*)$')
 		basic => %re('^[a-zA-Z0-9\-_%][a-zA-Z0-9\-_.:%]*$')
 		number => (%re('^[0-9]+$') %re('^0x[0-9a-fA-F]+$') %re('^0b[01]+$') %re('^0o[0-7]+$'))
 		keywords => ('~' '~~' 'local' 'let' 'lets' 'for' 'fn' '%closure' 'match' 'matchall'
@@ -125,7 +125,7 @@ with-dynlibs mod_syntax {
 	}
 
 	fn atom_type str lasttok futuretok {
-		if {$synax_conf_accelerate} {
+		if {$syntax_conf_accelerate} {
 			if {~ $#lasttok 0} { lasttok = '' }
 			if {~ $#futuretok 0} { futuretok = '' }
 			return <={$&syn_atom_type $str $lasttok $futuretok}
