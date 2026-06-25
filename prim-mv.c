@@ -926,6 +926,68 @@ PRIM(getrusage){
 
 #endif
 
+PRIM(extractbinding){
+	Root r_list;
+	List *result = nil; Root r_result;
+	Dict *d = nil; Root r_d;
+	Closure *fn = nil; Root r_fn;
+	Binding *cbind = nil; Root r_cbind;
+
+	if(!list)
+		fail("$&extractbinding", "missing argument");
+
+	gcref(&r_list, (void**)&list);
+	gcref(&r_result, (void**)&result);
+	gcref(&r_d, (void**)&d);
+	gcref(&r_fn, (void**)&fn);
+	gcref(&r_cbind, (void**)&cbind);
+
+	if((fn = getclosure(list->term)) == nil)
+		fail("$&extractbinding", "argument must be a closure");
+
+	d = mkdict();
+
+	for(cbind = fn->binding; cbind != nil; cbind = cbind->next)
+		d = dictput(d, cbind->name, cbind->defn);
+
+	result = mklist(mkdictterm(d), nil);
+
+	gcrderef(&r_cbind);
+	gcrderef(&r_fn);
+	gcrderef(&r_d);
+	gcrderef(&r_result);
+	gcrderef(&r_list);
+	return result;
+}
+
+PRIM(linkbinding){
+	Root r_list;
+	List *result = nil; Root r_result;
+	Closure *fn1 = nil;
+	Closure *fn2 = nil;
+
+	if(!list)
+		fail("$&linkbinding", "missing argument $1");
+	if(!list->next)
+		fail("$&linkbinding", "missing argument $2");
+
+	gcref(&r_list, (void**)&list);
+	gcref(&r_result, (void**)&result);
+
+	if((fn1 = getclosure(list->term)) == nil)
+		fail("$&linkbinding", "$1 must be a closure");
+	if((fn2 = getclosure(list->next->term)) == nil)
+		fail("$&linkbinding", "$2 must be a closure");
+
+	fn2->binding = fn1->binding;
+	result = mklist(mkterm(nil, fn2), nil);
+
+	gcrderef(&r_result);
+	gcrderef(&r_list);
+
+	return result;
+}
+
 Primitive prim_mv[] = {
 	DX(version),
 	DX(buildstring),
@@ -975,6 +1037,8 @@ Primitive prim_mv[] = {
 #ifdef PRIM_GETRUSAGE
 	DX(getrusage),
 #endif
+	DX(extractbinding),
+	DX(linkbinding),
 };
 
 Dict *
