@@ -392,6 +392,7 @@ extern Closure *mkclosure(Tree *tree, Binding *binding);
 extern Closure *extractbindings(Tree *tree);
 extern Binding *mkbinding(char *name, List *defn, Binding *next);
 extern Binding *reversebindings(Binding *binding);
+extern Binding *clonebindings(Binding *oldbind);
 
 /* eval.c */
 

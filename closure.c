@@ -226,7 +226,7 @@ extractbindings(Tree *tree0)
 
 DefineTag(Binding, static);
 
-extern Binding *
+Binding *
 mkbinding(char *name, List *defn, Binding *next)
 {
 	Binding *binding = NULL; Root r_binding;
@@ -244,7 +244,7 @@ mkbinding(char *name, List *defn, Binding *next)
 	return binding;
 }
 
-extern Binding *
+Binding *
 reversebindings(Binding *binding)
 {
 	if(binding == NULL)
@@ -259,6 +259,26 @@ reversebindings(Binding *binding)
 		} while((binding = next) != NULL);
 		return prev;
 	}
+}
+
+Binding*
+clonebindings(Binding *oldbind)
+{
+	Root r_oldbind;
+	Binding *newbind = nil; Root r_newbind;
+	Binding *curbind;
+
+	gcref(&r_oldbind, (void**)&oldbind);
+	gcref(&r_newbind, (void**)&newbind);
+
+	for(curbind = oldbind; curbind != nil; curbind = curbind->next)
+		newbind = mkbinding(oldbind->name, oldbind->defn, newbind);
+
+	newbind = reversebindings(newbind);
+	gcrderef(&r_newbind);
+	gcrderef(&r_oldbind);
+
+	return newbind;
 }
 
 static void *

@@ -988,6 +988,35 @@ PRIM(linkbinding){
 	return result;
 }
 
+PRIM(clonebinding){
+	Root r_list;
+	List *result = nil; Root r_result;
+	Closure *fn = nil; Root r_fn;
+	Binding *newbind = nil; Root r_newbind;
+
+	if(!list)
+		fail("$&clonebinding", "missing argument");
+
+	gcref(&r_list, (void**)&list);
+	gcref(&r_result, (void**)&result);
+	gcref(&r_fn, (void**)&fn);
+	gcref(&r_newbind, (void**)&newbind);
+
+	if((fn = getclosure(list->term)) == nil)
+		fail("$&clonebinding", "argument must be a closure");
+
+	newbind = clonebindings(fn->binding);
+	fn->binding = newbind;
+	result = mklist(mkterm(nil, fn), nil);
+
+	gcrderef(&r_newbind);
+	gcrderef(&r_fn);
+	gcrderef(&r_result);
+	gcrderef(&r_list);
+
+	return result;
+}
+
 Primitive prim_mv[] = {
 	DX(version),
 	DX(buildstring),
@@ -1039,6 +1068,7 @@ Primitive prim_mv[] = {
 #endif
 	DX(extractbinding),
 	DX(linkbinding),
+	DX(clonebinding),
 };
 
 Dict *
