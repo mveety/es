@@ -868,6 +868,12 @@ fn %interactive-exception-handler errobj result {
 }
 
 fn %interactive-hook-exception-handler hook errobj {
+	match $hook (
+		preexec { fn-%preexec= }
+		postexec { fn-%postexec= }
+		prompt { fn-%prompt= }
+		* { unreachable }
+	)
 	errmatch $errobj (
 		exit { throw $err $type $msg}
 		error { echo >[1=2] $hook^' handler: error: '^$type^': '^$^msg }
@@ -888,15 +894,7 @@ fn %interactive-hook-exception-handler hook errobj {
 		continue { result <=true }
 		{ throw $err $type $msg }
 	)
-	matchall $hook (
-		preexec { fn-%preexec= }
-		postexec { fn-%postexec= }
-		(preexec postexec) { throw hook_error }
-		prompt { fn-%prompt= }
-		* { unreachable }
-	)
 }
-
 
 fn %interactive-prompt-hook {
 	if {! ~ $#fn-%prompt 0} {
