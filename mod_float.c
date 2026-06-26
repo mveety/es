@@ -6,16 +6,16 @@ List *
 prim_addf(List *list, Binding *binding, int evalflags)
 {
 	double a, b, res;
-	List *result; Root r_result;
+	List *result;
 
 	a = listtof(list, "$&addf", 1);
 	b = listtof(list->next, "$&addf", 2);
 
 	res = a + b;
 
-	gcref(&r_result, (void **)&result);
+	ref(result);
 	result = floattolist(res, "$&addf");
-	gcrderef(&r_result);
+	deref(result);
 
 	return result;
 }
@@ -24,16 +24,16 @@ List *
 prim_subf(List *list, Binding *binding, int evalflags)
 {
 	double a, b, res;
-	List *result; Root r_result;
+	List *result;
 
 	a = listtof(list, "$&subf", 1);
 	b = listtof(list->next, "$&subf", 2);
 
 	res = a - b;
 
-	gcref(&r_result, (void **)&result);
+	ref(result);
 	result = floattolist(res, "$&subf");
-	gcrderef(&r_result);
+	deref(result);
 
 	return result;
 }
@@ -42,16 +42,16 @@ List *
 prim_mulf(List *list, Binding *binding, int evalflags)
 {
 	double a, b, res;
-	List *result; Root r_result;
+	List *result;
 
 	a = listtof(list, "$&mulf", 1);
 	b = listtof(list->next, "$&mulf", 2);
 
 	res = a * b;
 
-	gcref(&r_result, (void **)&result);
+	ref(result);
 	result = floattolist(res, "$&mulf");
-	gcrderef(&r_result);
+	deref(result);
 
 	return result;
 }
@@ -60,7 +60,7 @@ List *
 prim_divf(List *list, Binding *binding, int evalflags)
 {
 	double a, b, res;
-	List *result; Root r_result;
+	List *result;
 
 	a = listtof(list, "$&divf", 1);
 	b = listtof(list->next, "$&divf", 2);
@@ -69,9 +69,9 @@ prim_divf(List *list, Binding *binding, int evalflags)
 		fail("$&divf", "divide by zero");
 	res = a / b;
 
-	gcref(&r_result, (void **)&result);
+	ref(result);
 	result = floattolist(res, "$&divf");
-	gcrderef(&r_result);
+	deref(result);
 
 	return result;
 }

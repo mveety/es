@@ -19,10 +19,10 @@ extern size_t objectssz;
 extern Object **objects;
 
 PRIM(objects_dumptypes) {
-	List *result = nil; Root r_result;
+	List *result = nil;
 	size_t i = 0;
 
-	gcref(&r_result, (void **)&result);
+	ref(result);
 
 	for(i = 0; i < typessz; i++) {
 		if(typedefs[i] == nil)
@@ -31,7 +31,7 @@ PRIM(objects_dumptypes) {
 	}
 	result = reverse(result);
 
-	gcrderef(&r_result);
+	deref(result);
 	return result;
 }
 

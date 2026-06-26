@@ -9,12 +9,12 @@ DefineTag(Term, static);
 Term *
 mkterm1(char *str, Closure *closure, Dict *dict, Object *obj)
 {
-	Term *term = nil; Root r_term;
+	Term *term = nil;
 
 	assert(str != nil || closure != nil || dict != nil || obj != nil);
 	gcdisable();
 	term = gcnew(Term);
-	gcref(&r_term, (void **)&term);
+	ref(term);
 	if(str != nil)
 		*term = (Term){tkString, ttNone, {.str = str}};
 	else if(closure != nil)
@@ -26,7 +26,7 @@ mkterm1(char *str, Closure *closure, Dict *dict, Object *obj)
 	else
 		unreachable();
 	gcenable();
-	gcderef(&r_term, (void **)&term);
+	deref(term);
 	return term;
 }
 
@@ -40,12 +40,12 @@ Term *
 mkstr(char *str)
 {
 	Term *term;
-	char *string = nil; Root r_string;
+	char *string = nil;
 
 	string = str;
-	gcref(&r_string, (void **)&string);
+	ref(string);
 	term = mkterm(string, nil);
-	gcderef(&r_string, (void **)&string);
+	deref(string);
 	return term;
 }
 
@@ -87,9 +87,9 @@ isadict(char *s)
 Closure *
 getclosure(Term *term)
 {
-	Term *tp = nil; Root r_tp;
-	Tree *np = nil; Root r_np;
-	char *tmp = nil; Root r_tmp;
+	Term *tp = nil;
+	Tree *np = nil;
+	char *tmp = nil;
 
 	assert(term->ptr);
 	switch(term->kind) {
@@ -98,23 +98,23 @@ getclosure(Term *term)
 		return nil;
 	case tkString:
 		if(isfunction(term->str)) {
-			gcref(&r_tp, (void **)&tp);
-			gcref(&r_np, (void **)&np);
-			gcref(&r_tmp, (void **)&tmp);
+			ref(tp);
+			ref(np);
+			ref(tmp);
 			tp = term;
 			tmp = gcdup(tp->str);
 			np = parsestring(tmp);
 			if(np == nil) {
-				gcrderef(&r_np);
-				gcrderef(&r_tp);
+				deref(np);
+				deref(tp);
 				return nil;
 			}
 			tp->closure = extractbindings(np);
 			tp->kind = tkClosure;
 			term = tp;
-			gcrderef(&r_tmp);
-			gcrderef(&r_np);
-			gcrderef(&r_tp);
+			deref(tmp);
+			deref(np);
+			deref(tp);
 		} else
 			return nil;
 		fallthrough;
@@ -131,11 +131,11 @@ void
 assocfmt(void *vargs, char *name, void *vdata)
 {
 	AssocArgs *args = nil; Root r_args_result;
-	List *data = nil; Root r_data;
+	List *data = nil;
 
 	args = vargs;
 	gcref(&r_args_result, (void **)&args->result);
-	gcref(&r_data, (void **)&data);
+	ref(data);
 	data = vdata;
 
 	if(args->result == nil)
@@ -143,7 +143,7 @@ assocfmt(void *vargs, char *name, void *vdata)
 	else
 		args->result = str("%s; %s => %#V", args->result, name, data, " ");
 
-	gcrderef(&r_data);
+	deref(data);
 	gcrderef(&r_args_result);
 }
 
@@ -159,10 +159,10 @@ getregex(Term *term)
 char *
 getstr(Term *term)
 {
-	Term *tp = nil; Root r_tp;
+	Term *tp = nil; 
 	AssocArgs args; Root r_args_result;
-	Dict *d = nil; Root r_d;
-	char *res = nil; Root r_res;
+	Dict *d = nil;
+	char *res = nil;
 	char *objstr = nil;
 	char *tmp;
 
@@ -179,9 +179,9 @@ getstr(Term *term)
 	case tkDict:
 		args.result = nil;
 		gcref(&r_args_result, (void **)&args.result);
-		gcref(&r_tp, (void **)&tp);
-		gcref(&r_d, (void **)&r_d);
-		gcref(&r_res, (void **)&r_res);
+		ref(tp);
+		ref(d);
+		ref(res);
 
 		d = term->dict;
 		dictforall(d, assocfmt, &args);
@@ -190,9 +190,9 @@ getstr(Term *term)
 		else
 			res = str("%%dict(%s)", args.result);
 
-		gcrderef(&r_res);
-		gcrderef(&r_d);
-		gcrderef(&r_tp);
+		deref(res);
+		deref(d);
+		deref(tp);
 		gcrderef(&r_args_result);
 		return res;
 	case tkObject:
@@ -210,10 +210,10 @@ getstr(Term *term)
 Dict *
 getdict(Term *term)
 {
-	Term *t = nil; Root r_t;
-	Tree *parsed = nil; Root r_parsed;
-	List *glommed = nil; Root r_glommed;
-	Dict *dict = nil; Root r_dict;
+	Term *t = nil;
+	Tree *parsed = nil;
+	List *glommed = nil;
+	Dict *dict = nil;
 
 	switch(term->kind) {
 	default:
@@ -224,10 +224,10 @@ getdict(Term *term)
 		assert(term->str != nil);
 		if(!isadict(term->str))
 			return nil;
-		gcref(&r_t, (void **)&t);
-		gcref(&r_parsed, (void **)&parsed);
-		gcref(&r_glommed, (void **)&glommed);
-		gcref(&r_dict, (void **)&dict);
+		ref(t);
+		ref(parsed);
+		ref(glommed);
+		ref(dict);
 
 		t = term;
 		parsed = parsestring(t->str);
@@ -240,10 +240,10 @@ getdict(Term *term)
 		t->kind = tkDict;
 		t->dict = dict;
 done:
-		gcrderef(&r_dict);
-		gcrderef(&r_glommed);
-		gcrderef(&r_parsed);
-		gcrderef(&r_t);
+		deref(dict);
+		deref(glommed);
+		deref(parsed);
+		deref(t);
 		return dict;
 	case tkClosure:
 	case tkRegex:
@@ -299,26 +299,26 @@ getobject(Term *term)
 Term *
 termcat(Term *t1, Term *t2)
 {
-	Term *term = nil; Root r_term;
-	char *str1 = nil; Root r_str1;
-	char *str2 = nil; Root r_str2;
+	Term *term = nil;
+	char *str1 = nil;
+	char *str2 = nil;
 
 	if(t1 == nil)
 		return t2;
 	if(t2 == nil)
 		return t1;
 
-	gcref(&r_term, (void **)&term);
-	str1 = getstr(t1);
-	gcref(&r_str1, (void **)&str1);
-	str2 = getstr(t2);
-	gcref(&r_str2, (void **)&str2);
+	ref(term);
+	ref(str1);
+	ref(str2);
 
+	str1 = getstr(t1);
+	str2 = getstr(t2);
 	term = mkstr(str("%s%s", str1, str2));
 
-	gcderef(&r_str2, (void **)&str2);
-	gcderef(&r_str1, (void **)&str1);
-	gcderef(&r_term, (void **)&term);
+	deref(str2);
+	deref(str1);
+	deref(term);
 	return term;
 }
 

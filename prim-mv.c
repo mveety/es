@@ -28,20 +28,19 @@ PRIM(addhistory) {
 }
 
 PRIM(addhistorylist) {
-	Root r_list;
-	List *lp; Root r_lp;
+	List *lp;
 
 	if(list == nil)
 		fail("$&addhistorylist", "usage: $&addhistorylist [list of strings]");
 
-	gcref(&r_list, (void **)&list);
-	gcref(&r_lp, (void **)&lp);
+	ref(list);
+	ref(lp);
 
 	for(lp = list; lp != nil; lp = lp->next)
 		history_add(editor, getstr(lp->term));
 
-	gcrderef(&r_lp);
-	gcrderef(&r_list);
+	deref(lp);
+	deref(list);
 
 	return list_true;
 }
@@ -58,7 +57,7 @@ PRIM(getevaldepth) {
 PRIM(range) {
 	int start, end;
 	int i;
-	List *res = nil; Root r_res;
+	List *res = nil;
 
 	if(list == nil || list->next == nil)
 		fail("$&range", "missing arguments");
@@ -91,7 +90,7 @@ PRIM(range) {
 	if(start > end)
 		fail("$&range", "start > end");
 
-	gcref(&r_res, (void **)&res);
+	ref(res);
 
 	gcdisable();
 	for(i = end; i >= start; i--)
@@ -104,12 +103,12 @@ PRIM(range) {
 
 PRIM(reverse) {
 	List *l = nil;
-	List *res = nil; Root r_res;
+	List *res = nil;
 
 	if(list == nil)
 		return nil;
 
-	gcref(&r_res, (void **)&res);
+	ref(res);
 
 	for(l = list; l != nil; l = l->next)
 		res = mklist(l->term, res);
@@ -169,14 +168,14 @@ PRIM(setrunflags) {
 
 PRIM(settermtag) {
 	char *tagname = nil;
-	List *lp = nil; Root r_lp;
-	Term *term = nil; Root r_term;
+	List *lp = nil;
+	Term *term = nil;
 
 	if(list == nil || list->next == nil)
 		fail("$&settermtag", "missing arguments");
 
-	gcref(&r_lp, (void **)&lp);
-	gcref(&r_term, (void **)&term);
+	ref(lp);
+	ref(term);
 	lp = list;
 	gcdisable();
 	tagname = getstr(lp->term);
@@ -192,14 +191,14 @@ PRIM(settermtag) {
 		term->tag = ttRegex;
 	else {
 		gcenable();
-		gcrderef(&r_term);
-		gcrderef(&r_lp);
+		deref(term);
+		deref(lp);
 		fail("$&settermtag", "invalid tag type");
 	}
 
 	gcenable();
-	gcrderef(&r_term);
-	gcrderef(&r_lp);
+	deref(term);
+	deref(lp);
 
 	return list_true;
 }
@@ -281,10 +280,10 @@ PRIM(varishidden) {
 }
 
 PRIM(gcstats) {
-	List *res = nil; Root r_res;
+	List *res = nil;
 	GcStats stats;
 
-	gcref(&r_res, (void **)&res);
+	ref(res);
 
 	memset(&stats, 0, sizeof(GcStats));
 	if(gctype == NewGc) {
@@ -339,13 +338,13 @@ PRIM(gcstats) {
 }
 
 PRIM(dumpregions) {
-	List *res = nil; Root r_res;
+	List *res = nil;
 	Region *r;
 
 	if(gctype == OldGc)
 		fail("$&dumpregions", "using old gc");
 
-	gcref(&r_res, (void **)&res);
+	ref(res);
 
 	for(r = regions; r != nil; r = r->next) {
 		res = mklist(mkstr(str("%lud", r->size)), res);
@@ -357,17 +356,17 @@ PRIM(dumpregions) {
 }
 
 PRIM(gctuning) {
-	List *res = nil; Root r_res;
+	List *res = nil;
 	int v = 0;
 
 	if(list == nil) {
-		gcref(&r_res, (void **)&res);
+		ref(res);
 		res = mklist(mkstr(str("%d", gc_oldsweep_after)), res);
 		res = mklist(mkstr(str("%ud", gc_oldage)), res);
 		res = mklist(mkstr(str("%d", gc_coalesce_after_n)), res);
 		res = mklist(mkstr(str("%d", gc_sort_after_n)), res);
 		res = mklist(mkstr(str("%d", gc_after)), res);
-		gcrderef(&r_res);
+		deref(res);
 		return res;
 	}
 	if(list->next == nil)
@@ -419,26 +418,26 @@ PRIM(gctuning) {
 }
 
 PRIM(parsestring) {
-	List *result = nil; Root r_result;
-	List *lp = nil; Root r_lp;
-	Tree *tree = nil; Root r_tree;
-	char *str = nil; Root r_str;
+	List *result = nil;
+	List *lp = nil;
+	Tree *tree = nil;
+	char *str = nil;
 
 	if(list == nil)
 		fail("$&parsestring", "missing argument");
 
-	gcref(&r_result, (void **)&result);
-	gcref(&r_lp, (void **)&lp);
-	gcref(&r_tree, (void **)&tree);
-	gcref(&r_str, (void **)&str);
+	ref(result);
+	ref(lp);
+	ref(tree);
+	ref(str);
 
 	lp = list;
 	str = getstr(lp->term);
 	if(str == nil) {
-		gcrderef(&r_str);
-		gcrderef(&r_tree);
-		gcrderef(&r_lp);
-		gcrderef(&r_result);
+		deref(str);
+		deref(tree);
+		deref(lp);
+		deref(result);
 		fail("$&parsestring", "invalid term");
 	}
 	tree = parsestring((const char *)str);
@@ -447,36 +446,36 @@ PRIM(parsestring) {
 	result = mklist(mkterm(nil, mkclosure(mk(nThunk, tree), nil)), nil);
 
 done:
-	gcrderef(&r_str);
-	gcrderef(&r_tree);
-	gcrderef(&r_lp);
-	gcrderef(&r_result);
+	deref(str);
+	deref(tree);
+	deref(lp);
+	deref(result);
 	return result;
 }
 
 PRIM(fmtvar) {
-	Term *term = nil; Root r_term;
-	List *res = nil; Root r_res;
-	char *name = nil; Root r_name;
-	List *defn = nil; Root r_defn;
+	Term *term = nil;
+	List *res = nil;
+	char *name = nil;
+	List *defn = nil;
 
 	if(list == nil)
 		fail("$&fmtvar", "missing var");
 
-	gcref(&r_term, (void **)&term);
-	gcref(&r_res, (void **)&res);
-	gcref(&r_name, (void **)&name);
-	gcref(&r_defn, (void **)&defn);
+	ref(term);
+	ref(res);
+	ref(name);
+	ref(defn);
 
 	name = getstr(list->term);
 	defn = varlookup(name, binding);
 	term = mkstr(str("%V", defn, " "));
 	res = mklist(term, nil);
 
-	gcrderef(&r_defn);
-	gcrderef(&r_name);
-	gcrderef(&r_res);
-	gcrderef(&r_term);
+	deref(defn);
+	deref(name);
+	deref(res);
+	deref(term);
 
 	return res;
 }
@@ -508,26 +507,26 @@ PRIM(isalist) {
 }
 
 PRIM(sortlist) {
-	List *lp = nil; Root r_lp;
-	List *res = nil; Root r_res;
+	List *lp = nil;
+	List *res = nil;
 
 	if(list == nil)
 		return nil;
 
-	gcref(&r_lp, (void **)&lp);
-	gcref(&r_res, (void **)&res);
+	ref(lp);
+	ref(res);
 	lp = list;
 
 	res = sortlist(lp);
 
-	gcrderef(&r_res);
-	gcrderef(&r_lp);
+	deref(res);
+	deref(lp);
 
 	return res;
 }
 
 PRIM(mapkey) {
-	List *lp = nil; Root r_lp;
+	List *lp = nil;
 	int res = 0;
 
 	if(list == nil)
@@ -541,7 +540,7 @@ PRIM(mapkey) {
 			return nil;
 	}
 
-	gcref(&r_lp, (void **)&lp);
+	ref(lp);
 	lp = list;
 
 	if(hasprefix(getstr(lp->next->term), "%esmle:")) {
@@ -557,12 +556,12 @@ PRIM(mapkey) {
 		if(bind_es_function(getstr(lp->term), getstr(lp->next->term)) < 0)
 			fail("$&mapkey", "keyname %s is not valid", getstr(lp->term));
 	}
-	gcrderef(&r_lp);
+	deref(lp);
 	return nil;
 }
 
 PRIM(unmapkey) {
-	List *lp = nil; Root r_lp;
+	List *lp = nil;
 
 	if(list == nil)
 		fail("$&unmapkey", "missing argument");
@@ -574,7 +573,7 @@ PRIM(unmapkey) {
 			return nil;
 	}
 
-	gcref(&r_lp, (void **)&lp);
+	ref(lp);
 	lp = list;
 
 	switch(unbind_es_function(getstr(lp->term))) {
@@ -594,12 +593,12 @@ PRIM(unmapkey) {
 		break;
 	}
 
-	gcrderef(&r_lp);
+	deref(lp);
 	return nil;
 }
 
 PRIM(mapaskey) {
-	List *lp = nil; Root r_lp;
+	List *lp = nil;
 
 	if(list == nil)
 		fail("$&mapaskey", "missing argument");
@@ -613,7 +612,7 @@ PRIM(mapaskey) {
 			return nil;
 	}
 
-	gcref(&r_lp, (void **)&lp);
+	ref(lp);
 	lp = list;
 
 	switch(map_as_key(getstr(lp->term), getstr(lp->next->term))) {
@@ -633,7 +632,7 @@ PRIM(mapaskey) {
 		break;
 	}
 
-	gcrderef(&r_lp);
+	deref(lp);
 	return nil;
 }
 
@@ -654,7 +653,7 @@ PRIM(clearkey) {
 }
 
 PRIM(getkeymap) {
-	List *res = nil; Root r_res;
+	List *res = nil;
 	EditorFunction fn;
 	int i = 0;
 
@@ -665,7 +664,7 @@ PRIM(getkeymap) {
 			return nil;
 	}
 
-	gcref(&r_res, (void **)&res);
+	ref(res);
 
 	for(i = 127; i > 0; i--) {
 		fn = mapping2edfn(editor->keymap->base_keys[i]);
@@ -699,7 +698,7 @@ PRIM(getkeymap) {
 		res = mklist(mkstr(str("%s", key2name(i + ExtKeyOffset))), res);
 	}
 
-	gcrderef(&r_res);
+	deref(res);
 	return res;
 }
 
@@ -734,8 +733,8 @@ PRIM(esmlegetwordstart) {
 }
 
 PRIM(esmlesetwordstart) {
-	List *lp = nil; Root r_lp;
-	List *res = nil; Root r_res;
+	List *lp = nil;
+	List *res = nil;
 
 	if(!editor->initialized || editor->indriver == DriverFallback) {
 		if(isinteractive())
@@ -745,8 +744,8 @@ PRIM(esmlesetwordstart) {
 	}
 	if(list == nil)
 		fail("$&esmlesetwordstart", "missing argument");
-	gcref(&r_lp, (void **)&lp);
-	gcref(&r_res, (void **)&res);
+	ref(lp);
+	ref(res);
 
 	lp = list;
 
@@ -754,13 +753,13 @@ PRIM(esmlesetwordstart) {
 		fail("$&esmlesetwordstart", "invalid argument: %s", getstr(lp->term));
 	res = mklist(mkstr(str("%s", getstr(lp->term))), nil);
 
-	gcrderef(&r_res);
-	gcrderef(&r_lp);
+	deref(res);
+	deref(lp);
 	return res;
 }
 
 PRIM(esmlesethighlight) {
-	List *lp = nil; Root r_lp;
+	List *lp = nil;
 
 	if(!editor->initialized || editor->indriver == DriverFallback) {
 		if(isinteractive())
@@ -773,17 +772,17 @@ PRIM(esmlesethighlight) {
 		return mklist(mkstr(str("")), nil);
 	}
 
-	gcref(&r_lp, (void **)&lp);
+	ref(lp);
 	lp = list;
 	if(lp->term->kind != tkString)
 		fail("$&esmlesethighlight", "argument must be a string");
 	set_highlight_formatting(editor, getstr(lp->term));
-	gcrderef(&r_lp);
+	deref(lp);
 	return mklist(mkstr(str("%#S", getstr(lp->term))), nil);
 }
 
 PRIM(esmlegethighlight) {
-	List *res = nil; Root r_res;
+	List *res = nil;
 
 	if(!editor->initialized || editor->indriver == DriverFallback) {
 		if(isinteractive())
@@ -795,41 +794,41 @@ PRIM(esmlegethighlight) {
 	if(editor->highlight_formatting == nil)
 		return mklist(mkstr(str("")), nil);
 
-	gcref(&r_res, (void **)&res);
+	ref(res);
 	if(list != nil && termeq(list->term, "-r"))
 		res = mklist(mkstr(str("%s", editor->highlight_formatting)), nil);
 	else
 		res = mklist(mkstr(str("%#S", editor->highlight_formatting)), nil);
 
-	gcrderef(&r_res);
+	deref(res);
 	return res;
 }
 
 PRIM(esmledumpbuiltinfuns) {
-	List *res = nil; Root r_res;
+	List *res = nil;
 	int i = 0;
 
-	gcref(&r_res, (void **)&res);
+	ref(res);
 
 	for(i = 0; i <= LastEditorFn; i++)
 		if(i != FnInvalid && i != FnEsFunction)
 			res = mklist(mkstr(str("%s", edfn2name(i))), res);
 
-	gcrderef(&r_res);
+	deref(res);
 	return res;
 }
 
 PRIM(fmt) {
-	List *res = nil; Root r_res;
+	List *res = nil;
 
 	if(list == nil)
 		fail("$&fmt", "missing argument");
 
-	gcref(&r_res, (void **)&res);
+	ref(res);
 
 	res = mklist(mkstr(str("%#S", getstr(list->term))), nil);
 
-	gcrderef(&r_res);
+	deref(res);
 
 	return res;
 }

@@ -179,7 +179,7 @@ extractbindings(Tree *tree0)
 	Chain me;
 	Tree *volatile tree = tree0;
 	Binding *volatile bindings = NULL;
-	Closure *result = NULL; Root r_result;
+	Closure *result = NULL;
 
 	gcdisable();
 
@@ -209,14 +209,14 @@ extractbindings(Tree *tree0)
 	chain = chain->next;
 
 	result = me.closure;
-	gcref(&r_result, (void **)&result);
+	ref(result);
 
 	result->tree = tree;
 	result->binding = bindings;
 
 	gcenable();
 
-	gcderef(&r_result, (void **)&result);
+	deref(result);
 	return result;
 }
 
@@ -261,7 +261,7 @@ reversebindings(Binding *binding)
 	}
 }
 
-Binding*
+Binding *
 clonebindings(Binding *oldbind)
 {
 	Binding *newbind = nil;

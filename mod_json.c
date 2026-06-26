@@ -342,14 +342,14 @@ PRIM(json_dumpobject){
 
 
 PRIM(json_decode) {
-	List *res = nil; Root r_res;
+	List *res = nil;
 	char *str = nil;
 	Object *obj;
 
 	if(list == nil)
 		fail("$&json_decode", "missing argument");
 
-	gcref(&r_res, (void **)&res);
+	ref(res);
 	gcdisable();
 
 	str = getstr(list->term);
@@ -359,19 +359,19 @@ PRIM(json_decode) {
 
 	res = mklist(mkobject(obj), nil);
 	gcenable();
-	gcrderef(&r_res);
+	deref(res);
 	return res;
 
 fail:
 	gcenable();
-	gcrderef(&r_res);
+	deref(res);
 	fail("$&json_decode", "error decoding json data");
 	return nil;
 }
 
 PRIM(json_encode) {
-	List *args = nil; Root r_args;
-	List *res = nil; Root r_res;
+	List *args = nil;
+	List *res = nil;
 	char *str = nil;
 	Object *obj;
 
@@ -380,8 +380,8 @@ PRIM(json_encode) {
 	if(!is_json_object(list->term))
 		fail("$&json_encode", "requires a json object as an argument");
 
-	gcref(&r_args, (void **)&args);
-	gcref(&r_res, (void **)&res);
+	ref(args);
+	ref(res);
 	args = list;
 	obj = getobject(args->term);
 
@@ -393,14 +393,14 @@ PRIM(json_encode) {
 	efree(str);
 
 fail:
-	gcrderef(&r_res);
-	gcrderef(&r_args);
+	deref(res);
+	deref(args);
 	return res;
 }
 
 PRIM(json_encode_formatted) {
-	List *args = nil; Root r_args;
-	List *res = nil; Root r_res;
+	List *args = nil;
+	List *res = nil;
 	char *str = nil;
 	Object *obj;
 
@@ -409,8 +409,8 @@ PRIM(json_encode_formatted) {
 	if(!is_json_object(list->term))
 		fail("$&json_encode_formatted", "requires a json object as an argument");
 
-	gcref(&r_args, (void **)&args);
-	gcref(&r_res, (void **)&res);
+	ref(args);
+	ref(res);
 	args = list;
 	obj = getobject(args->term);
 
@@ -422,14 +422,14 @@ PRIM(json_encode_formatted) {
 	efree(str);
 
 fail:
-	gcrderef(&r_res);
-	gcrderef(&r_args);
+	deref(res);
+	deref(args);
 	return res;
 }
 
 PRIM(json_create) {
-	List *lp = nil; Root r_lp;
-	List *res = nil; Root r_res;
+	List *lp = nil;
+	List *res = nil;
 	double number;
 	Object *resobj;
 	int type;
@@ -437,8 +437,8 @@ PRIM(json_create) {
 	if(list == nil)
 		fail("$&json_create", "missing type");
 
-	gcref(&r_lp, (void **)&lp);
-	gcref(&r_res, (void **)&res);
+	ref(lp);
+	ref(res);
 
 	lp = list;
 
@@ -476,15 +476,15 @@ PRIM(json_create) {
 
 	res = mklist(mkobject(resobj), nil);
 
-	gcrderef(&r_res);
-	gcrderef(&r_lp);
+	deref(res);
+	deref(lp);
 	return res;
 }
 
 PRIM(json_addto){
-	List *lp = nil; Root r_lp;
-	List *res = nil; Root r_res;
-	char *name = nil; Root r_name;
+	List *lp = nil;
+	List *res = nil;
+	char *name = nil;
 	int type;
 	Object *parent;
 	Object *newparent;
@@ -499,9 +499,9 @@ PRIM(json_addto){
 	if(!is_json_object(list->next->term))
 		fail("$&json_addto", "$2 must be a json object");
 
-	gcref(&r_lp, (void **)&lp);
-	gcref(&r_res, (void **)&res);
-	gcref(&r_name, (void **)&name);
+	ref(lp);
+	ref(res);
+	ref(name);
 	lp = list;
 
 	parent = getobject(list->term);
@@ -524,15 +524,15 @@ PRIM(json_addto){
 	res = mklist(mkobject(newparent), nil);
 
 fail:
-	gcrderef(&r_name);
-	gcrderef(&r_res);
-	gcrderef(&r_lp);
+	deref(name);
+	deref(res);
+	deref(lp);
 	return res;
 }
 
 PRIM(json_gettype){
-	List *lp = nil; Root r_lp;
-	List *res = nil; Root r_res;
+	List *lp = nil;
+	List *res = nil;
 	int type;
 	Object *obj;
 
@@ -541,8 +541,8 @@ PRIM(json_gettype){
 	if(!is_json_object(list->term))
 		fail("$&json_gettype", "argument needs to be a json object");
 
-	gcref(&r_lp, (void **)&lp);
-	gcref(&r_res, (void **)&res);
+	ref(lp);
+	ref(res);
 
 	obj = getobject(list->term);
 	type = get_json_object_type(obj);
@@ -551,16 +551,16 @@ PRIM(json_gettype){
 		res = mklist(mkstr(str("%d", cJSON_GetArraySize(json(obj)->data))), nil);
 	res = mklist(mkstr(str("%s", int2typename(type))), res);
 
-	gcrderef(&r_res);
-	gcrderef(&r_lp);
+	deref(res);
+	deref(lp);
 	return res;
 }
 
 List *
 get_or_detach_object(int op, List *list, Binding *bindings, int evalflags)
 {
-	List *lp = nil; Root r_lp;
-	List *res = nil; Root r_res;
+	List *lp = nil;
+	List *res = nil;
 	Object *parent = nil;
 	Object *child = nil;
 	int type = 0;
@@ -583,8 +583,8 @@ get_or_detach_object(int op, List *list, Binding *bindings, int evalflags)
 	if(!is_json_object(list->term))
 		fail(fnname, "argument needs to be a json object");
 
-	gcref(&r_lp, (void **)&lp);
-	gcref(&r_res, (void **)&res);
+	ref(lp);
+	ref(res);
 	lp = list;
 
 	parent = getobject(lp->term);
@@ -632,8 +632,8 @@ get_or_detach_object(int op, List *list, Binding *bindings, int evalflags)
 	res = mklist(mkobject(child), nil);
 
 fail:
-	gcrderef(&r_res);
-	gcrderef(&r_lp);
+	deref(res);
+	deref(lp);
 	return res;
 }
 
@@ -646,8 +646,8 @@ PRIM(json_detachobject){
 }
 
 PRIM(json_getdata){
-	List *lp = nil; Root r_lp;
-	List *res = nil; Root r_res;
+	List *lp = nil;
+	List *res = nil;
 	Object *obj = nil;
 	int type;
 
@@ -656,8 +656,8 @@ PRIM(json_getdata){
 	if(!is_json_object(list->term))
 		fail("$&json_getdata", "argument needs to be a json object");
 
-	gcref(&r_lp, (void **)&lp);
-	gcref(&r_res, (void **)&res);
+	ref(lp);
+	ref(res);
 	lp = list;
 
 	obj = getobject(lp->term);
@@ -686,8 +686,8 @@ PRIM(json_getdata){
 		break;
 	}
 
-	gcrderef(&r_res);
-	gcrderef(&r_lp);
+	deref(res);
+	deref(lp);
 	return res;
 }
 
@@ -703,14 +703,14 @@ cJSON_WalkObjectForNames(cJSON *children)
 List *
 cJSON_GetObjectItemNames(cJSON *object)
 {
-	List *res = nil; Root r_res;
+	List *res = nil;
 
 	assert(object);
 
 	if(!cJSON_IsObject(object))
 		return nil;
 
-	gcref(&r_res, (void **)&res);
+	ref(res);
 	gc();
 	gcdisable();
 
@@ -718,14 +718,14 @@ cJSON_GetObjectItemNames(cJSON *object)
 
 	gcenable();
 	gc();
-	gcrderef(&r_res);
+	deref(res);
 
 	return res;
 }
 
 PRIM(json_getobjectnames) {
-	List *lp = nil; Root r_lp;
-	List *res = nil; Root r_res;
+	List *lp = nil;
+	List *res = nil;
 	Object *obj;
 
 	if(list == nil)
@@ -735,16 +735,16 @@ PRIM(json_getobjectnames) {
 	if(get_json_object_type(getobject(list->term)) != JTObject)
 		fail("$&json_getobjectnames", "object must be a json object");
 
-	gcref(&r_lp, (void **)&lp);
-	gcref(&r_res, (void **)&res);
+	ref(lp);
+	ref(res);
 
 	lp = list;
 	obj = getobject(lp->term);
 
 	res = cJSON_GetObjectItemNames(json(obj)->data);
 
-	gcrderef(&r_res);
-	gcrderef(&r_lp);
+	deref(res);
+	deref(lp);
 	return res;
 }
 

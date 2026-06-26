@@ -199,8 +199,7 @@ parsemode(char *modestr)
 
 PRIM(file_open) {
 	Object *obj = nil;
-	List *res = nil; Root r_res;
-	Root r_list;
+	List *res = nil;
 	char *fname;
 	int mode = 0;
 
@@ -211,8 +210,8 @@ PRIM(file_open) {
 	if(list->next->next != nil)
 		fail("$&file_open", "too many arguments");
 
-	gcref(&r_res, (void **)&res);
-	gcref(&r_list, (void **)&list);
+	ref(res);
+	ref(list);
 
 	fname = getstr(list->term);
 	if(!fname)
@@ -236,21 +235,20 @@ PRIM(file_open) {
 
 	res = mklist(mkobject(obj), nil);
 	gcenable();
-	gcrderef(&r_list);
-	gcrderef(&r_res);
+	deref(list);
+	deref(res);
 	return res;
 }
 
 PRIM(file_name) {
-	Root r_list;
-	List *res = nil; Root r_res;
+	List *res = nil;
 	Object *obj = nil;
 
 	if(list == nil)
 		fail("$&file_name", "invalid argument");
 
-	gcref(&r_list, (void **)&list);
-	gcref(&r_res, (void **)&res);
+	ref(list);
+	ref(res);
 	obj = getobject(list->term);
 	if(!obj)
 		fail("$&file_name", "$1 must be an object");
@@ -260,22 +258,21 @@ PRIM(file_name) {
 	if(obj->sysflags & ObjectInitialized)
 		res = mklist(mkstr(str("%s", file(obj)->name)), nil);
 
-	gcrderef(&r_res);
-	gcrderef(&r_list);
+	deref(res);
+	deref(list);
 
 	return res;
 }
 
 PRIM(file_fd) {
-	Root r_list;
-	List *res = nil; Root r_res;
+	List *res = nil;
 	Object *obj = nil;
 
 	if(list == nil)
 		fail("$&file_name", "invalid argument");
 
-	gcref(&r_list, (void **)&list);
-	gcref(&r_res, (void **)&res);
+	ref(list);
+	ref(res);
 	obj = getobject(list->term);
 	if(!obj)
 		fail("$&file_fd", "$1 must be an object");
@@ -287,26 +284,25 @@ PRIM(file_fd) {
 	else
 		fail("$&file_fd", "file not initialized");
 
-	gcrderef(&r_res);
-	gcrderef(&r_list);
+	deref(res);
+	deref(list);
 
 	return res;
 }
 
 PRIM(blob2string) {
-	Root r_list;
 	Object *obj = nil;
-	char *newstr = nil; Root r_newstr;
-	List *res = nil; Root r_res;
+	char *newstr = nil;
+	List *res = nil;
 
 	if(list == nil)
 		fail("$&blob2string", "missing argument");
 	if(list->next != nil)
 		fail("$&blob2string", "too many arguments");
 
-	gcref(&r_list, (void **)&list);
-	gcref(&r_newstr, (void **)&newstr);
-	gcref(&r_res, (void **)&res);
+	ref(list);
+	ref(newstr);
+	ref(res);
 
 	obj = getobject(list->term);
 	if(!obj)
@@ -320,18 +316,17 @@ PRIM(blob2string) {
 
 	res = mklist(mkstr(newstr), nil);
 
-	gcrderef(&r_res);
-	gcrderef(&r_newstr);
-	gcrderef(&r_list);
+	deref(res);
+	deref(newstr);
+	deref(list);
 
 	return res;
 }
 
 PRIM(string2blob) {
-	Root r_list;
 	Object *obj = nil;
-	char *str = nil; Root r_str;
-	List *res = nil; Root r_res;
+	char *str = nil;
+	List *res = nil;
 	size_t slen = 0;
 
 	if(list == nil)
@@ -339,9 +334,9 @@ PRIM(string2blob) {
 	if(list->next != nil)
 		fail("$&string2blob", "too many arguments");
 
-	gcref(&r_list, (void **)&list);
-	gcref(&r_str, (void **)&str);
-	gcref(&r_res, (void **)&res);
+	ref(list);
+	ref(str);
+	ref(res);
 
 	str = getstr(list->term);
 	if(!str)
@@ -356,31 +351,30 @@ PRIM(string2blob) {
 
 	res = mklist(mkobject(obj), nil);
 
-	gcrderef(&r_res);
-	gcrderef(&r_str);
-	gcrderef(&r_list);
+	deref(res);
+	deref(str);
+	deref(list);
 
 	return res;
 }
 
 PRIM(file_read) {
-	char *buf = nil; Root r_buf;
-	char *rstr = nil; Root r_rstr;
+	char *buf = nil;
+	char *rstr = nil;
 	Object *obj = nil;
 	size_t nbytes = 0;
 	ssize_t nread = 0;
-	List *res = nil; Root r_res;
-	Root r_list;
+	List *res = nil;
 
 	if(length(list) < 2)
 		fail("$&file_read", "missing arguments");
 	if(length(list) > 2)
 		fail("$&file_read", "too many arguments");
 
-	gcref(&r_list, (void **)&list);
-	gcref(&r_res, (void **)&res);
-	gcref(&r_buf, (void **)&buf);
-	gcref(&r_rstr, (void **)&rstr);
+	ref(list);
+	ref(res);
+	ref(buf);
+	ref(rstr);
 
 	obj = getobject(list->term);
 	if(!obj)
@@ -408,10 +402,10 @@ PRIM(file_read) {
 		fail("$&file_read", "unable to read: %s", strerror(errno));
 	if(nread == 0) {
 		res = mklist(mkstr(str("0")), nil);
-		gcrderef(&r_rstr);
-		gcrderef(&r_buf);
-		gcrderef(&r_res);
-		gcrderef(&r_list);
+		deref(rstr);
+		deref(buf);
+		deref(res);
+		deref(list);
 		return res;
 	}
 	rstr = gcalloc(nread + 1, tString);
@@ -420,30 +414,29 @@ PRIM(file_read) {
 	res = mklist(mkstr(rstr), nil);
 	res = mklist(mkstr(str("%d", nread)), res);
 
-	gcrderef(&r_rstr);
-	gcrderef(&r_buf);
-	gcrderef(&r_res);
-	gcrderef(&r_list);
+	deref(rstr);
+	deref(buf);
+	deref(res);
+	deref(list);
 	return res;
 }
 
 PRIM(file_bread) {
-	char *buf = nil; Root r_buf;
+	char *buf = nil;
 	Object *obj = nil;
 	Object *blob = nil;
 	size_t nbytes = 0;
 	ssize_t nread = 0;
-	List *res = nil; Root r_res;
-	Root r_list;
+	List *res = nil;
 
 	if(length(list) < 2)
 		fail("$&file_bread", "missing arguments");
 	if(length(list) > 2)
 		fail("$&file_bread", "too many arguments");
 
-	gcref(&r_list, (void **)&list);
-	gcref(&r_res, (void **)&res);
-	gcref(&r_buf, (void **)&buf);
+	ref(list);
+	ref(res);
+	ref(buf);
 
 	obj = getobject(list->term);
 	if(!obj)
@@ -471,9 +464,9 @@ PRIM(file_bread) {
 		fail("$&file_bread", "unable to read: %s", strerror(errno));
 	if(nread == 0) {
 		res = mklist(mkstr(str("0")), nil);
-		gcrderef(&r_buf);
-		gcrderef(&r_res);
-		gcrderef(&r_list);
+		deref(buf);
+		deref(res);
+		deref(list);
 		return res;
 	}
 
@@ -482,15 +475,14 @@ PRIM(file_bread) {
 	res = mklist(mkobject(blob), nil);
 	res = mklist(mkstr(str("%d", nread)), res);
 
-	gcrderef(&r_buf);
-	gcrderef(&r_res);
-	gcrderef(&r_list);
+	deref(buf);
+	deref(res);
+	deref(list);
 	return res;
 }
 
 PRIM(file_write) {
-	Root r_list;
-	char *outstr = nil; Root r_outstr;
+	char *outstr = nil;
 	size_t outstrlen = 0;
 	ssize_t nwritten = 0;
 	Object *obj;
@@ -500,8 +492,8 @@ PRIM(file_write) {
 	if(length(list) > 2)
 		fail("$&file_write", "too many arguments");
 
-	gcref(&r_list, (void **)&list);
-	gcref(&r_outstr, (void **)&outstr);
+	ref(list);
+	ref(outstr);
 
 	obj = getobject(list->term);
 	if(!obj)
@@ -517,14 +509,13 @@ PRIM(file_write) {
 	if(nwritten < 0)
 		fail("$&file_write", "unable to write: %s", strerror(errno));
 
-	gcrderef(&r_outstr);
-	gcrderef(&r_list);
+	deref(outstr);
+	deref(list);
 
 	return mklist(mkstr(str("%d", nwritten)), nil);
 }
 
 PRIM(file_bwrite) {
-	Root r_list;
 	ssize_t nwritten = 0;
 	Object *obj;
 	Object *blob;
@@ -534,7 +525,7 @@ PRIM(file_bwrite) {
 	if(length(list) > 2)
 		fail("$&file_bwrite", "too many arguments");
 
-	gcref(&r_list, (void **)&list);
+	ref(list);
 
 	obj = getobject(list->term);
 	if(!obj)
@@ -553,13 +544,12 @@ PRIM(file_bwrite) {
 	if(nwritten < 0)
 		fail("$&file_bwrite", "unable to write: %s", strerror(errno));
 
-	gcrderef(&r_list);
+	deref(list);
 
 	return mklist(mkstr(str("%d", nwritten)), nil);
 }
 
 PRIM(file_seek) {
-	Root r_list;
 	off_t newoffset = 0;
 	off_t offset = 0;
 	int whence;
@@ -570,7 +560,7 @@ PRIM(file_seek) {
 	if(length(list) > 3)
 		fail("$&file_seek", "too many arguments");
 
-	gcref(&r_list, (void **)&list);
+	ref(list);
 
 	obj = getobject(list->term);
 	if(!obj)
@@ -604,7 +594,7 @@ PRIM(file_seek) {
 	if(newoffset == -1)
 		fail("$&file_seek", "unable to seek: %s", strerror(errno));
 
-	gcrderef(&r_list);
+	deref(list);
 	return mklist(mkstr(str("%d", newoffset)), nil);
 }
 

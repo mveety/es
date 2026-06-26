@@ -91,100 +91,100 @@ PRIM(make_helloobject){
 
 PRIM(object_gcmanage) {
 	Object *obj;
-	List *result = nil; Root r_result;
+	List *result = nil;
 
 	if(list == nil)
 		fail("$&object_gcmanage", "missing argument");
 	if(list->term->kind != tkObject)
 		fail("$&object_gcmanage", "argument must be an object");
 
-	gcref(&r_result, (void **)&result);
+	ref(result);
 	obj = getobject(list->term);
 	refobject(obj);
 	obj->sysflags |= ObjectGcManaged;
 	result = mklist(mkobject(obj), nil);
-	gcrderef(&r_result);
+	deref(result);
 	derefobject(obj);
 	return result;
 }
 
 PRIM(object_freeable) {
 	Object *obj;
-	List *result = nil; Root r_result;
+	List *result = nil;
 
 	if(list == nil)
 		fail("$&object_freeable", "missing argument");
 
-	gcref(&r_result, (void **)&result);
+	ref(result);
 	if((obj = getobject(list->term)) == nil)
 		fail("$&object_freeable", "argument must be an object");
 	obj->sysflags |= ObjectFreeWhenNoRefs;
 	result = mklist(mkobject(obj), nil);
-	gcrderef(&r_result);
+	deref(result);
 	return result;
 }
 
 PRIM(object_initialize) {
 	Object *obj;
-	List *result = nil; Root r_result;
+	List *result = nil;
 
 	if(list == nil)
 		fail("$&object_gcmanage", "missing argument");
 	if(list->term->kind != tkObject)
 		fail("$&object_gcmanage", "argument must be an object");
 
-	gcref(&r_result, (void **)&result);
+	ref(result);
 	obj = getobject(list->term);
 	refobject(obj);
 	obj->sysflags |= ObjectInitialized;
 	result = mklist(mkobject(obj), nil);
-	gcrderef(&r_result);
+	deref(result);
 	derefobject(obj);
 	return result;
 }
 
 PRIM(object_closeonfork){
 	Object *obj = nil;
-	List *result = nil; Root r_result;
+	List *result = nil;
 
 	if(list == nil)
 		fail("$&object_closeonfork", "missing argument");
 	if(list->term->kind != tkObject)
 		fail("$&object_closeonfork", "argument must be an object");
 
-	gcref(&r_result, (void **)&result);
+	ref(result);
 	obj = getobject(list->term);
 	refobject(obj);
 	obj->sysflags |= ObjectCloseOnFork;
 	result = mklist(mkobject(obj), nil);
-	gcrderef(&r_result);
+	deref(result);
 	derefobject(obj);
 	return result;
 }
 
 PRIM(object_onforkcallback){
 	Object *obj = nil;
-	List *result = nil; Root r_result;
+	List *result = nil;
 
 	if(list == nil)
 		fail("$&object_onforkcallback", "missing argument");
 	if(list->term->kind != tkObject)
 		fail("$&object_onforkcallback", "argument must be an object");
 
-	gcref(&r_result, (void **)&result);
+	ref(result);
 	obj = getobject(list->term);
 	refobject(obj);
 	obj->sysflags |= ObjectCallbackOnFork;
 	result = mklist(mkobject(obj), nil);
-	gcrderef(&r_result);
+	deref(result);
 	derefobject(obj);
 	return result;
 }
 
 PRIM(dump_bindings) {
-	Binding *bp = nil; Root r_bp;
+	Binding *bp = nil;
 
-	gcref(&r_bp, (void **)&bp);
+	ref(bp);
 
 	if(binding == nil)
 		eprint("no bindings\n");
@@ -192,7 +192,7 @@ PRIM(dump_bindings) {
 		for(bp = binding; bp != nil; bp = bp->next)
 			eprint("binding %s = %V\n", bp->name, bp->defn, " ");
 
-	gcrderef(&r_bp);
+	deref(bp);
 
 	return list_true;
 }
