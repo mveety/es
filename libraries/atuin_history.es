@@ -12,7 +12,7 @@ if {~ $#__atuin_started 0 || ~ $__atuin_start false} {
 	__atuin_started = true
 }
 
-fn __atuin_echo args {
+fn atuin_echo args {
 	if {$atuin_history_conf_debugging} {
 		echo $args
 	}
@@ -78,7 +78,7 @@ fn __atuin_enable {
 						}
 					}
 				)
-				__atuin_echo atuin history end -e $res -d $duration '--' $ATUIN_HISTORY_ID
+				atuin_echo atuin history end -e $res -d $duration '--' $ATUIN_HISTORY_ID
 				{ local (ATUIN_LOG = error) {
 					atuin history end -e $res -d $duration '--' $ATUIN_HISTORY_ID >/dev/null >[2=1] }} &
 			}
