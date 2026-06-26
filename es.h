@@ -794,6 +794,10 @@ extern Root *rootlist;
 	RefRemove(v1);                 \
 	RefRemove3(v2, v3, v4)
 
+/* new gc macros (I'm sick of gcref/gcderef/gcrderef) */
+#define ref(v) Root CONCAT(r_, v); gcref(CONCAT(&r_, v), (void**)&v)
+#define deref(v) gcderef(CONCAT(&r_, v), (void**)&v)
+
 extern void gcref(Root*, void**);
 extern void gcderef(Root*, void**);
 extern void gcrderef(Root*);

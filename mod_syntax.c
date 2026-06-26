@@ -175,23 +175,23 @@ soutbuf_initialize(Arena *arena, SOutBuf *buf, int len)
 char *
 es_syntax_highlighting_hook(char *buffer, size_t len)
 {
-	List *hook = nil; Root r_hook;
-	List *res = nil; Root r_res;
-	List *args = nil; Root r_args;
+	List *hook = nil;
+	List *res = nil;
+	List *args = nil;
 	char *resstr = nil;
 
 	if(len == 0)
 		return nil;
 
-	gcref(&r_hook, (void **)&hook);
+	ref(hook);
 
 	if((hook = varlookup("fn-%syntax_highlight", nil)) == nil) {
-		gcrderef(&r_hook);
+		deref(hook);
 		return estrndup(buffer, len);
 	}
 
-	gcref(&r_args, (void **)&args);
-	gcref(&r_res, (void **)&res);
+	ref(args);
+	ref(res);
 
 	args = mklist(mkstr(gcndup(buffer, len)), nil);
 	hook = append(hook, args);
@@ -200,9 +200,9 @@ es_syntax_highlighting_hook(char *buffer, size_t len)
 	if(res)
 		resstr = estrdup(getstr(res->term));
 
-	gcrderef(&r_res);
-	gcrderef(&r_args);
-	gcrderef(&r_hook);
+	deref(res);
+	deref(args);
+	deref(hook);
 
 	return resstr;
 }
@@ -922,8 +922,8 @@ es_fast_highlighting(char *buffer, size_t bufend)
 }
 
 PRIM(basictokenize) {
-	List *lp = nil; Root r_lp;
-	List *res = nil; Root r_res;
+	List *lp = nil;
+	List *res = nil;
 	TokenResults results;
 	int64_t i = 0;
 	Arena *btarena = nil;
@@ -945,8 +945,8 @@ PRIM(basictokenize) {
 	if(strlen(getstr(list->term)) <= 0)
 		return mklist(mkstr(gcdup("")), nil);
 
-	gcref(&r_lp, (void **)&r_lp);
-	gcref(&r_res, (void **)&r_res);
+	ref(lp);
+	ref(res);
 
 	lp = list;
 
@@ -966,15 +966,15 @@ PRIM(basictokenize) {
 	}
 
 	arena_destroy(btarena);
-	gcrderef(&r_res);
-	gcrderef(&r_lp);
+	deref(res);
+	deref(lp);
 	dprint("done parsing\n");
 	return res;
 
 fail:
 	arena_destroy(btarena);
-	gcrderef(&r_res);
-	gcrderef(&r_lp);
+	deref(res);
+	deref(lp);
 	fail("$&basictokenize", "tokenizer failure");
 	unreachable();
 	return nil;
@@ -1080,17 +1080,17 @@ PRIM(syn_atom_type) {
 PRIM(fasthighlighting) {
 	char *instr = nil;
 	char *res = nil;
-	List *reslist = nil; Root r_reslist;
+	List *reslist = nil;
 
 	if(list == nil)
 		fail("$&fasthighlighting", "missing argument");
 
 	instr = getstr(list->term);
 	res = es_fast_highlighting(instr, strlen(instr));
-	gcref(&r_reslist, (void **)&reslist);
+	ref(reslist);
 	reslist = mklist(mkstr(gcdup(res)), nil);
 	efree(res);
-	gcrderef(&r_reslist);
+	deref(reslist);
 	return reslist;
 }
 
@@ -1100,11 +1100,10 @@ PRIM(enablefasthighlighting) {
 }
 
 PRIM(stripdsdechars) {
-	Root r_list;
-	List *res = nil; Root r_res;
-	char *src = nil; Root r_src;
+	List *res = nil;
+	char *src = nil;
 	size_t srcsz = 0;
-	char *dest = nil; Root r_dest;
+	char *dest = nil;
 	size_t desti = 0;
 	size_t i = 0;
 
@@ -1113,10 +1112,10 @@ PRIM(stripdsdechars) {
 	if(list->next != nil)
 		fail("$&stripdsdechars", "too many arguments");
 
-	gcref(&r_list, (void **)&list);
-	gcref(&r_res, (void **)&res);
-	gcref(&r_src, (void **)&src);
-	gcref(&r_dest, (void **)&dest);
+	ref(list);
+	ref(res);
+	ref(src);
+	ref(dest);
 
 	src = getstr(list->term);
 	srcsz = strlen(src);
@@ -1137,10 +1136,10 @@ PRIM(stripdsdechars) {
 
 	res = mklist(mkstr(dest), nil);
 
-	gcrderef(&r_dest);
-	gcrderef(&r_src);
-	gcrderef(&r_res);
-	gcrderef(&r_list);
+	deref(dest);
+	deref(src);
+	deref(res);
+	deref(list);
 
 	return res;
 }

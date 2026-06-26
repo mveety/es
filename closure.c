@@ -12,18 +12,18 @@ DefineTag(Closure, static);
 extern Closure *
 mkclosure(Tree *tree, Binding *binding)
 {
-	Closure *closure = NULL; Root r_closure;
+	Closure *closure = nil;
 
 	gcdisable();
 
+	ref(closure);
 	closure = gcnew(Closure);
-	gcref(&r_closure, (void **)&closure);
 
 	closure->tree = tree;
 	closure->binding = binding;
 	gcenable();
 
-	gcderef(&r_closure, (void **)&closure);
+	deref(closure);
 	return closure;
 }
 
@@ -82,23 +82,23 @@ static Chain *chain = NULL;
 static Binding *
 extract(Tree *tree0, Binding *bindings0)
 {
-	Tree *tree = nil; Root r_tree;
-	Binding *bindings = nil; Root r_bindings;
-	Tree *defn = nil; Root r_defn;
-	List *list = nil; Root r_list;
-	Tree *name = nil; Root r_name;
-	Term *term = nil; Root r_term;
-	Tree *word = nil; Root r_word;
+	Tree *tree = nil;
+	Binding *bindings = nil;
+	Tree *defn = nil;
+	List *list = nil;
+	Tree *name = nil;
+	Term *term = nil;
+	Tree *word = nil;
 	NodeKind k;
 	char *prim = nil;
 
-	gcref(&r_tree, (void **)&tree);
-	gcref(&r_bindings, (void **)&bindings);
-	gcref(&r_defn, (void **)&defn);
-	gcref(&r_list, (void **)&list);
-	gcref(&r_name, (void **)&name);
-	gcref(&r_term, (void **)&term);
-	gcref(&r_word, (void **)&word);
+	ref(tree);
+	ref(bindings);
+	ref(defn);
+	ref(list);
+	ref(name);
+	ref(term);
+	ref(word);
 
 	assert(gcisblocked());
 	tree = tree0;
@@ -162,13 +162,13 @@ extract(Tree *tree0, Binding *bindings0)
 		}
 	}
 
-	gcrderef(&r_word);
-	gcrderef(&r_term);
-	gcrderef(&r_name);
-	gcrderef(&r_list);
-	gcrderef(&r_defn);
-	gcrderef(&r_bindings);
-	gcrderef(&r_tree);
+	deref(word);
+	deref(term);
+	deref(name);
+	deref(list);
+	deref(defn);
+	deref(bindings);
+	deref(tree);
 
 	return bindings;
 }
@@ -229,18 +229,18 @@ DefineTag(Binding, static);
 Binding *
 mkbinding(char *name, List *defn, Binding *next)
 {
-	Binding *binding = NULL; Root r_binding;
+	Binding *binding = nil;
 
 	assert(next == NULL || next->name != NULL);
 	validatevar(name);
 	gcdisable();
 	binding = gcnew(Binding);
-	gcref(&r_binding, (void **)&binding);
+	ref(binding);
 	binding->name = name;
 	binding->defn = defn;
 	binding->next = next;
 	gcenable();
-	gcderef(&r_binding, (void **)&binding);
+	deref(binding);
 	return binding;
 }
 
@@ -264,19 +264,18 @@ reversebindings(Binding *binding)
 Binding*
 clonebindings(Binding *oldbind)
 {
-	Root r_oldbind;
-	Binding *newbind = nil; Root r_newbind;
+	Binding *newbind = nil;
 	Binding *curbind;
 
-	gcref(&r_oldbind, (void**)&oldbind);
-	gcref(&r_newbind, (void**)&newbind);
+	ref(oldbind);
+	ref(newbind);
 
 	for(curbind = oldbind; curbind != nil; curbind = curbind->next)
 		newbind = mkbinding(oldbind->name, oldbind->defn, newbind);
 
 	newbind = reversebindings(newbind);
-	gcrderef(&r_newbind);
-	gcrderef(&r_oldbind);
+	deref(newbind);
+	deref(oldbind);
 
 	return newbind;
 }

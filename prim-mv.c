@@ -863,7 +863,7 @@ PRIM(debugecho) {
 
 PRIM(getloadavg) {
 	double loadavg[3];
-	List *res = nil; Root r_res;
+	List *res = nil;
 	char tmp[256];
 	int printlen = 0;
 	int i = 2;
@@ -871,7 +871,7 @@ PRIM(getloadavg) {
 	if(getloadavg(loadavg, 3) < 0)
 		fail("$&getloadavg", "unable to get load average");
 
-	gcref(&r_res, (void **)&res);
+	ref(res);
 
 	for(i = 2; i >= 0; i--) {
 		memset(&tmp[0], 0, sizeof(tmp));
@@ -881,7 +881,7 @@ PRIM(getloadavg) {
 		res = mklist(mkstr(str("%s", tmp)), res);
 	}
 
-	gcrderef(&r_res);
+	deref(res);
 	return res;
 }
 
@@ -890,7 +890,7 @@ PRIM(getloadavg) {
 #ifdef PRIM_GETRUSAGE
 
 PRIM(getrusage){
-	List *res = nil; Root r_res;
+	List *res = nil;
 	struct rusage usage;
 
 	errno = 0;
@@ -908,7 +908,7 @@ PRIM(getrusage){
 		}
 	}
 
-	gcref(&r_res, (void **)&res);
+	ref(res);
 
 	res = mklist(mkstr(str("%ld", usage.ru_maxrss * 1024)), res);
 	res = mklist(mkstr(str("%ld", usage.ru_inblock + usage.ru_oublock)), res);
@@ -919,7 +919,7 @@ PRIM(getrusage){
 	res =
 		mklist(mkstr(str("%ld.%03ld", usage.ru_utime.tv_sec, usage.ru_utime.tv_usec / 1000)), res);
 
-	gcrderef(&r_res);
+	deref(res);
 
 	return res;
 }
@@ -927,20 +927,19 @@ PRIM(getrusage){
 #endif
 
 PRIM(extractbinding){
-	Root r_list;
-	List *result = nil; Root r_result;
-	Dict *d = nil; Root r_d;
-	Closure *fn = nil; Root r_fn;
-	Binding *cbind = nil; Root r_cbind;
+	List *result = nil;
+	Dict *d = nil;
+	Closure *fn = nil;
+	Binding *cbind = nil;
 
 	if(!list)
 		fail("$&extractbinding", "missing argument");
 
-	gcref(&r_list, (void**)&list);
-	gcref(&r_result, (void**)&result);
-	gcref(&r_d, (void**)&d);
-	gcref(&r_fn, (void**)&fn);
-	gcref(&r_cbind, (void**)&cbind);
+	ref(list);
+	ref(result);
+	ref(d);
+	ref(fn);
+	ref(cbind);
 
 	if((fn = getclosure(list->term)) == nil)
 		fail("$&extractbinding", "argument must be a closure");
@@ -952,17 +951,17 @@ PRIM(extractbinding){
 
 	result = mklist(mkdictterm(d), nil);
 
-	gcrderef(&r_cbind);
-	gcrderef(&r_fn);
-	gcrderef(&r_d);
-	gcrderef(&r_result);
-	gcrderef(&r_list);
+	deref(cbind);
+	deref(fn);
+	deref(d);
+	deref(result);
+	deref(list);
+
 	return result;
 }
 
 PRIM(linkbinding){
-	Root r_list;
-	List *result = nil; Root r_result;
+	List *result = nil;
 	Closure *fn1 = nil;
 	Closure *fn2 = nil;
 
@@ -971,8 +970,8 @@ PRIM(linkbinding){
 	if(!list->next)
 		fail("$&linkbinding", "missing argument $2");
 
-	gcref(&r_list, (void**)&list);
-	gcref(&r_result, (void**)&result);
+	ref(list);
+	ref(result);
 
 	if((fn1 = getclosure(list->term)) == nil)
 		fail("$&linkbinding", "$1 must be a closure");
@@ -982,25 +981,24 @@ PRIM(linkbinding){
 	fn2->binding = fn1->binding;
 	result = mklist(mkterm(nil, fn2), nil);
 
-	gcrderef(&r_result);
-	gcrderef(&r_list);
+	deref(result);
+	deref(list);
 
 	return result;
 }
 
 PRIM(clonebinding){
-	Root r_list;
-	List *result = nil; Root r_result;
-	Closure *fn = nil; Root r_fn;
-	Binding *newbind = nil; Root r_newbind;
+	List *result = nil;
+	Closure *fn = nil;
+	Binding *newbind = nil;
 
 	if(!list)
 		fail("$&clonebinding", "missing argument");
 
-	gcref(&r_list, (void**)&list);
-	gcref(&r_result, (void**)&result);
-	gcref(&r_fn, (void**)&fn);
-	gcref(&r_newbind, (void**)&newbind);
+	ref(list);
+	ref(result);
+	ref(fn);
+	ref(newbind);
 
 	if((fn = getclosure(list->term)) == nil)
 		fail("$&clonebinding", "argument must be a closure");
@@ -1009,10 +1007,10 @@ PRIM(clonebinding){
 	fn->binding = newbind;
 	result = mklist(mkterm(nil, fn), nil);
 
-	gcrderef(&r_newbind);
-	gcrderef(&r_fn);
-	gcrderef(&r_result);
-	gcrderef(&r_list);
+	deref(newbind);
+	deref(fn);
+	deref(result);
+	deref(list);
 
 	return result;
 }
