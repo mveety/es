@@ -105,6 +105,7 @@ getclosure(Term *term)
 			tmp = gcdup(tp->str);
 			np = parsestring(tmp);
 			if(np == nil) {
+				deref(tmp);
 				deref(np);
 				deref(tp);
 				return nil;
