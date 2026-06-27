@@ -51,6 +51,14 @@ libdir = <={if {! ~ $#2 0} {
 					}
 				}
 			} {
+				# for bootstrapping if $default_libraries is unset (like in a new installation)
+				if {~ $#default_libraries 0} {
+					if {~ $#XDG_CONFIG_HOME 0} {
+						default_libraries = $home/.config/es-mveety
+					} {
+						default_libraries = $XDG_CONFIG_HOME/es-mveety
+					}
+				}
 				result $default_libraries
 			}
 		}
