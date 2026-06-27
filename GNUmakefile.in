@@ -50,7 +50,7 @@ es_static : ${OFILES} system.o
 	${CC} -c ${CFLAGS} ${MODCFLAGS} -o $@ $<
 
 %.so : %.o
-	${CC} ${LDFLAGS} ${MODLDFLAGS} -shared -o $@ $^ ${MODLIBS} ${MODEXTRAAGS}
+	${CC} ${LDFLAGS} ${MODLDFLAGS} -shared -o $@ $^ ${MODLIBS} ${MODEXTRAFLAGS}
 
 doc/es.1: es ${DOCFILES} doc/make_man.es
 	./es -Np -c '{cd doc; ../es -Np make_man.es}'
