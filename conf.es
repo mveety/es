@@ -12,10 +12,34 @@ fn defconf pkg name value {
 # alias var as pkg confvar
 fn defconfalias var pkg name {
 	local (varname = $pkg^_conf_^$name) {
-		$varname = ''
+		$varname = 'empty'
 		get-$varname = @ { result $$var }
 		set-$varname = @ { $var = $*; result $* }
 		result $varname
+	}
+}
+
+fn defconftype pkg name options {
+	let (varname = $pkg^_conf_^$name) {
+		set-$varname = @ arg _ {
+			if {! ~ $arg $options} {
+				result $$varname
+			} {
+				result $arg
+			}
+		}
+	}
+}
+
+fn defconftypefn pkg name testfun {
+	let (varname = $pkg^_conf_^$name) {
+		set-$varname = @ args {
+			if {$testfun $args} {
+				result $args
+			} {
+				result $$varname
+			}
+		}
 	}
 }
 
