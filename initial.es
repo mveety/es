@@ -1018,12 +1018,18 @@ set-buildstring = @{ result <=$&buildstring }
 
 # conf wrappers for version, and buildstring
 
-es_conf_buildstring = ''
+es_conf_buildstring = '0'
 get-es_conf_buildstring = @{ result $buildstring }
 set-es_conf_buildstring = @{ result $buildstring }
-es_conf_version = ''
+es_conf_version = '0'
 get-es_conf_version = @{ result $version }
 set-es_conf_version = @{ result $version }
+es_conf_cflags = '0'
+get-es_conf_cflags = @{ result $__es_cflags }
+set-es_conf_cflags = @{ result $__es_cflags }
+es_conf_buildtime = '0'
+get-es_conf_buildtime = @{ result $__es_buildtime }
+set-es_conf_buildtime = @{ result $__es_buildtime }
 
 #	If the primitive $&resetterminal is defined (meaning that readline
 #	or editline is being used), setting the variables $TERM or $TERMCAP
@@ -1043,21 +1049,21 @@ if {~ <=$&primitives resetterminal} {
 # the getter function. If the variable is not defined the getter is not
 # called.
 
-eval-depth = ''
+eval-depth = '680'
 get-eval-depth = $&getevaldepth
 
-apids = ''
+apids = '0'
 get-apids = @ { result <=%apids }
 
-unixtime = ''
+unixtime = '0'
 get-unixtime = $&unixtime
 
-unixtime_ns = ''
+unixtime_ns = '0'
 get-unixtime_ns = $&unixtimens
 
 get-pid = $&getpid
 
-es_conf_path = ''
+es_conf_path = '0'
 get-es_conf_path = @{ result $path }
 set-es_conf_path = @{ path = $*; result $* }
 

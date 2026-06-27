@@ -36,6 +36,10 @@ let (
 		__es_libraries_initialize
 		__es_iosub_init
 		__es_define_iosub_settor
+		es_conf_buildstring = '0'
+		es_conf_version = '0'
+		es_conf_cflags = '0'
+		es_conf_buildtime = '0'
 		%unhidevar es_internal_symcount
 
 		# run $home/.esrc if applicable
