@@ -42,7 +42,7 @@ fn __atuin_enable {
 				return <=false
 			}
 			local (id=; ctime = $unixtime_ns) {
-				__atuin_echo 'id = `{atuin history start ''--'' '^$cmdline
+				atuin_echo 'id = `{atuin history start ''--'' '^$cmdline
 				id = `{atuin history start '--' $cmdline}
 				%add-history $cmdline
 				ditto = $cmdline
