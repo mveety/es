@@ -54,7 +54,7 @@ let (
 	}
 
 	fn esconf_packages confdict {
-		dictnames $confdict
+		dictnames $confdict |> sortlist
 	}
 
 	fn esconf_havepackage confdict pkg {
@@ -82,7 +82,7 @@ let (
 
 	fn esconf_printpackage confdict raw pkg {
 		echo 'package '^$pkg^':'
-		for (vn = <={dictget $confdict $pkg}) {
+		for (vn = <={dictget $confdict $pkg |> sortlist}) {
 			echo -n '    '
 			let (var = $pkg^_conf_^$vn;fmt = $pkg^_conffmt_^$vn) {
 				if {$raw} {
@@ -107,9 +107,10 @@ let (
 	}
 
 	fn esconf_printall confdict raw {
-		dictforall $confdict @ n v {
+		for(n = <={dictnames $confdict |> sortlist}) let (v = $confdict($n)) {
+		#dictforall $confdict @ n v {
 			echo 'package '^$n^':'
-			for (vn = $v) {
+			for (vn = <={sortlist $v}) {
 				echo -n '    '
 				let (var = $n^_conf_^$vn;fmt = $n^_conffmt_^$vn) {
 					if {$raw} {
