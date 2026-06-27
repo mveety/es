@@ -68,4 +68,6 @@ mod_json.so : MODLIBS=$(MODJSON_LIBS)
 mod_json.so : mod_json.o float_util.o
 mod_file.o : mod_file.c $(ESHFILES) prim.h gc.h mod_file.h
 mod_file.so : mod_file.o
+mod_macro.o : mod_macro.c $(ESHFILES) prim.h
+mod_macro.so : mod_macro.o
 
