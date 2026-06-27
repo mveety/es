@@ -6,6 +6,7 @@ with-dynlibs mod_json {
 	library json (init libraries)
 
 	defconf json formatted-output true
+	defconftype json formatted-output true false
 
 	fn-%json_decode = $&json_decode
 	fn-%json_encode = $&json_encode

@@ -16,22 +16,10 @@ if {~ $#autoloaded 0} {
 }
 
 defconf autoinit echo-load false
-set-autoinit_conf_echo-load = @ arg _ {
-	if {~ $arg true false} {
-		result $arg
-	} {
-		result $autoinit_conf_echo-load
-	}
-}
+defconftype autoinit echo-load true false
 
 defconf autoinit start-automatically false
-set-autoinit_conf_start-automatically = @ arg _ {
-	if {~ $arg true false} {
-		result $arg
-	} {
-		result $autoinit_conf_start-automatically
-	}
-}
+defconftype autoinit start-automatically true false
 
 fn esrcd_getall {
 	result $libraries/esrc.d/*.es

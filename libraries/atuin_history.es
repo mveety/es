@@ -1,10 +1,15 @@
 library atuin_history (init esmle history)
 
 defconf atuin_history update-history-file true
+defconftype atuin_history update-history-file true false
 defconf atuin_history debugging false
+defconftype atuin_history debugging true false
 defconf atuin_history load-on-change true
+defconftype atuin_history load-on-change true false
 defconf atuin_history enable-keymap-hook true
+defconftype atuin_history enable-keymap-hook true false
 defconf atuin_history load-duplicate-entries true
+defconftype atuin_history load-duplicate-entries true false
 
 if {~ $#__atuin_started 0 || ~ $__atuin_start false} {
 	old_reload-history = $fn-reload-history
@@ -42,7 +47,7 @@ fn __atuin_enable {
 				return <=false
 			}
 			local (id=; ctime = $unixtime_ns) {
-				atuin_echo 'id = `{atuin history start ''--'' '^$cmdline
+				atuin_echo 'id = `{atuin history start ''--'' '^$cmdline^'}'
 				id = `{atuin history start '--' $cmdline}
 				%add-history $cmdline
 				ditto = $cmdline

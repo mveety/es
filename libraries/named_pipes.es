@@ -3,8 +3,11 @@
 library named_pipes (init libraries)
 
 defconf named_pipes tempdir /tmp
+defconftypefn named_pipes tempdir @ arg _ { if {access -rw $arg} { true } { false }}
 defconf named_pipes keep-files false
+defconftype named_pipes keep-files true false
 defconf named_pipes allow-unnamed-pipes false
+defconftype named_pipes allow-unnamed-pipes true false
 
 if {~ $#_es_named_pipes 0} {
 	_es_named_pipes = %dict()

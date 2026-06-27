@@ -1,6 +1,7 @@
 library dumplist (init)
 
 defconf dumplist formatting %dict(maxcol => 65; tabsize => 4)
+defconftypefn dumplist formatting @ arg _ { if {~ <={%termtypeof $arg} dict} { true } { false }}
 
 fn print-list varname options list {
 	if {! ~ <={%termtypeof $options} dict} {

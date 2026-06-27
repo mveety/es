@@ -8,6 +8,7 @@ if {~ $#__es_dict_assert 0} {
 }
 
 defconf dict useprimitive true
+defconftype dict useprimitive true false
 
 if {$dict_conf_useprimitive} {
 	library dict (init macros libraries)

@@ -4,6 +4,7 @@ with-dynlibs mod_syntax {
 	library syntax (init libraries esmle colors)
 
 	defconf syntax debugging false
+	defconftype syntax debugging true false
 	defconf syntax colors %dict(
 		basic => $colors(fg_default)
 		number => $colors(fg_red)
@@ -15,36 +16,24 @@ with-dynlibs mod_syntax {
 		primitive => $colors(fg_green)
 		path => $colors(fg_default)
 	)
+	defconftypefn syntax colors @ arg _ { if {~ <={%termtypeof $arg} dict} { true } { false }}
 
 	defconf syntax enable false
 	set-syntax_conf_enable = @ arg _ {
-		if {~ $arg true} {
-			$&enablehighlighting
-		} {~ $arg false} {
-			$&disablehighlighting
-		} {~ $arg fast} {
-			$&enablefasthighlighting
-		} {
-			return $syntax_conf_enabled
-		}
+		match $arg (
+			true { $&enablehighlighting }
+			false { $&disablehighlighting }
+			fast { $&enablefasthighlighting }
+			* { return $syntax_conf_enable }
+		)
 		result $arg
 	}
 
 	defconf syntax funvars-as-functions false
-	set-syntax_conf_funvars-as-functions = @ arg _ {
-		match $arg (
-			(true false) { result $arg }
-			* { result $set-syntax_conf_funvars-as-functions }
-		)
-	}
+	defconftype syntax funvars-as-functions true false
 
 	defconf syntax accelerate false
-	set-syntax_conf_accelerate = @ arg _ {
-		match $arg (
-			(true false) { result $arg }
-			* { result $syntax_conf_accelerate }
-		)
-	}
+	defconftype syntax accelerate true false
 
 	defconf syntax var-hook false
 	let (old-%var = $fn-%var) {

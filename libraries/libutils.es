@@ -199,6 +199,7 @@ fn libutil_function_search fun libhash {
 %hidefunction libutil_function_search
 
 defconf libutil enable-build false
+defconftype libutil enable-build true false
 if {$libutil_conf_enable-build} {
 	echo 'libutil build tools enabled' >[1=2]
 

@@ -5,6 +5,7 @@ defconf history maxdisplay 25
 defconf history reload 25
 defconf history file ''
 defconf history load-on-change true
+defconftype history load-on-change true false
 
 fn history_call_date {
 	let (utc = false; cmd = date; tmp=) {
@@ -357,4 +358,41 @@ set-history_conf_use-hook = @ arg {
 		return false
 	}
 }
+
+set-history_conf_maxdisplay = @ arg _ {
+	let (
+		fn isinteger n {
+			add $n 0 onerror return <=false
+			return <=true
+		}
+	) {
+		if {! isinteger $arg} {
+			return $history_conf_maxdisplay
+		}
+		arg = <={todecimal $arg}
+		if {lt $arg 0} {
+			return $history_conf_maxdisplay
+		}
+		return $arg
+	}
+}
+
+set-history_conf_reload = @ arg _ {
+	let (
+		fn isinteger n {
+			add $n 0 onerror return <=false
+			return <=true
+		}
+	) {
+		if {! isinteger $arg} {
+			return $history_conf_maxdisplay
+		}
+		arg = <={todecimal $arg}
+		if {lt $arg 0} {
+			return $history_conf_maxdisplay
+		}
+		return $arg
+	}
+}
+
 
