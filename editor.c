@@ -1765,11 +1765,13 @@ call_completions_hook(EditorState *state, Wordpos pos)
 			completions = completions2;
 			completionssz = completions2sz;
 		}
+#if EditorDebug == 1
 		for(i = 0; i < completionssz; i++) {
 			dprint("sorted completions[%lu](%lu) = \"%s\"\n", i, strlen(completions[i]),
 				   completions[i]);
 		}
 		dprint("completionssz = %lu\n", completionssz);
+#endif
 	}
 	state->completions = completions;
 	state->completionssz = completionssz;
@@ -1783,20 +1785,37 @@ get_next_completion(EditorState *state, Wordpos pos)
 	if(state->completions == nil)
 		return nil;
 
-	if(state->complete_direction == Backward) {
-		if(state->completionsi < state->completionssz)
-			state->completionsi++;
-		else if(state->completionsi >= state->completionssz)
+	switch(state->complete_direction) {
+	default:
+		unreachable();
+	case None:
+		state->completionsi = 0;
+		dprint("complete state: None -> Forward\n");
+		state->complete_direction = Forward;
+		break;
+	case Forward:
+		dprint("complete state: Forward\n");
+		state->complete_direction = Forward;
+		break;
+	case Backward:
+		dprint("complete state: Backward -> Forward\n");
+		dprint("incoming state->completionsi = %ld\n", state->completionsi);
+		state->complete_direction = Forward;
+		if(state->in_completion)
+			state->completionsi += 2;
+		else
 			state->completionsi = 0;
-		state->complete_direction = Forward;
+		break;
 	}
-	if(state->complete_direction == None)
-		state->complete_direction = Forward;
-	if(state->completionsi < state->completionssz)
-		return estrdup(state->completions[state->completionsi++]);
 
-	state->completionsi = 0;
-	return nil;
+	dprint("state->completionsi = %ld\n", state->completionsi);
+
+	if(state->completionsi >= (ssize_t)state->completionssz) {
+		state->completionsi = 0;
+		return nil;
+	}
+
+	return estrdup(state->completions[state->completionsi++]);
 }
 
 char *
@@ -1807,19 +1826,37 @@ get_prev_completion(EditorState *state, Wordpos pos)
 	if(state->completions == nil)
 		return nil;
 
-	if(state->complete_direction == None)
+	switch(state->complete_direction) {
+	default:
+		unreachable();
+	case None:
+		state->completionsi = state->completionssz - 1;
+		dprint("complete state: None -> Backward\n");
 		state->complete_direction = Backward;
-
-	if(state->completionsi == 0) {
-		state->completionsi = state->completionssz;
-		return nil;
-	} else if(state->complete_direction == Forward) {
-		if(state->completionsi > 1)
-			state->completionsi--;
+		break;
+	case Backward:
+		dprint("complete state: Backward\n");
 		state->complete_direction = Backward;
+		break;
+	case Forward:
+		dprint("complete state: Forward -> Backward\n");
+		dprint("incoming state->completionsi = %ld\n", state->completionsi);
+		state->complete_direction = Backward;
+		if(state->in_completion)
+			state->completionsi -= 2;
+		else
+			state->completionsi = state->completionssz - 1;
+		break;
 	}
 
-	return estrdup(state->completions[--state->completionsi]);
+	dprint("state->completionsi = %ld\n", state->completionsi);
+
+	if(state->completionsi < 0) {
+		state->completionsi = state->completionssz - 1;
+		return nil;
+	}
+
+	return estrdup(state->completions[state->completionsi--]);
 }
 
 void /* maybe I should use a rope? */

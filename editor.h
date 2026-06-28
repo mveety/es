@@ -325,7 +325,9 @@ struct EditorState {
 	int sort_completions;
 	int remove_duplicates;
 	char **completions;
-	size_t completionsi;
+	ssize_t completionsi;
+	// completionssz should probably be signed, but I'm assuming
+	// that you won't have so many completions it goes negative
 	size_t completionssz;
 	enum { None, Forward, Backward } complete_direction;
 	char **(*completions_hook)(char *, int, int);
