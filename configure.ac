@@ -30,6 +30,7 @@ EDITORDEBUG=false
 SYNTAXDEBUG=false
 BOUNDSSAFETY=false
 debugging='true'
+automated_crashing='false'
 
 AC_ARG_ENABLE(loginshell,
 [  --enable-loginshell	Only load esrc if a login shell],
@@ -91,7 +92,14 @@ AC_ARG_ENABLE(debugging,
 	fi
 ])
 
-
+AC_ARG_ENABLE(automated-crashing,
+[  --enable-automated-crashing	Give some primitives the option of crashing],
+[	if test "x$enableval" = "xyes"; then
+		automated_crashing='true'
+	else
+		automated_crashing='false'
+	fi
+])
 
 
 dnl AC_ARG_ENABLE(ubsan,
@@ -495,6 +503,11 @@ fi
 if test "$debugging" = "true"
 then
 	AC_DEFINE(DEBUGGING)
+fi
+
+if test "$automated_crashing" = "true"
+then
+	AC_DEFINE(AUTOMATED_CRASHING)
 fi
 
 AC_CONFIG_FILES([config.mk Makefile GNUmakefile])

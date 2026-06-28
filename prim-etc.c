@@ -10,6 +10,12 @@ PRIM(result) {
 PRIM(echo) {
 	const char *eol = "\n";
 	if(list != NULL) {
+#ifdef AUTOMATED_CRASHING
+		if(termeq(list->term, "--es-secret-crash-me")) {
+			list = list->next;
+			panic("echo: automated crash");
+		}
+#endif
 		if(termeq(list->term, "-n")) {
 			eol = "";
 			list = list->next;

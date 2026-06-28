@@ -152,3 +152,6 @@
 /* enable dprint */
 #undef DEBUGGING
 
+/* give primitives the option of crashing */
+#undef AUTOMATED_CRASHING
+
