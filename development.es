@@ -1,6 +1,8 @@
 #!/usr/bin/env es
 
-VALIDCC = (clang22 clang21 clang gcc)
+CLANGS = (clang22 clang21 clang)
+GCCS = (gcc)
+VALIDCC = $CLANGS $GCCS
 
 fn exists name {
 	{ access -n $name -1e -xf $path; result <=true } onerror { result <=false}
@@ -14,7 +16,7 @@ fn get-cc {
 }
 
 local(
-	CC = <=get-cc
+	CC = ''
 	cmd = (./configure --enable-modules --enable-development)
 	enable-addrsan = false
 	enable-bounds-safety = false
@@ -26,13 +28,16 @@ local(
 			(-A) { enable-addrsan = true }
 			(-B) { enable-bounds-safety = true }
 			(-X) { enable-automated-crashing = true }
+			(-G) { VALIDCC = $GCCS }
+			(-C) { VALIDCC = $CLANGS }
 			(-h) { usage }
 		)
 	} @ {
-		echo >[1=2] 'usage: ./development.es [-ABX]'
+		echo >[1=2] 'usage: ./development.es [-ABCGX]'
 		exit 1
 	} $*
 
+	CC = <=get-cc
 	try make distclean
 	if {~ $CC clang* && ! ~ $CC clang } {
 		if { $enable-addrsan } { cmd += --enable-addrsan }
