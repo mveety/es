@@ -1,4 +1,4 @@
-library (init libraries esmle cwd)
+library direnv (init libraries esmle cwd)
 
 defconf direnv enable false
 set-direnv_conf_enable = @ arg _ {
