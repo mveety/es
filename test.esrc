@@ -14,6 +14,8 @@
 libraries = `{pwd}^/libraries
 conf -s es:dynlib-local-search true
 
+import prompt
+
 # base libraries. most stuff autoloads, but this stuff is required
 match `{hostname} (
 	(silverfox redfox) { import 256syntax autoinit library_autoload atuin_history }
