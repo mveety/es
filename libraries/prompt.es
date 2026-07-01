@@ -1,6 +1,6 @@
 #!/usr/bin/env es
 
-library prompt (init libraries cwd colors advanced_hooks)
+library prompt (init libraries cwd colors) # advanced_hooks
 
 let (
 	hostname = `{uname -n}
@@ -9,7 +9,6 @@ let (
 	green = <={esmle_wrap $colors(fg_green)}
 	nocolor = <={esmle_wrap $attrib(reset)}
 ) {
-
 	# get git branch info
 	fn mv-git-branch {
 		local(b=<-{git branch '--show-current' >[2=1]}) {
@@ -70,11 +69,11 @@ let (
 		if {~ $#('fn-'^$pname^'-prompt') 0} {
 			throw error set-prompt 'prompt '^$pname^' does not exist'
 		} {
-			if {~ <={conf -X advanced_hooks:prompt} enable} {
-				add-prompt-hook prompt $('fn-'^$pname^'-prompt')
-			} {
+			#if {~ <={conf -X advanced_hooks:prompt} enable} {
+			#	add-prompt-hook prompt $('fn-'^$pname^'-prompt')
+			#} {
 				fn-%prompt = $('fn-'^$pname^'-prompt')
-			}
+			#}
 			result <=true
 		}
 	}

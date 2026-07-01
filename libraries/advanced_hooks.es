@@ -80,6 +80,17 @@ let (
 		}
 		return $arg
 	}
+
+	# work around the closure.c:121 crash
+	noexport += fn-adv_preexec_hook
+	noexport += fn-add-preexec-hook
+	noexport += fn-del-preexec-hook
+	noexport += fn-preexec-hooks
+	noexport += fn-get-preexec-hook
+	noexport += fn-enable-preexec-hook
+	noexport += fn-disable-preexec-hook
+	noexport += advanced_hooks_conf_preexec
+	noexport += set-advanced_hooks_conf_preexec
 }
 
 let (
@@ -161,6 +172,16 @@ let (
 		return $arg
 	}
 
+	# work around the closure.c:121 crash
+	noexport += fn-adv_postexec_hook
+	noexport += fn-add-postexec-hook
+	noexport += fn-del-postexec-hook
+	noexport += fn-postexec-hooks
+	noexport += fn-get-postexec-hook
+	noexport += fn-enable-postexec-hook
+	noexport += fn-disable-postexec-hook
+	noexport += advanced_hooks_conf_postexec
+	noexport += set-advanced_hooks_conf_postexec
 }
 
 let (
@@ -243,6 +264,16 @@ let (
 		return $arg
 	}
 
+	# work around the closure.c:121 crash
+	noexport += fn-adv_cdhook_hook
+	noexport += fn-add-cdhook-hook
+	noexport += fn-del-cdhook-hook
+	noexport += fn-cdhook-hooks
+	noexport += fn-get-cdhook-hook
+	noexport += fn-enable-cdhook-hook
+	noexport += fn-disable-cdhook-hook
+	noexport += advanced_hooks_conf_cdhook
+	noexport += set-advanced_hooks_conf_cdhook
 
 }
 
@@ -324,6 +355,17 @@ let (
 		}
 		return $arg
 	}
+
+	# work around the closure.c:121 crash
+	noexport += fn-adv_prompt_hook
+	noexport += fn-add-prompt-hook
+	noexport += fn-del-prompt-hook
+	noexport += fn-prompt-hooks
+	noexport += fn-get-prompt-hook
+	noexport += fn-enable-prompt-hook
+	noexport += fn-disable-prompt-hook
+	noexport += advanced_hooks_conf_prompt
+	noexport += set-advanced_hooks_conf_prompt
 }
 
 
