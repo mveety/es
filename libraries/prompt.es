@@ -1,6 +1,6 @@
 #!/usr/bin/env es
 
-library prompt (init libraries cwd colors)
+library prompt (init libraries cwd colors advanced_hooks)
 
 let (
 	hostname = `{uname -n}
@@ -64,18 +64,17 @@ let (
 			echo <={process <={~~ <={glob 'fn-*-prompt' <=$&internals <=$&vars} fn-*-prompt} (
 				(set) {result}
 				* {result $matchexpr}
-			)} default
-			return <=true
-		}
-		if {~ $pname default} {
-			fn-%prompt=
-			prompt = ('; ' '')
+			)}
 			return <=true
 		}
 		if {~ $#('fn-'^$pname^'-prompt') 0} {
 			throw error set-prompt 'prompt '^$pname^' does not exist'
 		} {
-			fn-%prompt = $('fn-'^$pname^'-prompt')
+			if {~ <={conf -X advanced_hooks:prompt} enable} {
+				add-prompt-hook prompt $('fn-'^$pname^'-prompt')
+			} {
+				fn-%prompt = $('fn-'^$pname^'-prompt')
+			}
 			result <=true
 		}
 	}
@@ -87,6 +86,10 @@ let (
 	set-prompt_conf_name = @{ set-prompt $* ; result $* }
 
 	## prompt options
+
+	fn default-prompt {
+		prompt = ('; ' '')
+	}
 
 	# pretty prompt
 	fn mveety-prompt {
