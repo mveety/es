@@ -186,8 +186,8 @@ let (
 	fn esconf_printusage {
 		echo >[1=2] 'usage: conf [-vrX] -p package [var]'
 		echo >[1=2] '       conf [-vrX] package:[var]'
-		echo >[1=2] '       conf [-vrd] [-A | -P] -p package -s var value'
-		echo >[1=2] '       conf [-vrd] [-A | -P] -s package:var value'
+		echo >[1=2] '       conf [-vqrd] [-A | -P] -p package -s var value'
+		echo >[1=2] '       conf [-vqrd] [-A | -P] -s package:var value'
 		echo >[1=2] '       conf [-vr] -p package -R var'
 		echo >[1=2] '       conf [-vr] -R package:var'
 		echo >[1=2] '       conf [-vrX] -a'
@@ -209,6 +209,8 @@ let (
 			confdict = <={es_get_confvars |> es_sort_confvars}
 			return_results = false
 			define = false
+			oldvardata = ''
+			quiet = false
 		) {
 			(_ rest) = <={parseargs @ arg {
 				match $arg (
@@ -230,6 +232,7 @@ let (
 					(-X) { return_results = true}
 					(-d) { define = true }
 					(-h) { mode = help ; usage }
+					(-q) { quiet = true }
 					* { usage }
 				)
 			} @ {
@@ -238,6 +241,8 @@ let (
 			} $args}
 
 			if {$usageexit} { return <=false }
+
+			if {! ~ $#_es_conf_bequiet 0} { quiet = true }
 
 			if {~ $mode printpackages} {
 				if {$return_results} {
@@ -315,11 +320,17 @@ let (
 						}
 					}
 					let (v = $package^_conf_^$varname) {
+						oldvardata = <={%string $$v}
 						match $setmode (
 							append { $v = ($$v $value) }
 							prepend { $v = ($value $$v) }
 							set { $v = $value }
 						)
+						if {! $quiet} {
+							if {~ $oldvardata <={%string $$v}} {
+								throw error conf 'var '^$package^':'^$varname^' was not set'
+							}
+						}
 						if {$verbose} {
 							if {$raw} {
 								echo >[1=2] $v^' = '^<={$&fmtvar $v}

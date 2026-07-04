@@ -11,6 +11,11 @@ let (
 			result <={$__es_initialize_esrc && $__es_readesrc}
 		}
 	}
+	fn call_initfn fun {
+		local (_es_conf_bequiet = true) {
+			$fun
+		}
+	}
 ) {
 	fn %interactive-shell { return $__es_interactive_start }
 
@@ -72,14 +77,16 @@ let (
 						}
 					}
 				}
-				if {access -r $__es_esrcfile} {
-					. $__es_esrcfile
-				}
-				if {$__es_extra_esrc} {
-					if {access -r $__es_extra_esrcfile} {
-						. $__es_extra_esrcfile
-					} {
-						echo 'warning: '^$__es_extra_esrcfile^' not found!'
+				local (_es_conf_bequiet = true) {
+					if {access -r $__es_esrcfile} {
+						. $__es_esrcfile
+					}
+					if {$__es_extra_esrc} {
+						if {access -r $__es_extra_esrcfile} {
+							. $__es_extra_esrcfile
+						} {
+							echo 'warning: '^$__es_extra_esrcfile^' not found!'
+						}
 					}
 				}
 			}
