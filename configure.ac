@@ -31,6 +31,7 @@ SYNTAXDEBUG=false
 BOUNDSSAFETY=false
 debugging='true'
 automated_crashing='false'
+BUILDTYPE='release'
 
 AC_ARG_ENABLE(loginshell,
 [  --enable-loginshell	Only load esrc if a login shell],
@@ -62,6 +63,7 @@ AC_ARG_ENABLE(development,
 		CFLAGS="-g -O0"
 		development=true
 		EDITORDEBUG=true
+		BUILDTYPE='development'
 	fi
 ])
 
@@ -145,6 +147,7 @@ AC_SUBST(OFILEOPTS)
 AC_SUBST(DYNLIBS)
 AC_SUBST(MODULES)
 AC_SUBST(MODOFILES)
+AC_SUBST(BUILDTYPE)
 AC_CANONICAL_HOST
 
 dnl saved_CFLAGS="$CFLAGS"

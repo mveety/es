@@ -126,6 +126,8 @@ config.es:
 	echo "es_conf_dynlibs = ${DYNAMIC_LIBRARIES}" >> $(srcdir)/config.es
 	echo "set-es_conf_dynlibs = @{ result ${DYNAMIC_LIBRARIES} }" >> $(srcdir)/config.es
 	echo "es_conf_dynlib-local-search = false" >> $(srcdir)/config.es
+	echo "es_conf_buildtype = '${BUILDTYPE}'" >> $(srcdir)/config.es
+	echo "set-es_conf_buildtype = @{ result '${BUILDTYPE}' }" >> $(srcdir)/config.es
 	echo "" >> $(srcdir)/config.es
 
 system.c : esdump ${SYSLIB}
