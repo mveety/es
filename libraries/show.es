@@ -1,5 +1,5 @@
 #!/usr/bin/env es
-option show
+library show (init libraries)
 
 # a little something from OpenVMS:
 # show is an internal that displays various variables and parameters.

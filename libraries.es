@@ -14,6 +14,7 @@ if {~ $#es_conf_library-import 0} { es_conf_library-import = true }
 if {~ $#es_conf_import-panic 0} { es_conf_import-panic = true }
 if {~ $#es_conf_automatic-import 0} { es_conf_automatic-import = true }
 if {~ $#es_conf_library-import-once 0} { es_conf_library-import-once = false }
+__es_in_import = false
 
 fn __es_libraries_initialize {
 	local (
@@ -110,7 +111,9 @@ fn import {
 				}
 				return <=true
 			} {
-				import_file $i^'.es'
+				local (__es_in_import = true; library = $i) {
+					import_file $i^'.es'
+				}
 			}
 		}
 	}
@@ -156,6 +159,14 @@ fn library name requirements {
 		}
 		throw $e $type $msg
 	} {
+		#if {! $__es_in_import} {
+		#	throw error library 'library must only be called inside of libraries'
+		#}
+		if {! ~ $#library 0 } {
+			if {! ~ $library $name} {
+				throw error library 'malformed library: file name and library name do not match'
+			}
+		}
 		check_and_load_options $requirements
 		if {checkoption $name && $es_conf_library-import-once} {
 			throw library_error already_imported $name^' is already imported'

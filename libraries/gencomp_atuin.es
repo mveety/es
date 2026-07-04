@@ -1,4 +1,4 @@
-library complete_atuin (init completion general_completion atuin_history)
+library gencomp_atuin (init completion general_completion atuin_history)
 
 _complete_atuin_main = (
 	history import stats search sync login
