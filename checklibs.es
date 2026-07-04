@@ -1,5 +1,7 @@
 #!/usr/bin/env es
 
+import libutils
+
 masked = (prompt.es)
 
 for (f = libraries/*.es) {
