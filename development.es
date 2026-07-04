@@ -21,28 +21,60 @@ local(
 	enable-addrsan = false
 	enable-bounds-safety = false
 	enable-automated-crashing = false
+	show-full-help = false
+	platform = <={%split ' ' $buildstring |> %elem 5}
 )  {
 
 	parseargs @ arg {
 		match $arg (
+			(*) { usage }
 			(-A) { enable-addrsan = true }
 			(-B) { enable-bounds-safety = true }
 			(-X) { enable-automated-crashing = true }
 			(-G) { VALIDCC = $GCCS }
 			(-C) { VALIDCC = $CLANGS }
-			(-h) { usage }
+			(-h) { show-full-help = true; usage }
 		)
 	} @ {
-		echo >[1=2] 'usage: ./development.es [-ABCGX]'
+		echo >[1=2] 'usage: ./development.es [-ABCGhX]'
+		if { $show-full-help } {
+			echo >[1=2] '    -A -- Enable address sanitizer (requires clang)'
+			echo >[1=2] '    -B -- Enable bounds safety (requires clang)'
+			echo >[1=2] '    -C -- force use of clang'
+			echo >[1=2] '    -G -- force use of gcc'
+			echo >[1=2] '    -h -- show this message'
+			echo >[1=2] '    -X -- enable ''automated crashing'''
+			exit 0
+		}
 		exit 1
 	} $*
 
 	CC = <=get-cc
 	try make distclean
-	if {~ $CC clang* && ! ~ $CC clang } {
-		if { $enable-addrsan } { cmd += --enable-addrsan }
-		if { $enable-bounds-safety } { cmd += --enable-bounds-safety }
-	}
+	match $platform (
+		(*) {
+			enable-addrsan = false
+			enable-bounds-safety = false
+		}
+		('FreeBSD') {
+			if {~ $CC clang* && ! ~ $CC clang } {
+				if { $enable-addrsan } { cmd += --enable-addrsan }
+				if { $enable-bounds-safety } { cmd += --enable-bounds-safety }
+			} {
+				enable-addrsan = false
+				enable-bounds-safety = false
+			}
+		}
+		('Linux') {
+			if {~ $CC clang*} {
+				if { $enable-addrsan } { cmd += --enable-addrsan }
+				if { $enable-bounds-safety } { cmd += --enable-bounds-safety }
+			} {
+				enable-addrsan = false
+				enable-bounds-safety = false
+			}
+		}
+	)
 	if { $enable-automated-crashing } { cmd += --enable-automated-crashing }
 	echo >[1=2] 'running: '^$^cmd
 	$cmd
