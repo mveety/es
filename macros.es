@@ -14,7 +14,10 @@ set-es_conf_tempdir = @ arg _ {
 	if {~ $arg */} {
 		arg = <={~~ $arg */}
 	}
-	result $arg
+	if { access -w -d $arg } {
+		return $arg
+	}
+	return $es_conf_tempdir
 }
 
 fn gensym prefix {

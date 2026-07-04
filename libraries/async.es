@@ -2,8 +2,8 @@
 
 library async (init libraries)
 
-defconf async tempdir /tmp
-defconftypefn async tempdir @ arg _ { if {access -rw $arg} { true } { false }}
+defconf async tempdir <={conf -X es:tempdir}
+defconftypefn async tempdir @ arg _ { if {access -w $arg} { true } { false }}
 defconf async keep-files false
 defconftype async keep-files true false
 defconf async track-procs true
