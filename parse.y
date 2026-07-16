@@ -25,7 +25,7 @@
 %token	EXTRACT CALL COUNT FLAT OROR TOSTR PRIM SUB
 %token	NL ENDFILE ERROR MATCH MATCHALL PROCESS TRY
 %token	DICTASSOC DICT DICTASSIGN APPENDASSIGN
-%token	REGEX
+%token	REGEX COMPMATCH
 
 %left	LOCAL LET LETS FOR CLOSURE ')'
 %left	ANDAND OROR NL MATCH MATCHALL PROCESS
@@ -82,6 +82,7 @@ cmd	:		%prec LET		{ $$ = NULL; }
 	| MATCH word nl '(' cases ')' {$$ = mkmatch($2, $5); }
 	| MATCHALL word nl '(' cases ')' {$$ = mkmatchall($2, $5); }
 	| PROCESS word nl '(' cases ')' {$$ = mkprocess($2, $5); }
+	| COMPMATCH word nl '(' cases ')' {$$ = mkcompmatch($2, $5); }
 
 cases : case			{ $$ = treecons2($1, NULL); }
 	  | cases ';' case        { $$ = treeconsend2($1, $3); }

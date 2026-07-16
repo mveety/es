@@ -322,7 +322,7 @@ is_all_patterns(Tree *pattern)
 
 /* mkmatch -- rewrite for match */
 Tree *
-mkmatch(Tree *subj, Tree *cases)
+mkmatch1(Tree *subj, Tree *cases, Boolean compmatch)
 {
 	const char *varname = "matchexpr";
 	Tree *sass, *svar, *matches = NULL;
@@ -333,7 +333,7 @@ mkmatch(Tree *subj, Tree *cases)
 	sass = treecons2(mk(nAssign, mk(nWord, varname), subj), NULL);
 	svar = mk(nVar, mk(nWord, varname));
 
-	if(comprehensive_matches) {
+	if(compmatch) {
 		/* it might not be a bad idea to generate an unreachable assert if there's
 		 * no wildcard case. I like the idea of comprehensive matches, but I don't
 		 * know how badly that would screw up everyone's code.
@@ -390,6 +390,18 @@ mkmatch(Tree *subj, Tree *cases)
 		matches = thunkify(treecons(mk(nPrim, "if"), matches));
 
 	return mk(nLet, sass, matches);
+}
+
+Tree *
+mkmatch(Tree *subj, Tree *cases)
+{
+	return mkmatch1(subj, cases, comprehensive_matches);
+}
+
+Tree *
+mkcompmatch(Tree *subj, Tree *cases)
+{
+	return mkmatch1(subj, cases, TRUE);
 }
 
 Tree *

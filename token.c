@@ -277,6 +277,8 @@ top:
 			return MATCHALL;
 		else if(streq(buf, "process"))
 			return PROCESS;
+		else if(streq(buf, "compmatch"))
+			return COMPMATCH;
 		else if(streq(buf, "onerror"))
 			return ONERR;
 		else if(streq(buf, "%dict"))

@@ -97,7 +97,7 @@ syntax_onload(void)
 		return -7;
 	if(pcre2_regcomp(
 		   &keywords_regex,
-		   "^(~|~~|local|let|lets|for|fn|%closure|match|matchall|process|%dict|%re|onerror)$",
+		   "^(~|~~|local|let|lets|for|fn|%closure|match|compmatch|matchall|process|%dict|%re|onerror)$",
 		   REMode) != 0)
 		return -8;
 	if(pcre2_regcomp(&path_regex, "^.*/.*$", REMode) != 0)

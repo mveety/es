@@ -51,7 +51,7 @@ with-dynlibs mod_syntax {
 		var => %re('^\$+[#\^":]?(\*|[a-zA-Z0-9\-_%][a-zA-Z0-9\-_:%]*)$')
 		basic => %re('^[a-zA-Z0-9\-_%][a-zA-Z0-9\-_.:%]*$')
 		number => (%re('^[0-9]+$') %re('^0x[0-9a-fA-F]+$') %re('^0b[01]+$') %re('^0o[0-7]+$'))
-		keywords => ('~' '~~' 'local' 'let' 'lets' 'for' 'fn' '%closure' 'match' 'matchall'
+		keywords => ('~' '~~' 'local' 'let' 'lets' 'for' 'fn' '%closure' 'match' 'compmatch' 'matchall'
 			'process' '%dict' '%re' 'onerror')
 		string => %re('^''(.|'''')*''?$')
 		comment => %re('^#.*$')
