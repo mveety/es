@@ -77,30 +77,37 @@ regex_t whitespace_regex;
 regex_t keywords_regex;
 regex_t path_regex;
 
+char *re_regex_prim= "^\\$&[a-zA-Z0-9\\-_]+$";
+char *re_regex_var = "^\\$+[#\\^\":]?(\\*|[a-zA-Z0-9\\-_%][a-zA-Z0-9\\-_:%]*)$";
+char *re_regex_basic = "^[a-zA-Z0-9\\-_%][a-zA-Z0-9\\-_.:%]*$";
+char *re_regex_number = "^([0-9]+|0x[0-9a-fA-F]+|0b[01]+|0o[0-7]+)$";
+char *re_regex_string = "^'(.|'')*'?$";
+char *re_regex_comment = "^#.*$";
+char *re_regex_whitespace = "^[ \\t\r\\n]+$";
+char *re_regex_keywords = "^(~|~~|local|let|lets|for|fn|%closure|match|compmatch|matchall|process|%dict|%re|onerror)$";
+//char *re_regex_path = "^(~([a-zA-Z][a-zA-Z0-9]*)|.*)/.*$";
+char *re_regex_path = "^(~([a-zA-Z][a-zA-Z0-9_-]*)+|.*/.*)$";
+
 int
 syntax_onload(void)
 {
-	if(pcre2_regcomp(&prim_regex, "^\\$&[a-zA-Z0-9\\-_]+$", REMode) != 0)
+	if(pcre2_regcomp(&prim_regex, re_regex_prim, REMode) != 0)
 		return -1;
-	if(pcre2_regcomp(&var_regex, "^\\$+[#\\^\":]?(\\*|[a-zA-Z0-9\\-_%][a-zA-Z0-9\\-_:%]*)$",
-					 REMode) != 0)
+	if(pcre2_regcomp(&var_regex, re_regex_var, REMode) != 0)
 		return -2;
-	if(pcre2_regcomp(&basic_regex, "^[a-zA-Z0-9\\-_%][a-zA-Z0-9\\-_.:%]*$", REMode) != 0)
+	if(pcre2_regcomp(&basic_regex, re_regex_basic, REMode) != 0)
 		return -3;
-	if(pcre2_regcomp(&number_regex, "^([0-9]+|0x[0-9a-fA-F]+|0b[01]+|0o[0-7]+)$", REMode) != 0)
+	if(pcre2_regcomp(&number_regex, re_regex_number, REMode) != 0)
 		return -4;
-	if(pcre2_regcomp(&string_regex, "^'(.|'')*'?$", REMode) != 0)
+	if(pcre2_regcomp(&string_regex, re_regex_string, REMode) != 0)
 		return -5;
-	if(pcre2_regcomp(&comment_regex, "^#.*$", REMode) != 0)
+	if(pcre2_regcomp(&comment_regex, re_regex_comment, REMode) != 0)
 		return -6;
-	if(pcre2_regcomp(&whitespace_regex, "^[ \\t\r\\n]+$", REMode) != 0)
+	if(pcre2_regcomp(&whitespace_regex, re_regex_whitespace, REMode) != 0)
 		return -7;
-	if(pcre2_regcomp(
-		   &keywords_regex,
-		   "^(~|~~|local|let|lets|for|fn|%closure|match|compmatch|matchall|process|%dict|%re|onerror)$",
-		   REMode) != 0)
+	if(pcre2_regcomp(&keywords_regex, re_regex_keywords, REMode) != 0)
 		return -8;
-	if(pcre2_regcomp(&path_regex, "^.*/.*$", REMode) != 0)
+	if(pcre2_regcomp(&path_regex, re_regex_path, REMode) != 0)
 		return -9;
 
 	return 0;
@@ -1145,11 +1152,56 @@ PRIM(stripdsdechars) {
 	return res;
 }
 
+PRIM(syn_getregex){
+	List *res = nil;
+	char *regextype = nil;
+	char *resstr = nil;
+
+	if(list == nil)
+		fail("$&syn_getregex", "missing argument");
+	if(list->next != nil)
+		fail("$&syn_getregex", "too many arguments");
+
+	ref(res);
+	ref(regextype);
+
+	regextype = getstr(list->term);
+
+	if(streq(regextype, "prim"))
+		resstr = re_regex_prim;
+	else if(streq(regextype, "var"))
+		resstr = re_regex_var;
+	else if(streq(regextype, "basic"))
+		resstr = re_regex_basic;
+	else if(streq(regextype, "number"))
+		resstr = re_regex_number;
+	else if(streq(regextype, "string"))
+		resstr = re_regex_string;
+	else if(streq(regextype, "comment"))
+		resstr = re_regex_comment;
+	else if(streq(regextype, "whitespace"))
+		resstr = re_regex_whitespace;
+	else if(streq(regextype, "keyword"))
+		resstr = re_regex_keywords;
+	else if(streq(regextype, "path"))
+		resstr = re_regex_path;
+	else
+		fail("$&syn_getregex", "invalid regex type");
+
+	res = mklist(mkregex(resstr), nil);
+
+	deref(regextype);
+	deref(res);
+
+	return res;
+}
+
 MODULE(mod_syntax, &syntax_onload, &syntax_onunload,
 	// core
 	DX(basictokenize),
 	DX(enablehighlighting),
 	DX(disablehighlighting),
+	DX(syn_getregex),
 
 	// accel
 	DX(syn_isatom),

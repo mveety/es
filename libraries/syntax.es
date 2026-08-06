@@ -47,16 +47,15 @@ with-dynlibs mod_syntax {
 	}
 
 	_es_syntax_defs = %dict(
-		prim => %re('^\$&[a-zA-Z0-9\-_]+$')
-		var => %re('^\$+[#\^":]?(\*|[a-zA-Z0-9\-_%][a-zA-Z0-9\-_:%]*)$')
-		basic => %re('^[a-zA-Z0-9\-_%][a-zA-Z0-9\-_.:%]*$')
-		number => (%re('^[0-9]+$') %re('^0x[0-9a-fA-F]+$') %re('^0b[01]+$') %re('^0o[0-7]+$'))
-		keywords => ('~' '~~' 'local' 'let' 'lets' 'for' 'fn' '%closure' 'match' 'compmatch' 'matchall'
-			'process' '%dict' '%re' 'onerror')
-		string => %re('^''(.|'''')*''?$')
-		comment => %re('^#.*$')
-		whitespace => %re('^[ \t\r\n]+$')
-		path => %re('^.*/.*$')
+		prim => <={$&syn_getregex prim}
+		var => <={$&syn_getregex var}
+		basic => <={$&syn_getregex basic}
+		number => <={$&syn_getregex number}
+		keywords => <={$&syn_getregex keyword}
+		string => <={$&syn_getregex string}
+		comment => <={$&syn_getregex comment}
+		whitespace => <={$&syn_getregex whitespace}
+		path => <={$&syn_getregex path}
 	)
 
 	fn %strip_formatting_marks str _ {
