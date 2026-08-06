@@ -355,6 +355,7 @@ extern void undefer(int ticket);
 extern Term *mkterm(char *str, Closure *closure);
 extern Term *mkstr(char *str);
 extern Term *mkobject(Object *obj);
+extern Term *mkregex(char *str);
 extern Term *mkdictterm(Dict *d);
 extern char *getregex(Term *term);
 extern char *getstr(Term *term);

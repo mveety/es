@@ -39,13 +39,15 @@ mkterm(char *str, Closure *closure)
 Term *
 mkstr(char *str)
 {
-	Term *term;
+	Term *term = nil;
 	char *string = nil;
 
 	string = str;
+	ref(term);
 	ref(string);
 	term = mkterm(string, nil);
 	deref(string);
+	deref(term);
 	return term;
 }
 
@@ -54,6 +56,25 @@ mkobject(Object *obj)
 {
 	refobject(obj);
 	return mkterm1(nil, nil, nil, obj);
+}
+
+Term *
+mkregex(char *str)
+{
+	Term *term = nil;
+	char *string = nil;
+
+	ref(string);
+	ref(term);
+
+	string = str;
+	term = mkterm(string, nil);
+	term->kind = tkRegex;
+
+	deref(term);
+	deref(string);
+
+	return term;
 }
 
 Term *
