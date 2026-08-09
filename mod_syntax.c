@@ -1158,7 +1158,7 @@ PRIM(syn_getregex){
 	char *resstr = nil;
 
 	if(list == nil)
-		fail("$&syn_getregex", "missing argument");
+		fail("$&syn_getregex", "missing regex type (should be prim, var, basic, number, string, comment, whitespace, keyword, or path)");
 	if(list->next != nil)
 		fail("$&syn_getregex", "too many arguments");
 
@@ -1186,7 +1186,7 @@ PRIM(syn_getregex){
 	else if(streq(regextype, "path"))
 		resstr = re_regex_path;
 	else
-		fail("$&syn_getregex", "invalid regex type");
+		fail("$&syn_getregex", "invalid regex type (should be prim, var, basic, number, string, comment, whitespace, keyword, or path)");
 
 	res = mklist(mkregex(resstr), nil);
 
