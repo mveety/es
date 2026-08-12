@@ -83,6 +83,9 @@ if {$debugging} {
 
 fn copyfile src dest {
 	if {! $debugging} {
+		if {access -rw $dest} {
+			rm $dest
+		}
 		cp $src $dest
 	}
 }
