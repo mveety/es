@@ -380,6 +380,7 @@ dnl force debugging on if --enable-development
 				clang)
 					CFLAGS="-fsanitize=address -fno-omit-frame-pointer $CFLAGS"
 					LDFLAGS="-fsanitize=address -fno-omit-frame-pointer $LDFLAGS"
+					AC_DEFINE(ASAN_ENABLED)
 					;;
 				*)
 					AC_MSG_ERROR([address sanitizer requires clang])

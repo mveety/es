@@ -200,8 +200,19 @@ initsignals(Boolean interactive, Boolean allowdumps)
 #endif /* !HAVE_SIGACTION */
 		else if(h == SIG_DFL || h == SIG_ERR)
 			sigeffect[sig] = sig_default;
-		else
+		else {
+#ifdef ASAN_ENABLED
+			switch(sig){
+			case SIGSEGV:
+			case SIGBUS:
+			case SIGFPE:
+			case SIGILL:
+				eprint("es:initsignals: ASan enabled, ignoring %s\n", signame(sig));
+				continue;
+			}
+#endif
 			panic("initsignals: bad incoming signal value for %s: %x", signame(sig), h);
+		}
 	}
 
 	if(interactive || sigeffect[SIGINT] == sig_default)

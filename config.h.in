@@ -155,3 +155,6 @@
 /* give primitives the option of crashing */
 #undef AUTOMATED_CRASHING
 
+/* is ASan enabled? */
+#undef ASAN_ENABLED
+
