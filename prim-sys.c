@@ -101,6 +101,8 @@ PRIM(setsignals) {
 		const char *s = getstr(lp->term);
 		Sigeffect effect = sig_catch;
 		switch(*s) {
+		case '~':
+			fail("$&setsignals", "%s can not be masked", &s[1]);
 		case '-':
 			effect = sig_ignore;
 			s++;

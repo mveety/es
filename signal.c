@@ -117,12 +117,24 @@ setsignal(int sig, Sighandler handler)
 #endif /* !HAVE_SIGACTION */
 }
 
-extern Sigeffect
+Sigeffect
 esignal(int sig, Sigeffect effect)
 {
 	Sigeffect old;
+
 	assert(0 < sig && sig <= NSIG);
+
 	old = sigeffect[sig];
+#ifdef ASAN_ENABLED
+	switch(sig){
+	case SIGBUS:
+	case SIGSEGV:
+	case SIGFPE:
+	case SIGILL:
+		eprint("$&setsignals: warning: ASan enabled; not setting %s\n", signame(sig));
+		return old;
+	}
+#endif
 	if(effect != sig_nochange && effect != old) {
 		switch(effect) {
 		case sig_ignore:
@@ -268,7 +280,21 @@ mksiglist(void)
 		int prefix;
 		switch(effects[sig]) {
 		default:
+#ifdef ASAN_ENABLED
+			switch(sig){
+			case SIGBUS:
+			case SIGSEGV:
+			case SIGFPE:
+			case SIGILL:
+				prefix = '~';
+				break;
+			default:
+#endif
 			panic("mksiglist: bad sigeffects for %s: %d", signame(sig), effects[sig]);
+#ifdef ASAN_ENABLED
+			}
+			break;
+#endif
 		case sig_default:
 			prefix = '\0';
 			break;
