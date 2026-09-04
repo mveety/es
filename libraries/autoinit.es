@@ -21,6 +21,8 @@ defconftype autoinit echo-load true false
 defconf autoinit start-automatically false
 defconftype autoinit start-automatically true false
 
+defconf autoinit editor vi
+
 fn esrcd_getall {
 	result $libraries/esrc.d/*.es
 }
@@ -225,6 +227,11 @@ fn autoinit command arg {
 			(file) {
 				if {! ~ $#arg 1} { esrcd_usage }
 				esrcd_find_by_name $arg |> esrcd_print
+			}
+			(edit) {
+				let (file = <={esrcd_find_by_name $arg}) {
+					<={conf -X autoinit:editor} $file
+				}
 			}
 			(new) {
 				if {! ~ $#arg 1} { esrcd_usage }

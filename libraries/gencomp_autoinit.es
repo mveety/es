@@ -2,7 +2,7 @@ library gencomp_autoinit (init completion autoinit general_completion complete_g
 
 _gencomp_autoinit_cmds = (
 	'load' 'load-all' 'enable' 'disable' 'list-all' 'list-enabled'
-	'list-loaded' 'file' 'new' 'delete' 'dir' 'help' 'git'
+	'list-loaded' 'file' 'new' 'edit' 'delete' 'dir' 'help' 'git'
 )
 
 fn gencomp_autoinit_inactive_scripts {
@@ -35,7 +35,7 @@ fn gencomp_autoinit_hook curline partial {
 						gencomp_filter_list $partial <=esrcd_active_scripts
 					}
 				}
-				('file' 'delete') {
+				('file' 'edit' 'delete') {
 					gencomp_filter_list $partial <=esrcd_all_scripts
 				}
 				('disable') {
