@@ -151,7 +151,7 @@ bloomsize(size_t size)
 		res = (size / 8) + 1;
 
 	return res;
-	if(res <= 2)
+	if(res/2 <= 2)
 		return 2;
 	return res / 2;
 }
