@@ -5,6 +5,7 @@
 *.so
 *.old
 *~
+.envrc
 es
 esdump
 es_static

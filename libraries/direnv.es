@@ -18,6 +18,7 @@ defconftype direnv print-on-unload true false
 let (
 	last-envdict = %dict()
 	direnv-loaded = false
+	varbackup = %dict()
 ) {
 	fn direnv_export {
 		result ``(\n){ direnv export systemd }
@@ -36,14 +37,42 @@ let (
 	}
 
 	fn direnv_load_envdict dict _ {
-		dictforall $dict @ varname value {
-			$varname = $value
+		let (newvarbackup = %dict()) {
+			dictforall $dict @ varname value {
+				if {! ~ <={%count $$varname} 0} {
+					newvarbackup := $varname => $$varname
+				}
+				$varname = $value
+			}
+			varbackup = $newvarbackup $varbackup
 		}
 	}
 
+	fn direnv_pop_dirbackup {
+		let(old=;) {
+			if {gt <={$&listcount $varbackup} 1} {
+				old = $varbackup(1)
+				varbackup = $varbackup(2 ...)
+			} {
+				old = $varbackup
+			}
+			result $old
+		}
+	}
+
+	fn direnv_var_stack {
+		result $varbackup
+	}
+
 	fn direnv_unload_envdict dict _ {
-		dictforall $dict @ varname _ {
-			$varname=
+		let (curvarbackup = <=direnv_pop_dirbackup) {
+			dictforall $dict @ varname _ {
+				if {dicthaskey $curvarbackup $varname} {
+					$varname = $curvarbackup($varname)
+				} {
+					$varname=
+				}
+			}
 		}
 	}
 
