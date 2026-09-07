@@ -171,7 +171,7 @@ for (i = $libs) {
 		if {~ $#t 0 } {
 			if {copy_dynlib $i $libdir} {
 				echo 'installing '^$i^' -> '^$libdir^'/'^$i
-				copyfile $srcfile $libdir
+				copyfile $srcfile $libdir/$i
 			}
 		} {
 			let (
@@ -183,7 +183,7 @@ for (i = $libs) {
 						echo 'copying '^$t^' -> '^$t^'.old'
 						copyfile $t $t^'.old'
 						echo 'installing '^$i^' -> '^$libdir^'/'^$i
-						copyfile $srcfile $libdir
+						copyfile $srcfile $libdir/$i
 					}
 				}
 			}
