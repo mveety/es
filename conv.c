@@ -43,6 +43,11 @@ Vconv(Format *f)
 				fmtprint(f, "%S", getstr(lp->term));
 			break;
 		case tkClosure:
+			if(f->flags & FMT_altform)
+				fmtprint(f, "%#S", getstr(lp->term));
+			else
+				fmtprint(f, "%s", getstr(lp->term));
+			break;
 		case tkDict:
 		case tkObject:
 			fmtprint(f, "%s", getstr(lp->term));

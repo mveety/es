@@ -82,6 +82,7 @@ static Chain *chain = NULL;
 static Binding *
 extract(Tree *tree0, Binding *bindings0)
 {
+	Tree *srctree = nil;
 	Tree *tree = nil;
 	Binding *bindings = nil;
 	Tree *defn = nil;
@@ -92,6 +93,7 @@ extract(Tree *tree0, Binding *bindings0)
 	NodeKind k;
 	char *prim = nil;
 
+	ref(srctree);
 	ref(tree);
 	ref(bindings);
 	ref(defn);
@@ -102,6 +104,7 @@ extract(Tree *tree0, Binding *bindings0)
 
 	assert(gcisblocked());
 	tree = tree0;
+	srctree = tree0;
 	bindings = bindings0;
 
 	for(; tree != NULL; tree = tree->u[1].p) {
@@ -118,7 +121,16 @@ extract(Tree *tree0, Binding *bindings0)
 				k = word->kind;
 				prim = nil;
 				assert(defn->kind == nList);
+#ifdef DEVELOPMENT
+				if(!(k == nWord || k == nQword || k == nPrim || k == nThunk || k == nDict)){
+					eprint("error: es:extract: invalid nodekind: %s\n", treekind(word));
+					eprint("error: es:extract: word = %T\n", word);
+					eprint("error: es:extract: srctree = %T\n", srctree);
+					assert(k == nWord || k == nQword || k == nPrim || k == nThunk || k == nDict);
+				}
+#else
 				assert(k == nWord || k == nQword || k == nPrim || k == nThunk || k == nDict);
+#endif
 				switch(k) {
 				case nPrim:
 					prim = word->u[0].s;
@@ -169,6 +181,7 @@ extract(Tree *tree0, Binding *bindings0)
 	deref(defn);
 	deref(bindings);
 	deref(tree);
+	deref(srctree);
 
 	return bindings;
 }

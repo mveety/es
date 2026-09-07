@@ -64,6 +64,7 @@ AC_ARG_ENABLE(development,
 		development=true
 		EDITORDEBUG=true
 		BUILDTYPE='development'
+		AC_DEFINE(DEVELOPMENT)
 	fi
 ])
 

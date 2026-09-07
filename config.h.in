@@ -158,3 +158,6 @@
 /* is ASan enabled? */
 #undef ASAN_ENABLED
 
+/* development build? */
+#undef DEVELOPMENT
+
