@@ -2,6 +2,9 @@ library advanced_hooks (init libraries)
 
 # allows setting multiple hooks on %preexec, %postexec, %cdhook, and %prompt
 
+defconf advanced_hooks warn-on-hook-set true
+defconftype advanced_hooks warn-on-hook-set true false
+
 let (
 	preexec-hooks = %dict()
 	enabled = false
@@ -45,7 +48,10 @@ let (
 		}
 		fn-%preexec = $fn-adv_preexec_hook
 		set-fn-%preexec = @ arg {
-			throw error 'adv_preexec_hook' 'tried to set %preexec'
+			if {$advanced_hooks_conf_warn-on-hook-set} {
+				echo >[1=2] 'warning: adv_preexec_hook: tried to set %preexec'
+			}
+			result $fn-%preexec
 		}
 		enabled = true
 		return <=true
@@ -82,15 +88,15 @@ let (
 	}
 
 	# work around the closure.c:121 crash
-	noexport += fn-adv_preexec_hook
-	noexport += fn-add-preexec-hook
-	noexport += fn-del-preexec-hook
-	noexport += fn-preexec-hooks
-	noexport += fn-get-preexec-hook
-	noexport += fn-enable-preexec-hook
-	noexport += fn-disable-preexec-hook
-	noexport += advanced_hooks_conf_preexec
-	noexport += set-advanced_hooks_conf_preexec
+	# noexport += fn-adv_preexec_hook
+	# noexport += fn-add-preexec-hook
+	# noexport += fn-del-preexec-hook
+	# noexport += fn-preexec-hooks
+	# noexport += fn-get-preexec-hook
+	# noexport += fn-enable-preexec-hook
+	# noexport += fn-disable-preexec-hook
+	# noexport += advanced_hooks_conf_preexec
+	# noexport += set-advanced_hooks_conf_preexec
 }
 
 let (
@@ -136,7 +142,10 @@ let (
 		}
 		fn-%postexec = $fn-adv_postexec_hook
 		set-fn-%postexec = @ arg {
-			throw error 'adv_postexec_hook' 'tried to set %postexec'
+			if {$advanced_hooks_conf_warn-on-hook-set} {
+				echo >[1=2] 'warning: adv_postexec_hook: tried to set %postexec'
+			}
+			result $fn-%postexec
 		}
 		enabled = true
 		return <=true
@@ -173,15 +182,15 @@ let (
 	}
 
 	# work around the closure.c:121 crash
-	noexport += fn-adv_postexec_hook
-	noexport += fn-add-postexec-hook
-	noexport += fn-del-postexec-hook
-	noexport += fn-postexec-hooks
-	noexport += fn-get-postexec-hook
-	noexport += fn-enable-postexec-hook
-	noexport += fn-disable-postexec-hook
-	noexport += advanced_hooks_conf_postexec
-	noexport += set-advanced_hooks_conf_postexec
+	# noexport += fn-adv_postexec_hook
+	# noexport += fn-add-postexec-hook
+	# noexport += fn-del-postexec-hook
+	# noexport += fn-postexec-hooks
+	# noexport += fn-get-postexec-hook
+	# noexport += fn-enable-postexec-hook
+	# noexport += fn-disable-postexec-hook
+	# noexport += advanced_hooks_conf_postexec
+	# noexport += set-advanced_hooks_conf_postexec
 }
 
 let (
@@ -228,7 +237,10 @@ let (
 		}
 		fn-%cdhook = $fn-adv_cdhook_hook
 		set-fn-%cdhook = @ arg {
-			throw error 'adv_cdhook_hook' 'tried to set %cdhook'
+			if {$advanced_hooks_conf_warn-on-hook-set} {
+				echo >[1=2] 'warning: adv_cdhook_hook: tried to set %cdhook'
+			}
+			result $fn-%cdhook
 		}
 		enabled = true
 		return <=true
@@ -265,15 +277,15 @@ let (
 	}
 
 	# work around the closure.c:121 crash
-	noexport += fn-adv_cdhook_hook
-	noexport += fn-add-cdhook-hook
-	noexport += fn-del-cdhook-hook
-	noexport += fn-cdhook-hooks
-	noexport += fn-get-cdhook-hook
-	noexport += fn-enable-cdhook-hook
-	noexport += fn-disable-cdhook-hook
-	noexport += advanced_hooks_conf_cdhook
-	noexport += set-advanced_hooks_conf_cdhook
+	# noexport += fn-adv_cdhook_hook
+	# noexport += fn-add-cdhook-hook
+	# noexport += fn-del-cdhook-hook
+	# noexport += fn-cdhook-hooks
+	# noexport += fn-get-cdhook-hook
+	# noexport += fn-enable-cdhook-hook
+	# noexport += fn-disable-cdhook-hook
+	# noexport += advanced_hooks_conf_cdhook
+	# noexport += set-advanced_hooks_conf_cdhook
 
 }
 
@@ -320,7 +332,10 @@ let (
 		}
 		fn-%prompt = $fn-adv_prompt_hook
 		set-fn-%prompt = @ arg {
-			throw error 'adv_prompt_hook' 'tried to set %prompt'
+			if {$advanced_hooks_conf_warn-on-hook-set} {
+				echo >[1=2] 'warning: adv_prompt_hook: tried to set %prompt'
+			}
+			result $fn-%prompt
 		}
 		enabled = true
 		return <=true
@@ -357,15 +372,15 @@ let (
 	}
 
 	# work around the closure.c:121 crash
-	noexport += fn-adv_prompt_hook
-	noexport += fn-add-prompt-hook
-	noexport += fn-del-prompt-hook
-	noexport += fn-prompt-hooks
-	noexport += fn-get-prompt-hook
-	noexport += fn-enable-prompt-hook
-	noexport += fn-disable-prompt-hook
-	noexport += advanced_hooks_conf_prompt
-	noexport += set-advanced_hooks_conf_prompt
+	# noexport += fn-adv_prompt_hook
+	# noexport += fn-add-prompt-hook
+	# noexport += fn-del-prompt-hook
+	# noexport += fn-prompt-hooks
+	# noexport += fn-get-prompt-hook
+	# noexport += fn-enable-prompt-hook
+	# noexport += fn-disable-prompt-hook
+	# noexport += advanced_hooks_conf_prompt
+	# noexport += set-advanced_hooks_conf_prompt
 }
 
 
