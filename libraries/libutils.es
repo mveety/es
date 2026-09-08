@@ -151,6 +151,7 @@ fn libutil_all_libraries {
 	) {
 		for (libfile = $all_lib_files) {
 			match $libfile (
+				($libraries/^'*'^.es $corelib/^'*'.es) { result }
 				$libraries/*.es { libname = <={~~ $libfile $libraries/*.es} }
 				$corelib/*.es { libname = <={~~ $libfile $corelib/*.es} }
 			)
