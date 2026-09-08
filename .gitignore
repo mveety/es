@@ -66,4 +66,6 @@ es_work
 doc/es.1
 *.esdat
 test.history
+html/*
+latex/*
 
