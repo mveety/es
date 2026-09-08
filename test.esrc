@@ -40,7 +40,7 @@ match `{uname} (
 
 ## configuration
 
-autoinit load-all
+# autoinit load-all
 
 conf -s history:maxdisplay 10
 conf -s history:reload 100
