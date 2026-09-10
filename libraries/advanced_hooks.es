@@ -51,6 +51,7 @@ let (
 			if {$advanced_hooks_conf_warn-on-hook-set} {
 				echo >[1=2] 'warning: adv_preexec_hook: tried to set %preexec'
 			}
+			preexec-hooks := default => $arg
 			result $fn-%preexec
 		}
 		enabled = true
@@ -145,6 +146,7 @@ let (
 			if {$advanced_hooks_conf_warn-on-hook-set} {
 				echo >[1=2] 'warning: adv_postexec_hook: tried to set %postexec'
 			}
+			postexec-hooks := default => $arg
 			result $fn-%postexec
 		}
 		enabled = true
@@ -240,6 +242,7 @@ let (
 			if {$advanced_hooks_conf_warn-on-hook-set} {
 				echo >[1=2] 'warning: adv_cdhook_hook: tried to set %cdhook'
 			}
+			cdhook-hooks := default => $arg
 			result $fn-%cdhook
 		}
 		enabled = true
@@ -335,6 +338,7 @@ let (
 			if {$advanced_hooks_conf_warn-on-hook-set} {
 				echo >[1=2] 'warning: adv_prompt_hook: tried to set %prompt'
 			}
+			prompt-hooks := default => $arg
 			result $fn-%prompt
 		}
 		enabled = true
