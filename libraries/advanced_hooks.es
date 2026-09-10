@@ -387,4 +387,87 @@ let (
 	# noexport += set-advanced_hooks_conf_prompt
 }
 
+let (
+	history-hooks = %dict()
+	enabled = false
+) {
+	fn adv_history_hook args {
+		if {~ $#history-hooks 0} {
+			return <=true
+		}
+		for (hookname = <={dictnames $history-hooks |> sortlist}){
+			$history-hooks($hookname) $args
+		}
+	}
+
+	fn add-history-hook name fun {
+		history-hooks := $name => $fun
+	}
+
+	fn del-history-hook name {
+		{history-hooks = <={dictremove $history-hooks $name}} onerror {
+			throw error 'del-history-hook' 'hook '^$name^' does not exist'
+		}
+		return <=true
+	}
+
+	fn history-hooks {
+		dictnames $history-hooks |> sortlist |> result
+	}
+
+	fn get-history-hook hookname {
+		result $history-hooks($hookname) onerror {
+			throw error 'get-history-hook' $hookname^' not found'
+		}
+	}
+
+	fn enable-history-hook {
+		if {$enabled} {
+			throw error 'enable-history-hook' 'hook already enabled'
+		}
+		if {! ~ $#fn-%history 0} {
+			history-hooks := default => $fn-%history
+		}
+		fn-%history = $fn-adv_history_hook
+		set-fn-%history = @ arg {
+			if {$advanced_hooks_conf_warn-on-hook-set} {
+				echo >[1=2] 'warning: adv_history_hook: tried to set %history'
+			}
+			history-hooks := default => $arg
+			result $fn-%history
+		}
+		enabled = true
+		return <=true
+	}
+
+	fn disable-history-hook {
+		if {! $enabled} {
+			throw error 'disable-history-hook' 'hook already disabled'
+		}
+			if {dicthaskey $history-hooks default} {
+				oldhook = $history-hooks(default)
+				set-fn-%history=
+				fn-%history = $history-hooks(default)
+				enabled = false
+				return <=true
+			}
+			set-fn-%history=
+			fn %history
+			enabled = false
+			return <=true
+	}
+
+	defconf advanced_hooks history disable
+	set-advanced_hooks_conf_history = @ arg _ {
+		if {! ~ $arg enable disable} {
+			return $advanced_hooks_conf_history
+		}
+		if {~ $arg enable && ! $enabled} {
+			enable-history-hook
+		} {~ $arg disable && $enabled} {
+			disable-history-hook
+		}
+		return $arg
+	}
+}
 
