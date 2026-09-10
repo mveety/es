@@ -23,9 +23,11 @@ local(
 	enable-automated-crashing = false
 	show-full-help = false
 	platform = <={%split ' ' $buildstring |> %elem 5}
+	operation = configure # or build or run
+	extraargs=
 )  {
 
-	parseargs @ arg {
+	(_ _ extraargs) = <={parseargs @ arg {
 		match $arg (
 			(*) { usage }
 			(-A) { enable-addrsan = true }
@@ -33,6 +35,9 @@ local(
 			(-X) { enable-automated-crashing = true }
 			(-G) { VALIDCC = $GCCS }
 			(-C) { VALIDCC = $CLANGS }
+			(-b) { operation = build }
+			(-r) { operation = run }
+			(--) { done }
 			(-h) { show-full-help = true; usage }
 		)
 	} @ {
@@ -42,44 +47,70 @@ local(
 			echo >[1=2] '    -B -- Enable bounds safety (requires clang)'
 			echo >[1=2] '    -C -- force use of clang'
 			echo >[1=2] '    -G -- force use of gcc'
+			echo >[1=2] '    -b -- build es'
+			echo >[1=2] '    -r -- run es'
 			echo >[1=2] '    -h -- show this message'
 			echo >[1=2] '    -X -- enable ''automated crashing'''
+			echo >[1=2] '    -- -- rest are args for es'
 			exit 0
 		}
 		exit 1
-	} $*
+	} $*}
 
-	CC = <=get-cc
-	try make distclean
-	match $platform (
-		(*) {
-			enable-addrsan = false
-			enable-bounds-safety = false
-		}
-		('FreeBSD') {
-			if {~ $CC clang* && ! ~ $CC clang } {
-				if { $enable-addrsan } { cmd += --enable-addrsan }
-				if { $enable-bounds-safety } { cmd += --enable-bounds-safety }
-			} {
-				enable-addrsan = false
-				enable-bounds-safety = false
+	match $operation (
+		run {
+			if {! access -rx es} {
+				throw error 'development.es' 'es does not exist'
 			}
-		}
-		('Linux') {
-			if {~ $CC clang*} {
-				if { $enable-addrsan } { cmd += --enable-addrsan }
-				if { $enable-bounds-safety } { cmd += --enable-bounds-safety }
-			} {
-				enable-addrsan = false
-				enable-bounds-safety = false
+			local (ASAN_OPTIONS='abort_on_error=1:disable_coredump=0') {
+				./es $extraargs
 			}
+			exit 0
 		}
+		build {
+			if {! access -rwf Makefile} {
+				ls -lah Makefile
+				access -rw Makefile |> echo
+				throw error 'development.es' 'makefile missing!'
+			}
+			make all
+			exit 0
+		}
+		configure {
+			CC = <=get-cc
+			try make distclean
+			match $platform (
+				(*) {
+					enable-addrsan = false
+					enable-bounds-safety = false
+				}
+				('FreeBSD') {
+					if {~ $CC clang* && ! ~ $CC clang } {
+						if { $enable-addrsan } { cmd += --enable-addrsan }
+						if { $enable-bounds-safety } { cmd += --enable-bounds-safety }
+					} {
+						enable-addrsan = false
+						enable-bounds-safety = false
+					}
+				}
+				('Linux') {
+					if {~ $CC clang*} {
+						if { $enable-addrsan } { cmd += --enable-addrsan }
+						if { $enable-bounds-safety } { cmd += --enable-bounds-safety }
+					} {
+						enable-addrsan = false
+						enable-bounds-safety = false
+					}
+				}
+			)
+			if { $enable-automated-crashing } { cmd += --enable-automated-crashing }
+			echo >[1=2] 'running: '^$^cmd
+			$cmd
+			if { $enable-automated-crashing } { echo >[1=2] 'note: building with automated crashing' }
+			if { $enable-addrsan } { echo >[1=2] 'note: building with addrsan' }
+			if { $enable-bounds-safety } { echo >[1=2] 'note: building with bounds safety' }
+		}
+		* { unreachable }
 	)
-	if { $enable-automated-crashing } { cmd += --enable-automated-crashing }
-	echo >[1=2] 'running: '^$^cmd
-	$cmd
-	if { $enable-automated-crashing } { echo >[1=2] 'note: building with automated crashing' }
-	if { $enable-addrsan } { echo >[1=2] 'note: building with addrsan' }
-	if { $enable-bounds-safety } { echo >[1=2] 'note: building with bounds safety' }
 }
 
