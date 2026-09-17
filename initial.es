@@ -1000,8 +1000,28 @@ fn-%exit-on-false = $&exitonfalse		# -e
 set-home = @ { local (set-HOME = ) HOME = $*; result $* }
 set-HOME = @ { local (set-home = ) home = $*; result $* }
 
-set-path = @ { local (set-PATH = ) PATH = <={%flatten : $*}; result $* }
-set-PATH = @ { local (set-path = ) path = <={%fsplit  : $*}; result $* }
+set-path = @ {
+	let (t = ()) local (set-PATH = ){
+		for (e = $*) {
+			if {! ~ $e ''} {
+				t += $e
+			}
+		}
+		PATH = <={%flatten : $t}
+		result $t
+	}
+}
+set-PATH = @ {
+	let (t = ()) local (set-path = ){
+		for (e = <={%fsplit  : $*}) {
+			if {! ~ $e ''} {
+				t += $e
+			}
+		}
+		path = $t
+		result $*
+	}
+}
 
 #	These settor functions call primitives to set data structures used
 #	inside of es.
