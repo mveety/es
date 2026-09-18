@@ -188,6 +188,7 @@ debug_flag_usage(void)
 			"	h -- HaahrHash\n"
 			"	H -- FNV1AHash\n"
 			"	J -- JenkinsOATHash\n"
+			"	j -- FNV1A+JenkinsHash\n"
 			"	C -- comprehensive_matches\n"
 			"	t -- forcetty\n"
 			"	e -- force_fallback_editor\n"
@@ -433,6 +434,9 @@ main(int argc, char *argv[])
 					break;
 				case 'J':
 					hashfunction = JenkinsOATHash;
+					break;
+				case 'j':
+					hashfunction = FJHash;
 					break;
 				case 'C':
 					comprehensive_matches = TRUE;

@@ -16,7 +16,7 @@
 #define FNV1A_HashIncr 0x01000193
 
 HashFunction hashfunction = HaahrHash;
-DictHash nilhash = {0, 0, 0};
+DictHash nilhash = {0, {.fnv1a = 0, .jenkins = 0}};
 DictStats dictstats = (DictStats){
 	.maxsize = 0,
 	.totalsize = 0,
@@ -133,10 +133,15 @@ strhash(DictHash *dh, const char *str)
 Boolean
 hash_compare(DictHash *dh1, DictHash *dh2)
 {
+#ifdef DO32BITCOMPARE
 	if(dh1->jenkins != dh2->jenkins)
 		goto fail;
 	if(dh1->fnv1a != dh2->fnv1a)
 		goto fail;
+#else
+	if(dh1->fjhash != dh2->fjhash)
+		goto fail;
+#endif
 	if(dh1->haahr != dh2->haahr)
 		goto fail;
 	return TRUE;
@@ -158,6 +163,8 @@ gethashi(DictHash *dh)
 		return dh->fnv1a;
 	case JenkinsOATHash:
 		return dh->jenkins;
+	case FJHash:
+		return dh->fjhash;
 	}
 }
 

@@ -93,7 +93,8 @@ typedef enum {
 typedef enum {
 	HaahrHash,
 	FNV1AHash,
-	JenkinsOATHash
+	JenkinsOATHash,
+	FJHash, // FNV1a + Jenkins
 } HashFunction;
 // clang-format on
 
@@ -166,8 +167,13 @@ struct Tree {
 
 struct DictHash {
 	uint64_t haahr;
-	uint32_t fnv1a;
-	uint32_t jenkins;
+	union {
+		struct {
+			uint32_t fnv1a;
+			uint32_t jenkins;
+		};
+		uint64_t fjhash;
+	};
 };
 
 struct Assoc {
