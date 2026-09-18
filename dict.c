@@ -15,6 +15,7 @@
 #define FNV1A_HashIncr 0x01000193
 
 HashFunction hashfunction = HaahrHash;
+DictHash nilhash = {0, 0, 0};
 
 uint32_t
 fnv1a_strhash2(const char *s1, const char *s2)
@@ -98,45 +99,53 @@ jenkins_oat_strhash2(const char *s1, const char *s2)
 
 /* interface */
 
-uint64_t
-strhash2(const char *str1, const char *str2)
+DictHash*
+strhash2(DictHash *dh, const char *str1, const char *str2)
 {
-	switch(hashfunction) {
-	default:
-		unreachable();
-		break;
-	case HaahrHash:
-		return haahr_strhash2(str1, str2);
-	case FNV1AHash:
-		return fnv1a_strhash2(str1, str2);
-	case JenkinsOATHash:
-		return jenkins_oat_strhash2(str1, str2);
-	}
-	unreachable();
-	return 0;
+	dh->haahr = haahr_strhash2(str1, str2);
+	dh->fnv1a = fnv1a_strhash2(str1, str2);
+	dh->jenkins = jenkins_oat_strhash2(str1, str2);
+
+	return dh;
 }
 
-uint64_t
-strhash(const char *str)
+DictHash*
+strhash(DictHash *dh, const char *str)
 {
-	switch(hashfunction) {
-	default:
-		unreachable();
-		break;
-	case HaahrHash:
-		return haahr_strhash2(str, nil);
-	case FNV1AHash:
-		return fnv1a_strhash2(str, nil);
-	case JenkinsOATHash:
-		return jenkins_oat_strhash2(str, nil);
-	}
-	unreachable();
-	return 0;
+	return strhash2(dh, str, nil);
 }
 
 /*
  * data structures and garbage collection
  */
+
+Boolean
+hash_compare(DictHash *dh1, DictHash *dh2)
+{
+	if(dh1->jenkins != dh2->jenkins)
+		return FALSE;
+	if(dh1->fnv1a != dh2->fnv1a)
+		return FALSE;
+	if(dh1->haahr != dh2->haahr)
+		return FALSE;
+	return TRUE;
+}
+
+static uint64_t
+gethashi(DictHash *dh)
+{
+	switch(hashfunction){
+	default:
+		unreachable();
+		return 0;
+	case HaahrHash:
+		return dh->haahr;
+	case FNV1AHash:
+		return dh->fnv1a;
+	case JenkinsOATHash:
+		return dh->jenkins;
+	}
+}
 
 DefineTag(Dict, static);
 
@@ -156,93 +165,61 @@ bloomsize(size_t size)
 	return res / 2;
 }
 
-static inline uint64_t
-bloominsert(Dict *dict, char *name)
+static inline DictHash *
+bloominsert(DictHash *dh, Dict *dict, char *name)
 {
-	uint64_t fnv1a_hash = 0;
 	size_t fnv1a_bit = 0;
-	uint64_t haahr_hash = 0;
 	size_t haahr_bit = 0;
-	uint64_t jenkins_hash = 0;
 	size_t jenkins_bit = 0;
 	size_t bloomsz = bloomsize(dict->size);
 
-	fnv1a_hash = fnv1a_strhash2(name, nil);
-	fnv1a_bit = fnv1a_hash % bloomsz;
-	haahr_hash = haahr_strhash2(name, nil);
-	haahr_bit = haahr_hash % bloomsz;
-	jenkins_hash = jenkins_oat_strhash2(name, nil);
-	jenkins_bit = jenkins_hash % bloomsz;
+	dh = strhash(dh, name);
+	fnv1a_bit = dh->fnv1a % bloomsz;
+	haahr_bit = dh->haahr % bloomsz;
+	jenkins_bit = dh->jenkins % bloomsz;
 
 	dict->bloom[fnv1a_bit / 8] |= 1 << (fnv1a_bit % 8);
 	dict->bloom[haahr_bit / 8] |= 1 << (haahr_bit % 8);
 	dict->bloom[jenkins_bit / 8] |= 1 << (jenkins_bit % 8);
 
-	switch(hashfunction) {
-	default:
-		unreachable();
-		break;
-	case HaahrHash:
-		return haahr_hash;
-	case FNV1AHash:
-		return fnv1a_hash;
-	case JenkinsOATHash:
-		return jenkins_hash;
-	}
+	return dh;
 }
 
 typedef struct BloomResult {
 	Boolean exists;
-	uint64_t hash;
+	DictHash hash;
 } BloomResult;
 
-static inline BloomResult
-bloomcheck2(Dict *dict, const char *name1, const char *name2)
+static inline BloomResult*
+bloomcheck2(BloomResult *br, Dict *dict, const char *name1, const char *name2)
 {
-	BloomResult res = {FALSE, 0};
-	uint64_t fnv1a_hash = 0;
 	size_t fnv1a_bit = 0;
-	uint64_t haahr_hash = 0;
 	size_t haahr_bit = 0;
-	uint64_t jenkins_hash = 0;
 	size_t jenkins_bit = 0;
 	size_t bloomsz = bloomsize(dict->size);
+	DictHash *dh = nil;
 
-	fnv1a_hash = fnv1a_strhash2(name1, name2);
-	fnv1a_bit = fnv1a_hash % bloomsz;
-	haahr_hash = haahr_strhash2(name1, name2);
-	haahr_bit = haahr_hash % bloomsz;
-	jenkins_hash = jenkins_oat_strhash2(name1, name2);
-	jenkins_bit = jenkins_hash % bloomsz;
+	*br = (BloomResult){FALSE, nilhash};
+	dh = strhash2(&br->hash, name1, name2);
 
-	switch(hashfunction) {
-	default:
-		unreachable();
-		break;
-	case HaahrHash:
-		res.hash = haahr_hash;
-		break;
-	case FNV1AHash:
-		res.hash = fnv1a_hash;
-		break;
-	case JenkinsOATHash:
-		res.hash = jenkins_hash;
-		break;
-	}
+	fnv1a_bit = dh->fnv1a % bloomsz;
+	haahr_bit = dh->haahr % bloomsz;
+	jenkins_bit = dh->jenkins % bloomsz;
+
 
 	if(((dict->bloom[fnv1a_bit / 8] & (1 << (fnv1a_bit % 8))) != 0) &&
 	   ((dict->bloom[haahr_bit / 8] & (1 << (haahr_bit % 8))) != 0) &&
 	   ((dict->bloom[jenkins_bit / 8] & (1 << (jenkins_bit % 8))) != 0))
-		res.exists = TRUE;
+		br->exists = TRUE;
 
-	return res;
+	return br;
 }
 
-static inline BloomResult
-bloomcheck(Dict *dict, const char *name)
+/*static inline BloomResult*
+bloomcheck(BloomResult *br, Dict *dict, const char *name)
 {
-	return bloomcheck2(dict, name, nil);
-}
+	return bloomcheck2(br, dict, name, nil);
+}*/
 
 static Dict *
 mkdict0(size_t size)
@@ -312,30 +289,29 @@ DictMark(void *p)
 char *DEAD = "%%DEAD%%";
 
 static Assoc *
-get(Dict *dict, const char *name)
+get2(Dict *dict, const char *name1, const char *name2)
 {
 	Assoc *ap;
 	uint64_t hash = 0;
 	uint64_t mask = dict->size - 1;
-	BloomResult bloomres = {FALSE, 0};
-	Root r_dict;
+	BloomResult bloomres = {FALSE, nilhash};
+	DictHash *dh = nil;
+	BloomResult *br = nil;
 
-	gcref(&r_dict, (void **)&dict);
-	if(dict->size > 100) {
-		bloomres = bloomcheck(dict, name);
-		if(bloomres.exists == FALSE)
-			goto fail;
-		hash = bloomres.hash;
-	} else
-		hash = strhash(name);
+	ref(dict);
+	dh = &bloomres.hash;
+	br = bloomcheck2(&bloomres, dict, name1, name2);
+	if(br->exists == FALSE)
+		goto fail;
+	hash = gethashi(dh);
 
 	for(; (ap = &dict->table[hash & mask])->name != NULL; hash++)
-		if(ap->name != DEAD && streq(name, ap->name)) {
-			gcrderef(&r_dict);
+		if(ap->name != DEAD && hash_compare(dh, &ap->hash) && streq2(ap->name, name1, name2)) {
+			deref(dict);
 			return ap;
 		}
 fail:
-	gcrderef(&r_dict);
+	deref(dict);
 	return nil;
 }
 
@@ -346,20 +322,21 @@ put(Dict *dict, char *name, void *value)
 {
 	uint64_t n, mask;
 	Assoc *ap;
-	Dict *old = nil; Root r_old;
-	char *np = nil; Root r_np;
-	void *vp = nil; Root r_vp;
-	Dict *new = nil; Root r_new;
+	Dict *old = nil;
+	char *np = nil;
+	void *vp = nil;
+	Dict *new = nil;
+	DictHash dicthash;
 
-	assert(get(dict, name) == nil);
+	assert(get2(dict, name, nil) == nil);
 	assert(value != nil);
 	assert(!dict->readonly);
 
 	if(dict->remain <= 1) {
-		gcref(&r_old, (void **)&old);
-		gcref(&r_np, (void **)&np);
-		gcref(&r_vp, (void **)&vp);
-		gcref(&r_new, (void **)&new);
+		ref(old);
+		ref(np);
+		ref(vp);
+		ref(new);
 		old = dict;
 		np = name;
 		vp = value;
@@ -370,13 +347,13 @@ put(Dict *dict, char *name, void *value)
 		name = np;
 		value = vp;
 
-		gcrderef(&r_new);
-		gcderef(&r_vp, (void **)&vp);
-		gcderef(&r_np, (void **)&np);
-		gcderef(&r_old, (void **)&old);
+		deref(new);
+		deref(vp);
+		deref(np);
+		deref(old);
 	}
 
-	n = bloominsert(dict, name);
+	n = gethashi(bloominsert(&dicthash, dict, name));
 	mask = dict->size - 1;
 	for(; (ap = &dict->table[n & mask])->name != DEAD; n++)
 		if(ap->name == nil) {
@@ -385,6 +362,7 @@ put(Dict *dict, char *name, void *value)
 		}
 
 	ap->name = name;
+	ap->hash = dicthash;
 	ap->value = value;
 	return dict;
 }
@@ -428,7 +406,7 @@ mkdict(void)
 extern void *
 dictget(Dict *dict, const char *name)
 {
-	Assoc *ap = get(dict, name);
+	Assoc *ap = get2(dict, name, nil);
 	if(ap == NULL)
 		return NULL;
 	return ap->value;
@@ -440,7 +418,7 @@ dictput(Dict *dict, char *name, void *value)
 	Assoc *ap = nil;
 
 	assert(!dict->readonly);
-	ap = get(dict, name);
+	ap = get2(dict, name, nil);
 	if(value != NULL)
 		if(ap == NULL)
 			dict = put(dict, name, value);
@@ -455,54 +433,41 @@ extern void
 dictforall(Dict *dp, void (*proc)(void *, char *, void *), void *arg)
 {
 	int i;
-	Dict *dict = NULL; Root r_dict;
-	void *argp = NULL; Root r_argp;
+	Dict *dict = nil;
+	void *argp = nil;
 
 	dict = dp;
-	gcref(&r_dict, (void **)&dict);
+	ref(dict);
 	argp = arg;
-	gcref(&r_argp, (void **)&argp);
+	ref(argp);
 	for(i = 0; i < dict->size; i++) {
 		Assoc *ap = &dict->table[i];
 		if(ap->name != NULL && ap->name != DEAD)
 			(*proc)(argp, ap->name, ap->value);
 	}
-	gcderef(&r_argp, (void **)&argp);
-	gcderef(&r_dict, (void **)&dict);
+	deref(argp);
+	deref(dict);
 }
 
 /* dictget2 -- look up the catenation of two names (such a hack!) */
 extern void *
 dictget2(Dict *dict, const char *name1, const char *name2)
 {
-	Assoc *ap;
-	uint64_t hash = 0;
-	uint64_t mask = dict->size - 1;
-	BloomResult bloomres = {FALSE, 0};
-
-	if(dict->size > 100) {
-		bloomres = bloomcheck2(dict, name1, name2);
-		if(bloomres.exists == FALSE)
-			return nil;
-		hash = bloomres.hash;
-	} else
-		hash = strhash2(name1, name2);
-
-	for(; (ap = &dict->table[hash & mask])->name != NULL; hash++)
-		if(ap->name != DEAD && streq2(ap->name, name1, name2))
-			return ap->value;
-	return nil;
+	Assoc *ap = get2(dict, name1, name2);
+	if(ap == NULL)
+		return NULL;
+	return ap->value;
 }
 
 Dict *
 dictcopy(Dict *oda)
 {
 	int i;
-	Dict *odict = NULL; Root r_odict;
-	Dict *dict = NULL; Root r_dict;
+	Dict *odict = nil;
+	Dict *dict = nil;
 
-	gcref(&r_odict, (void **)&odict);
-	gcref(&r_dict, (void **)&dict);
+	ref(odict);
+	ref(dict);
 
 	odict = oda;
 	dict = mkdict();
@@ -513,8 +478,8 @@ dictcopy(Dict *oda)
 		dict = dictput(dict, odict->table[i].name, (void *)odict->table[i].value);
 	}
 
-	gcrderef(&r_dict);
-	gcrderef(&r_odict);
+	deref(dict);
+	deref(odict);
 
 	return dict;
 }
@@ -523,11 +488,11 @@ Dict *
 dictappend(Dict *desta, Dict *srca, Boolean overwrite)
 {
 	int i;
-	Dict *dest = NULL; Root r_dest;
-	Dict *src = NULL; Root r_src;
+	Dict *dest = nil;
+	Dict *src = nil;
 
-	gcref(&r_dest, (void **)&dest);
-	gcref(&r_src, (void **)&src);
+	ref(dest);
+	ref(src);
 
 	dest = desta;
 	src = srca;
@@ -541,8 +506,8 @@ dictappend(Dict *desta, Dict *srca, Boolean overwrite)
 		dest = dictput(dest, src->table[i].name, src->table[i].value);
 	}
 
-	gcrderef(&r_src);
-	gcrderef(&r_dest);
+	deref(src);
+	deref(dest);
 
 	return dest;
 }
@@ -550,23 +515,23 @@ dictappend(Dict *desta, Dict *srca, Boolean overwrite)
 Dict *
 parsedict(Tree *tree0, Binding *binding0, int flags)
 {
-	Tree *tree = nil; Root r_tree;
-	Binding *binding = nil; Root r_binding;
-	Tree *inner = nil; Root r_inner;
-	Dict *dict = nil; Root r_dict;
-	Tree *assoc = nil; Root r_assoc;
-	List *name = nil; Root r_name;
-	List *value = nil; Root r_value;
-	char *namestr = nil; Root r_namestr;
+	Tree *tree = nil;
+	Binding *binding = nil;
+	Tree *inner = nil;
+	Dict *dict = nil;
+	Tree *assoc = nil;
+	List *name = nil;
+	List *value = nil;
+	char *namestr = nil;
 
-	gcref(&r_tree, (void **)&tree);
-	gcref(&r_binding, (void **)&binding);
-	gcref(&r_inner, (void **)&inner);
-	gcref(&r_dict, (void **)&dict);
-	gcref(&r_assoc, (void **)&assoc);
-	gcref(&r_name, (void **)&name);
-	gcref(&r_value, (void **)&value);
-	gcref(&r_namestr, (void **)&namestr);
+	ref(tree);
+	ref(binding);
+	ref(inner);
+	ref(dict);
+	ref(assoc);
+	ref(name);
+	ref(value);
+	ref(namestr);
 
 	tree = tree0;
 	binding = binding0;
@@ -582,14 +547,14 @@ parsedict(Tree *tree0, Binding *binding0, int flags)
 		dict = dictput(dict, namestr, value);
 	}
 
-	gcrderef(&r_namestr);
-	gcrderef(&r_value);
-	gcrderef(&r_name);
-	gcrderef(&r_assoc);
-	gcrderef(&r_dict);
-	gcrderef(&r_inner);
-	gcrderef(&r_binding);
-	gcrderef(&r_tree);
+	deref(namestr);
+	deref(value);
+	deref(name);
+	deref(assoc);
+	deref(dict);
+	deref(inner);
+	deref(binding);
+	deref(tree);
 
 	return dict;
 }

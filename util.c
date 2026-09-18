@@ -70,6 +70,10 @@ extern Boolean
 streq2(const char *s, const char *t1, const char *t2)
 {
 	int c;
+
+	if(t2 == nil)
+		return streq(s, t1);
+
 	assert(s != NULL && t1 != NULL && t2 != NULL);
 	while((c = *t1++) != '\0')
 		if(c != *s++)

@@ -61,6 +61,7 @@ typedef struct Term Term;
 typedef struct List List;
 typedef struct Binding Binding;
 typedef struct Closure Closure;
+typedef struct DictHash DictHash;
 typedef struct Assoc Assoc;
 typedef struct Dict Dict;
 typedef struct Var Var;
@@ -162,8 +163,15 @@ struct Tree {
 	} u[2];
 };
 
+struct DictHash {
+	uint64_t haahr;
+	uint32_t fnv1a;
+	uint32_t jenkins;
+};
+
 struct Assoc {
 	char *name;
+	DictHash hash;
 	char *value;
 };
 
@@ -477,8 +485,8 @@ extern int ewaitfor(int pid);
 /* dict.c */
 
 extern HashFunction hashfunction;
-extern uint64_t strhash2(const char *, const char *);
-extern uint64_t strhash(const char *);
+extern DictHash *strhash2(DictHash *dh, const char *, const char *);
+extern DictHash *strhash(DictHash *dh, const char *);
 extern Dict *mkdict(void);
 extern void dictforall(Dict *dict, void (*proc)(void *, char *, void *), void *arg);
 extern void *dictget(Dict *dict, const char *name);
