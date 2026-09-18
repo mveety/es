@@ -64,6 +64,7 @@ typedef struct Closure Closure;
 typedef struct DictHash DictHash;
 typedef struct Assoc Assoc;
 typedef struct Dict Dict;
+typedef struct DictStats DictStats;
 typedef struct Var Var;
 typedef struct RegexStatus RegexStatus;
 typedef struct AppendContext AppendContext;
@@ -180,6 +181,20 @@ struct Dict {
 	int size, remain;
 	char *bloom;
 	Assoc table[1];
+};
+
+struct DictStats {
+	uint64_t maxsize;
+	uint64_t totalsize;
+	uint64_t ndicts;
+	uint64_t nputs;
+	uint64_t nlookups;
+	uint64_t failed_lookups;
+	uint64_t avgcompares;
+	uint64_t totalcompares;
+	uint64_t bloomfail;
+	uint64_t hashfail;
+	uint64_t strcmpfail;
 };
 
 /*

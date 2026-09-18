@@ -311,10 +311,34 @@ PRIM(dictreadonly) {
 	return mklist(mkstr(str("%d", res)), nil);
 }
 
+extern DictStats dictstats;
+
+PRIM(dictstats) {
+	List *res = nil;
+
+	ref(res);
+
+	res = mklist(mkstr(str("%ld", dictstats.strcmpfail)), res);
+	res = mklist(mkstr(str("%ld", dictstats.hashfail)), res);
+	res = mklist(mkstr(str("%ld", dictstats.bloomfail)), res);
+	res = mklist(mkstr(str("%ld", dictstats.totalcompares)), res);
+	res = mklist(mkstr(str("%ld", dictstats.avgcompares)), res);
+	res = mklist(mkstr(str("%ld", dictstats.failed_lookups)), res);
+	res = mklist(mkstr(str("%ld", dictstats.nlookups)), res);
+	res = mklist(mkstr(str("%ld", dictstats.nputs)), res);
+	res = mklist(mkstr(str("%ld", dictstats.ndicts)), res);
+	res = mklist(mkstr(str("%ld", dictstats.totalsize)), res);
+	res = mklist(mkstr(str("%ld", dictstats.maxsize)), res);
+
+	deref(res);
+
+	return res;
+}
+
 Primitive prim_dict[] = {
 	DX(dictnew),	DX(dictget),		   DX(dictput),		 DX(dictput_nocopy),
 	DX(dictremove), DX(dictremove_nocopy), DX(dictforall),	 DX(dictsize),
-	DX(termtypeof), DX(dictcopy),		   DX(dictreadonly),
+	DX(termtypeof), DX(dictcopy),		   DX(dictreadonly), DX(dictstats),
 };
 
 Dict *

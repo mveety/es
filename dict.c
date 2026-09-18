@@ -2,6 +2,7 @@
 
 #include "es.h"
 #include "gc.h"
+#include "stdenv.h"
 
 #define INIT_DICT_SIZE 8
 #define REMAIN(n) (((n) * 2) / 3)
@@ -16,6 +17,17 @@
 
 HashFunction hashfunction = HaahrHash;
 DictHash nilhash = {0, 0, 0};
+DictStats dictstats = (DictStats){
+	.maxsize = 0,
+	.totalsize = 0,
+	.nputs = 0,
+	.nlookups = 0,
+	.avgcompares = 0,
+	.totalcompares = 0,
+	.bloomfail = 0,
+	.hashfail = 0,
+	.strcmpfail = 0,
+};
 
 uint32_t
 fnv1a_strhash2(const char *s1, const char *s2)
@@ -123,12 +135,15 @@ Boolean
 hash_compare(DictHash *dh1, DictHash *dh2)
 {
 	if(dh1->jenkins != dh2->jenkins)
-		return FALSE;
+		goto fail;
 	if(dh1->fnv1a != dh2->fnv1a)
-		return FALSE;
+		goto fail;
 	if(dh1->haahr != dh2->haahr)
-		return FALSE;
+		goto fail;
 	return TRUE;
+fail:
+	dictstats.hashfail++;
+	return FALSE;
 }
 
 static uint64_t
@@ -155,14 +170,11 @@ bloomsize(size_t size)
 	size_t res;
 
 	if(size % 8 == 0)
-		res = size / 8;
+		res = (size*2) / 8;
 	else
-		res = (size / 8) + 1;
+		res = ((size*2) / 8) + 1;
 
 	return res;
-	if(res/2 <= 2)
-		return 2;
-	return res / 2;
 }
 
 static inline DictHash *
@@ -235,6 +247,10 @@ mkdict0(size_t size)
 	dict->size = size;
 	dict->remain = REMAIN(size);
 	dict->bloom = gcmalloc(bloomsize(size));
+	if((uint64_t)dict->size > dictstats.maxsize)
+		dictstats.maxsize = dict->size;
+	dictstats.totalsize += dict->size;
+	dictstats.ndicts++;
 	gcenable();
 	gcrderef(&r_dict);
 	return dict;
@@ -288,6 +304,24 @@ DictMark(void *p)
 
 char *DEAD = "%%DEAD%%";
 
+static inline void
+update_get_stats(uint64_t compares, uint64_t failed)
+{
+	dictstats.avgcompares = ((dictstats.avgcompares*dictstats.nlookups)+compares)/(dictstats.nlookups+1);
+	dictstats.totalcompares += compares;
+	dictstats.nlookups++;
+	dictstats.failed_lookups += failed;
+}
+
+static Boolean
+dictstreq2(const char *s, const char *t1, const char *t2)
+{
+	if(streq2(s, t1, t2))
+		return TRUE;
+	dictstats.strcmpfail++;
+	return FALSE;
+}
+
 static Assoc *
 get2(Dict *dict, const char *name1, const char *name2)
 {
@@ -297,20 +331,26 @@ get2(Dict *dict, const char *name1, const char *name2)
 	BloomResult bloomres = {FALSE, nilhash};
 	DictHash *dh = nil;
 	BloomResult *br = nil;
+	uint64_t compares = 1;
+	uint64_t failed = 0;
 
 	ref(dict);
 	dh = &bloomres.hash;
 	br = bloomcheck2(&bloomres, dict, name1, name2);
-	if(br->exists == FALSE)
+	if(br->exists == FALSE){
+		dictstats.bloomfail++;
 		goto fail;
+	}
 	hash = gethashi(dh);
 
-	for(; (ap = &dict->table[hash & mask])->name != NULL; hash++)
-		if(ap->name != DEAD && hash_compare(dh, &ap->hash) && streq2(ap->name, name1, name2)) {
+	for(; (ap = &dict->table[hash & mask])->name != NULL; hash++, compares++)
+		if(ap->name != DEAD && hash_compare(dh, &ap->hash) && dictstreq2(ap->name, name1, name2)) {
+			update_get_stats(compares, 0);
 			deref(dict);
 			return ap;
 		}
 fail:
+	update_get_stats(br->exists == TRUE ? compares : 0, 1);
 	deref(dict);
 	return nil;
 }
@@ -341,6 +381,8 @@ put(Dict *dict, char *name, void *value)
 		np = name;
 		vp = value;
 
+		dictstats.totalsize -= old->size;
+		dictstats.ndicts--;
 		new = mkdict0(GROW(old->size));
 		dictforall(old, &putwrapper, new);
 		dict = new;
@@ -364,6 +406,7 @@ put(Dict *dict, char *name, void *value)
 	ap->name = name;
 	ap->hash = dicthash;
 	ap->value = value;
+	dictstats.nputs++;
 	return dict;
 }
 
