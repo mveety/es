@@ -22,7 +22,6 @@ DictStats dictstats = (DictStats){
 	.totalsize = 0,
 	.nputs = 0,
 	.nlookups = 0,
-	.avgcompares = 0,
 	.totalcompares = 0,
 	.bloomfail = 0,
 	.hashfail = 0,
@@ -307,7 +306,6 @@ char *DEAD = "%%DEAD%%";
 static inline void
 update_get_stats(uint64_t compares, uint64_t failed)
 {
-	dictstats.avgcompares = ((dictstats.avgcompares*dictstats.nlookups)+compares)/(dictstats.nlookups+1);
 	dictstats.totalcompares += compares;
 	dictstats.nlookups++;
 	dictstats.failed_lookups += failed;
@@ -332,7 +330,6 @@ get2(Dict *dict, const char *name1, const char *name2)
 	DictHash *dh = nil;
 	BloomResult *br = nil;
 	uint64_t compares = 1;
-	uint64_t failed = 0;
 
 	ref(dict);
 	dh = &bloomres.hash;

@@ -322,7 +322,6 @@ PRIM(dictstats) {
 	res = mklist(mkstr(str("%ld", dictstats.hashfail)), res);
 	res = mklist(mkstr(str("%ld", dictstats.bloomfail)), res);
 	res = mklist(mkstr(str("%ld", dictstats.totalcompares)), res);
-	res = mklist(mkstr(str("%ld", dictstats.avgcompares)), res);
 	res = mklist(mkstr(str("%ld", dictstats.failed_lookups)), res);
 	res = mklist(mkstr(str("%ld", dictstats.nlookups)), res);
 	res = mklist(mkstr(str("%ld", dictstats.nputs)), res);

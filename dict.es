@@ -94,7 +94,7 @@ fn dicthaskey dict key {
 fn %dictstats {
 	let (
 		(maxsize totalsize ndicts nputs nlookups
-			failed_lookups avgcompares totalcompares
+			failed_lookups totalcompares
 			bloomfail hashfail strcmpfail) = <=$&dictstats
 		resdict = <=dictnew
 	) {
@@ -109,8 +109,8 @@ fn %dictstats {
 		resdict := nputs => $nputs
 		resdict := nlookups => $nlookups
 		resdict := failed_lookups => $failed_lookups
-		resdict := avgcompares => $avgcompares
 		resdict := totalcompares => $totalcompares
+		resdict := avgcompares => <={div $totalcompares $failed_lookups}
 		resdict := bloomfail => $bloomfail
 		resdict := hashfail => $hashfail
 		resdict := strcmpfail => $strcmpfail

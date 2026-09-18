@@ -190,7 +190,6 @@ struct DictStats {
 	uint64_t nputs;
 	uint64_t nlookups;
 	uint64_t failed_lookups;
-	uint64_t avgcompares;
 	uint64_t totalcompares;
 	uint64_t bloomfail;
 	uint64_t hashfail;
