@@ -270,6 +270,14 @@ static const Limit limits[] = {
 	{"nthr",		 RLIMIT_NTHR,		  NULL	  },
 #endif
 
+#ifdef RLIMIT_NOVMON
+	{"novmon",	RLIMIT_NOVMON, NULL},
+#endif
+
+#ifdef RLIMIT_NLIMITS
+	{"nlimits",	RLIMIT_NLIMITS, NULL},
+#endif
+
 	{NULL,		   0,				 NULL	  }
 };
 
