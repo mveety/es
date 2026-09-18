@@ -110,7 +110,6 @@ fn %dictstats {
 		resdict := nlookups => $nlookups
 		resdict := failed_lookups => $failed_lookups
 		resdict := totalcompares => $totalcompares
-		resdict := avgcompares => <={div $totalcompares $failed_lookups}
 		resdict := bloomfail => $bloomfail
 		resdict := hashfail => $hashfail
 		resdict := strcmpfail => $strcmpfail
